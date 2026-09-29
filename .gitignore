@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors / local agent runtime state
+.vscode/*
+!.vscode/extensions.json
+.idea
+/.claude/
+
+# The web/ Next.js app manages its own ignores (node_modules, .next, .env*, etc.)
