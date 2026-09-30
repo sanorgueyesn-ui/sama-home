@@ -22,15 +22,26 @@ async function main() {
     );
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  // Phase 17 audit (Bloc 6): this used to be an upsert whose `update`
+  // clause silently overwrote an existing admin's name/password on every
+  // re-run — a real risk in production if the seed command is ever
+  // accidentally re-triggered (e.g. a misconfigured deploy pipeline). The
+  // seed now only ever CREATES the first admin; an existing account with
+  // this username is left completely untouched.
+  const existing = await prisma.user.findUnique({ where: { username } });
+  if (existing) {
+    console.log(
+      `Un compte existe déjà pour l'identifiant « ${username} » — le seed ne modifie jamais un compte existant. Rien n'a été changé.`,
+    );
+    return;
+  }
 
-  const user = await prisma.user.upsert({
-    where: { username },
-    update: { passwordHash, name },
-    create: { username, passwordHash, name, role: "ADMIN" },
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user = await prisma.user.create({
+    data: { username, passwordHash, name, role: "ADMIN" },
   });
 
-  console.log(`Compte prêt : ${user.username} (${user.role}).`);
+  console.log(`Compte créé : ${user.username} (${user.role}).`);
 }
 
 main()
