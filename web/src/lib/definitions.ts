@@ -69,3 +69,52 @@ export type ClientFormState =
       message?: string;
     }
   | undefined;
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Logements
+// ---------------------------------------------------------------------------
+
+export const PROPERTY_TYPE_VALUES = ["ROOM", "APARTMENT"] as const;
+
+export const PropertySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Le nom est obligatoire.")
+    .max(120, "Le nom : 120 caractères maximum."),
+  type: z.enum(PROPERTY_TYPE_VALUES, "Le type est obligatoire."),
+  description: optionalText(500, "Description"),
+  // Capacité : pas explicitement marquée obligatoire/optionnelle dans le
+  // prompt maître, mais chaque logement de la maquette en affiche une
+  // (« 2 personnes »...) — traitée comme obligatoire, borne raisonnable
+  // documentée ici (1 à 50 personnes).
+  capacity: z
+    .string()
+    .trim()
+    .min(1, "La capacité est obligatoire.")
+    .transform((v) => Number(v))
+    .pipe(
+      z
+        .number("La capacité doit être un nombre.")
+        .int("La capacité doit être un nombre entier.")
+        .min(1, "Minimum 1 personne.")
+        .max(50, "Maximum 50 personnes."),
+    ),
+  // Simple URL collée par le gestionnaire — pas d'upload de fichier (voir
+  // consigne Phase 4, section PHOTO).
+  photo: z
+    .string()
+    .trim()
+    .max(2048, "URL trop longue.")
+    .transform((v) => (v.length === 0 ? undefined : v))
+    .pipe(z.url("URL de photo invalide.").optional())
+    .optional(),
+  active: z.boolean(),
+});
+
+export type PropertyFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof PropertySchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;

@@ -80,3 +80,42 @@ model Client {
   @@index([phone])
   @@index([name])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Logements
+// ---------------------------------------------------------------------------
+
+enum PropertyType {
+  ROOM
+  APARTMENT
+}
+
+/// Un logement (chambre meublée ou appartement).
+///
+/// Volontairement PAS de colonne "status" : le prompt maître interdit un
+/// statut manuel qui pourrait contredire les futures réservations/locations.
+/// Le statut affiché (AVAILABLE/OCCUPIED/RESERVED/UNAVAILABLE) est calculé à
+/// la volée par src/lib/property-status.ts, qui ne regarde pour l'instant
+/// que `active` — les Phases 6 à 8 lui fourniront les réservations/locations
+/// actives sans que ce modèle ait besoin de changer.
+///
+/// `photo` est une simple URL (String?) collée par le gestionnaire : pas
+/// d'upload de fichier, pas de service de stockage externe, conformément à
+/// la consigne de la Phase 4 ("ne pas ajouter Cloudinary/S3 sans besoin réel").
+model Property {
+  id          String       @id @default(cuid())
+  name        String
+  type        PropertyType
+  description String?
+  capacity    Int
+  photo       String?
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Pas de relation Tarif ici : elle appartient à la Phase 5. Elle ajoutera
+  // `propertyId` côté Tariff sans migration supplémentaire sur Property.
+
+  @@index([type])
+  @@index([active])
+}

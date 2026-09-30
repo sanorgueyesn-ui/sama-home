@@ -29,12 +29,20 @@ export default async function Home() {
           Fondations + authentification en place — écrans à venir par phase.
         </p>
       </div>
-      <Link
-        href="/clients"
-        className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
-      >
-        Clients
-      </Link>
+      <div className="flex gap-3">
+        <Link
+          href="/clients"
+          className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
+        >
+          Clients
+        </Link>
+        <Link
+          href="/logements"
+          className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
+        >
+          Logements
+        </Link>
+      </div>
       <form action={logout}>
         <button
           type="submit"

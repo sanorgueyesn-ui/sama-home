@@ -1,0 +1,89 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/app/logements/status-badge";
+import { PropertyPhoto } from "@/app/logements/property-photo";
+import { ToggleActiveButton } from "./toggle-active-button";
+import { getPropertyById } from "@/lib/properties-data";
+import { computePropertyStatus } from "@/lib/property-status";
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-[#E7EAEE] py-3 last:border-0">
+      <p className="text-[11px] font-bold text-navy/50">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-navy">{value}</p>
+    </div>
+  );
+}
+
+export default async function PropertyDetailPage(props: PageProps<"/logements/[id]">) {
+  const { id } = await props.params;
+  const { created, updated } = await props.searchParams;
+
+  const property = await getPropertyById(id);
+  if (!property) {
+    notFound();
+  }
+
+  const status = computePropertyStatus(property);
+
+  return (
+    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
+      <div className="mb-5 flex items-center gap-3">
+        <Link
+          href="/logements"
+          aria-label="Retour"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-navy"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </Link>
+        <h1 className="flex-1 truncate text-xl font-extrabold text-navy">{property.name}</h1>
+      </div>
+
+      {created ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Logement créé avec succès.
+        </p>
+      ) : null}
+      {updated ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Modifications enregistrées.
+        </p>
+      ) : null}
+
+      <PropertyPhoto photo={property.photo} type={property.type} className="h-44 w-full rounded-2xl" />
+
+      <div className="mt-4 flex items-center justify-between">
+        <p className="text-sm font-bold text-navy/70">
+          {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"}
+        </p>
+        <StatusBadge status={status} />
+      </div>
+
+      <Card className="mt-3 px-4">
+        <Row label="CAPACITÉ" value={`${property.capacity} personne${property.capacity > 1 ? "s" : ""}`} />
+        <Row label="DESCRIPTION" value={property.description ?? "—"} />
+        <Row
+          label="LOGEMENT DEPUIS"
+          value={new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(property.createdAt)}
+        />
+      </Card>
+
+      <p className="mt-4 text-xs font-medium text-navy/40">
+        Les tarifs seront gérés à partir de la Phase 5.
+      </p>
+
+      <div className="mt-5 flex flex-col gap-2.5">
+        <Link
+          href={`/logements/${property.id}/edit`}
+          className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"
+        >
+          Modifier
+        </Link>
+        <ToggleActiveButton id={property.id} active={property.active} />
+      </div>
+    </div>
+  );
+}
