@@ -125,7 +125,14 @@ export async function toggleTariffActive(
 ): Promise<{ error?: string }> {
   await verifySession();
 
-  const existing = await prisma.tariff.findUniqueOrThrow({ where: { id } });
+  // Phase 14 audit (Bloc 7): findUniqueOrThrow with no guard here would
+  // throw uncaught for a nonexistent/tampered id instead of the same
+  // graceful "introuvable" pattern every other action in this file (and the
+  // rest of the project) already uses.
+  const existing = await prisma.tariff.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Tarif introuvable." };
+  }
 
   if (nextActive && (await hasConflictingActiveTariff(existing.propertyId, existing, id))) {
     return { error: DUPLICATE_MESSAGE };
@@ -151,7 +158,11 @@ export async function toggleTariffActive(
 export async function deleteTariff(id: string): Promise<{ error?: string }> {
   await verifySession();
 
-  const existing = await prisma.tariff.findUniqueOrThrow({ where: { id } });
+  // Phase 14 audit (Bloc 7): same fix as toggleTariffActive above.
+  const existing = await prisma.tariff.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Tarif introuvable." };
+  }
 
   const [referencingReservation, referencingRental] = await Promise.all([
     prisma.reservation.findFirst({ where: { tariffId: id }, select: { id: true } }),

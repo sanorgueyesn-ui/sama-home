@@ -250,6 +250,12 @@ export type ReservationFormState =
  * exists to pick a historical date.
  */
 export const PaymentSchema = z.object({
+  // Phase 14 audit (Bloc 9): same upper bound as TariffSchema.amount, absent
+  // here until now — not exploitable (createReservationPayment/
+  // createRentalPayment already refuse any amount over the real `remaining`,
+  // which is itself bounded by a Tariff-derived total), but an unbounded
+  // value would previously reach Postgres's 4-byte `Int` column and fail
+  // there with a raw overflow error instead of a clear Zod message.
   amount: z
     .string()
     .trim()
@@ -259,7 +265,8 @@ export const PaymentSchema = z.object({
       z
         .number("Le montant doit être un nombre.")
         .int("Le montant doit être un nombre entier (FCFA, sans centimes).")
-        .min(1, "Le montant doit être supérieur à 0."),
+        .min(1, "Le montant doit être supérieur à 0.")
+        .max(100_000_000, "Montant trop élevé."),
     ),
   method: z.enum(PAYMENT_METHOD_VALUES, "Mode de paiement invalide."),
   reference: optionalText(120, "Référence"),
@@ -297,6 +304,9 @@ export const EXPENSE_CATEGORY_VALUES = [
  */
 export const ExpenseSchema = z.object({
   category: z.enum(EXPENSE_CATEGORY_VALUES, "Catégorie invalide."),
+  // Phase 14 audit (Bloc 9): same reasoning as PaymentSchema.amount above —
+  // Expense has no "remaining" guard at all to indirectly bound it, so this
+  // was the more directly reachable gap of the two.
   amount: z
     .string()
     .trim()
@@ -306,7 +316,8 @@ export const ExpenseSchema = z.object({
       z
         .number("Le montant doit être un nombre.")
         .int("Le montant doit être un nombre entier (FCFA, sans centimes).")
-        .min(1, "Le montant doit être supérieur à 0."),
+        .min(1, "Le montant doit être supérieur à 0.")
+        .max(100_000_000, "Montant trop élevé."),
     ),
   method: z.enum(PAYMENT_METHOD_VALUES, "Mode de paiement invalide."),
   reference: optionalText(120, "Référence"),

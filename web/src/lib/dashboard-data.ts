@@ -84,6 +84,16 @@ export async function getPropertyStatusCounts(): Promise<Record<PropertyStatus, 
  * existing filter already returns it, each tagged with its own status badge.
  */
 export async function getTodayArrivals() {
+  // Phase 14 audit fix: every other exported data-layer function in this
+  // project asserts its own verifySession() directly rather than relying on
+  // a callee to do it (defense-in-depth + an auditable invariant: grepping
+  // for verifySession()/requireAdmin() should account for every exported
+  // function). This one was already protected transitively (listReservations
+  // calls it internally) — never actually exploitable — but a future
+  // refactor of listReservations could silently drop that protection
+  // without this file's own tests catching it. Zero behavior change: cache()
+  // memoizes verifySession() per request, so this adds no extra DB round trip.
+  await verifySession();
   const { items } = await listReservations({ timeFilter: "today" });
   return items;
 }
@@ -113,6 +123,9 @@ export async function getTodayDepartures(now: Date = new Date()) {
  * (Bloc 12: no N+1) via the exact Phase 8 service.
  */
 export async function getActiveRentalsWithPayments() {
+  // Phase 14 audit fix: same reasoning as getTodayArrivals above — was only
+  // transitively protected via listRentals(), now also asserts directly.
+  await verifySession();
   const { items, truncated } = await listRentals({ timeFilter: "active" });
   const summaries = await getRentalPaymentSummaries(prisma, items);
   return { items, summaries, truncated };

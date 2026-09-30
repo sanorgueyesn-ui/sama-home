@@ -300,13 +300,21 @@ export async function updateReservation(
   redirect(`/reservations/${id}?updated=1`);
 }
 
-export async function cancelReservation(id: string) {
+export async function cancelReservation(id: string): Promise<{ error?: string }> {
   await verifySession();
 
-  const existing = await prisma.reservation.findUniqueOrThrow({ where: { id } });
+  // Phase 14 audit (Bloc 7): findUniqueOrThrow with no guard here would
+  // throw uncaught for a nonexistent/tampered id — every other action in
+  // this file already returns a graceful { error } instead.
+  const existing = await prisma.reservation.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Réservation introuvable." };
+  }
+
   await prisma.reservation.update({ where: { id }, data: { status: "CANCELLED" } });
 
   revalidatePath("/reservations");
   revalidatePath(`/reservations/${id}`);
   revalidatePath(`/logements/${existing.propertyId}`);
+  return {};
 }
