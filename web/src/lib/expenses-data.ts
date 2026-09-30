@@ -2,6 +2,7 @@ import "server-only";
 import type { ExpenseCategory, PaymentMethod } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
+import { todayRange, monthRange, type DateRange } from "@/lib/period";
 
 // Bloc 11 — "NE PAS charger une quantité illimitée de dépenses en mémoire."
 // Same limitation pattern (take + count + truncated flag) already used by
@@ -11,20 +12,12 @@ const LIST_LIMIT = 50;
 
 export type ExpensePeriodFilter = "today" | "month" | "all";
 
-function periodRange(period: ExpensePeriodFilter): { gte: Date; lt: Date } | undefined {
+// Phase 10, Bloc 14/15: extracted to src/lib/period.ts so /depenses and the
+// new dashboard share the exact same "today"/"month" boundaries — see that
+// file for the timezone-convention rationale. Behavior is unchanged.
+function periodRange(period: ExpensePeriodFilter): DateRange | undefined {
   if (period === "all") return undefined;
-  const now = new Date();
-  if (period === "today") {
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 1);
-    return { gte: start, lt: end };
-  }
-  // "month" — calendar month containing "now".
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return { gte: start, lt: end };
+  return period === "today" ? todayRange() : monthRange();
 }
 
 export async function listExpenses(filters: {
