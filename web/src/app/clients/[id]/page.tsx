@@ -66,12 +66,30 @@ export default async function ClientDetailPage(props: PageProps<"/clients/[id]">
         />
       </Card>
 
-      <Link
-        href={`/clients/${client.id}/edit`}
-        className="mt-5 flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"
-      >
-        Modifier
-      </Link>
+      {/* Phase 12, Bloc 4/6: mêmes raccourcis pré-remplis que /logements/[id]
+          offre déjà pour propertyId — jusqu'ici absents ici, obligeant à
+          resélectionner le client depuis une liste après être passé par sa
+          fiche (trouvé pendant l'inspection de la Phase 12). */}
+      <div className="mt-5 flex flex-col gap-2.5">
+        <Link
+          href={`/reservations/new?clientId=${client.id}`}
+          className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+        >
+          Nouvelle réservation
+        </Link>
+        <Link
+          href={`/locations/new?clientId=${client.id}`}
+          className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"
+        >
+          Nouvelle location
+        </Link>
+        <Link
+          href={`/clients/${client.id}/edit`}
+          className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"
+        >
+          Modifier
+        </Link>
+      </div>
     </div>
   );
 }

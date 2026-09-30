@@ -18,6 +18,26 @@ function parseClientForm(formData: FormData) {
   });
 }
 
+/**
+ * Phase 12, Bloc 6 — "+ Nouveau client" launched from mid-reservation/
+ * mid-location (see reservation-form.tsx/rental-form.tsx) carries a
+ * `returnTo` hidden field so the manager lands back on a fresh form with
+ * the new client pre-selected, instead of being dropped on the client's
+ * profile and having to re-find them in the picker. `returnTo` is
+ * attacker-controllable form data (Bloc 23: never trust the browser), so it
+ * is only ever honored against this exact allowlist — never redirected to
+ * verbatim — to rule out an open redirect.
+ */
+const RETURN_TO_PATTERN = /^\/(reservations|locations)\/new(\?[\w=&%.-]*)?$/;
+
+function safeReturnTo(formData: FormData): string | null {
+  const value = formData.get("returnTo");
+  if (typeof value !== "string" || !RETURN_TO_PATTERN.test(value)) {
+    return null;
+  }
+  return value;
+}
+
 export async function createClient(
   _prevState: ClientFormState,
   formData: FormData,
@@ -31,6 +51,7 @@ export async function createClient(
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
+  const returnTo = safeReturnTo(formData);
 
   let clientId: string;
   try {
@@ -41,6 +62,10 @@ export async function createClient(
   }
 
   revalidatePath("/clients");
+  if (returnTo) {
+    const separator = returnTo.includes("?") ? "&" : "?";
+    redirect(`${returnTo}${separator}clientId=${clientId}`);
+  }
   redirect(`/clients/${clientId}?created=1`);
 }
 

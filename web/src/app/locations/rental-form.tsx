@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { checkRentalAvailability } from "@/app/actions/rentals";
 import type { ReservationFormState } from "@/lib/definitions";
 
@@ -49,6 +51,10 @@ export function RentalForm({
   defaultClientId?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Phase 12, Bloc 6/8 — same "+ Nouveau client" round trip as reservation-form.tsx.
+  const newClientHref = `/clients/new?returnTo=${encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`;
 
   const [clientId, setClientId] = useState(defaultClientId ?? "");
   const [propertyId, setPropertyId] = useState(defaultPropertyId ?? "");
@@ -113,9 +119,14 @@ export function RentalForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-navy">
-          Client
-        </label>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label htmlFor="clientId" className="block text-xs font-bold text-navy">
+            Client
+          </label>
+          <Link href={newClientHref} className="text-xs font-bold text-navy underline">
+            + Nouveau client
+          </Link>
+        </div>
         <select
           id="clientId"
           name="clientId"

@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { checkAvailability } from "@/app/actions/reservations";
 import type { ReservationFormState } from "@/lib/definitions";
 
@@ -56,6 +58,13 @@ export function ReservationForm({
   };
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Phase 12, Bloc 6 — carries the current form's URL (so propertyId, if
+  // any, survives the round trip) as the safe `returnTo` for "+ Nouveau
+  // client". Validated again server-side against an allowlist regardless
+  // (actions/clients.ts) — never trusted just because it was built here.
+  const newClientHref = `/clients/new?returnTo=${encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`;
 
   const [clientId, setClientId] = useState(defaultValues?.clientId ?? "");
   const [propertyId, setPropertyId] = useState(defaultValues?.propertyId ?? "");
@@ -136,9 +145,16 @@ export function ReservationForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-navy">
-          Client
-        </label>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label htmlFor="clientId" className="block text-xs font-bold text-navy">
+            Client
+          </label>
+          {!isEdit ? (
+            <Link href={newClientHref} className="text-xs font-bold text-navy underline">
+              + Nouveau client
+            </Link>
+          ) : null}
+        </div>
         <select
           id="clientId"
           name="clientId"

@@ -228,6 +228,11 @@ export async function checkInReservation(reservationId: string): Promise<{ error
             durationUnit: reservation.durationUnit,
             amount: reservation.amount,
             deposit: reservation.deposit,
+            // Phase 12, Bloc 7 fix: the reservation's note was silently
+            // dropped on check-in — the master prompt explicitly requires
+            // it be conserved ("note si applicable"). Self-caught during the
+            // Phase 12 flow inspection.
+            note: reservation.note,
           },
         });
         await tx.reservation.update({ where: { id: reservationId }, data: { status: "ARRIVED" } });

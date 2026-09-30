@@ -25,10 +25,13 @@ export function ClientForm({
   action,
   defaultValues,
   submitLabel,
+  returnTo,
 }: {
   action: (state: ClientFormState, formData: FormData) => Promise<ClientFormState>;
   defaultValues?: ClientFormValues;
   submitLabel: string;
+  /** Phase 12, Bloc 6 — see actions/clients.ts's safeReturnTo() for the server-side allowlist. */
+  returnTo?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const [idDocumentType, setIdDocumentType] = useState(defaultValues?.idDocumentType ?? "");
@@ -36,6 +39,7 @@ export function ClientForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
       <Field
         id="name"
         label="Nom du client"
