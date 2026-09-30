@@ -5,7 +5,7 @@ import { PropertyFilters } from "./filters";
 import { StatusBadge } from "./status-badge";
 import { PropertyPhoto } from "./property-photo";
 import { listProperties } from "@/lib/properties-data";
-import { computePropertyStatus } from "@/lib/property-status";
+import { getPropertyStatuses } from "@/lib/property-status";
 
 export default async function PropertiesPage(props: PageProps<"/logements">) {
   const { q, type } = await props.searchParams;
@@ -13,6 +13,8 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
   const typeFilter = type === "ROOM" || type === "APARTMENT" ? type : undefined;
 
   const { items, truncated } = await listProperties(query, typeFilter);
+  // One query for the whole page instead of one per card (Phase 7).
+  const statuses = await getPropertyStatuses(items);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 pt-6 pb-10">
@@ -67,7 +69,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-extrabold text-navy">{property.name}</p>
-                    <StatusBadge status={computePropertyStatus(property)} />
+                    <StatusBadge status={statuses.get(property.id) ?? "UNAVAILABLE"} />
                   </div>
                   <p className="mt-0.5 text-xs font-medium text-navy/60">
                     {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"} ·{" "}

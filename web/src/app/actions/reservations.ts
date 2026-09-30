@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
-import { findConflictingReservation } from "@/lib/availability";
+import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 
 function parseReservationForm(formData: FormData) {
@@ -23,14 +23,18 @@ function parseReservationForm(formData: FormData) {
 
 class AvailabilityConflictError extends Error {}
 
-function formatConflictMessage(conflict: {
-  arrivalTime: Date;
-  departureTime: Date;
-  client: { name: string };
-}) {
+// Phase 7, Bloc 7: a reservation must also be refused if it would overlap an
+// active Rental (a walk-in currently occupying the room), not only another
+// reservation — so this now goes through the shared findAvailabilityConflict
+// instead of a reservation-only query.
+function formatConflictMessage(conflict: AvailabilityConflict) {
   const fmt = (d: Date) =>
     d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  return `Indisponible : ${conflict.client.name} occupe déjà ce logement du ${fmt(conflict.arrivalTime)} au ${fmt(conflict.departureTime)}.`;
+  const occupancyWord = conflict.kind === "rental" ? "est actuellement occupé par" : "occupe déjà ce logement du";
+  if (conflict.kind === "rental") {
+    return `Indisponible : ${conflict.clientName} ${occupancyWord} ${fmt(conflict.arrivalTime)} à ${fmt(conflict.departureTime)} (départ prévu).`;
+  }
+  return `Indisponible : ${conflict.clientName} ${occupancyWord} ${fmt(conflict.arrivalTime)} au ${fmt(conflict.departureTime)}.`;
 }
 
 /**
@@ -64,7 +68,7 @@ export async function checkAvailability(input: {
   }
   const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
 
-  const conflict = await findConflictingReservation(prisma, {
+  const conflict = await findAvailabilityConflict(prisma, {
     propertyId: input.propertyId,
     arrivalTime: arrivalDateTime,
     departureTime: departureDateTime,
@@ -120,7 +124,7 @@ export async function createReservation(
   try {
     reservationId = await prisma.$transaction(
       async (tx) => {
-        const conflict = await findConflictingReservation(tx, {
+        const conflict = await findAvailabilityConflict(tx, {
           propertyId,
           arrivalTime: arrivalDateTime,
           departureTime: departureDateTime,
@@ -223,7 +227,7 @@ export async function updateReservation(
   try {
     await prisma.$transaction(
       async (tx) => {
-        const conflict = await findConflictingReservation(tx, {
+        const conflict = await findAvailabilityConflict(tx, {
           propertyId,
           arrivalTime: arrivalDateTime,
           departureTime: departureDateTime,

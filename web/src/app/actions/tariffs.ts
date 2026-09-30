@@ -142,20 +142,25 @@ export async function toggleTariffActive(
  * historical record must still be able to display what it booked) can never
  * be physically deleted. Deactivation remains the safe, always-available
  * alternative, which the UI leads with.
+ *
+ * Phase 7 update: Rental -> Tariff now exists too (`onDelete: Restrict` in
+ * the schema would otherwise let a Rental-referenced tariff pass this
+ * application check and then fail with a raw Prisma foreign-key error
+ * instead of this friendly message) — same rule, extended to Rental.
  */
 export async function deleteTariff(id: string): Promise<{ error?: string }> {
   await verifySession();
 
   const existing = await prisma.tariff.findUniqueOrThrow({ where: { id } });
 
-  const referencingReservation = await prisma.reservation.findFirst({
-    where: { tariffId: id },
-    select: { id: true },
-  });
-  if (referencingReservation) {
+  const [referencingReservation, referencingRental] = await Promise.all([
+    prisma.reservation.findFirst({ where: { tariffId: id }, select: { id: true } }),
+    prisma.rental.findFirst({ where: { tariffId: id }, select: { id: true } }),
+  ]);
+  if (referencingReservation || referencingRental) {
     return {
       error:
-        "Ce tarif est référencé par au moins une réservation et ne peut pas être supprimé. Désactivez-le à la place.",
+        "Ce tarif est référencé par au moins une réservation ou une location et ne peut pas être supprimé. Désactivez-le à la place.",
     };
   }
 

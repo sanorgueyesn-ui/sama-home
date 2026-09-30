@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { CancelButton } from "./cancel-button";
+import { CheckInButton } from "./check-in-button";
 import { getReservationById } from "@/lib/reservations-data";
 import { formatDuration } from "@/lib/duration";
 
@@ -100,6 +101,7 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
 
       {canModify ? (
         <div className="mt-5 flex flex-col gap-2.5">
+          <CheckInButton id={reservation.id} />
           <Link
             href={`/reservations/${reservation.id}/edit`}
             className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"

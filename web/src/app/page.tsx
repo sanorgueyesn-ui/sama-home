@@ -29,7 +29,7 @@ export default async function Home() {
           Fondations + authentification en place — écrans à venir par phase.
         </p>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <Link
           href="/clients"
           className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
@@ -47,6 +47,12 @@ export default async function Home() {
           className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
         >
           Réservations
+        </Link>
+        <Link
+          href="/locations"
+          className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
+        >
+          Locations
         </Link>
       </div>
       <form action={logout}>

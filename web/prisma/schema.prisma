@@ -22,14 +22,14 @@ enum UserRole {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   /// Identifiant de connexion (voir écran "Splash / Connexion" de la maquette)
-  username     String    @unique
+  username     String   @unique
   passwordHash String
   name         String
-  role         UserRole  @default(GESTIONNAIRE)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role         UserRole @default(GESTIONNAIRE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   sessions Session[]
 }
@@ -56,12 +56,12 @@ model Session {
 /// inventer une règle métier non demandée. L'UI suggère quelques valeurs
 /// courantes via des puces, sans empêcher la saisie libre.
 model Client {
-  id       String @id @default(cuid())
-  name     String
+  id    String @id @default(cuid())
+  name  String
   /// Normalisé à la création/modification (espaces/points/tirets retirés,
   /// "+" initial conservé) pour que la recherche soit fiable — voir
   /// src/lib/definitions.ts, ClientSchema.
-  phone    String
+  phone String
 
   email            String?
   address          String?
@@ -72,9 +72,10 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Rental et Payment appartiennent aux phases suivantes ; elles ajouteront
-  // leur propre relation vers Client sans modifier ce modèle davantage.
+  // Payment appartient à une phase suivante ; elle ajoutera sa propre
+  // relation vers Client sans modifier ce modèle davantage.
   reservations Reservation[]
+  rentals      Rental[]
 
   @@index([phone])
   @@index([name])
@@ -94,9 +95,9 @@ enum PropertyType {
 /// Volontairement PAS de colonne "status" : le prompt maître interdit un
 /// statut manuel qui pourrait contredire les futures réservations/locations.
 /// Le statut affiché (AVAILABLE/OCCUPIED/RESERVED/UNAVAILABLE) est calculé à
-/// la volée par src/lib/property-status.ts, qui ne regarde pour l'instant
-/// que `active` — les Phases 6 à 8 lui fourniront les réservations/locations
-/// actives sans que ce modèle ait besoin de changer.
+/// la volée par src/lib/property-status.ts à partir de `active`, des
+/// réservations CONFIRMED proches et des locations ACTIVE (Phase 7) — sans
+/// qu'aucune colonne supplémentaire n'ait été ajoutée ici.
 ///
 /// `photo` est une simple URL (String?) collée par le gestionnaire : pas
 /// d'upload de fichier, pas de service de stockage externe, conformément à
@@ -114,6 +115,7 @@ model Property {
 
   tariffs      Tariff[]
   reservations Reservation[]
+  rentals      Rental[]
 
   @@index([type])
   @@index([active])
@@ -163,8 +165,8 @@ enum DurationUnit {
 /// par la Phase 6 dès qu'une réservation peut pointer vers un tarif — voir
 /// le commentaire dans deleteTariff().
 model Tariff {
-  id       String @id @default(cuid())
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  id         String   @id @default(cuid())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
   propertyId String
 
   label         String
@@ -178,6 +180,7 @@ model Tariff {
   updatedAt DateTime @updatedAt
 
   reservations Reservation[]
+  rentals      Rental[]
 
   @@index([propertyId])
   @@index([propertyId, active])
@@ -249,8 +252,109 @@ model Reservation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Présent seulement si "Faire entrer" a été exécuté (Phase 7). Le lien
+  /// est conservé indéfiniment : la réservation reste l'historique de
+  /// l'origine de la location, elle n'est jamais supprimée.
+  rental Rental?
+
   @@index([propertyId, status])
   @@index([clientId])
   @@index([arrivalTime])
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — Locations (Rental)
+// ---------------------------------------------------------------------------
+
+enum RentalStatus {
+  /// Client actuellement dans le logement — bloque la disponibilité.
+  ACTIVE
+  /// Séjour terminé normalement — ne bloque plus, reste en historique.
+  COMPLETED
+  /// Annulée avant sa fin — ne bloque plus, reste en historique.
+  CANCELLED
+}
+
+/// Un client réellement présent dans un logement — distinct d'une
+/// Reservation (un créneau réservé pour le futur). Créée soit depuis une
+/// réservation CONFIRMED ("Faire entrer"), soit directement ("Nouvelle
+/// location", sans réservation).
+///
+/// `tariffId` est nullable (comme demandé) : les deux parcours actuels de
+/// l'app renseignent toujours un tarif, mais le modèle n'exige pas qu'un
+/// tarif existe pour toute location possible à l'avenir.
+///
+/// `onDelete: Restrict` partout : jamais de suppression physique de
+/// Client/Property/Reservation/Tariff tant qu'une location les référence.
+/// Une Rental elle-même n'est également jamais supprimée physiquement par
+/// l'app — seul son statut change (voir RentalStatus).
+model Rental {
+  id String @id @default(cuid())
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  /// Une location directe n'a pas de réservation d'origine.
+  reservationId String?      @unique
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  tariffId String?
+  tariff   Tariff? @relation(fields: [tariffId], references: [id], onDelete: Restrict)
+
+  /// Heure RÉELLE d'arrivée — peut différer de l'heure prévue de la
+  /// réservation d'origine, qui elle reste inchangée pour toujours (Bloc 9).
+  arrivalAt DateTime
+
+  /// Calculée à la création depuis arrivalAt + durée, puis déplacée par
+  /// chaque prolongation (jamais par une simple édition).
+  plannedDepartureAt DateTime
+  actualDepartureAt  DateTime?
+
+  /// Copie figée au moment de la création (depuis le Tariff choisi, ou
+  /// depuis la Reservation d'origine si applicable) — jamais recalculée.
+  durationValue Int
+  durationUnit  DurationUnit
+
+  /// Montant total COURANT = montant initial + somme des RentalExtension.
+  /// Incrémenté à chaque prolongation, jamais écrasé (Bloc 15).
+  amount Int
+
+  /// Repris tel quel depuis la Reservation d'origine si applicable
+  /// (Bloc 16) — jamais redemandé au gestionnaire dans ce cas.
+  deposit Int @default(0)
+
+  status RentalStatus @default(ACTIVE)
+  note   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  extensions RentalExtension[]
+
+  @@index([propertyId, status])
+  @@index([clientId])
+  @@index([status])
+}
+
+/// Journal append-only d'une prolongation (Bloc 15) : préserve le détail de
+/// CHAQUE extension au lieu d'écraser un seul total, pour ne jamais perdre
+/// l'historique si plusieurs prolongations sont accordées. Ce n'est pas un
+/// système financier (pas de Payment/caisse/rapprochement) — seulement la
+/// trace de comment Rental.amount a grandi dans le temps.
+model RentalExtension {
+  id       String @id @default(cuid())
+  rentalId String
+  rental   Rental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  durationValue Int
+  durationUnit  DurationUnit
+  amount        Int
+
+  createdAt DateTime @default(now())
+
+  @@index([rentalId])
 }

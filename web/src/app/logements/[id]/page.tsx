@@ -7,7 +7,8 @@ import { ToggleActiveButton } from "./toggle-active-button";
 import { TariffRowActions } from "./tariffs/tariff-row-actions";
 import { getPropertyById } from "@/lib/properties-data";
 import { listTariffsForProperty } from "@/lib/tariffs-data";
-import { computePropertyStatus } from "@/lib/property-status";
+import { getPropertyStatus } from "@/lib/property-status";
+import { getActiveRentalForProperty } from "@/lib/rentals-data";
 
 function formatFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/ |,/g, " ")} FCFA`;
@@ -31,8 +32,9 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
     notFound();
   }
 
-  const status = computePropertyStatus(property);
+  const status = await getPropertyStatus(property);
   const tariffs = await listTariffsForProperty(property.id);
+  const activeRental = status === "OCCUPIED" ? await getActiveRentalForProperty(property.id) : null;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
@@ -132,13 +134,29 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
       )}
 
       <div className="mt-5 flex flex-col gap-2.5">
-        {property.active && tariffs.some((t) => t.active) ? (
+        {status === "OCCUPIED" && activeRental ? (
           <Link
-            href={`/reservations/new?propertyId=${property.id}`}
+            href={`/locations/${activeRental.id}`}
             className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
           >
-            Réserver
+            Voir la location en cours
           </Link>
+        ) : null}
+        {property.active && tariffs.some((t) => t.active) && status !== "OCCUPIED" ? (
+          <>
+            <Link
+              href={`/locations/new?propertyId=${property.id}`}
+              className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+            >
+              Nouvelle location
+            </Link>
+            <Link
+              href={`/reservations/new?propertyId=${property.id}`}
+              className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"
+            >
+              Réserver
+            </Link>
+          </>
         ) : null}
         <Link
           href={`/logements/${property.id}/edit`}
