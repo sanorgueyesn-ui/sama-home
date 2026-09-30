@@ -46,3 +46,37 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 3 — Clients
+// ---------------------------------------------------------------------------
+
+/// `idDocumentType` reste une chaîne libre (pas un enum) : le prompt maître
+/// n'énumère pas les types de pièce acceptés, et les figer maintenant serait
+/// inventer une règle métier non demandée. L'UI suggère quelques valeurs
+/// courantes via des puces, sans empêcher la saisie libre.
+model Client {
+  id       String @id @default(cuid())
+  name     String
+  /// Normalisé à la création/modification (espaces/points/tirets retirés,
+  /// "+" initial conservé) pour que la recherche soit fiable — voir
+  /// src/lib/definitions.ts, ClientSchema.
+  phone    String
+
+  email            String?
+  address          String?
+  idDocumentType   String?
+  idDocumentNumber String?
+  notes            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations volontairement absentes pour l'instant : Reservation, Rental et
+  // Payment appartiennent aux phases suivantes (voir section "Base de
+  // données" de la Phase 3). Elles ajouteront chacune `clientId` + relation
+  // vers Client sans qu'aucune migration ne doive modifier ce modèle.
+
+  @@index([phone])
+  @@index([name])
+}
