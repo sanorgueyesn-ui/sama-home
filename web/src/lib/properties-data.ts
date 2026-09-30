@@ -28,3 +28,13 @@ export async function getPropertyById(id: string) {
   await verifySession();
   return prisma.property.findUnique({ where: { id } });
 }
+
+/** For the reservation list's "logement" filter dropdown (Phase 6, Bloc 15). */
+export async function listAllPropertiesForSelect() {
+  await verifySession();
+  return prisma.property.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+    take: 500,
+  });
+}

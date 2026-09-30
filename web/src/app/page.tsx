@@ -42,6 +42,12 @@ export default async function Home() {
         >
           Logements
         </Link>
+        <Link
+          href="/reservations"
+          className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
+        >
+          Réservations
+        </Link>
       </div>
       <form action={logout}>
         <button

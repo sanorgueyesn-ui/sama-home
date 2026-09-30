@@ -17,7 +17,11 @@ export function TariffRowActions({ id, active }: { id: string; active: boolean }
 
   function handleDelete() {
     if (!confirm("Supprimer définitivement ce tarif ? Cette action est irréversible.")) return;
-    startTransition(() => deleteTariff(id));
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteTariff(id);
+      if (result.error) setError(result.error);
+    });
   }
 
   return (

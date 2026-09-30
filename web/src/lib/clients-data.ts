@@ -36,3 +36,19 @@ export async function getClientById(id: string) {
   await verifySession();
   return prisma.client.findUnique({ where: { id } });
 }
+
+/**
+ * For the reservation form's client picker (Phase 6): every client, minimal
+ * fields only (id/name/phone — the form needs to auto-display the phone
+ * once a client is picked, per Bloc 9). Capped generously rather than the
+ * 50-row search limit above, since this feeds a single <select>, not a
+ * paginated list.
+ */
+export async function listClientsForSelect() {
+  await verifySession();
+  return prisma.client.findMany({
+    select: { id: true, name: true, phone: true },
+    orderBy: { name: "asc" },
+    take: 500,
+  });
+}

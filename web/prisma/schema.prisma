@@ -72,10 +72,9 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations volontairement absentes pour l'instant : Reservation, Rental et
-  // Payment appartiennent aux phases suivantes (voir section "Base de
-  // données" de la Phase 3). Elles ajouteront chacune `clientId` + relation
-  // vers Client sans qu'aucune migration ne doive modifier ce modèle.
+  // Rental et Payment appartiennent aux phases suivantes ; elles ajouteront
+  // leur propre relation vers Client sans modifier ce modèle davantage.
+  reservations Reservation[]
 
   @@index([phone])
   @@index([name])
@@ -113,10 +112,8 @@ model Property {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  // Pas de relation Tarif ici : elle appartient à la Phase 5. Elle ajoutera
-  // `propertyId` côté Tariff sans migration supplémentaire sur Property.
-
-  tariffs Tariff[]
+  tariffs      Tariff[]
+  reservations Reservation[]
 
   @@index([type])
   @@index([active])
@@ -180,6 +177,80 @@ model Tariff {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  reservations Reservation[]
+
   @@index([propertyId])
   @@index([propertyId, active])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6 — Réservations
+// ---------------------------------------------------------------------------
+
+enum ReservationStatus {
+  CONFIRMED
+  /// Atteignable uniquement par une future phase Locations (arrivée réelle).
+  ARRIVED
+  CANCELLED
+  /// Atteignable uniquement par une future phase Locations (séjour terminé).
+  COMPLETED
+}
+
+/// Vocabulaire déjà donné dans le prompt maître d'origine (section 21) —
+/// réutilisé ici pour `depositMethod`, pas inventé.
+enum PaymentMethod {
+  CASH
+  WAVE
+  ORANGE_MONEY
+  OTHER
+}
+
+/// Une réservation. `amount`, `durationValue` et `durationUnit` sont des
+/// COPIES figées au moment de la création (voir src/app/actions/reservations.ts) :
+/// si le Tariff référencé est modifié plus tard, cette réservation ne doit
+/// jamais être recalculée rétroactivement. `tariffId` reste la référence de
+/// configuration (pour l'affichage du type/libellé), `amount` est le montant
+/// réellement appliqué.
+///
+/// `onDelete: Restrict` sur les trois relations : aucune suppression physique
+/// de Client/Property/Tariff n'est possible depuis l'app tant qu'une
+/// réservation les référence (voir la mise à jour de deleteTariff()).
+model Reservation {
+  id String @id @default(cuid())
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  tariffId String
+  tariff   Tariff @relation(fields: [tariffId], references: [id], onDelete: Restrict)
+
+  /// Jour calendaire de l'arrivée (affichage/filtrage "aujourd'hui/à venir").
+  date DateTime
+
+  /// Instants exacts (date + heure) — utilisés pour le calcul réel de
+  /// disponibilité ; `departureTime` peut retomber le lendemain.
+  arrivalTime   DateTime
+  departureTime DateTime
+
+  /// Copie figée depuis Tariff au moment de la création — jamais recalculée.
+  durationValue Int
+  durationUnit  DurationUnit
+  amount        Int
+
+  deposit       Int            @default(0)
+  depositMethod PaymentMethod?
+
+  status ReservationStatus @default(CONFIRMED)
+  note   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId, status])
+  @@index([clientId])
+  @@index([arrivalTime])
+  @@index([status])
 }

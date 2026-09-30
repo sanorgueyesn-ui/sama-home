@@ -168,3 +168,71 @@ export type TariffFormState =
       message?: string;
     }
   | undefined;
+
+// ---------------------------------------------------------------------------
+// Phase 6 — Réservations
+// ---------------------------------------------------------------------------
+
+export const RESERVATION_STATUS_VALUES = [
+  "CONFIRMED",
+  "ARRIVED",
+  "CANCELLED",
+  "COMPLETED",
+] as const;
+export const PAYMENT_METHOD_VALUES = ["CASH", "WAVE", "ORANGE_MONEY", "OTHER"] as const;
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+/**
+ * NOTE — `durationValue`, `durationUnit` and `amount` are intentionally NOT
+ * part of this schema: they are never trusted from the client. The server
+ * derives them from the authoritative Tariff row at submission time (see
+ * src/app/actions/reservations.ts) — otherwise a tampered request could book
+ * any amount. `status` is also excluded: it only ever changes through the
+ * dedicated `cancelReservation` action, never through this form.
+ */
+export const ReservationSchema = z.object({
+  clientId: z.string().trim().min(1, "Le client est obligatoire."),
+  propertyId: z.string().trim().min(1, "Le logement est obligatoire."),
+  tariffId: z.string().trim().min(1, "Le tarif est obligatoire."),
+  date: z
+    .string()
+    .trim()
+    .min(1, "La date est obligatoire.")
+    .regex(DATE_REGEX, "Date invalide (AAAA-MM-JJ).")
+    .refine((v) => {
+      const d = new Date(`${v}T00:00:00`);
+      return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+    }, "Date invalide."),
+  arrivalTime: z
+    .string()
+    .trim()
+    .min(1, "L'heure d'arrivée est obligatoire.")
+    .regex(TIME_REGEX, "Heure invalide (HH:MM)."),
+  deposit: z
+    .string()
+    .trim()
+    .transform((v) => (v.length === 0 ? "0" : v))
+    .transform(Number)
+    .pipe(
+      z
+        .number("L'acompte doit être un nombre.")
+        .int("L'acompte doit être un nombre entier.")
+        .min(0, "L'acompte ne peut pas être négatif."),
+    ),
+  depositMethod: z
+    .string()
+    .trim()
+    .transform((v) => (v.length === 0 ? undefined : v))
+    .pipe(z.enum(PAYMENT_METHOD_VALUES, "Mode de paiement invalide.").optional())
+    .optional(),
+  note: optionalText(1000, "Note"),
+});
+
+export type ReservationFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof ReservationSchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;

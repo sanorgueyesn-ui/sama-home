@@ -132,6 +132,14 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
       )}
 
       <div className="mt-5 flex flex-col gap-2.5">
+        {property.active && tariffs.some((t) => t.active) ? (
+          <Link
+            href={`/reservations/new?propertyId=${property.id}`}
+            className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+          >
+            Réserver
+          </Link>
+        ) : null}
         <Link
           href={`/logements/${property.id}/edit`}
           className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"

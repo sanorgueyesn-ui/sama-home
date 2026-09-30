@@ -136,16 +136,31 @@ export async function toggleTariffActive(
   return {};
 }
 
-export async function deleteTariff(id: string) {
+/**
+ * Phase 6, Bloc 14: now that Reservation -> Tariff exists, a tariff
+ * referenced by any reservation (of any status, including CANCELLED — the
+ * historical record must still be able to display what it booked) can never
+ * be physically deleted. Deactivation remains the safe, always-available
+ * alternative, which the UI leads with.
+ */
+export async function deleteTariff(id: string): Promise<{ error?: string }> {
   await verifySession();
 
   const existing = await prisma.tariff.findUniqueOrThrow({ where: { id } });
 
-  // Phase 6 TODO: once Reservation can reference a Tariff, check here that
-  // no reservation points to this tariff and refuse deletion if it does
-  // (recommend deactivating instead). Nothing references Tariff yet, so
-  // deletion is always safe today — never bypass this check once it exists.
+  const referencingReservation = await prisma.reservation.findFirst({
+    where: { tariffId: id },
+    select: { id: true },
+  });
+  if (referencingReservation) {
+    return {
+      error:
+        "Ce tarif est référencé par au moins une réservation et ne peut pas être supprimé. Désactivez-le à la place.",
+    };
+  }
+
   await prisma.tariff.delete({ where: { id } });
 
   revalidatePath(`/logements/${existing.propertyId}`);
+  return {};
 }
