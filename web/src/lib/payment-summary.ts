@@ -95,3 +95,47 @@ export async function getRentalPaymentSummary(client: DbClient, rentalId: string
   });
   return summarize(rental.amount, agg._sum.amount ?? 0);
 }
+
+/**
+ * Batch variant of getRentalPaymentSummary for list pages — one query for N
+ * rentals instead of N (same N+1 avoidance pattern as getPropertyStatuses in
+ * src/lib/property-status.ts). Self-caught while working on Phase 9's
+ * non-regression pass over Phase 8: src/app/locations/page.tsx was still
+ * showing `rental.deposit`-derived numbers, which go stale the moment any
+ * "Encaisser" payment happens after creation — see the Phase 9 report.
+ */
+export async function getRentalPaymentSummaries(
+  client: DbClient,
+  rentals: { id: string; amount: number; reservationId: string | null }[],
+): Promise<Map<string, PaymentSummary>> {
+  if (rentals.length === 0) return new Map();
+  const rentalIds = rentals.map((r) => r.id);
+  const reservationIds = rentals
+    .map((r) => r.reservationId)
+    .filter((id): id is string => id !== null);
+
+  const payments = await client.payment.findMany({
+    where: {
+      OR: [
+        { rentalId: { in: rentalIds } },
+        ...(reservationIds.length > 0 ? [{ reservationId: { in: reservationIds } }] : []),
+      ],
+    },
+    select: { rentalId: true, reservationId: true, amount: true },
+  });
+
+  const paidByRental = new Map<string, number>();
+  const paidByReservation = new Map<string, number>();
+  for (const p of payments) {
+    if (p.rentalId) paidByRental.set(p.rentalId, (paidByRental.get(p.rentalId) ?? 0) + p.amount);
+    if (p.reservationId) paidByReservation.set(p.reservationId, (paidByReservation.get(p.reservationId) ?? 0) + p.amount);
+  }
+
+  const result = new Map<string, PaymentSummary>();
+  for (const r of rentals) {
+    const totalPaid =
+      (paidByRental.get(r.id) ?? 0) + (r.reservationId ? paidByReservation.get(r.reservationId) ?? 0 : 0);
+    result.set(r.id, summarize(r.amount, totalPaid));
+  }
+  return result;
+}

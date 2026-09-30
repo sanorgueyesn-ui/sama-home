@@ -54,6 +54,12 @@ export default async function Home() {
         >
           Locations
         </Link>
+        <Link
+          href="/depenses"
+          className="h-11 rounded-xl bg-navy px-5 text-sm font-bold text-white flex items-center"
+        >
+          Dépenses
+        </Link>
       </div>
       <form action={logout}>
         <button

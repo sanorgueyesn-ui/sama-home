@@ -6,6 +6,8 @@ import { RentalStatusBadge } from "./status-badge";
 import { RentalTimeIndicator } from "./time-indicator";
 import { listRentals, type RentalTimeFilter } from "@/lib/rentals-data";
 import { listAllPropertiesForSelect } from "@/lib/properties-data";
+import { getRentalPaymentSummaries } from "@/lib/payment-summary";
+import { prisma } from "@/lib/prisma";
 
 const TIME_VALUES: RentalTimeFilter[] = ["active", "completed", "cancelled", "all"];
 
@@ -27,6 +29,9 @@ export default async function LocationsPage(props: PageProps<"/locations">) {
     listRentals({ timeFilter, propertyId: propertyFilter, query }),
     listAllPropertiesForSelect(),
   ]);
+  // Real Payment-based totals (never the raw, potentially-stale
+  // `deposit` field — see the Phase 9 report for why this card was fixed).
+  const paymentSummaries = await getRentalPaymentSummaries(prisma, items);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 pt-6 pb-10">
@@ -73,7 +78,7 @@ export default async function LocationsPage(props: PageProps<"/locations">) {
       ) : (
         <div className="mt-4 flex flex-col gap-3">
           {items.map((r) => {
-            const reste = Math.max(r.amount - r.deposit, 0);
+            const summary = paymentSummaries.get(r.id);
             return (
               <Link key={r.id} href={`/locations/${r.id}`}>
                 <Card className="p-4">
@@ -92,7 +97,8 @@ export default async function LocationsPage(props: PageProps<"/locations">) {
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <div className="text-xs font-semibold text-navy/60">
-                      {fmtFcfa(r.amount)} · Acompte {fmtFcfa(r.deposit)} · Reste {fmtFcfa(reste)}
+                      {fmtFcfa(r.amount)} · Payé {fmtFcfa(summary?.totalPaid ?? 0)} · Reste{" "}
+                      {fmtFcfa(summary?.remaining ?? r.amount)}
                     </div>
                   </div>
                   {r.status === "ACTIVE" ? (

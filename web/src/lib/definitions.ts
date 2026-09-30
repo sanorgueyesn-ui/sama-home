@@ -272,3 +272,50 @@ export type PaymentFormState =
       message?: string;
     }
   | undefined;
+
+// ---------------------------------------------------------------------------
+// Phase 9 — Dépenses
+// ---------------------------------------------------------------------------
+
+export const EXPENSE_CATEGORY_VALUES = [
+  "RENT",
+  "ELECTRICITY",
+  "WATER",
+  "INTERNET",
+  "CLEANING",
+  "MAINTENANCE",
+  "REPAIR",
+  "SALARY",
+  "PURCHASE",
+  "OTHER",
+] as const;
+
+/**
+ * NOTE — `paidAt` is intentionally NOT part of this schema: it is always
+ * `new Date()` server-side (Bloc 7), same rule as Payment.paidAt. No UI
+ * control exists to pick a historical date for V1.
+ */
+export const ExpenseSchema = z.object({
+  category: z.enum(EXPENSE_CATEGORY_VALUES, "Catégorie invalide."),
+  amount: z
+    .string()
+    .trim()
+    .min(1, "Le montant est obligatoire.")
+    .transform(Number)
+    .pipe(
+      z
+        .number("Le montant doit être un nombre.")
+        .int("Le montant doit être un nombre entier (FCFA, sans centimes).")
+        .min(1, "Le montant doit être supérieur à 0."),
+    ),
+  method: z.enum(PAYMENT_METHOD_VALUES, "Mode de paiement invalide."),
+  reference: optionalText(120, "Référence"),
+  note: optionalText(500, "Note"),
+});
+
+export type ExpenseFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof ExpenseSchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;

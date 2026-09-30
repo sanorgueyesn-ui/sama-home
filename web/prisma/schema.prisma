@@ -429,3 +429,57 @@ model Payment {
   @@index([reservationId])
   @@index([rentalId])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 9 — Dépenses (Expense)
+// ---------------------------------------------------------------------------
+
+enum ExpenseCategory {
+  RENT
+  ELECTRICITY
+  WATER
+  INTERNET
+  CLEANING
+  MAINTENANCE
+  REPAIR
+  SALARY
+  PURCHASE
+  OTHER
+}
+
+/// Argent SORTANT de l'activité — jamais mélangé avec `Payment` (argent
+/// ENTRANT), voir Bloc 1 de la Phase 9. Pas de relation vers Property : une
+/// dépense (loyer, électricité, salaire...) concerne généralement toute la
+/// résidence, pas un logement précis, et rien dans le périmètre de la Phase
+/// 9 ne demande de filtrer/imputer une dépense à un logement — inventer
+/// cette relation aurait été une décision métier non demandée (Bloc 3).
+///
+/// Comme `Payment`, `method` réutilise l'enum `PaymentMethod` existant (même
+/// vocabulaire technique — "comment l'argent a bougé" — appliqué ici au sens
+/// sortant plutôt qu'entrant), aucune deuxième enum créée (Bloc 6).
+///
+/// Historique, jamais modifiée ni supprimée physiquement après création
+/// (Bloc 15/16) : aucune action de modification/suppression n'existe dans
+/// le code applicatif pour ce modèle.
+model Expense {
+  id String @id @default(cuid())
+
+  category ExpenseCategory
+  amount   Int
+
+  /// Toujours l'heure serveur au moment de la création (Bloc 7) — jamais une
+  /// valeur envoyée par le navigateur. Aucune UI ne permet de saisir une
+  /// dépense à une date historique pour V1.
+  paidAt DateTime @default(now())
+
+  method    PaymentMethod
+  reference String?
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paidAt])
+  @@index([category])
+  @@index([method])
+}
