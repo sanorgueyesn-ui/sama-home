@@ -50,3 +50,17 @@ export const getCurrentUser = cache(async () => {
 
   return user;
 });
+
+/**
+ * Phase 11, Bloc 11 — "un simple masquage d'un bouton dans l'interface ne
+ * constitue pas une protection" : every ADMIN-only page and action must call
+ * this (or perform the equivalent check) server-side. Redirects home rather
+ * than to /login, since the user IS authenticated — they just lack the role.
+ */
+export const requireAdmin = cache(async () => {
+  const user = await getCurrentUser();
+  if (user.role !== "ADMIN") {
+    redirect("/");
+  }
+  return user;
+});

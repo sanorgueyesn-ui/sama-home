@@ -319,3 +319,134 @@ export type ExpenseFormState =
       message?: string;
     }
   | undefined;
+
+// ---------------------------------------------------------------------------
+// Phase 11 — Paramètres
+// ---------------------------------------------------------------------------
+
+/**
+ * Bloc 5 — "Informations générales" de l'établissement. Réutilise PHONE_REGEX
+ * (défini plus haut pour ClientSchema, Phase 3) — pas de deuxième règle de
+ * téléphone inventée (Bloc 16 : "format téléphone si une validation existe
+ * déjà").
+ */
+export const SettingsSchema = z.object({
+  establishmentName: z
+    .string()
+    .trim()
+    .min(1, "Le nom de l'établissement est obligatoire.")
+    .max(120, "Le nom : 120 caractères maximum."),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Le téléphone est obligatoire.")
+    .transform((v) => v.replace(/[\s.-]/g, ""))
+    .pipe(z.string().regex(PHONE_REGEX, "Numéro invalide : 8 à 15 chiffres, un « + » initial optionnel.")),
+  secondaryPhone: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/[\s.-]/g, ""))
+    .transform((v) => (v.length === 0 ? undefined : v))
+    .pipe(z.string().regex(PHONE_REGEX, "Numéro invalide : 8 à 15 chiffres, un « + » initial optionnel.").optional())
+    .optional(),
+  address: z
+    .string()
+    .trim()
+    .min(1, "L'adresse est obligatoire.")
+    .max(240, "Adresse : 240 caractères maximum."),
+  email: z
+    .string()
+    .trim()
+    .max(180, "Email : 180 caractères maximum.")
+    .transform((v) => (v.length === 0 ? undefined : v))
+    .pipe(z.email("Email invalide.").optional())
+    .optional(),
+  description: optionalText(500, "Description"),
+});
+
+export type SettingsFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof SettingsSchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;
+
+/**
+ * Bloc 10/16 — aucune règle de force de mot de passe n'existait avant cette
+ * phase (le script de seed ne vérifie que la présence d'une valeur). 8
+ * caractères minimum est une décision prise ici, pas une règle préexistante
+ * réutilisée — signalée dans le rapport plutôt que silencieusement choisie.
+ */
+const NEW_PASSWORD_MIN = 8;
+const newPasswordField = () =>
+  z
+    .string()
+    .min(1, "Le nouveau mot de passe est obligatoire.")
+    .min(NEW_PASSWORD_MIN, `Le mot de passe doit contenir au moins ${NEW_PASSWORD_MIN} caractères.`);
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Le mot de passe actuel est obligatoire."),
+    newPassword: newPasswordField(),
+    confirmPassword: z.string().min(1, "La confirmation est obligatoire."),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    error: "La confirmation ne correspond pas au nouveau mot de passe.",
+    path: ["confirmPassword"],
+  });
+
+export type ChangePasswordFormState =
+  | {
+      errors?: Partial<Record<"currentPassword" | "newPassword" | "confirmPassword", string[]>>;
+      message?: string;
+    }
+  | undefined;
+
+export const USER_ROLE_VALUES = ["ADMIN", "GESTIONNAIRE"] as const;
+
+export const CreateUserSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(1, "L'identifiant est obligatoire.")
+    .max(60, "Identifiant : 60 caractères maximum."),
+  name: z.string().trim().min(1, "Le nom est obligatoire.").max(120, "Le nom : 120 caractères maximum."),
+  password: newPasswordField(),
+  role: z.enum(USER_ROLE_VALUES, "Rôle invalide."),
+});
+
+export type CreateUserFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof CreateUserSchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;
+
+export const UpdateUserSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est obligatoire.").max(120, "Le nom : 120 caractères maximum."),
+  role: z.enum(USER_ROLE_VALUES, "Rôle invalide."),
+});
+
+export type UpdateUserFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof UpdateUserSchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;
+
+export const ResetPasswordSchema = z
+  .object({
+    newPassword: newPasswordField(),
+    confirmPassword: z.string().min(1, "La confirmation est obligatoire."),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    error: "La confirmation ne correspond pas au nouveau mot de passe.",
+    path: ["confirmPassword"],
+  });
+
+export type ResetPasswordFormState =
+  | {
+      errors?: Partial<Record<"newPassword" | "confirmPassword", string[]>>;
+      message?: string;
+    }
+  | undefined;

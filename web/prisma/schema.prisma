@@ -483,3 +483,36 @@ model Expense {
   @@index([category])
   @@index([method])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 11 — Paramètres (Settings)
+// ---------------------------------------------------------------------------
+
+/// Informations générales de l'établissement (Bloc 4/5). Nécessaire :
+/// aucun modèle existant ne porte ces données (Property est par logement,
+/// pas pour la résidence dans son ensemble).
+///
+/// Singleton délibéré : un seul enregistrement, toujours lu/écrit via
+/// `id = "singleton"` (voir src/lib/settings-data.ts et
+/// src/app/actions/settings.ts). Préféré à un modèle générique
+/// `Setting{key,value}` — les champs sont fixes, connus et structurés
+/// (Bloc 15 demande explicitement d'éviter un KV générique dans ce cas).
+///
+/// Pas de champ logo : aucune infrastructure d'upload de fichier n'existe
+/// dans le projet (Property.photo lui-même n'est qu'une URL collée, jamais
+/// un vrai stockage) ; les logos officiels restent des fichiers statiques
+/// dans public/brand/, affichés tels quels — voir le rapport Phase 11,
+/// section 10, pour la décision documentée (Bloc 17).
+model Settings {
+  id String @id @default(cuid())
+
+  establishmentName String
+  phone             String
+  secondaryPhone    String?
+  address           String
+  email             String?
+  description       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

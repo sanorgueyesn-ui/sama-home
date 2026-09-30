@@ -69,6 +69,7 @@ export default async function Dashboard() {
           { href: "/reservations", label: "Réservations" },
           { href: "/locations", label: "Locations" },
           { href: "/depenses", label: "Dépenses" },
+          { href: "/settings", label: "Paramètres" },
         ].map((m) => (
           <Link
             key={m.href}
