@@ -116,6 +116,70 @@ model Property {
   // Pas de relation Tarif ici : elle appartient à la Phase 5. Elle ajoutera
   // `propertyId` côté Tariff sans migration supplémentaire sur Property.
 
+  tariffs Tariff[]
+
   @@index([type])
   @@index([active])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Tarifs
+// ---------------------------------------------------------------------------
+
+/// Catégorie tarifaire (vocabulaire métier, français). Base V1 imposée par le
+/// prompt maître — ne pas en ajouter sans le signaler d'abord.
+enum TariffType {
+  HEURE
+  NUIT
+  JOUR
+  SEMAINE
+  MOIS
+}
+
+/// Unité de la durée (vocabulaire technique, anglais — délibérément distinct
+/// de TariffType). Ce découplage EST la règle métier critique de la Phase 5 :
+/// une durée de 24 HOURS n'est pas automatiquement un tarif JOUR, et un tarif
+/// JOUR peut être exprimé en 1 DAY ou en 24 HOURS selon le choix du
+/// gestionnaire. Aucune contrainte ne force un couplage type/unité.
+enum DurationUnit {
+  HOURS
+  NIGHT
+  DAY
+  WEEK
+  MONTH
+}
+
+/// Un tarif appartient toujours à un logement. `amount` en FCFA entier (pas
+/// de sous-unité dans cette devise) : jamais de Float JS, jamais de Decimal
+/// inutile pour une devise qui n'a pas de centimes.
+///
+/// Pas de contrainte d'unicité en base sur (propertyId, type, durationValue,
+/// durationUnit) : elle casserait l'historique (un ancien tarif désactivé et
+/// son remplaçant actif partagent forcément cette combinaison). La
+/// prévention des doublons actifs est applicative — voir
+/// src/app/actions/tariffs.ts.
+///
+/// Pas de suppression automatique : `active` est le mécanisme d'archivage
+/// prévu pour que la Phase 6 (Réservations) puisse un jour référencer un
+/// tarif historique sans qu'il ait disparu. La suppression physique reste
+/// possible ici (rien ne référence encore Tariff) mais devra être bloquée
+/// par la Phase 6 dès qu'une réservation peut pointer vers un tarif — voir
+/// le commentaire dans deleteTariff().
+model Tariff {
+  id       String @id @default(cuid())
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  propertyId String
+
+  label         String
+  type          TariffType
+  durationValue Int
+  durationUnit  DurationUnit
+  amount        Int
+  active        Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([propertyId, active])
 }

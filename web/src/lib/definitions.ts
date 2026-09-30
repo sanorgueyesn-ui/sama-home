@@ -118,3 +118,53 @@ export type PropertyFormState =
       message?: string;
     }
   | undefined;
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Tarifs
+// ---------------------------------------------------------------------------
+
+export const TARIFF_TYPE_VALUES = ["HEURE", "NUIT", "JOUR", "SEMAINE", "MOIS"] as const;
+export const DURATION_UNIT_VALUES = ["HOURS", "NIGHT", "DAY", "WEEK", "MONTH"] as const;
+
+export const TariffSchema = z.object({
+  label: z
+    .string()
+    .trim()
+    .min(1, "Le libellé est obligatoire.")
+    .max(60, "Le libellé : 60 caractères maximum."),
+  type: z.enum(TARIFF_TYPE_VALUES, "Type de tarif invalide."),
+  durationValue: z
+    .string()
+    .trim()
+    .min(1, "La durée est obligatoire.")
+    .transform((v) => Number(v))
+    .pipe(
+      z
+        .number("La durée doit être un nombre.")
+        .int("La durée doit être un nombre entier.")
+        .min(1, "La durée doit être supérieure à 0.")
+        .max(365, "Durée trop grande (max 365)."),
+    ),
+  durationUnit: z.enum(DURATION_UNIT_VALUES, "Unité de durée invalide."),
+  // FCFA entier — voir le commentaire sur `model Tariff` dans schema.prisma.
+  amount: z
+    .string()
+    .trim()
+    .min(1, "Le montant est obligatoire.")
+    .transform((v) => Number(v))
+    .pipe(
+      z
+        .number("Le montant doit être un nombre.")
+        .int("Le montant doit être un nombre entier (FCFA, sans centimes).")
+        .min(1, "Le montant doit être supérieur à 0.")
+        .max(100_000_000, "Montant trop élevé."),
+    ),
+  active: z.boolean(),
+});
+
+export type TariffFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof TariffSchema>, string[]>>;
+      message?: string;
+    }
+  | undefined;

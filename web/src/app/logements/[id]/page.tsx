@@ -4,8 +4,14 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/app/logements/status-badge";
 import { PropertyPhoto } from "@/app/logements/property-photo";
 import { ToggleActiveButton } from "./toggle-active-button";
+import { TariffRowActions } from "./tariffs/tariff-row-actions";
 import { getPropertyById } from "@/lib/properties-data";
+import { listTariffsForProperty } from "@/lib/tariffs-data";
 import { computePropertyStatus } from "@/lib/property-status";
+
+function formatFcfa(amount: number) {
+  return `${amount.toLocaleString("fr-FR").replace(/ |,/g, " ")} FCFA`;
+}
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -18,7 +24,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default async function PropertyDetailPage(props: PageProps<"/logements/[id]">) {
   const { id } = await props.params;
-  const { created, updated } = await props.searchParams;
+  const { created, updated, tariffCreated, tariffUpdated } = await props.searchParams;
 
   const property = await getPropertyById(id);
   if (!property) {
@@ -26,6 +32,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
   }
 
   const status = computePropertyStatus(property);
+  const tariffs = await listTariffsForProperty(property.id);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
@@ -52,6 +59,16 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           Modifications enregistrées.
         </p>
       ) : null}
+      {tariffCreated ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Tarif créé avec succès.
+        </p>
+      ) : null}
+      {tariffUpdated ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Tarif modifié avec succès.
+        </p>
+      ) : null}
 
       <PropertyPhoto photo={property.photo} type={property.type} className="h-44 w-full rounded-2xl" />
 
@@ -71,9 +88,48 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         />
       </Card>
 
-      <p className="mt-4 text-xs font-medium text-navy/40">
-        Les tarifs seront gérés à partir de la Phase 5.
-      </p>
+      <div className="mt-5 flex items-center justify-between">
+        <p className="text-xs font-bold tracking-wide text-navy/50">TARIFS</p>
+        <Link href={`/logements/${property.id}/tariffs/new`} className="text-xs font-bold text-coral">
+          + Ajouter un tarif
+        </Link>
+      </div>
+
+      {tariffs.length === 0 ? (
+        <Card className="mt-2 px-4 py-6 text-center">
+          <p className="text-sm font-semibold text-navy">Aucun tarif pour ce logement</p>
+          <p className="mt-1 text-xs text-navy/60">
+            Ajoutez au moins un tarif pour pouvoir proposer ce logement.
+          </p>
+        </Card>
+      ) : (
+        <Card className="mt-2 px-4">
+          {tariffs.map((tariff) => (
+            <div
+              key={tariff.id}
+              className="flex items-center justify-between gap-3 border-b border-[#E7EAEE] py-3 last:border-0"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/logements/${property.id}/tariffs/${tariff.id}/edit`}
+                    className="truncate text-sm font-bold text-navy underline-offset-2 hover:underline"
+                  >
+                    {tariff.label}
+                  </Link>
+                  {!tariff.active ? (
+                    <span className="shrink-0 rounded-full bg-neutral-bg px-2 py-0.5 text-[10px] font-bold text-neutral">
+                      Inactif
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-0.5 text-xs font-semibold text-navy/60">{formatFcfa(tariff.amount)}</p>
+              </div>
+              <TariffRowActions id={tariff.id} active={tariff.active} />
+            </div>
+          ))}
+        </Card>
+      )}
 
       <div className="mt-5 flex flex-col gap-2.5">
         <Link
