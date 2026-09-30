@@ -63,8 +63,8 @@ export function ExpenseFilters({
 
   return (
     <div className="mt-4">
-      <div className="flex h-12 items-center gap-2.5 rounded-xl bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)]">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7A87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)] focus-within:border-navy">
+        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7A87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
@@ -73,6 +73,7 @@ export function ExpenseFilters({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher par référence ou note..."
+          aria-label="Rechercher une dépense par référence ou note"
           className="flex-1 bg-transparent text-sm text-navy outline-none placeholder:text-navy/40"
         />
       </div>
@@ -96,7 +97,8 @@ export function ExpenseFilters({
         <select
           value={defaultCategory}
           onChange={(e) => pushParams(query, defaultPeriod, e.target.value, defaultMethod)}
-          className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none"
+          aria-label="Filtrer par catégorie"
+          className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none focus:border-navy"
         >
           <option value="">Toutes catégories</option>
           {CATEGORY_OPTIONS.map((c) => (
@@ -108,7 +110,8 @@ export function ExpenseFilters({
         <select
           value={defaultMethod}
           onChange={(e) => pushParams(query, defaultPeriod, defaultCategory, e.target.value)}
-          className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none"
+          aria-label="Filtrer par mode de paiement"
+          className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none focus:border-navy"
         >
           <option value="">Tous les modes</option>
           {METHOD_OPTIONS.map((m) => (

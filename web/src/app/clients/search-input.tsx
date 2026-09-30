@@ -21,8 +21,9 @@ export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
   }, [value]);
 
   return (
-    <div className="flex h-12 items-center gap-2.5 rounded-xl bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)]">
+    <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)] focus-within:border-navy">
       <svg
+        aria-hidden="true"
         width="17"
         height="17"
         viewBox="0 0 24 24"
@@ -40,6 +41,7 @@ export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Rechercher un client (nom ou téléphone)..."
+        aria-label="Rechercher un client par nom ou téléphone"
         className="flex-1 bg-transparent text-sm text-navy outline-none placeholder:text-navy/40"
       />
     </div>
