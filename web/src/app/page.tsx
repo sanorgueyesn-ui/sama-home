@@ -1,6 +1,12 @@
 import Image from "next/image";
+import { getCurrentUser } from "@/lib/dal";
+import { logout } from "@/app/actions/auth";
 
-export default function Home() {
+export default async function Home() {
+  // Server-side, database-backed check — see src/lib/dal.ts. Redirects to
+  // /login on its own if there is no valid session.
+  const user = await getCurrentUser();
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-24 text-center">
       <Image
@@ -16,9 +22,20 @@ export default function Home() {
           SAMA HOME
         </h1>
         <p className="mt-1 text-sm font-medium text-navy/60">
-          Fondations du projet en place — écrans à venir par phase.
+          Connecté en tant que {user.name} ({user.role}).
+        </p>
+        <p className="mt-1 text-xs font-medium text-navy/40">
+          Fondations + authentification en place — écrans à venir par phase.
         </p>
       </div>
+      <form action={logout}>
+        <button
+          type="submit"
+          className="h-11 rounded-xl border border-navy/15 px-5 text-sm font-bold text-navy"
+        >
+          Déconnexion
+        </button>
+      </form>
     </div>
   );
 }

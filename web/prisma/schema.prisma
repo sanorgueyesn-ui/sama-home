@@ -11,3 +11,38 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ---------------------------------------------------------------------------
+// Phase 2 — Authentification
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  GESTIONNAIRE
+}
+
+model User {
+  id           String    @id @default(cuid())
+  /// Identifiant de connexion (voir écran "Splash / Connexion" de la maquette)
+  username     String    @unique
+  passwordHash String
+  name         String
+  role         UserRole  @default(GESTIONNAIRE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions Session[]
+}
+
+/// Session serveur (DB-backed) : la valeur en base fait autorité, le cookie
+/// n'est qu'une référence signée vers elle (voir src/lib/session.ts).
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
