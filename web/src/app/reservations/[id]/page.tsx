@@ -5,11 +5,12 @@ import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { CancelButton } from "./cancel-button";
 import { CheckInButton } from "./check-in-button";
 import { getReservationById } from "@/lib/reservations-data";
+import { listPaymentsForReservation } from "@/lib/payments-data";
+import { getReservationPaymentSummary } from "@/lib/payment-summary";
+import { prisma } from "@/lib/prisma";
 import { formatDuration } from "@/lib/duration";
-
-function fmtFcfa(amount: number) {
-  return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
-}
+import { PaymentSummaryCard } from "@/components/payments/payment-summary-card";
+import { PaymentHistory } from "@/components/payments/payment-history";
 
 function fmtDateTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -19,13 +20,6 @@ function fmtDateTime(d: Date) {
     minute: "2-digit",
   }).format(d);
 }
-
-const PAYMENT_LABELS: Record<string, string> = {
-  CASH: "Espèces",
-  WAVE: "Wave",
-  ORANGE_MONEY: "Orange Money",
-  OTHER: "Autre",
-};
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -38,15 +32,19 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default async function ReservationDetailPage(props: PageProps<"/reservations/[id]">) {
   const { id } = await props.params;
-  const { created, updated } = await props.searchParams;
+  const { created, updated, paid } = await props.searchParams;
 
   const reservation = await getReservationById(id);
   if (!reservation) {
     notFound();
   }
 
-  const reste = Math.max(reservation.amount - reservation.deposit, 0);
+  const [summary, payments] = await Promise.all([
+    getReservationPaymentSummary(prisma, id),
+    listPaymentsForReservation(id),
+  ]);
   const canModify = reservation.status === "CONFIRMED";
+  const canPay = canModify && summary.remaining > 0;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
@@ -74,6 +72,11 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
           Modifications enregistrées.
         </p>
       ) : null}
+      {paid ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Encaissement enregistré.
+        </p>
+      ) : null}
 
       <Card className="px-4">
         <Row label="CLIENT" value={reservation.client.name} />
@@ -85,14 +88,9 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
         <Row label="DÉPART PRÉVU" value={fmtDateTime(reservation.departureTime)} />
       </Card>
 
-      <Card className="mt-3 px-4">
-        <Row label="MONTANT" value={fmtFcfa(reservation.amount)} />
-        <Row label="ACOMPTE" value={fmtFcfa(reservation.deposit)} />
-        <Row label="RESTE" value={fmtFcfa(reste)} />
-        {reservation.depositMethod ? (
-          <Row label="MODE DE PAIEMENT" value={PAYMENT_LABELS[reservation.depositMethod] ?? reservation.depositMethod} />
-        ) : null}
-      </Card>
+      <PaymentSummaryCard summary={summary} />
+
+      <PaymentHistory payments={payments} />
 
       <Card className="mt-3 px-4">
         <Row label="NOTE" value={reservation.note ?? "—"} />
@@ -101,6 +99,14 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
 
       {canModify ? (
         <div className="mt-5 flex flex-col gap-2.5">
+          {canPay ? (
+            <Link
+              href={`/reservations/${reservation.id}/pay`}
+              className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+            >
+              Encaisser
+            </Link>
+          ) : null}
           <CheckInButton id={reservation.id} />
           <Link
             href={`/reservations/${reservation.id}/edit`}

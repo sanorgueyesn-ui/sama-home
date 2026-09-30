@@ -148,6 +148,24 @@ export async function createReservation(
             note,
           },
         });
+        // Phase 8, Bloc 1/5: the initial acompte is now ALSO represented as
+        // a real Payment row, atomically with the reservation itself — this
+        // is what makes it the single source of truth for totalPaid from
+        // now on (see src/lib/payment-summary.ts), while `deposit` itself
+        // stays untouched for historical readability (Bloc 2). No Payment is
+        // created for deposit = 0 (nothing was actually collected).
+        if (deposit > 0) {
+          await tx.payment.create({
+            data: {
+              reservationId: reservation.id,
+              amount: deposit,
+              // depositMethod is optional on this form (deposit > 0 with no
+              // method chosen is an existing, allowed case) — OTHER is the
+              // honest "unspecified" fallback, never a guessed method.
+              method: depositMethod ?? "OTHER",
+            },
+          });
+        }
         return reservation.id;
       },
       { isolationLevel: "Serializable" },
@@ -190,7 +208,15 @@ export async function updateReservation(
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
-  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note } = parsed.data;
+  // Phase 8, Bloc 1: deposit/depositMethod are intentionally NOT taken from
+  // this form anymore — they're frozen at whatever they were at creation
+  // (already converted to a Payment row then, see createReservation). Once
+  // real encaissements exist, silently overwriting the raw `deposit` column
+  // from an edit form would desync it from the actual Payment history, which
+  // is the single source of truth for money from now on (Bloc 5/6). New
+  // encaissements go exclusively through "Encaisser" (Bloc 13). The two
+  // fields are also hidden from the edit form itself — see reservation-form.tsx.
+  const { clientId, propertyId, tariffId, date, arrivalTime, note } = parsed.data;
 
   const [client, property, tariff] = await Promise.all([
     prisma.client.findUnique({ where: { id: clientId } }),
@@ -220,8 +246,11 @@ export async function updateReservation(
 
   const departureDateTime = computeDepartureTime(arrivalDateTime, durationValue, durationUnit);
 
-  if (deposit > amount) {
-    return { errors: { deposit: ["L'acompte ne peut pas dépasser le montant total."] } };
+  if (existing.deposit > amount) {
+    return {
+      message:
+        "L'acompte déjà encaissé pour cette réservation dépasse le montant de ce tarif — choisissez un autre tarif.",
+    };
   }
 
   try {
@@ -248,8 +277,7 @@ export async function updateReservation(
             durationValue,
             durationUnit,
             amount,
-            deposit,
-            depositMethod: depositMethod ?? null,
+            // deposit/depositMethod deliberately omitted — frozen (see above).
             note,
           },
         });

@@ -5,7 +5,12 @@ import { RentalStatusBadge } from "@/app/locations/status-badge";
 import { RentalTimeIndicator } from "@/app/locations/time-indicator";
 import { CompleteButton, CancelRentalButton } from "./action-buttons";
 import { getRentalById } from "@/lib/rentals-data";
+import { listPaymentsForRental } from "@/lib/payments-data";
+import { getRentalPaymentSummary } from "@/lib/payment-summary";
+import { prisma } from "@/lib/prisma";
 import { formatDuration } from "@/lib/duration";
+import { PaymentSummaryCard } from "@/components/payments/payment-summary-card";
+import { PaymentHistory } from "@/components/payments/payment-history";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -25,16 +30,26 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default async function RentalDetailPage(props: PageProps<"/locations/[id]">) {
   const { id } = await props.params;
-  const { created, extended } = await props.searchParams;
+  const { created, extended, paid } = await props.searchParams;
 
   const rental = await getRentalById(id);
   if (!rental) {
     notFound();
   }
 
+  const [summary, payments] = await Promise.all([
+    getRentalPaymentSummary(prisma, id),
+    listPaymentsForRental(id),
+  ]);
   const now = new Date();
-  const reste = Math.max(rental.amount - rental.deposit, 0);
   const isActive = rental.status === "ACTIVE";
+  const canPay = isActive && summary.remaining > 0;
+  // Display-only breakdown (Bloc 14: "Montant initial, Extensions, Total
+  // dû") — never stored: Rental.amount is already the running total
+  // (initial + every extension, see payment-summary.ts), so "montant
+  // initial" is derived here by subtracting the extensions we already have.
+  const extensionsTotal = rental.extensions.reduce((sum, e) => sum + e.amount, 0);
+  const initialAmount = rental.amount - extensionsTotal;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
@@ -62,6 +77,11 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           Prolongation enregistrée.
         </p>
       ) : null}
+      {paid ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Encaissement enregistré.
+        </p>
+      ) : null}
 
       {isActive ? (
         <div className="mb-4">
@@ -85,12 +105,6 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         )}
       </Card>
 
-      <Card className="mt-3 px-4">
-        <Row label="MONTANT TOTAL" value={fmtFcfa(rental.amount)} />
-        <Row label="ACOMPTE" value={fmtFcfa(rental.deposit)} />
-        <Row label="RESTE" value={fmtFcfa(reste)} />
-      </Card>
-
       {rental.extensions.length > 0 ? (
         <Card className="mt-3 px-4">
           <p className="pt-3 text-[11px] font-bold text-navy/50">PROLONGATIONS</p>
@@ -103,6 +117,20 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         </Card>
       ) : null}
 
+      <PaymentSummaryCard
+        summary={summary}
+        extraRows={
+          rental.extensions.length > 0
+            ? [
+                { label: "MONTANT INITIAL", value: fmtFcfa(initialAmount) },
+                { label: "EXTENSIONS", value: `+${fmtFcfa(extensionsTotal)}` },
+              ]
+            : undefined
+        }
+      />
+
+      <PaymentHistory payments={payments} />
+
       {rental.note ? (
         <Card className="mt-3 px-4">
           <Row label="NOTE" value={rental.note} />
@@ -111,6 +139,14 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
       {isActive ? (
         <div className="mt-5 flex flex-col gap-2.5">
+          {canPay ? (
+            <Link
+              href={`/locations/${rental.id}/pay`}
+              className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+            >
+              Encaisser
+            </Link>
+          ) : null}
           <Link
             href={`/locations/${rental.id}/extend`}
             className="flex h-14 items-center justify-center rounded-2xl border border-navy/15 text-sm font-extrabold text-navy"

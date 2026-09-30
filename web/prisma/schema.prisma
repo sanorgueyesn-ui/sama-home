@@ -257,6 +257,11 @@ model Reservation {
   /// l'origine de la location, elle n'est jamais supprimée.
   rental Rental?
 
+  /// Paiements encaissés PENDANT que ce contexte était une réservation
+  /// (avant toute arrivée). Voir le commentaire sur `model Payment` pour la
+  /// règle anti double-comptage une fois qu'une Rental existe.
+  payments Payment[]
+
   @@index([propertyId, status])
   @@index([clientId])
   @@index([arrivalTime])
@@ -335,6 +340,16 @@ model Rental {
 
   extensions RentalExtension[]
 
+  /// Paiements encaissés PENDANT que ce contexte était une location (après
+  /// l'arrivée). Pour une location née d'une réservation, le total réel payé
+  /// additionne CES paiements-ci ET ceux de la réservation d'origine — voir
+  /// src/lib/payment-summary.ts. `Rental.deposit` reste un champ historique
+  /// figé (Bloc 2 de la Phase 8) : pour une location née d'un check-in, ce
+  /// n'est qu'une COPIE de `Reservation.deposit`, jamais un paiement
+  /// distinct — donc jamais reconverti en Payment séparément (voir
+  /// prisma/backfill-payments.ts).
+  payments Payment[]
+
   @@index([propertyId, status])
   @@index([clientId])
   @@index([status])
@@ -356,5 +371,61 @@ model RentalExtension {
 
   createdAt DateTime @default(now())
 
+  @@index([rentalId])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 8 — Paiements (Payment)
+// ---------------------------------------------------------------------------
+
+/// Un encaissement réel, saisi une fois, jamais modifié ni supprimé après
+/// coup (Bloc 16) — la seule correction prévue pour V1 est une phase
+/// financière ultérieure (contre-écriture), volontairement hors périmètre
+/// ici.
+///
+/// EXACTEMENT UN des deux (reservationId, rentalId) doit être renseigné —
+/// jamais les deux, jamais aucun. Contrainte appliquée à la fois côté
+/// application (src/app/actions/payments.ts) ET côté base (contrainte CHECK
+/// ajoutée à la migration `add_payments`) : Bloc 4 demandait "au minimum un
+/// contexte valide", mais autoriser les deux à la fois romprait justement la
+/// règle anti double-comptage que ce même bloc demande de préserver (un
+/// paiement rattaché simultanément à une réservation ET à une location
+/// apparaîtrait dans les deux résumés financiers) — durcir "au minimum" en
+/// "exactement" est documenté ici plutôt que décidé silencieusement.
+///
+/// Pas de suppression physique de Reservation/Rental tant qu'un paiement les
+/// référence (onDelete: Restrict), comme pour toutes les autres relations du
+/// projet vers ces deux modèles.
+///
+/// Rattachement réservation → location (Bloc 19) : un paiement encaissé
+/// AVANT l'arrivée reste lié à `reservationId` pour toujours (jamais
+/// migré/déplacé vers `rentalId` au moment du check-in). Le total payé
+/// d'une location née d'une réservation additionne donc les deux ensembles
+/// (voir src/lib/payment-summary.ts), sans qu'aucune ligne ne soit jamais
+/// comptée dans les deux totaux à la fois.
+model Payment {
+  id String @id @default(cuid())
+
+  reservationId String?
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  rentalId String?
+  rental   Rental? @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+
+  amount Int
+  method PaymentMethod
+
+  /// Toujours l'heure serveur au moment de l'encaissement (Bloc 11) — jamais
+  /// une valeur envoyée par le navigateur. Aucune UI ne permet de saisir une
+  /// date historique pour V1.
+  paidAt DateTime @default(now())
+
+  reference String?
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reservationId])
   @@index([rentalId])
 }

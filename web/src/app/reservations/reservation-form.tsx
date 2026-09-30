@@ -124,6 +124,15 @@ export function ReservationForm({
 
   const canSubmit = availability.available === true && !availability.checking;
 
+  // Phase 8, Bloc 1: once a reservation exists, "combien a été payé" is
+  // owned by the Payment ledger (see "Encaisser" on the detail page), not by
+  // this form — editing it here would silently desync it from the real
+  // payment history. Signalled by the presence of `excludeReservationId`
+  // (only ever passed by the edit page). The fields are still submitted as
+  // hidden inputs so the shared ReservationSchema keeps parsing successfully
+  // — updateReservation ignores their value regardless (see actions/reservations.ts).
+  const isEdit = Boolean(excludeReservationId);
+
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
@@ -280,43 +289,53 @@ export function ReservationForm({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-navy">
-            Acompte (FCFA)
-          </label>
-          <input
-            id="deposit"
-            name="deposit"
-            type="number"
-            min={0}
-            value={deposit}
-            onChange={(e) => setDeposit(Number(e.target.value))}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
-          />
-          {errors?.deposit?.map((error) => (
-            <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
-            </p>
-          ))}
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-navy">Mode de paiement</label>
+      {isEdit ? (
+        <>
+          <input type="hidden" name="deposit" value={deposit} />
           <input type="hidden" name="depositMethod" value={depositMethod} />
-          <select
-            value={depositMethod}
-            onChange={(e) => setDepositMethod(e.target.value)}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
-          >
-            <option value="">—</option>
-            {PAYMENT_MODES.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
+          <p className="rounded-xl bg-paper px-4 py-3 text-xs font-semibold text-navy/60">
+            Le suivi des paiements se fait désormais depuis « Encaisser », sur la fiche de la réservation.
+          </p>
+        </>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-navy">
+              Acompte (FCFA)
+            </label>
+            <input
+              id="deposit"
+              name="deposit"
+              type="number"
+              min={0}
+              value={deposit}
+              onChange={(e) => setDeposit(Number(e.target.value))}
+              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            />
+            {errors?.deposit?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
             ))}
-          </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-navy">Mode de paiement</label>
+            <input type="hidden" name="depositMethod" value={depositMethod} />
+            <select
+              value={depositMethod}
+              onChange={(e) => setDepositMethod(e.target.value)}
+              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            >
+              <option value="">—</option>
+              {PAYMENT_MODES.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-navy">

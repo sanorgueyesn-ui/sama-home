@@ -81,13 +81,13 @@ export async function createRentalDirect(
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
-  // Bloc 6 lists Client/Logement/Tarif/Date-heure/Durée/Montant/Acompte/Note
-  // for "Nouvelle location" — no "mode de paiement" field, unlike
-  // Reservation (Phase 6). ReservationSchema still parses it (shared schema,
-  // see parseRentalForm above) but it's deliberately ignored here: Rental
-  // has no depositMethod column, and Bloc 17 explicitly limits this phase to
-  // "le montant et l'acompte", not payment-method tracking.
-  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, note } = parsed.data;
+  // Phase 7 Bloc 6 originally omitted "mode de paiement" from this form
+  // (Rental has no depositMethod column, and payment-method tracking didn't
+  // exist yet). Phase 8 reintroduces it here for one reason only: every
+  // Payment row now requires a `method`, and this form collects the very
+  // first amount of money for a direct rental — see the auto-created Payment
+  // below. Rental itself still has no depositMethod column (unchanged).
+  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note } = parsed.data;
 
   const [client, property, tariff] = await Promise.all([
     prisma.client.findUnique({ where: { id: clientId } }),
@@ -138,6 +138,15 @@ export async function createRentalDirect(
             note,
           },
         });
+        // Phase 8, Bloc 1/5 — same rule as createReservation: the initial
+        // acompte becomes a real Payment row atomically with the rental
+        // itself, so totalPaid has a single source of truth from creation
+        // onward. No Payment for deposit = 0.
+        if (deposit > 0) {
+          await tx.payment.create({
+            data: { rentalId: rental.id, amount: deposit, method: depositMethod ?? "OTHER" },
+          });
+        }
         return rental.id;
       },
       { isolationLevel: "Serializable" },

@@ -15,6 +15,13 @@ type TariffOption = {
 };
 type PropertyOption = { id: string; name: string; type: string; tariffs: TariffOption[] };
 
+const PAYMENT_MODES: { value: string; label: string }[] = [
+  { value: "CASH", label: "Espèces" },
+  { value: "WAVE", label: "Wave" },
+  { value: "ORANGE_MONEY", label: "Orange Money" },
+  { value: "OTHER", label: "Autre" },
+];
+
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
@@ -49,6 +56,7 @@ export function RentalForm({
   const [date, setDate] = useState(nowDateIso());
   const [arrivalTime, setArrivalTime] = useState(nowTimeIso());
   const [deposit, setDeposit] = useState(0);
+  const [depositMethod, setDepositMethod] = useState("");
   const [note, setNote] = useState("");
 
   const [availability, setAvailability] = useState<{
@@ -258,24 +266,42 @@ export function RentalForm({
         </div>
       ) : null}
 
-      <div>
-        <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-navy">
-          Acompte (FCFA)
-        </label>
-        <input
-          id="deposit"
-          name="deposit"
-          type="number"
-          min={0}
-          value={deposit}
-          onChange={(e) => setDeposit(Number(e.target.value))}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
-        />
-        {errors?.deposit?.map((error) => (
-          <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
-          </p>
-        ))}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-navy">
+            Acompte (FCFA)
+          </label>
+          <input
+            id="deposit"
+            name="deposit"
+            type="number"
+            min={0}
+            value={deposit}
+            onChange={(e) => setDeposit(Number(e.target.value))}
+            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          />
+          {errors?.deposit?.map((error) => (
+            <p key={error} className="mt-1 text-xs font-medium text-danger">
+              {error}
+            </p>
+          ))}
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-navy">Mode de paiement</label>
+          <input type="hidden" name="depositMethod" value={depositMethod} />
+          <select
+            value={depositMethod}
+            onChange={(e) => setDepositMethod(e.target.value)}
+            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          >
+            <option value="">—</option>
+            {PAYMENT_MODES.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div>
