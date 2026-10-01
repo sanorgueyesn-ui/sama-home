@@ -4,9 +4,18 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { checkAvailability } from "@/app/actions/reservations";
+import { requiresIdentity } from "@/lib/identity";
 import type { ReservationFormState } from "@/lib/definitions";
 
-type ClientOption = { id: string; name: string; phone: string };
+const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire", "Carte consulaire"];
+
+type ClientOption = {
+  id: string;
+  name: string;
+  phone: string;
+  idDocumentType?: string | null;
+  idDocumentNumber?: string | null;
+};
 type TariffOption = {
   id: string;
   label: string;
@@ -74,6 +83,8 @@ export function ReservationForm({
   const [deposit, setDeposit] = useState(defaultValues?.deposit ?? 0);
   const [depositMethod, setDepositMethod] = useState(defaultValues?.depositMethod ?? "");
   const [note, setNote] = useState(defaultValues?.note ?? "");
+  const [idDocumentType, setIdDocumentType] = useState("");
+  const [idDocumentNumber, setIdDocumentNumber] = useState("");
 
   const [availability, setAvailability] = useState<{
     checking: boolean;
@@ -131,16 +142,36 @@ export function ReservationForm({
     });
   }, [availability.departureTime]);
 
-  const canSubmit = availability.available === true && !availability.checking;
-
   // Phase 8, Bloc 1: once a reservation exists, "combien a été payé" is
   // owned by the Payment ledger (see "Encaisser" on the detail page), not by
   // this form — editing it here would silently desync it from the real
   // payment history. Signalled by the presence of `excludeReservationId`
-  // (only ever passed by the edit page). The fields are still submitted as
-  // hidden inputs so the shared ReservationSchema keeps parsing successfully
-  // — updateReservation ignores their value regardless (see actions/reservations.ts).
+  // (only ever passed by the edit page).
   const isEdit = Boolean(excludeReservationId);
+
+  // Audit Client/Réservation, Bloc 3/5 — identité obligatoire seulement à
+  // partir de la durée RÉELLE du séjour (jamais depuis le libellé/l'unité du
+  // tarif affiché). On réutilise departureTime déjà calculé par
+  // checkAvailability plutôt que de recalculer un départ côté client.
+  const needsIdentity = useMemo(() => {
+    if (!availability.departureTime || !date || !arrivalTime) return false;
+    const arrival = new Date(`${date}T${arrivalTime}:00`);
+    const departure = new Date(availability.departureTime);
+    if (Number.isNaN(arrival.getTime()) || Number.isNaN(departure.getTime())) return false;
+    return requiresIdentity(arrival, departure);
+  }, [availability.departureTime, date, arrivalTime]);
+
+  // Si le client possède déjà une identité valide en fiche, ne jamais la
+  // redemander (règle validée explicitement).
+  const clientAlreadyHasIdentity = Boolean(
+    selectedClient?.idDocumentType && selectedClient?.idDocumentNumber,
+  );
+  const showIdentitySection = !isEdit && needsIdentity && !clientAlreadyHasIdentity;
+
+  const canSubmit =
+    availability.available === true &&
+    !availability.checking &&
+    (!showIdentitySection || (idDocumentType.trim() !== "" && idDocumentNumber.trim() !== ""));
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -366,6 +397,56 @@ export function ReservationForm({
           className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-4 py-3 text-sm text-navy outline-none focus:border-navy"
         />
       </div>
+
+      {showIdentitySection ? (
+        <div className="flex flex-col gap-3 rounded-xl bg-warning-bg px-4 py-3">
+          <p className="text-sm font-bold text-warning">Pièce d&apos;identité requise pour ce séjour.</p>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-navy">Type de pièce</label>
+            <input type="hidden" name="idDocumentType" value={idDocumentType} />
+            <div className="flex flex-wrap gap-2">
+              {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setIdDocumentType(suggestion)}
+                  className={`h-10 rounded-full border px-3.5 text-xs font-bold transition-colors ${
+                    idDocumentType === suggestion
+                      ? "border-navy bg-navy text-white"
+                      : "border-navy/15 bg-paper text-navy"
+                  }`}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+            {errors?.idDocumentType?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
+          <div>
+            <label htmlFor="idDocumentNumber" className="mb-1.5 block text-xs font-bold text-navy">
+              Numéro de pièce
+            </label>
+            <input
+              id="idDocumentNumber"
+              name="idDocumentNumber"
+              type="text"
+              value={idDocumentNumber}
+              onChange={(e) => setIdDocumentNumber(e.target.value)}
+              placeholder="Numéro"
+              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            />
+            {errors?.idDocumentNumber?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">

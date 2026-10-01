@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
+import { checkIdentityRequirement } from "@/lib/identity";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 
 class RentalActionError extends Error {}
@@ -32,6 +33,8 @@ function parseRentalForm(formData: FormData) {
     deposit: formData.get("deposit"),
     depositMethod: formData.get("depositMethod"),
     note: formData.get("note"),
+    idDocumentType: formData.get("idDocumentType"),
+    idDocumentNumber: formData.get("idDocumentNumber"),
   });
 }
 
@@ -87,7 +90,7 @@ export async function createRentalDirect(
   // Payment row now requires a `method`, and this form collects the very
   // first amount of money for a direct rental — see the auto-created Payment
   // below. Rental itself still has no depositMethod column (unchanged).
-  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note } = parsed.data;
+  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note, idDocumentType, idDocumentNumber } = parsed.data;
 
   const [client, property, tariff] = await Promise.all([
     prisma.client.findUnique({ where: { id: clientId } }),
@@ -112,6 +115,17 @@ export async function createRentalDirect(
     return { errors: { deposit: ["L'acompte ne peut pas dépasser le montant total."] } };
   }
 
+  // Audit Client/Réservation, Bloc 3/4 — même règle que createReservation :
+  // une location directe de 48h réelles ou plus exige une identité au
+  // dossier du client, vérifié côté serveur, jamais seulement côté UI.
+  const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
+    idDocumentType,
+    idDocumentNumber,
+  });
+  if (!identityCheck.ok) {
+    return { message: identityCheck.message };
+  }
+
   let rentalId: string;
   try {
     rentalId = await prisma.$transaction(
@@ -123,6 +137,9 @@ export async function createRentalDirect(
         });
         if (conflict) {
           throw new RentalActionError(formatConflictMessage(conflict));
+        }
+        if (identityCheck.updateClientWith) {
+          await tx.client.update({ where: { id: clientId }, data: identityCheck.updateClientWith });
         }
         const rental = await tx.rental.create({
           data: {

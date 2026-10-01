@@ -228,6 +228,14 @@ export const ReservationSchema = z.object({
     .pipe(z.enum(PAYMENT_METHOD_VALUES, "Mode de paiement invalide.").optional())
     .optional(),
   note: optionalText(1000, "Note"),
+  // Audit Client/Réservation, Bloc 3/4/5 — jamais obligatoires au niveau du
+  // schéma (un séjour court n'en a pas besoin) : l'obligation réelle dépend
+  // de la durée calculée côté serveur et de l'identité déjà au dossier du
+  // client, voir checkIdentityRequirement() dans src/lib/identity.ts, appelé
+  // depuis createReservation/createRentalDirect. Mêmes contraintes que
+  // ClientSchema.idDocumentType/idDocumentNumber, pour rester cohérent.
+  idDocumentType: optionalText(60, "Type de pièce"),
+  idDocumentNumber: optionalText(60, "Numéro de pièce"),
 });
 
 export type ReservationFormState =

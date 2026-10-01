@@ -37,6 +37,20 @@ export function ClientForm({
   const [idDocumentType, setIdDocumentType] = useState(defaultValues?.idDocumentType ?? "");
   const errors = state?.errors;
 
+  // Audit Client/Réservation, Bloc 3/5/11 — un client court séjour n'a besoin
+  // que de Nom + Téléphone (voir Bloc 3). Les autres champs (email, adresse,
+  // pièce d'identité, notes) restent accessibles mais repliés par défaut pour
+  // ne pas imposer un formulaire long. Repliés par défaut sauf si le client
+  // édité possède déjà l'une de ces informations (fiche existante à modifier).
+  const hasSecondaryData = Boolean(
+    defaultValues?.email ||
+      defaultValues?.address ||
+      defaultValues?.idDocumentType ||
+      defaultValues?.idDocumentNumber ||
+      defaultValues?.notes,
+  );
+  const [showMore, setShowMore] = useState(hasSecondaryData);
+
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
@@ -58,70 +72,83 @@ export function ClientForm({
         hint="Les espaces sont retirés automatiquement."
         placeholder="Ex. +221 77 000 00 00"
       />
-      <Field
-        id="email"
-        label="Email"
-        type="email"
-        defaultValue={defaultValues?.email}
-        errors={errors?.email}
-        placeholder="Ex. client@exemple.com"
-      />
-      <Field
-        id="address"
-        label="Adresse"
-        defaultValue={defaultValues?.address}
-        errors={errors?.address}
-        placeholder="Ex. Sacré-Cœur 3, Dakar"
-      />
 
-      <div>
-        <label className="mb-1.5 block text-xs font-bold text-navy">
-          Type de pièce <span className="ml-1 font-medium text-navy/40">(optionnel)</span>
-        </label>
-        <div className="mb-2 flex flex-wrap gap-2">
-          {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => setIdDocumentType(suggestion)}
-              className={`rounded-full px-3.5 py-2 text-xs font-bold ${
-                idDocumentType === suggestion
-                  ? "bg-navy text-white"
-                  : "bg-paper text-navy"
-              }`}
-            >
-              {suggestion}
-            </button>
+      <button
+        type="button"
+        onClick={() => setShowMore((v) => !v)}
+        className="flex items-center gap-1.5 self-start text-xs font-bold text-navy underline"
+        aria-expanded={showMore}
+      >
+        {showMore ? "− Masquer les informations complémentaires" : "+ Informations complémentaires"}
+      </button>
+
+      {/* Toujours montés (jamais démontés) pour qu'un champ rempli puis
+          replié ne perde jamais sa valeur saisie — seule la visibilité
+          change, via `hidden` plutôt qu'un rendu conditionnel. */}
+      <div className={`flex flex-col gap-4 ${showMore ? "" : "hidden"}`}>
+        <Field
+          id="email"
+          label="Email"
+          type="email"
+          defaultValue={defaultValues?.email}
+          errors={errors?.email}
+          placeholder="Ex. client@exemple.com"
+        />
+        <Field
+          id="address"
+          label="Adresse"
+          defaultValue={defaultValues?.address}
+          errors={errors?.address}
+          placeholder="Ex. Sacré-Cœur 3, Dakar"
+        />
+
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-navy">
+            Type de pièce <span className="ml-1 font-medium text-navy/40">(optionnel)</span>
+          </label>
+          <div className="mb-2 flex flex-wrap gap-2">
+            {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setIdDocumentType(suggestion)}
+                className={`rounded-full px-3.5 py-2 text-xs font-bold ${
+                  idDocumentType === suggestion ? "bg-navy text-white" : "bg-paper text-navy"
+                }`}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+          <input
+            id="idDocumentType"
+            name="idDocumentType"
+            value={idDocumentType}
+            onChange={(e) => setIdDocumentType(e.target.value)}
+            placeholder="Ou saisir un autre type"
+            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          />
+          {errors?.idDocumentType?.map((error) => (
+            <p key={error} className="mt-1 text-xs font-medium text-danger">
+              {error}
+            </p>
           ))}
         </div>
-        <input
-          id="idDocumentType"
-          name="idDocumentType"
-          value={idDocumentType}
-          onChange={(e) => setIdDocumentType(e.target.value)}
-          placeholder="Ou saisir un autre type"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
-        />
-        {errors?.idDocumentType?.map((error) => (
-          <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
-          </p>
-        ))}
-      </div>
 
-      <Field
-        id="idDocumentNumber"
-        label="Numéro de pièce"
-        defaultValue={defaultValues?.idDocumentNumber}
-        errors={errors?.idDocumentNumber}
-      />
-      <TextAreaField
-        id="notes"
-        label="Notes"
-        defaultValue={defaultValues?.notes}
-        errors={errors?.notes}
-        placeholder="Informations complémentaires (facultatif)"
-      />
+        <Field
+          id="idDocumentNumber"
+          label="Numéro de pièce"
+          defaultValue={defaultValues?.idDocumentNumber}
+          errors={errors?.idDocumentNumber}
+        />
+        <TextAreaField
+          id="notes"
+          label="Notes"
+          defaultValue={defaultValues?.notes}
+          errors={errors?.notes}
+          placeholder="Informations complémentaires (facultatif)"
+        />
+      </div>
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">

@@ -43,11 +43,17 @@ export async function getClientById(id: string) {
  * once a client is picked, per Bloc 9). Capped generously rather than the
  * 50-row search limit above, since this feeds a single <select>, not a
  * paginated list.
+ *
+ * Audit Client/Réservation — idDocumentType/idDocumentNumber added so the
+ * form can tell client-side whether the selected client already has an
+ * identity on file (and therefore never re-prompt for it, per the validated
+ * rule) without a second round-trip. Not new data exposure: the same
+ * gestionnaire already sees these fields on the client's own profile page.
  */
 export async function listClientsForSelect() {
   await verifySession();
   return prisma.client.findMany({
-    select: { id: true, name: true, phone: true },
+    select: { id: true, name: true, phone: true, idDocumentType: true, idDocumentNumber: true },
     orderBy: { name: "asc" },
     take: 500,
   });

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
+import { checkIdentityRequirement } from "@/lib/identity";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 
 function parseReservationForm(formData: FormData) {
@@ -18,6 +19,8 @@ function parseReservationForm(formData: FormData) {
     deposit: formData.get("deposit"),
     depositMethod: formData.get("depositMethod"),
     note: formData.get("note"),
+    idDocumentType: formData.get("idDocumentType"),
+    idDocumentNumber: formData.get("idDocumentNumber"),
   });
 }
 
@@ -92,7 +95,7 @@ export async function createReservation(
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
-  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note } = parsed.data;
+  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note, idDocumentType, idDocumentNumber } = parsed.data;
 
   // Bloc 17 — every existence/coherence rule re-checked server-side.
   const [client, property, tariff] = await Promise.all([
@@ -120,6 +123,19 @@ export async function createReservation(
     return { errors: { deposit: ["L'acompte ne peut pas dépasser le montant total."] } };
   }
 
+  // Audit Client/Réservation, Bloc 3/4 — identité obligatoire côté serveur
+  // à partir de 48h réelles, jamais uniquement côté interface. Calculé ici
+  // (avant la transaction) pour pouvoir refuser immédiatement avec un
+  // message clair ; la mise à jour du client, elle, reste dans la
+  // transaction ci-dessous pour rester atomique avec la réservation.
+  const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
+    idDocumentType,
+    idDocumentNumber,
+  });
+  if (!identityCheck.ok) {
+    return { message: identityCheck.message };
+  }
+
   let reservationId: string;
   try {
     reservationId = await prisma.$transaction(
@@ -131,6 +147,9 @@ export async function createReservation(
         });
         if (conflict) {
           throw new AvailabilityConflictError(formatConflictMessage(conflict));
+        }
+        if (identityCheck.updateClientWith) {
+          await tx.client.update({ where: { id: clientId }, data: identityCheck.updateClientWith });
         }
         const reservation = await tx.reservation.create({
           data: {

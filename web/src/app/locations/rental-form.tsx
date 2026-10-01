@@ -4,9 +4,18 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { checkRentalAvailability } from "@/app/actions/rentals";
+import { requiresIdentity } from "@/lib/identity";
 import type { ReservationFormState } from "@/lib/definitions";
 
-type ClientOption = { id: string; name: string; phone: string };
+const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire", "Carte consulaire"];
+
+type ClientOption = {
+  id: string;
+  name: string;
+  phone: string;
+  idDocumentType?: string | null;
+  idDocumentNumber?: string | null;
+};
 type TariffOption = {
   id: string;
   label: string;
@@ -64,6 +73,8 @@ export function RentalForm({
   const [deposit, setDeposit] = useState(0);
   const [depositMethod, setDepositMethod] = useState("");
   const [note, setNote] = useState("");
+  const [idDocumentType, setIdDocumentType] = useState("");
+  const [idDocumentNumber, setIdDocumentNumber] = useState("");
 
   const [availability, setAvailability] = useState<{
     checking: boolean;
@@ -114,7 +125,29 @@ export function RentalForm({
     });
   }, [availability.departureTime]);
 
-  const canSubmit = availability.available === true && !availability.checking;
+  // Audit Client/Réservation, Bloc 3/5 — même règle que reservation-form.tsx :
+  // identité obligatoire à partir de la durée RÉELLE (48h), aussi pour une
+  // location directe. On réutilise departureTime déjà calculé par
+  // checkRentalAvailability plutôt que de recalculer un départ côté client.
+  const needsIdentity = useMemo(() => {
+    if (!availability.departureTime || !date || !arrivalTime) return false;
+    const arrival = new Date(`${date}T${arrivalTime}:00`);
+    const departure = new Date(availability.departureTime);
+    if (Number.isNaN(arrival.getTime()) || Number.isNaN(departure.getTime())) return false;
+    return requiresIdentity(arrival, departure);
+  }, [availability.departureTime, date, arrivalTime]);
+
+  // Si le client possède déjà une identité valide en fiche, ne jamais la
+  // redemander (règle validée explicitement).
+  const clientAlreadyHasIdentity = Boolean(
+    selectedClient?.idDocumentType && selectedClient?.idDocumentNumber,
+  );
+  const showIdentitySection = needsIdentity && !clientAlreadyHasIdentity;
+
+  const canSubmit =
+    availability.available === true &&
+    !availability.checking &&
+    (!showIdentitySection || (idDocumentType.trim() !== "" && idDocumentNumber.trim() !== ""));
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -328,6 +361,56 @@ export function RentalForm({
           className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-4 py-3 text-sm text-navy outline-none focus:border-navy"
         />
       </div>
+
+      {showIdentitySection ? (
+        <div className="flex flex-col gap-3 rounded-xl bg-warning-bg px-4 py-3">
+          <p className="text-sm font-bold text-warning">Pièce d&apos;identité requise pour ce séjour.</p>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-navy">Type de pièce</label>
+            <input type="hidden" name="idDocumentType" value={idDocumentType} />
+            <div className="flex flex-wrap gap-2">
+              {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setIdDocumentType(suggestion)}
+                  className={`h-10 rounded-full border px-3.5 text-xs font-bold transition-colors ${
+                    idDocumentType === suggestion
+                      ? "border-navy bg-navy text-white"
+                      : "border-navy/15 bg-paper text-navy"
+                  }`}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+            {errors?.idDocumentType?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
+          <div>
+            <label htmlFor="idDocumentNumber" className="mb-1.5 block text-xs font-bold text-navy">
+              Numéro de pièce
+            </label>
+            <input
+              id="idDocumentNumber"
+              name="idDocumentNumber"
+              type="text"
+              value={idDocumentNumber}
+              onChange={(e) => setIdDocumentNumber(e.target.value)}
+              placeholder="Numéro"
+              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            />
+            {errors?.idDocumentNumber?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
