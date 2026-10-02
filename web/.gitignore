@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# sauvegardes PostgreSQL locales (Bloc P.1, scripts/backup-db.mts) — jamais
+# commitées, contiennent des données réelles.
+/backups/
+
 # redundant copy of Prisma's agent-skill docs (kept under .claude/ and .agents/)
 /.windsurf/
 

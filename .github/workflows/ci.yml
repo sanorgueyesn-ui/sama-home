@@ -1,0 +1,47 @@
+name: CI
+
+# Bloc P.1 — CI minimale : valide le schéma Prisma, le lint et le build sur
+# chaque push/PR. Ne touche JAMAIS une base de données réelle (ni DEV ni
+# production) : DATABASE_URL/SESSION_SECRET ci-dessous sont des valeurs
+# syntaxiquement valides mais inertes, utilisées uniquement parce que
+# `prisma generate`/`next build` exigent que ces variables existent — aucune
+# connexion n'est jamais réellement établie (toutes les routes de l'app sont
+# dynamiques, confirmé en Bloc P.1, aucune requête DB n'a lieu au build).
+# N'exécute ni seed, ni migration, ni suppression de quoi que ce soit.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  DATABASE_URL: "postgresql://ci:ci@127.0.0.1:5432/ci_placeholder_never_connected?schema=public"
+  SESSION_SECRET: "ci-placeholder-value-not-a-real-secret-32-bytes-ok"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
