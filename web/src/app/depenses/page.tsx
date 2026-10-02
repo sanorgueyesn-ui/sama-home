@@ -3,23 +3,12 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ExpenseFilters } from "./filters";
 import { listExpenses, type ExpensePeriodFilter } from "@/lib/expenses-data";
-import { EXPENSE_CATEGORY_VALUES, PAYMENT_METHOD_VALUES } from "@/lib/definitions";
-import type { ExpenseCategory, PaymentMethod } from "@/generated/prisma/client";
+import { listExpenseCategoriesForFilter } from "@/lib/expense-categories-data";
+import { PAYMENT_METHOD_VALUES } from "@/lib/definitions";
+import type { PaymentMethod } from "@/generated/prisma/client";
 
 const PERIOD_VALUES: ExpensePeriodFilter[] = ["today", "month", "all"];
 
-const CATEGORY_LABELS: Record<string, string> = {
-  RENT: "Loyer",
-  ELECTRICITY: "Électricité",
-  WATER: "Eau",
-  INTERNET: "Internet",
-  CLEANING: "Nettoyage",
-  MAINTENANCE: "Entretien",
-  REPAIR: "Réparation",
-  SALARY: "Salaire",
-  PURCHASE: "Achat",
-  OTHER: "Autre",
-};
 const METHOD_LABELS: Record<string, string> = {
   CASH: "Espèces",
   WAVE: "Wave",
@@ -38,14 +27,19 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
   const { q, period, category, method, created } = await props.searchParams;
   const query = typeof q === "string" ? q : undefined;
   const periodFilter = PERIOD_VALUES.includes(period as ExpensePeriodFilter) ? (period as ExpensePeriodFilter) : "month";
-  const categoryFilter = EXPENSE_CATEGORY_VALUES.includes(category as ExpenseCategory)
-    ? (category as ExpenseCategory)
-    : undefined;
   const methodFilter = PAYMENT_METHOD_VALUES.includes(method as PaymentMethod) ? (method as PaymentMethod) : undefined;
+
+  // Bloc 16.2, section 9 — catégories actives + inactives déjà référencées
+  // par une dépense (une catégorie désactivée ne doit jamais disparaître du
+  // filtre historique). `categoryId` n'est plus un enum fermé validable par
+  // Zod : la seule validation possible est de vérifier qu'il correspond à
+  // une catégorie réellement proposée par ce filtre.
+  const filterCategories = await listExpenseCategoriesForFilter();
+  const categoryFilter = filterCategories.some((c) => c.id === category) ? (category as string) : undefined;
 
   const { items, truncated, totalAmount, byCategory } = await listExpenses({
     period: periodFilter,
-    category: categoryFilter,
+    categoryId: categoryFilter,
     method: methodFilter,
     query,
   });
@@ -73,6 +67,7 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
         defaultPeriod={periodFilter}
         defaultCategory={categoryFilter ?? ""}
         defaultMethod={methodFilter ?? ""}
+        categories={filterCategories}
       />
 
       {items.length === 0 ? (
@@ -97,12 +92,15 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
         <>
           {/* Bloc 14 — total réel calculé côté serveur pour la période/les
               filtres sélectionnés, avec le détail par catégorie donné en
-              exemple dans le prompt. */}
+              exemple dans le prompt. Bloc 16.2 — le libellé ici est le nom
+              COURANT de la catégorie (agrégat vivant), à la différence de
+              chaque ligne de dépense ci-dessous qui affiche son
+              `categoryNameSnapshot` figé. */}
           <Card className="mt-4 px-4">
             <p className="pt-3 text-[11px] font-bold text-navy/50">TOTAL DES DÉPENSES</p>
             {byCategory.map((c) => (
-              <div key={c.category} className="flex items-center justify-between border-b border-[#E7EAEE] py-2.5 last:border-0">
-                <span className="text-sm font-semibold text-navy">{CATEGORY_LABELS[c.category] ?? c.category}</span>
+              <div key={c.categoryId} className="flex items-center justify-between border-b border-[#E7EAEE] py-2.5 last:border-0">
+                <span className="text-sm font-semibold text-navy">{c.categoryName}</span>
                 <span className="text-sm font-bold text-navy">{fmtFcfa(c.amount)}</span>
               </div>
             ))}
@@ -116,7 +114,11 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
             {items.map((e) => (
               <Card key={e.id} className="p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-extrabold text-navy">{CATEGORY_LABELS[e.category] ?? e.category}</p>
+                  {/* Bloc 16.2, section 8 — nom historique figé à la
+                      création, jamais le nom courant de la catégorie :
+                      un renommage ultérieur ne doit jamais changer
+                      rétroactivement l'affichage d'une dépense existante. */}
+                  <p className="text-sm font-extrabold text-navy">{e.categoryNameSnapshot}</p>
                   <p className="text-sm font-extrabold text-navy">{fmtFcfa(e.amount)}</p>
                 </div>
                 <div className="mt-1.5 flex items-center gap-3 text-xs font-semibold text-navy/60">

@@ -82,6 +82,15 @@ function WalletIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
+function CashIcon({ active }: { active: boolean }) {
+  return (
+    <svg {...iconProps(active)}>
+      <rect x="2.5" y="6" width="19" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.6" fill={active ? "currentColor" : "none"} />
+      <path d="M5.5 6v12M18.5 6v12" />
+    </svg>
+  );
+}
 function GearIcon({ active }: { active: boolean }) {
   return (
     <svg {...iconProps(active)}>
@@ -116,6 +125,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} /> },
   { href: "/clients", label: "Clients", icon: (a) => <PeopleIcon active={a} /> },
   { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
+  { href: "/caisse", label: "Caisse", icon: (a) => <CashIcon active={a} /> },
   { href: "/settings", label: "Paramètres", icon: (a) => <GearIcon active={a} /> },
 ];
 

@@ -118,6 +118,33 @@ export async function getTodayDepartures(now: Date = new Date()) {
   });
 }
 
+export type DailyFinancialPoint = { date: Date; revenue: number; expense: number };
+
+/**
+ * Phase "responsive dashboard" (PC) — recettes/dépenses groupées par jour sur
+ * les 7 derniers jours (aujourd'hui inclus), pour le graphique de la
+ * maquette PC. Même source de vérité que getFinancialSummary (SUM(Payment),
+ * SUM(Expense) via Payment.paidAt/Expense.paidAt, même todayRange()) — aucune
+ * nouvelle règle de calcul, juste un groupage par jour au lieu d'un seul
+ * total. Lecture seule, jamais appelée par un chemin d'écriture.
+ */
+export async function getWeeklyFinancialTrend(now: Date = new Date()): Promise<DailyFinancialPoint[]> {
+  await verifySession();
+
+  const days: DailyFinancialPoint[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(now);
+    day.setDate(day.getDate() - i);
+    const { gte, lt } = todayRange(day);
+    const [revenueAgg, expenseAgg] = await Promise.all([
+      prisma.payment.aggregate({ where: { paidAt: { gte, lt } }, _sum: { amount: true } }),
+      prisma.expense.aggregate({ where: { paidAt: { gte, lt } }, _sum: { amount: true } }),
+    ]);
+    days.push({ date: gte, revenue: revenueAgg._sum.amount ?? 0, expense: expenseAgg._sum.amount ?? 0 });
+  }
+  return days;
+}
+
 /**
  * Bloc 8 — active rentals with their real payment summary, batch-computed
  * (Bloc 12: no N+1) via the exact Phase 8 service.

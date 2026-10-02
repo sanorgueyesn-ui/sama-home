@@ -11,7 +11,7 @@ import bcrypt from "bcryptjs";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
-async function main() {
+async function seedAdmin() {
   const username = process.env.SEED_ADMIN_USERNAME;
   const password = process.env.SEED_ADMIN_PASSWORD;
   const name = process.env.SEED_ADMIN_NAME;
@@ -42,6 +42,47 @@ async function main() {
   });
 
   console.log(`Compte créé : ${user.username} (${user.role}).`);
+}
+
+// Bloc 16.1 — mêmes 10 catégories historiques que l'ancien enum
+// `ExpenseCategory`, dans le même ordre (voir la migration
+// add_expense_category_table, qui les crée déjà pour la base de dev
+// actuelle). Ce seed est un filet de sécurité idempotent pour tout
+// environnement où ces lignes n'existeraient pas encore — jamais une
+// deuxième source qui pourrait diverger de la migration.
+const EXPENSE_CATEGORIES = [
+  { name: "Loyer", position: 0 },
+  { name: "Électricité", position: 1 },
+  { name: "Eau", position: 2 },
+  { name: "Internet", position: 3 },
+  { name: "Nettoyage", position: 4 },
+  { name: "Entretien", position: 5 },
+  { name: "Réparation", position: 6 },
+  { name: "Salaire", position: 7 },
+  { name: "Achat", position: 8 },
+  { name: "Autre", position: 9 },
+] as const;
+
+async function seedExpenseCategories() {
+  for (const category of EXPENSE_CATEGORIES) {
+    // Même principe que seedAdmin() ci-dessus : ne jamais écraser une
+    // catégorie déjà présente (un renommage ou une désactivation faite par
+    // l'ADMIN ne doit jamais être annulé par un re-run du seed).
+    const existing = await prisma.expenseCategory.findFirst({ where: { name: category.name } });
+    if (existing) {
+      console.log(`Catégorie de dépense déjà présente : « ${category.name} » — inchangée.`);
+      continue;
+    }
+    await prisma.expenseCategory.create({
+      data: { name: category.name, position: category.position, active: true },
+    });
+    console.log(`Catégorie de dépense créée : « ${category.name} ».`);
+  }
+}
+
+async function main() {
+  await seedAdmin();
+  await seedExpenseCategories();
 }
 
 main()

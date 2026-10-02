@@ -17,7 +17,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
   const statuses = await getPropertyStatuses(items);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-navy">Logements</h1>
         <Link
@@ -57,7 +57,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
           }
         />
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           {items.map((property) => (
             <Link key={property.id} href={`/logements/${property.id}`}>
               <Card className="flex gap-3 p-3.5">
@@ -80,7 +80,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
             </Link>
           ))}
           {truncated && (
-            <p className="pt-1 text-center text-xs font-medium text-navy/50">
+            <p className="col-span-full pt-1 text-center text-xs font-medium text-navy/50">
               Affinez votre recherche pour voir plus de résultats.
             </p>
           )}

@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { ExpenseForm } from "@/app/depenses/expense-form";
 import { createExpense } from "@/app/actions/expenses";
+import { listActiveExpenseCategories } from "@/lib/expense-categories-data";
 
-export default function NewExpensePage() {
+export default async function NewExpensePage() {
+  // Bloc 16.2, section 10 — catégories actives uniquement pour la création
+  // (une catégorie désactivée n'est jamais proposée pour une nouvelle
+  // dépense).
+  const categories = await listActiveExpenseCategories();
+
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
       <div className="mb-5 flex items-center gap-3">
@@ -18,7 +24,7 @@ export default function NewExpensePage() {
         <h1 className="text-xl font-extrabold text-navy">Nouvelle dépense</h1>
       </div>
 
-      <ExpenseForm action={createExpense} />
+      <ExpenseForm action={createExpense} categories={categories} />
     </div>
   );
 }

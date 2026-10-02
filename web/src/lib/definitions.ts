@@ -236,6 +236,14 @@ export const ReservationSchema = z.object({
   // ClientSchema.idDocumentType/idDocumentNumber, pour rester cohérent.
   idDocumentType: optionalText(60, "Type de pièce"),
   idDocumentNumber: optionalText(60, "Numéro de pièce"),
+  // Bloc 21 — arrivée rétroactive : jamais obligatoire au niveau du schéma
+  // (seulement exigé par checkRetroactiveArrival() quand l'arrivée saisie
+  // est réellement rétroactive, voir src/lib/retroactive-checkin.ts). Ce
+  // champ n'a de sens que pour une Rental (createRentalDirect/
+  // checkInReservation) — createReservation/updateReservation le reçoivent
+  // aussi (même schéma partagé) mais ne le lisent jamais : une réservation
+  // est un créneau futur, jamais une arrivée déjà survenue.
+  retroactiveReason: optionalText(500, "Justification"),
 });
 
 export type ReservationFormState =
@@ -292,26 +300,20 @@ export type PaymentFormState =
 // Phase 9 — Dépenses
 // ---------------------------------------------------------------------------
 
-export const EXPENSE_CATEGORY_VALUES = [
-  "RENT",
-  "ELECTRICITY",
-  "WATER",
-  "INTERNET",
-  "CLEANING",
-  "MAINTENANCE",
-  "REPAIR",
-  "SALARY",
-  "PURCHASE",
-  "OTHER",
-] as const;
-
 /**
- * NOTE — `paidAt` is intentionally NOT part of this schema: it is always
- * `new Date()` server-side (Bloc 7), same rule as Payment.paidAt. No UI
- * control exists to pick a historical date for V1.
+ * Bloc 16.2 — `categoryId` remplace l'ancien enum fermé `category` (Bloc
+ * 16.1 a transformé `ExpenseCategory` en table configurable). Zod ne peut
+ * valider ici que la FORME (un identifiant non vide) — l'existence réelle
+ * et l'activité de la catégorie restent une vérification serveur contre la
+ * DB (voir createExpense dans src/app/actions/expenses.ts), jamais
+ * déductible d'un schéma statique.
+ *
+ * NOTE — `paidAt` est intentionnellement absent de ce schéma : toujours
+ * `new Date()` côté serveur (Bloc 7), même règle que Payment.paidAt. Aucun
+ * contrôle UI ne permet de saisir une date historique pour V1.
  */
 export const ExpenseSchema = z.object({
-  category: z.enum(EXPENSE_CATEGORY_VALUES, "Catégorie invalide."),
+  categoryId: z.string().trim().min(1, "Catégorie obligatoire."),
   // Phase 14 audit (Bloc 9): same reasoning as PaymentSchema.amount above —
   // Expense has no "remaining" guard at all to indirectly bound it, so this
   // was the more directly reachable gap of the two.
@@ -338,6 +340,17 @@ export type ExpenseFormState =
       message?: string;
     }
   | undefined;
+
+/**
+ * Bloc 16.2 — nom d'une catégorie de dépense (création/renommage). Partagé
+ * entre les deux actions plutôt que dupliqué (même règle que
+ * `optionalText`/`PHONE_REGEX` ci-dessus : une seule définition réutilisée).
+ */
+export const ExpenseCategoryNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Le nom est obligatoire.")
+  .max(80, "Nom trop long (80 caractères maximum).");
 
 // ---------------------------------------------------------------------------
 // Phase 11 — Paramètres
@@ -469,3 +482,50 @@ export type ResetPasswordFormState =
       message?: string;
     }
   | undefined;
+
+// ---------------------------------------------------------------------------
+// Bloc 17.2 — Caisse & Banque
+// ---------------------------------------------------------------------------
+
+/**
+ * Bloc 17.2, section 7/BLOC 7 — jamais de numéro de compte complet, jamais
+ * d'IBAN, jamais d'identifiants d'accès : `maskedAccountNumber` est une
+ * chaîne déjà masquée par l'utilisateur (ex. "•••• 4821"), jamais validée
+ * comme un vrai numéro de compte.
+ */
+export const BankAccountSchema = z.object({
+  label: z.string().trim().min(1, "Le nom du compte est obligatoire.").max(120, "Nom trop long."),
+  bankName: z.string().trim().min(1, "Le nom de la banque est obligatoire.").max(120, "Nom trop long."),
+  maskedAccountNumber: optionalText(40, "Numéro masqué"),
+});
+
+/**
+ * BLOC 9 — `fixedAmount` XOR `percentage`, jamais les deux, jamais aucun
+ * des deux (la contrainte CHECK `TransferSchedule_amount_type_check` en
+ * base est le filet de sécurité final — ce schéma est la première
+ * validation côté serveur, pas la seule).
+ */
+export const TransferScheduleSchema = z
+  .object({
+    bankAccountId: z.string().trim().min(1, "Compte bancaire obligatoire."),
+    frequency: z.enum(["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY"], "Fréquence invalide."),
+    amountType: z.enum(["FIXED", "PERCENTAGE"], "Type de montant invalide."),
+    fixedAmount: z.number().int("Montant invalide.").positive("Le montant doit être positif.").optional(),
+    percentage: z
+      .number()
+      .int("Pourcentage invalide.")
+      .min(1, "Le pourcentage doit être supérieur à 0.")
+      .max(100, "Le pourcentage ne peut pas dépasser 100.")
+      .optional(),
+    nextRunAt: z.date(),
+  })
+  .refine(
+    (data) =>
+      data.amountType === "FIXED"
+        ? data.fixedAmount !== undefined && data.percentage === undefined
+        : data.percentage !== undefined && data.fixedAmount === undefined,
+    {
+      error: "Fournir un montant fixe (si FIXED) ou un pourcentage (si PERCENTAGE), jamais les deux ni aucun des deux.",
+      path: ["amountType"],
+    },
+  );

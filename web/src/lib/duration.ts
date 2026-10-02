@@ -15,12 +15,14 @@
  *   here.
  * - MONTH is real calendar-month addition (JS Date month arithmetic), NOT a
  *   fixed 30-day/43200-minute approximation. This means the resulting
- *   duration in minutes varies (28 to 31 days) depending on the month. Edge
- *   case: adding a month to a day that doesn't exist in the target month
- *   (e.g. Jan 31 + 1 month) follows native JS `Date` overflow semantics —
- *   it rolls into the following month (Jan 31 -> Mar 2 or 3, not clamped to
- *   Feb 28/29). Confirm with the business if month-based tariffs (long-stay
- *   rentals) become common.
+ *   duration in minutes varies (28 to 31 days) depending on the month.
+ *   Bloc K.1 — edge case resolved: adding a month to a day that doesn't
+ *   exist in the target month (e.g. Jan 31 + 1 month) is clamped to that
+ *   target month's last day (Jan 31 -> Feb 28/29, never Mar 2/3), same rule
+ *   as `advanceNextRunAt()`'s MONTHLY case (src/app/actions/bank.ts, Bloc
+ *   H.1) — kept as a separate, duplicated implementation rather than a
+ *   shared helper: this file has no dependency on the frozen bank/caisse
+ *   engine, and Bloc K.1's scope explicitly excludes touching it.
  */
 
 export type DurationUnitValue = "HOURS" | "NIGHT" | "DAY" | "WEEK" | "MONTH";
@@ -55,7 +57,11 @@ export function computeDepartureTime(
 ): Date {
   if (durationUnit === "MONTH") {
     const result = new Date(arrivalTime);
-    result.setMonth(result.getMonth() + durationValue);
+    const day = result.getDate();
+    const year = result.getFullYear();
+    const targetMonthIndex = result.getMonth() + durationValue;
+    const lastDayOfTargetMonth = new Date(year, targetMonthIndex + 1, 0).getDate();
+    result.setFullYear(year, targetMonthIndex, Math.min(day, lastDayOfTargetMonth));
     return result;
   }
   const minutes = durationValue * FIXED_MINUTES[durationUnit];

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { checkRentalAvailability } from "@/app/actions/rentals";
 import { requiresIdentity } from "@/lib/identity";
+import { checkRetroactiveArrival, RETROACTIVE_TOLERANCE_MINUTES } from "@/lib/retroactive-checkin";
 import type { ReservationFormState } from "@/lib/definitions";
 
 const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire", "Carte consulaire"];
@@ -75,6 +76,7 @@ export function RentalForm({
   const [note, setNote] = useState("");
   const [idDocumentType, setIdDocumentType] = useState("");
   const [idDocumentNumber, setIdDocumentNumber] = useState("");
+  const [retroactiveReason, setRetroactiveReason] = useState("");
 
   const [availability, setAvailability] = useState<{
     checking: boolean;
@@ -144,9 +146,39 @@ export function RentalForm({
   );
   const showIdentitySection = needsIdentity && !clientAlreadyHasIdentity;
 
+  // Bloc 21 — arrivée rétroactive : ce formulaire acceptait déjà n'importe
+  // quelle heure d'arrivée sans aucune validation passé/futur. Même règle
+  // que le check-in, retour visuel immédiat côté client — le serveur
+  // revalide intégralement (createRentalDirect) et reste la seule source de
+  // vérité.
+  //
+  // IMPORTANT : `isRetroactive` (affiche le champ) est dérivé INDÉPENDAMMENT
+  // de `retroCheck.ok` (bloque la soumission). checkRetroactiveArrival
+  // renvoie `ok:false` tant que la justification est vide ET que l'arrivée
+  // est rétroactive — si on avait gardé "isRetroactive = retroCheck.ok &&
+  // retroCheck.isRetroactive", le champ ne serait JAMAIS apparu (il faudrait
+  // déjà avoir rempli la justification pour que le check passe et révèle le
+  // champ qui sert justement à la saisir). Corrigé : le champ apparaît dès
+  // que l'écart dépasse la tolérance, quelle que soit la justification.
+  const isRetroactive = useMemo(() => {
+    if (!date || !arrivalTime) return false;
+    const arrival = new Date(`${date}T${arrivalTime}:00`);
+    if (Number.isNaN(arrival.getTime())) return false;
+    return new Date().getTime() - arrival.getTime() > RETROACTIVE_TOLERANCE_MINUTES * 60_000;
+  }, [date, arrivalTime]);
+
+  const retroCheck = useMemo(() => {
+    if (!date || !arrivalTime) return null;
+    const arrival = new Date(`${date}T${arrivalTime}:00`);
+    if (Number.isNaN(arrival.getTime())) return null;
+    return checkRetroactiveArrival(new Date(), arrival, retroactiveReason);
+  }, [date, arrivalTime, retroactiveReason]);
+  const retroBlockedMessage = retroCheck?.ok === false ? retroCheck.message : null;
+
   const canSubmit =
     availability.available === true &&
     !availability.checking &&
+    !retroBlockedMessage &&
     (!showIdentitySection || (idDocumentType.trim() !== "" && idDocumentNumber.trim() !== ""));
 
   return (
@@ -309,6 +341,34 @@ export function RentalForm({
           {availability.message ? <p className="text-xs font-medium">{availability.message}</p> : null}
         </div>
       ) : null}
+
+      {isRetroactive ? (
+        <div className="flex flex-col gap-3 rounded-xl bg-warning-bg px-4 py-3">
+          <div>
+            <p className="text-sm font-bold text-warning">Arrivée rétroactive</p>
+            <p className="mt-0.5 text-xs font-medium text-warning">
+              Cette arrivée sera enregistrée avec l&apos;heure réelle saisie. Maximum autorisé : 24 heures en
+              arrière.
+            </p>
+          </div>
+          <div>
+            <label htmlFor="retroactiveReason" className="mb-1.5 block text-xs font-bold text-navy">
+              Justification
+            </label>
+            <textarea
+              id="retroactiveReason"
+              name="retroactiveReason"
+              value={retroactiveReason}
+              onChange={(e) => setRetroactiveReason(e.target.value)}
+              placeholder="Ex. Client arrivé avant l'enregistrement."
+              className="min-h-16 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+            />
+          </div>
+        </div>
+      ) : (
+        <input type="hidden" name="retroactiveReason" value={retroactiveReason} />
+      )}
+      {retroBlockedMessage ? <p className="text-xs font-medium text-danger">{retroBlockedMessage}</p> : null}
 
       <div className="grid grid-cols-2 gap-3">
         <div>

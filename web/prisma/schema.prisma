@@ -32,6 +32,22 @@ model User {
   updatedAt    DateTime @updatedAt
 
   sessions Session[]
+
+  /// Traçabilité de l'enregistrement rétroactif d'une arrivée (Bloc 21) — qui
+  /// a réellement saisi la location, distinct du client qui y séjourne.
+  rentalsRegistered Rental[]   @relation("RentalRegisteredBy")
+
+  /// Journal générique des opérations sensibles (Bloc 15).
+  auditLogs         AuditLog[] @relation("AuditLogUser")
+
+  /// Caisse & Banque (Bloc 17.2).
+  cashSessionsOpened       CashSession[]      @relation("CashSessionOpenedBy")
+  cashSessionsClosed       CashSession[]      @relation("CashSessionClosedBy")
+  cashCorrections          CashCorrection[]
+  bankAccountsCreated      BankAccount[]
+  bankTransfersCreated     BankTransfer[]     @relation("BankTransferCreatedBy")
+  bankTransfersEffected    BankTransfer[]     @relation("BankTransferEffectedBy")
+  transferSchedulesCreated TransferSchedule[]
 }
 
 /// Session serveur (DB-backed) : la valeur en base fait autorité, le cookie
@@ -312,6 +328,11 @@ model Rental {
 
   /// Heure RÉELLE d'arrivée — peut différer de l'heure prévue de la
   /// réservation d'origine, qui elle reste inchangée pour toujours (Bloc 9).
+  /// Depuis le Bloc 21 (arrivée rétroactive), peut aussi différer de
+  /// `registeredAt` : un gestionnaire peut saisir une arrivée jusqu'à 24h
+  /// dans le passé (voir src/lib/retroactive-checkin.ts) — c'est TOUJOURS
+  /// cette valeur-ci (jamais `registeredAt`) qui sert au calcul du départ et
+  /// à la vérification de disponibilité.
   arrivalAt DateTime
 
   /// Calculée à la création depuis arrivalAt + durée, puis déplacée par
@@ -335,6 +356,26 @@ model Rental {
   status RentalStatus @default(ACTIVE)
   note   String?
 
+  /// Bloc 21/Bloc 15 (traçabilité) — `registeredByUserId` reste NULL sur les
+  /// lignes créées avant ces fonctionnalités (jamais fabriqué a posteriori —
+  /// voir Phase "audit financier", section W : il n'existait aucune
+  /// traçabilité d'auteur avant ce bloc). Pour toute nouvelle Rental, il est
+  /// systématiquement renseigné, que l'arrivée soit rétroactive ou non.
+  /// `retroactiveReason` n'est renseigné QUE lorsque `arrivalAt` est
+  /// réellement rétroactif (hors tolérance technique) — jamais pour une
+  /// arrivée "maintenant". `createdAt` (déjà existant ci-dessous) EST
+  /// l'unique timestamp d'enregistrement — un champ `registeredAt` dédié
+  /// existait un temps mais a été retiré (Bloc 15) : doublon exact de
+  /// `createdAt` pour toute nouvelle ligne, qu'il n'y avait aucune raison de
+  /// maintenir séparément.
+  registeredByUserId String?
+  registeredBy       User?   @relation("RentalRegisteredBy", fields: [registeredByUserId], references: [id], onDelete: Restrict)
+  retroactiveReason  String?
+
+  /// Depuis le Bloc 15 (traçabilité), ce champ standard Prisma porte
+  /// explicitement le sens métier "quand la location a été enregistrée dans
+  /// SAMA HOME" — distinct de `arrivalAt` (l'heure RÉELLE d'arrivée,
+  /// potentiellement jusqu'à 24h antérieure).
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -434,17 +475,27 @@ model Payment {
 // Phase 9 — Dépenses (Expense)
 // ---------------------------------------------------------------------------
 
-enum ExpenseCategory {
-  RENT
-  ELECTRICITY
-  WATER
-  INTERNET
-  CLEANING
-  MAINTENANCE
-  REPAIR
-  SALARY
-  PURCHASE
-  OTHER
+/// Catégorie de dépense configurable par l'ADMIN (Bloc 16.1) — remplace
+/// l'ancien enum `ExpenseCategory` figé dans le code. Même forme que
+/// `Tariff` (seul précédent réel de ce genre dans ce projet) : `active`
+/// archive sans supprimer, pas de suppression physique si référencée
+/// (`onDelete: Restrict` sur `Expense.category`), pas de contrainte
+/// d'unicité sur `name` (une catégorie désactivée et son remplacement actif
+/// peuvent légitimement partager le même nom — même raisonnement que
+/// `Tariff.label`). `position` pilote l'ordre d'affichage dans
+/// Paramètres → Catégories de dépenses (Bloc 16.2, pas encore implémenté).
+model ExpenseCategory {
+  id       String  @id @default(cuid())
+  name     String
+  active   Boolean @default(true)
+  position Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses Expense[]
+
+  @@index([active, position])
 }
 
 /// Argent SORTANT de l'activité — jamais mélangé avec `Payment` (argent
@@ -464,8 +515,18 @@ enum ExpenseCategory {
 model Expense {
   id String @id @default(cuid())
 
-  category ExpenseCategory
-  amount   Int
+  categoryId String
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  /// Copie figée du nom de la catégorie au moment de la création (Bloc
+  /// 16.1) — un renommage ultérieur de `ExpenseCategory.name` ne doit
+  /// jamais changer rétroactivement l'affichage d'une dépense déjà
+  /// enregistrée. `categoryId` reste la seule référence structurelle
+  /// (filtres, intégrité, rattachement) ; ce champ n'est qu'un libellé
+  /// historique figé, jamais utilisé pour filtrer/agréger.
+  categoryNameSnapshot String
+
+  amount Int
 
   /// Toujours l'heure serveur au moment de la création (Bloc 7) — jamais une
   /// valeur envoyée par le navigateur. Aucune UI ne permet de saisir une
@@ -480,7 +541,7 @@ model Expense {
   updatedAt DateTime @updatedAt
 
   @@index([paidAt])
-  @@index([category])
+  @@index([categoryId])
   @@index([method])
 }
 
@@ -515,4 +576,291 @@ model Settings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Bloc 15 — Traçabilité (AuditLog)
+// ---------------------------------------------------------------------------
+
+/// Journal générique des opérations sensibles — répond à "quelle opération a
+/// été effectuée, sur quelle donnée, avec quelles anciennes/nouvelles
+/// valeurs, éventuellement pour quelle raison". Complémentaire, pas
+/// redondant, avec un champ "auteur" direct sur une entité (ex.
+/// `Rental.registeredByUserId`, qui répond seulement à "qui a créé CETTE
+/// ligne") : AuditLog peut couvrir plusieurs types d'opérations sur
+/// plusieurs entités dans le temps, modifications comprises, pas seulement
+/// la création.
+///
+/// Portée volontairement minimale pour cette étape (Bloc 7/10) : seules les
+/// créations de Rental (location directe, check-in) sont journalisées pour
+/// l'instant. D'autres opérations (tarifs, dépenses, versements...)
+/// viendront s'ajouter progressivement, sans changement de structure ici.
+///
+/// `oldValue`/`newValue` en `Json?` : instantané structuré plutôt qu'une
+/// chaîne — type Postgres/Prisma déjà standard, pas une nouvelle convention
+/// inventée. `null` pour `oldValue` sur une création (rien n'existait avant).
+model AuditLog {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("AuditLogUser", fields: [userId], references: [id], onDelete: Restrict)
+
+  action     String
+  entityType String
+  entityId   String
+
+  reason    String?
+  oldValue  Json?
+  newValue  Json?
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Bloc 17.2 — Caisse & Banque
+// ---------------------------------------------------------------------------
+
+/// La caisse physique/logique. V1 (Bloc 17.1, décision A) : une seule ligne
+/// utilisée. Une vraie table dès maintenant (pas un singleton à id fixe
+/// comme `Settings`) pour qu'une future caisse supplémentaire n'exige
+/// aucune migration structurelle — seulement une nouvelle ligne.
+model CashRegister {
+  id     String  @id @default(cuid())
+  name   String
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions CashSession[]
+
+  @@index([active])
+}
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+/// Une période OUVERTURE → CLÔTURE pour une caisse. Le solde théorique
+/// n'est JAMAIS stocké pendant que la session est OPEN (calculé à la
+/// demande — voir src/lib/cash-data.ts, Bloc 17.2 section D) : seul
+/// `closingTheoreticalBalance` est écrit, une seule fois, au moment de la
+/// clôture — même principe que `Reservation.amount` figé depuis `Tariff`
+/// au moment de la création, jamais recalculé après coup.
+///
+/// Contrainte "une seule session OPEN par caisse" : non exprimable dans ce
+/// schéma (pas de preview feature d'index partiel activé dans ce projet —
+/// voir generator ci-dessus) — appliquée via un index unique partiel ajouté
+/// à la main dans la migration SQL (même technique déjà utilisée pour
+/// `Payment_context_check`), doublée d'une vérification applicative dans la
+/// transaction Serializable d'ouverture.
+model CashSession {
+  id String @id @default(cuid())
+
+  cashRegisterId String
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Restrict)
+
+  status CashSessionStatus @default(OPEN)
+
+  /// Bloc 17.1 décision I / Bloc 17.2 section 3.3 : normalement copié du
+  /// `physicalCount` (s'il existe) sinon du `closingTheoreticalBalance` de
+  /// la session précédente. `openingIsManual`/`openingReason` ne sont
+  /// renseignés que pour l'ouverture exceptionnelle ADMIN (première
+  /// ouverture, ou override).
+  openingBalance  Int
+  openingIsManual Boolean @default(false)
+  openingReason   String?
+  openedAt        DateTime @default(now())
+  openedByUserId  String
+  openedBy        User     @relation("CashSessionOpenedBy", fields: [openedByUserId], references: [id], onDelete: Restrict)
+
+  /// Figé une seule fois à la clôture — jamais recalculé après coup, même
+  /// si une correction est ajoutée plus tard (voir modification de clôture,
+  /// Bloc 17.2 section 14, qui ne touche jamais ce champ).
+  closingTheoreticalBalance Int?
+  /// Comptage physique — facultatif (Bloc 17.1 décision D).
+  physicalCount             Int?
+  /// `physicalCount - closingTheoreticalBalance`, renseigné seulement si
+  /// `physicalCount` est fourni.
+  variance                  Int?
+  /// Obligatoire dès que `variance != 0` (Bloc 17.1 décision E) — jamais
+  /// bloquant pour la clôture elle-même.
+  varianceReason            String?
+  closeNote                 String?
+  closedAt                  DateTime?
+  closedByUserId            String?
+  closedBy                  User?     @relation("CashSessionClosedBy", fields: [closedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  corrections   CashCorrection[]
+  bankTransfers BankTransfer[]
+
+  @@index([cashRegisterId, status])
+  @@index([openedAt])
+  @@index([closedAt])
+}
+
+/// La SEULE ligne financière saisie manuellement dans toute cette
+/// architecture (Bloc 17.1 section 6) — un ajustement explicite quand la
+/// caisse réelle ne correspond à aucune opération déjà enregistrée. ADMIN
+/// uniquement (Bloc 17.2 section 3.1). `amount` signé (+/-). Append-only :
+/// aucune action de modification/suppression ne doit jamais être écrite
+/// pour ce modèle — une correction erronée s'annule par une NOUVELLE ligne
+/// de signe opposé, jamais en silence (même philosophie que
+/// `Payment`/`Expense`/`RentalExtension`).
+model CashCorrection {
+  id String @id @default(cuid())
+
+  cashSessionId String
+  cashSession   CashSession @relation(fields: [cashSessionId], references: [id], onDelete: Restrict)
+
+  amount Int
+  reason String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([cashSessionId])
+  @@index([userId])
+}
+
+/// Référence d'un compte bancaire externe — jamais de données sensibles en
+/// clair (Bloc 17.2 section 7) : `maskedAccountNumber` est une chaîne déjà
+/// masquée (ex. "•••• 4821"), jamais un numéro complet ni un IBAN, jamais
+/// d'identifiants d'accès. Mono-devise FCFA comme tout le reste du projet
+/// (`Int`, jamais de `Float`/`Decimal`) — aucun champ devise ajouté. Même
+/// forme `active`/pas de suppression physique si référencé que
+/// `Tariff`/`ExpenseCategory` : ADMIN uniquement pour créer/modifier/
+/// désactiver (Bloc 17.2 section 3.2).
+model BankAccount {
+  id                   String  @id @default(cuid())
+  label                String
+  bankName             String
+  maskedAccountNumber  String?
+  active               Boolean @default(true)
+
+  createdByUserId String
+  createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transfers BankTransfer[]
+  schedules TransferSchedule[]
+
+  @@index([active])
+}
+
+enum BankTransferStatus {
+  DRAFT
+  SCHEDULED
+  EFFECTED
+  CANCELLED
+}
+
+/// CAISSE → BANQUE. Jamais une `Expense` — table structurellement séparée,
+/// donc impossible à confondre avec une dépense (Bloc 17.1 section 2/
+/// Bloc 17.2 section 3.2). `cashSessionId` n'est résolu qu'au moment de
+/// l'EFFET réel (jamais à la création d'un DRAFT/SCHEDULED, qui peut exister
+/// avant même qu'une session ne soit ouverte) — même principe que
+/// `Reservation.arrivalTime` (prévu) vs `Rental.arrivalAt` (réel) déjà
+/// établi dans ce projet : ne jamais confondre une intention planifiée avec
+/// un fait réellement survenu.
+model BankTransfer {
+  id String @id @default(cuid())
+
+  bankAccountId String
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+
+  amount Int
+  status BankTransferStatus @default(DRAFT)
+
+  scheduledAt DateTime?
+  effectedAt  DateTime?
+
+  reference String?
+  note      String?
+
+  createdByUserId String
+  createdBy       User   @relation("BankTransferCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  effectedByUserId String?
+  effectedBy       User?   @relation("BankTransferEffectedBy", fields: [effectedByUserId], references: [id], onDelete: Restrict)
+
+  cashSessionId String?
+  cashSession   CashSession? @relation(fields: [cashSessionId], references: [id], onDelete: Restrict)
+
+  /// Présent uniquement si généré automatiquement par une TransferSchedule
+  /// échue — traçabilité directement portée par ce champ (Bloc 17.2 section
+  /// 20 : pas d'utilisateur système inventé, pas d'AuditLog pour la simple
+  /// génération, seulement pour les actions humaines réelles).
+  transferScheduleId String?
+  transferSchedule   TransferSchedule? @relation(fields: [transferScheduleId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bankAccountId])
+  @@index([cashSessionId])
+  @@index([status])
+  @@index([transferScheduleId])
+}
+
+enum TransferFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum TransferAmountType {
+  FIXED
+  PERCENTAGE
+}
+
+/// Une règle de récurrence qui GÉNÈRE des `BankTransfer` à l'état
+/// `SCHEDULED` — ne les exécute jamais elle-même (Bloc 17.1 section 9 /
+/// Bloc 17.2 section 3.5 : "une programmation ne doit jamais prétendre
+/// avoir effectué automatiquement un transfert bancaire"). ADMIN uniquement
+/// pour créer/modifier/désactiver (Bloc 17.2 section 3.2). Déclenchement
+/// lazy (vérifié à la consultation d'une page pertinente, voir Bloc 17.2
+/// section 18) — ce projet n'a aucune infrastructure de tâche planifiée.
+model TransferSchedule {
+  id String @id @default(cuid())
+
+  bankAccountId String
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+
+  frequency  TransferFrequency
+  amountType TransferAmountType
+
+  /// Exactement un des deux selon `amountType` — jamais les deux à la fois
+  /// (contrainte CHECK ajoutée en migration, même style que
+  /// `Payment_context_check`).
+  fixedAmount Int?
+  /// Pourcentage de la trésorerie théorique disponible au moment de la
+  /// génération (Bloc 17.2 section 3.4/19) — jamais un pourcentage figé
+  /// d'un montant historique.
+  percentage  Int?
+
+  nextRunAt DateTime
+  active    Boolean  @default(true)
+
+  createdByUserId String
+  createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  generatedTransfers BankTransfer[]
+
+  @@index([bankAccountId])
+  @@index([active, nextRunAt])
 }

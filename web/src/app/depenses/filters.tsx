@@ -9,19 +9,6 @@ const PERIOD_CHIPS: { value: string; label: string }[] = [
   { value: "all", label: "Tout" },
 ];
 
-const CATEGORY_OPTIONS: { value: string; label: string }[] = [
-  { value: "RENT", label: "Loyer" },
-  { value: "ELECTRICITY", label: "Électricité" },
-  { value: "WATER", label: "Eau" },
-  { value: "INTERNET", label: "Internet" },
-  { value: "CLEANING", label: "Nettoyage" },
-  { value: "MAINTENANCE", label: "Entretien" },
-  { value: "REPAIR", label: "Réparation" },
-  { value: "SALARY", label: "Salaire" },
-  { value: "PURCHASE", label: "Achat" },
-  { value: "OTHER", label: "Autre" },
-];
-
 const METHOD_OPTIONS: { value: string; label: string }[] = [
   { value: "CASH", label: "Espèces" },
   { value: "WAVE", label: "Wave" },
@@ -29,16 +16,25 @@ const METHOD_OPTIONS: { value: string; label: string }[] = [
   { value: "OTHER", label: "Autre" },
 ];
 
+/**
+ * Bloc 16.2, section 9 — les catégories viennent désormais de la DB
+ * (actives + inactives déjà utilisées, voir listExpenseCategoriesForFilter
+ * dans src/lib/expense-categories-data.ts), plus de liste statique. Une
+ * catégorie inactive reste sélectionnable ici (jamais retirée de
+ * l'historique) mais est clairement signalée comme telle.
+ */
 export function ExpenseFilters({
   defaultQuery,
   defaultPeriod,
   defaultCategory,
   defaultMethod,
+  categories,
 }: {
   defaultQuery: string;
   defaultPeriod: string;
   defaultCategory: string;
   defaultMethod: string;
+  categories: { id: string; name: string; active: boolean }[];
 }) {
   const [query, setQuery] = useState(defaultQuery);
   const router = useRouter();
@@ -101,9 +97,9 @@ export function ExpenseFilters({
           className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none focus:border-navy"
         >
           <option value="">Toutes catégories</option>
-          {CATEGORY_OPTIONS.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.active ? c.name : `${c.name} (désactivée)`}
             </option>
           ))}
         </select>

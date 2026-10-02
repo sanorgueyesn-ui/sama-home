@@ -1,5 +1,5 @@
 import "server-only";
-import type { ExpenseCategory, PaymentMethod } from "@/generated/prisma/client";
+import type { PaymentMethod } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { todayRange, monthRange, type DateRange } from "@/lib/period";
@@ -22,7 +22,7 @@ function periodRange(period: ExpensePeriodFilter): DateRange | undefined {
 
 export async function listExpenses(filters: {
   period?: ExpensePeriodFilter;
-  category?: ExpenseCategory;
+  categoryId?: string;
   method?: PaymentMethod;
   query?: string;
 }) {
@@ -34,7 +34,7 @@ export async function listExpenses(filters: {
 
   const where = {
     ...(range ? { paidAt: range } : {}),
-    ...(filters.category ? { category: filters.category } : {}),
+    ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(filters.method ? { method: filters.method } : {}),
     // Bloc 13 — server-side search on reference/note only, never a
     // navigator-side scan of thousands of rows.
@@ -52,18 +52,35 @@ export async function listExpenses(filters: {
   // always computed server-side from the SAME `where` as the list, never
   // trusted from the browser, and never a second, independently-maintained
   // formula (single source: this one query per figure).
+  //
+  // Bloc 16.2, section 7 — groupBy sur `categoryId` (Bloc 16.1), puis
+  // jointure explicite vers `ExpenseCategory` pour le libellé. Le nom
+  // affiché ici est volontairement le nom COURANT de la catégorie — cette
+  // vue est un agrégat vivant, pas un enregistrement historique individuel
+  // (contrairement à chaque ligne de `items`, qui affiche
+  // `categoryNameSnapshot` — voir depenses/page.tsx).
   const [items, total, totalAgg, byCategoryAgg] = await Promise.all([
     prisma.expense.findMany({ where, orderBy: { paidAt: "desc" }, take: LIST_LIMIT }),
     prisma.expense.count({ where }),
     prisma.expense.aggregate({ where, _sum: { amount: true } }),
-    prisma.expense.groupBy({ by: ["category"], where, _sum: { amount: true }, orderBy: { category: "asc" } }),
+    prisma.expense.groupBy({ by: ["categoryId"], where, _sum: { amount: true }, orderBy: { categoryId: "asc" } }),
   ]);
+
+  const categories = await prisma.expenseCategory.findMany({
+    where: { id: { in: byCategoryAgg.map((c) => c.categoryId) } },
+    select: { id: true, name: true },
+  });
+  const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
 
   return {
     items,
     total,
     truncated: total > items.length,
     totalAmount: totalAgg._sum.amount ?? 0,
-    byCategory: byCategoryAgg.map((c) => ({ category: c.category, amount: c._sum.amount ?? 0 })),
+    byCategory: byCategoryAgg.map((c) => ({
+      categoryId: c.categoryId,
+      categoryName: categoryNameById.get(c.categoryId) ?? c.categoryId,
+      amount: c._sum.amount ?? 0,
+    })),
   };
 }

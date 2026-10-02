@@ -4,19 +4,6 @@ import { useActionState, useState } from "react";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { ExpenseFormState } from "@/lib/definitions";
 
-const CATEGORY_OPTIONS: { value: string; label: string }[] = [
-  { value: "RENT", label: "Loyer" },
-  { value: "ELECTRICITY", label: "Électricité" },
-  { value: "WATER", label: "Eau" },
-  { value: "INTERNET", label: "Internet" },
-  { value: "CLEANING", label: "Nettoyage" },
-  { value: "MAINTENANCE", label: "Entretien" },
-  { value: "REPAIR", label: "Réparation" },
-  { value: "SALARY", label: "Salaire" },
-  { value: "PURCHASE", label: "Achat" },
-  { value: "OTHER", label: "Autre" },
-];
-
 const METHOD_OPTIONS: { value: string; label: string }[] = [
   { value: "CASH", label: "Espèces" },
   { value: "WAVE", label: "Wave" },
@@ -24,13 +11,22 @@ const METHOD_OPTIONS: { value: string; label: string }[] = [
   { value: "OTHER", label: "Autre" },
 ];
 
+/**
+ * Bloc 16.2, section 10 — les catégories viennent de la DB (actives
+ * uniquement, voir listActiveExpenseCategories), plus de liste enum
+ * statique. Le formulaire envoie toujours `categoryId`, jamais `category`
+ * ni `categoryNameSnapshot` (ce dernier n'est dérivé que côté serveur,
+ * depuis `category.name` au moment de la création — voir createExpense).
+ */
 export function ExpenseForm({
   action,
+  categories,
 }: {
   action: (state: ExpenseFormState, formData: FormData) => Promise<ExpenseFormState>;
+  categories: { id: string; name: string }[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [category, setCategory] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [method, setMethod] = useState("CASH");
 
   const errors = state?.errors;
@@ -38,24 +34,24 @@ export function ExpenseForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="category" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="categoryId" className="mb-1.5 block text-xs font-bold text-navy">
           Catégorie
         </label>
         <select
-          id="category"
-          name="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          id="categoryId"
+          name="categoryId"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
           className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
         >
           <option value="">Sélectionner une catégorie...</option>
-          {CATEGORY_OPTIONS.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
-        {errors?.category?.map((error) => (
+        {errors?.categoryId?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
             {error}
           </p>

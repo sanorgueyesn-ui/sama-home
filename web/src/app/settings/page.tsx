@@ -80,18 +80,41 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
       </section>
 
       {/* Administration — visible uniquement pour ADMIN (Bloc 13). Rappel :
-          ce simple masquage n'est PAS la protection — /settings/users et
-          chaque action utilisateur revérifient le rôle côté serveur
-          (requireAdmin(), voir src/lib/dal.ts et src/app/actions/users.ts). */}
+          ce simple masquage n'est PAS la protection — /settings/users,
+          /settings/expense-categories, /settings/bank-accounts,
+          /settings/transfer-schedules et chaque action associée revérifient
+          le rôle côté serveur (requireAdmin(), voir src/lib/dal.ts,
+          src/app/actions/users.ts, src/app/actions/expense-categories.ts,
+          src/app/actions/bank.ts). */}
       {user.role === "ADMIN" ? (
         <section className="mt-6">
           <h2 className="mb-2.5 text-sm font-extrabold text-navy">Administration</h2>
-          <Link
-            href="/settings/users"
-            className="flex h-12 items-center justify-center rounded-xl border border-navy/15 text-sm font-extrabold text-navy"
-          >
-            Utilisateurs
-          </Link>
+          <div className="flex flex-col gap-2.5">
+            <Link
+              href="/settings/users"
+              className="flex h-12 items-center justify-center rounded-xl border border-navy/15 text-sm font-extrabold text-navy"
+            >
+              Utilisateurs
+            </Link>
+            <Link
+              href="/settings/expense-categories"
+              className="flex h-12 items-center justify-center rounded-xl border border-navy/15 text-sm font-extrabold text-navy"
+            >
+              Catégories de dépenses
+            </Link>
+            <Link
+              href="/settings/bank-accounts"
+              className="flex h-12 items-center justify-center rounded-xl border border-navy/15 text-sm font-extrabold text-navy"
+            >
+              Comptes bancaires
+            </Link>
+            <Link
+              href="/settings/transfer-schedules"
+              className="flex h-12 items-center justify-center rounded-xl border border-navy/15 text-sm font-extrabold text-navy"
+            >
+              Virements programmés
+            </Link>
+          </div>
         </section>
       ) : null}
 

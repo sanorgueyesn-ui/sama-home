@@ -3,10 +3,12 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { verifySession } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { checkIdentityRequirement } from "@/lib/identity";
+import { checkRetroactiveArrival } from "@/lib/retroactive-checkin";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 
 class RentalActionError extends Error {}
@@ -35,6 +37,7 @@ function parseRentalForm(formData: FormData) {
     note: formData.get("note"),
     idDocumentType: formData.get("idDocumentType"),
     idDocumentNumber: formData.get("idDocumentNumber"),
+    retroactiveReason: formData.get("retroactiveReason"),
   });
 }
 
@@ -78,7 +81,7 @@ export async function createRentalDirect(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
-  await verifySession();
+  const { userId } = await verifySession();
 
   const parsed = parseRentalForm(formData);
   if (!parsed.success) {
@@ -90,7 +93,19 @@ export async function createRentalDirect(
   // Payment row now requires a `method`, and this form collects the very
   // first amount of money for a direct rental — see the auto-created Payment
   // below. Rental itself still has no depositMethod column (unchanged).
-  const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note, idDocumentType, idDocumentNumber } = parsed.data;
+  const {
+    clientId,
+    propertyId,
+    tariffId,
+    date,
+    arrivalTime,
+    deposit,
+    depositMethod,
+    note,
+    idDocumentType,
+    idDocumentNumber,
+    retroactiveReason,
+  } = parsed.data;
 
   const [client, property, tariff] = await Promise.all([
     prisma.client.findUnique({ where: { id: clientId } }),
@@ -108,6 +123,18 @@ export async function createRentalDirect(
   if (Number.isNaN(arrivalDateTime.getTime())) {
     return { message: "Date ou heure invalide." };
   }
+
+  // Bloc 21 — arrivée rétroactive : "Nouvelle location directe" acceptait déjà
+  // n'importe quelle heure d'arrivée sans aucune validation passé/futur (un
+  // trou de sécurité existant, pas un nouveau comportement). Même règle que
+  // checkInReservation : jamais dans le futur, jamais plus de 24h dans le
+  // passé, justification obligatoire dès que l'écart sort de la tolérance.
+  const registeredAt = new Date();
+  const retroCheck = checkRetroactiveArrival(registeredAt, arrivalDateTime, retroactiveReason);
+  if (!retroCheck.ok) {
+    return { message: retroCheck.message };
+  }
+
   const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
 
   const amount = tariff.amount; // never a client-submitted value
@@ -153,6 +180,26 @@ export async function createRentalDirect(
             amount,
             deposit,
             note,
+            registeredByUserId: userId,
+            retroactiveReason: retroCheck.isRetroactive ? retroactiveReason : null,
+          },
+        });
+        // Bloc 15 — traçabilité : AuditLog créé atomiquement avec la Rental,
+        // dans la même transaction Serializable (jamais l'un sans l'autre).
+        // userId vient exclusivement de verifySession(), jamais du formulaire.
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: "RENTAL_CREATED_DIRECT",
+            entityType: "Rental",
+            entityId: rental.id,
+            reason: retroCheck.isRetroactive ? (retroactiveReason ?? null) : null,
+            oldValue: Prisma.DbNull,
+            newValue: {
+              arrivalAt: arrivalDateTime.toISOString(),
+              plannedDepartureAt: departureDateTime.toISOString(),
+              isRetroactive: retroCheck.isRetroactive,
+            },
           },
         });
         // Phase 8, Bloc 1/5 — same rule as createReservation: the initial
@@ -188,8 +235,11 @@ export async function createRentalDirect(
  * la réservation ne passe ARRIVED que si la Location a bien été créée, et
  * réciproquement (Bloc 20) — jamais l'un sans l'autre.
  */
-export async function checkInReservation(reservationId: string): Promise<{ error?: string }> {
-  await verifySession();
+export async function checkInReservation(
+  reservationId: string,
+  options?: { actualArrivalAt?: string; reason?: string },
+): Promise<{ error?: string }> {
+  const { userId } = await verifySession();
 
   const reservation = await prisma.reservation.findUnique({ where: { id: reservationId } });
   if (!reservation) {
@@ -205,9 +255,21 @@ export async function checkInReservation(reservationId: string): Promise<{ error
     return { error: "Cette réservation n'est plus confirmée." };
   }
 
-  // Actual arrival = now (Bloc 9: never the reservation's planned time — the
-  // reservation itself keeps its original arrivalTime forever).
-  const actualArrival = new Date();
+  // Bloc 21 — arrivée rétroactive : si `options.actualArrivalAt` est fourni,
+  // il remplace "maintenant" comme heure RÉELLE d'arrivée (le gestionnaire a
+  // saisi le séjour après coup). Sans lui, comportement strictement
+  // inchangé (Bloc 9 : arrivée = maintenant, jamais l'heure prévue de la
+  // réservation, qui elle reste figée pour toujours).
+  const registeredAt = new Date();
+  const actualArrival = options?.actualArrivalAt ? new Date(options.actualArrivalAt) : registeredAt;
+  if (Number.isNaN(actualArrival.getTime())) {
+    return { error: "Heure d'arrivée invalide." };
+  }
+  const retroCheck = checkRetroactiveArrival(registeredAt, actualArrival, options?.reason);
+  if (!retroCheck.ok) {
+    return { error: retroCheck.message };
+  }
+
   const plannedDeparture = computeDepartureTime(
     actualArrival,
     reservation.durationValue,
@@ -250,6 +312,25 @@ export async function checkInReservation(reservationId: string): Promise<{ error
             // it be conserved ("note si applicable"). Self-caught during the
             // Phase 12 flow inspection.
             note: reservation.note,
+            registeredByUserId: userId,
+            retroactiveReason: retroCheck.isRetroactive ? options?.reason : null,
+          },
+        });
+        // Bloc 15 — traçabilité : même règle que createRentalDirect, AuditLog
+        // atomique dans la même transaction Serializable.
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: "RENTAL_CREATED_FROM_CHECKIN",
+            entityType: "Rental",
+            entityId: rental.id,
+            reason: retroCheck.isRetroactive ? (options?.reason ?? null) : null,
+            oldValue: Prisma.DbNull,
+            newValue: {
+              arrivalAt: actualArrival.toISOString(),
+              plannedDepartureAt: plannedDeparture.toISOString(),
+              isRetroactive: retroCheck.isRetroactive,
+            },
           },
         });
         await tx.reservation.update({ where: { id: reservationId }, data: { status: "ARRIVED" } });
@@ -274,7 +355,13 @@ export async function checkInReservation(reservationId: string): Promise<{ error
   redirect(`/locations/${rentalId}?created=1`);
 }
 
-/** Bloc 13 — "Terminer". */
+/**
+ * Bloc 13 — "Terminer". Transaction Serializable (Bloc K.1) : relit le
+ * statut dans la transaction avant d'écrire — un deuxième `completeRental()`
+ * concurrent sur la même Rental échoue proprement au lieu d'écraser
+ * silencieusement `actualDepartureAt` (même pattern que
+ * `cancelBankTransfer()`, Bloc I.1).
+ */
 export async function completeRental(id: string): Promise<{ error?: string }> {
   await verifySession();
 
@@ -282,10 +369,28 @@ export async function completeRental(id: string): Promise<{ error?: string }> {
   if (!rental) return { error: "Location introuvable." };
   if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
 
-  await prisma.rental.update({
-    where: { id },
-    data: { status: "COMPLETED", actualDepartureAt: new Date() },
-  });
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        const fresh = await tx.rental.findUniqueOrThrow({ where: { id } });
+        if (fresh.status !== "ACTIVE") {
+          throw new RentalActionError("Cette location n'est plus active.");
+        }
+        await tx.rental.update({
+          where: { id },
+          data: { status: "COMPLETED", actualDepartureAt: new Date() },
+        });
+      },
+      { isolationLevel: "Serializable" },
+    );
+  } catch (error) {
+    if (error instanceof RentalActionError) {
+      return { error: error.message };
+    }
+    return {
+      error: "Cette location vient peut-être d'être clôturée à l'instant (opération concurrente). Veuillez réessayer.",
+    };
+  }
 
   revalidatePath("/locations");
   revalidatePath(`/locations/${id}`);
