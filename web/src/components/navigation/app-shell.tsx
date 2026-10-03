@@ -7,8 +7,11 @@ import { logout } from "@/app/actions/auth";
 
 // Audit Client/Réservation, Bloc 6 (PRIORITAIRE) — navigation persistante
 // présente sur TOUTE page authentifiée, pour qu'aucun écran ne soit un
-// cul-de-sac : barre d'onglets fixe en mobile, barre latérale fixe en
-// tablette/PC. Le logo/texte "SAMA HOME" remplace le placeholder
+// cul-de-sac : barre d'onglets fixe en mobile ET tablette, barre latérale
+// fixe à partir du breakpoint desktop (lg, 1024px) uniquement — en dessous,
+// réserver 240px à une sidebar en flux décentrait visuellement le contenu
+// par rapport au viewport (expérimentation /clients, non généralisée).
+// Le logo/texte "SAMA HOME" remplace le placeholder
 // "Résidence Atlantique" visible sur la maquette (nom de marque incohérent,
 // signalé dans le rapport d'audit — non repris ici).
 
@@ -144,8 +147,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:border-r md:border-navy/10 md:bg-white md:px-3 md:py-6">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-navy/10 lg:bg-white lg:px-3 lg:py-6">
         <div className="mb-6 px-3 text-lg font-extrabold tracking-tight text-navy">SAMA HOME</div>
         <nav className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map((item) => {
@@ -175,9 +178,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </form>
       </aside>
 
-      <div className="min-w-0 flex-1 pb-20 md:pb-0">{children}</div>
+      <div className="min-w-0 flex-1 pb-20 lg:pb-0">{children}</div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-navy/10 bg-white [padding-bottom:env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-navy/10 bg-white [padding-bottom:env(safe-area-inset-bottom)] lg:hidden">
         {MOBILE_PRIMARY.map((item) => {
           const active = isActive(pathname, item.href);
           return (
@@ -210,7 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {moreOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end md:hidden" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 flex items-end lg:hidden" role="dialog" aria-modal="true">
           <button
             type="button"
             aria-label="Fermer"

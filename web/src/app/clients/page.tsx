@@ -20,7 +20,7 @@ export default async function ClientsPage(props: PageProps<"/clients">) {
   const { items, truncated } = await listClients(query);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:px-8 lg:ml-[max(0px,calc((100vw_-_48rem)/2_-_15rem))] lg:mr-auto lg:w-[min(48rem,calc(100vw_-_15rem))] lg:max-w-none lg:px-10">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-navy">Clients</h1>
         <Link
