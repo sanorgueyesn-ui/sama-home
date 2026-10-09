@@ -32,7 +32,7 @@ export function TariffRowActions({ id, active }: { id: string; active: boolean }
           disabled={pending}
           onClick={handleToggle}
           className={`h-8 rounded-lg px-2.5 text-[11px] font-bold disabled:opacity-60 ${
-            active ? "bg-paper text-navy/70" : "bg-success-bg text-success"
+            active ? "bg-surface-sunken text-fg/70" : "bg-success-bg text-success"
           }`}
         >
           {active ? "Désactiver" : "Activer"}

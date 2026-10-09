@@ -63,7 +63,7 @@ export function TariffForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label className="mb-1.5 block text-xs font-bold text-navy">Type de tarif</label>
+        <label className="mb-1.5 block text-xs font-bold text-fg">Type de tarif</label>
         <input type="hidden" name="type" value={type} />
         <div className="flex flex-wrap gap-2">
           {TYPE_OPTIONS.map((opt) => (
@@ -71,8 +71,9 @@ export function TariffForm({
               key={opt.value}
               type="button"
               onClick={() => setType(opt.value)}
+              aria-pressed={type === opt.value}
               className={`rounded-full px-3.5 py-2 text-xs font-bold ${
-                type === opt.value ? "bg-navy text-white" : "bg-paper text-navy"
+                type === opt.value ? "bg-navy text-white" : "bg-surface-raised text-fg"
               }`}
             >
               {opt.label}
@@ -88,7 +89,7 @@ export function TariffForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="durationValue" className="mb-1.5 block text-xs font-bold text-navy">
+          <label htmlFor="durationValue" className="mb-1.5 block text-xs font-bold text-fg">
             Durée
           </label>
           <input
@@ -99,7 +100,7 @@ export function TariffForm({
             max={365}
             value={durationValue}
             onChange={(e) => setDurationValue(Number(e.target.value))}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.durationValue?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -108,12 +109,12 @@ export function TariffForm({
           ))}
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-navy">Unité</label>
+          <label className="mb-1.5 block text-xs font-bold text-fg">Unité</label>
           <select
             name="durationUnit"
             value={durationUnit}
             onChange={(e) => setDurationUnit(e.target.value as typeof durationUnit)}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
             {UNIT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -126,7 +127,7 @@ export function TariffForm({
 
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label htmlFor="label" className="text-xs font-bold text-navy">
+          <label htmlFor="label" className="text-xs font-bold text-fg">
             Libellé affiché
           </label>
           <button
@@ -143,7 +144,7 @@ export function TariffForm({
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Ex. 2 heures, Nuitée, Semaine..."
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {errors?.label?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -164,7 +165,7 @@ export function TariffForm({
       />
 
       {showActiveToggle ? (
-        <label className="flex items-center gap-2.5 text-sm font-bold text-navy">
+        <label className="flex items-center gap-2.5 text-sm font-bold text-fg">
           <input
             type="checkbox"
             name="active"

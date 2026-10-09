@@ -19,7 +19,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-navy">Logements</h1>
+        <h1 className="text-2xl font-extrabold text-fg">Logements</h1>
         <Link
           href="/logements/new"
           className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
@@ -57,7 +57,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
           }
         />
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {items.map((property) => (
             <Link key={property.id} href={`/logements/${property.id}`}>
               <Card className="flex gap-3 p-3.5">
@@ -68,10 +68,10 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-extrabold text-navy">{property.name}</p>
+                    <p className="truncate text-sm font-extrabold text-fg">{property.name}</p>
                     <StatusBadge status={statuses.get(property.id) ?? "UNAVAILABLE"} />
                   </div>
-                  <p className="mt-0.5 text-xs font-medium text-navy/60">
+                  <p className="mt-0.5 text-xs font-medium text-fg/60">
                     {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"} ·{" "}
                     {property.capacity} personne{property.capacity > 1 ? "s" : ""}
                   </p>
@@ -80,7 +80,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
             </Link>
           ))}
           {truncated && (
-            <p className="col-span-full pt-1 text-center text-xs font-medium text-navy/50">
+            <p className="col-span-full pt-1 text-center text-xs font-medium text-fg/50">
               Affinez votre recherche pour voir plus de résultats.
             </p>
           )}

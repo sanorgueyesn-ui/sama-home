@@ -37,8 +37,8 @@ export function PropertyFilters({
 
   return (
     <div className="mt-4">
-      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)] focus-within:border-navy">
-        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7A87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-surface-raised px-3.5 shadow-card focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange">
+        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-fg/40" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
@@ -48,7 +48,7 @@ export function PropertyFilters({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher un logement..."
           aria-label="Rechercher un logement"
-          className="flex-1 bg-transparent text-sm text-navy outline-none placeholder:text-navy/40"
+          className="flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg/40"
         />
       </div>
 
@@ -58,8 +58,9 @@ export function PropertyFilters({
             key={chip.value}
             type="button"
             onClick={() => pushParams(query, chip.value)}
+            aria-pressed={defaultType === chip.value}
             className={`rounded-full px-4 py-2 text-xs font-bold ${
-              defaultType === chip.value ? "bg-navy text-white" : "bg-white text-navy"
+              defaultType === chip.value ? "bg-navy text-white" : "bg-surface-raised text-fg"
             }`}
           >
             {chip.label}

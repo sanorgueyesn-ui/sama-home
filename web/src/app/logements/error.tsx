@@ -21,10 +21,10 @@ export default function PropertiesError({
           <path d="M10.3 3.9 1.9 18.5A1.8 1.8 0 0 0 3.5 21h17a1.8 1.8 0 0 0 1.6-2.5L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
         </svg>
       </div>
-      <p className="text-base font-extrabold text-navy">
+      <p className="text-base font-extrabold text-fg">
         Impossible de charger les logements
       </p>
-      <p className="mt-1.5 max-w-xs text-sm text-navy/60">
+      <p className="mt-1.5 max-w-xs text-sm text-fg/60">
         Une erreur inattendue est survenue. Vérifiez votre connexion et réessayez.
       </p>
       <button

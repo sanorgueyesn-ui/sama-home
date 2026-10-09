@@ -31,14 +31,15 @@ export function PropertyForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label className="mb-1.5 block text-xs font-bold text-navy">Type de logement</label>
+        <label className="mb-1.5 block text-xs font-bold text-fg">Type de logement</label>
         <input type="hidden" name="type" value={type} />
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setType("ROOM")}
+            aria-pressed={type === "ROOM"}
             className={`h-11 flex-1 rounded-xl text-sm font-bold ${
-              type === "ROOM" ? "bg-navy text-white" : "border border-navy/15 bg-white text-navy"
+              type === "ROOM" ? "bg-navy text-white" : "border border-border/15 bg-surface-raised text-fg"
             }`}
           >
             Chambre
@@ -46,8 +47,9 @@ export function PropertyForm({
           <button
             type="button"
             onClick={() => setType("APARTMENT")}
+            aria-pressed={type === "APARTMENT"}
             className={`h-11 flex-1 rounded-xl text-sm font-bold ${
-              type === "APARTMENT" ? "bg-navy text-white" : "border border-navy/15 bg-white text-navy"
+              type === "APARTMENT" ? "bg-navy text-white" : "border border-border/15 bg-surface-raised text-fg"
             }`}
           >
             Appartement
@@ -97,7 +99,7 @@ export function PropertyForm({
       />
 
       {showActiveToggle ? (
-        <label className="flex items-center gap-2.5 text-sm font-bold text-navy">
+        <label className="flex items-center gap-2.5 text-sm font-bold text-fg">
           <input
             type="checkbox"
             name="active"
