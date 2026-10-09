@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, type TransferFrequency } from "@/generated/prisma/client";
 import { getCurrentUser, verifySession } from "@/lib/dal";
 import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cash-data";
+import { catchUpSchedule, isSerializationConflict } from "@/lib/transfer-schedule-engine";
 import { BankAccountSchema, TransferScheduleSchema } from "@/lib/definitions";
 
 /**
@@ -541,56 +542,26 @@ export async function deactivateTransferSchedule(id: string): Promise<{ error?: 
 // Génération paresseuse — BLOC 18/19/20
 // ---------------------------------------------------------------------------
 
-function advanceNextRunAt(current: Date, frequency: TransferFrequency): Date {
-  const next = new Date(current);
-  switch (frequency) {
-    case "DAILY":
-      next.setDate(next.getDate() + 1);
-      break;
-    case "WEEKLY":
-      next.setDate(next.getDate() + 7);
-      break;
-    case "BIWEEKLY":
-      next.setDate(next.getDate() + 14);
-      break;
-    case "MONTHLY": {
-      const day = next.getDate();
-      const year = next.getFullYear();
-      const targetMonthIndex = next.getMonth() + 1;
-      const lastDayOfTargetMonth = new Date(year, targetMonthIndex + 1, 0).getDate();
-      next.setFullYear(year, targetMonthIndex, Math.min(day, lastDayOfTargetMonth));
-      break;
-    }
-  }
-  return next;
-}
-
 /**
- * BLOC 18/19 — à appeler depuis n'importe quelle page pertinente (aucune UI
- * dans ce bloc, donc aucun appelant encore — la fonction existe et est
- * testée indépendamment, prête pour l'Étape I). Pour chaque programmation
- * active échue :
- *   - FIXED → `fixedAmount` tel quel ;
- *   - PERCENTAGE → `floor(soldeThéoriqueDisponible × percentage / 100)`,
- *     plafonné au disponible (Bloc 17.2 section 3.4/BLOC 19 — FCFA entier,
- *     jamais de Float, même convention que tout le reste du projet) ;
- *   - si le montant calculé est <= 0, ou si le compte bancaire est
- *     désactivé : AUCUN virement créé, mais `nextRunAt` avance quand même
- *     (évite une boucle de nouvelle tentative infinie sur une
- *     configuration durablement inopérante) ;
- *   - toujours `status: SCHEDULED`, jamais EFFECTED (BLOC 9/18 — "une
- *     programmation ne doit jamais prétendre avoir effectué
- *     automatiquement un transfert").
+ * BLOC 18/19, corrigé — à appeler depuis n'importe quelle page pertinente.
+ * Pour chaque programmation active échue, rattrape TOUTES ses échéances
+ * manquantes (pas une seule par appel — voir `catchUpSchedule`,
+ * src/lib/transfer-schedule-engine.ts, qui porte la boucle bornée et la
+ * logique métier complète : FIXED/PERCENTAGE, compte désactivé, montant
+ * nul, toujours `status: SCHEDULED` jamais EFFECTED). Cette fonction ne
+ * fait plus que lister les programmations dues et déléguer, programmation
+ * par programmation, à `catchUpSchedule`.
  *
  * Traçabilité (BLOC 20) : `transferScheduleId` + `createdByUserId` (celui
- * de la programmation, pas un utilisateur système inventé ni l'utilisateur
- * de passage qui a déclenché la vérification) suffisent — aucune entrée
- * AuditLog pour la simple génération, qui n'est l'action d'aucun humain.
+ * de la programmation, pas un utilisateur système inventé) suffisent —
+ * aucune entrée AuditLog pour la simple génération, qui n'est l'action
+ * d'aucun humain.
  *
- * Chaque programmation est traitée dans sa propre transaction Serializable
- * (relecture de `nextRunAt`/`active` dans la transaction) : deux
- * déclenchements concurrents de cette fonction ne peuvent pas générer deux
- * fois le même virement pour la même échéance (BLOC 23, test 5).
+ * Chaque échéance reste traitée dans sa propre transaction Serializable
+ * courte avec relecture de `nextRunAt`/`active` à l'intérieur de la
+ * transaction : deux déclenchements concurrents ne peuvent pas générer
+ * deux fois le même virement pour la même échéance (voir
+ * `catchUpSchedule`/`isSerializationConflict`).
  */
 export async function generateDueScheduledTransfers(): Promise<{ generated: number }> {
   // Lecture paresseuse déclenchée par la simple consultation d'une page —
@@ -608,69 +579,18 @@ export async function generateDueScheduledTransfers(): Promise<{ generated: numb
   let generated = 0;
 
   for (const { id: scheduleId } of dueSchedules) {
-    try {
-      await prisma.$transaction(
-        async (tx) => {
-          const fresh = await tx.transferSchedule.findUnique({ where: { id: scheduleId } });
-          if (!fresh || !fresh.active || fresh.nextRunAt > now) {
-            return;
-          }
-
-          const account = await tx.bankAccount.findUnique({ where: { id: fresh.bankAccountId } });
-          if (!account || !account.active) {
-            await tx.transferSchedule.update({
-              where: { id: fresh.id },
-              data: { nextRunAt: advanceNextRunAt(fresh.nextRunAt, fresh.frequency) },
-            });
-            return;
-          }
-
-          let amount: number;
-          if (fresh.amountType === "FIXED") {
-            amount = fresh.fixedAmount!;
-          } else {
-            const register = await resolveDefaultCashRegister(tx);
-            const session = await tx.cashSession.findFirst({
-              where: { cashRegisterId: register.id, status: "OPEN" },
-            });
-            const available = session ? await computeTheoreticalBalance(tx, session) : 0;
-            const raw = Math.floor((available * fresh.percentage!) / 100);
-            amount = Math.min(raw, available);
-          }
-
-          if (amount <= 0) {
-            await tx.transferSchedule.update({
-              where: { id: fresh.id },
-              data: { nextRunAt: advanceNextRunAt(fresh.nextRunAt, fresh.frequency) },
-            });
-            return;
-          }
-
-          await tx.bankTransfer.create({
-            data: {
-              bankAccountId: fresh.bankAccountId,
-              amount,
-              status: "SCHEDULED",
-              scheduledAt: now,
-              createdByUserId: fresh.createdByUserId,
-              transferScheduleId: fresh.id,
-            },
-          });
-
-          await tx.transferSchedule.update({
-            where: { id: fresh.id },
-            data: { nextRunAt: advanceNextRunAt(fresh.nextRunAt, fresh.frequency) },
-          });
-
-          generated++;
-        },
-        { isolationLevel: "Serializable" },
+    const result = await catchUpSchedule(scheduleId, now);
+    generated += result.generated;
+    if (result.stoppedOnError && !isSerializationConflict(result.stoppedOnError)) {
+      // Un conflit de sérialisation est un aléa de concurrence attendu,
+      // retraité au prochain appel — jamais masqué pour autant côté
+      // observabilité, mais pas davantage qu'avant (déjà silencieux).
+      // Toute AUTRE erreur est, elle, inattendue : journalisée plutôt que
+      // masquée, sans bloquer le traitement des programmations suivantes.
+      console.error(
+        `generateDueScheduledTransfers() — échec inattendu pour la programmation ${scheduleId} :`,
+        result.stoppedOnError,
       );
-    } catch {
-      // Une programmation en conflit de sérialisation (déclenchement
-      // concurrent) ne doit jamais bloquer le traitement des autres
-      // programmations dues — elle sera retraitée au prochain déclenchement.
-      continue;
     }
   }
 
