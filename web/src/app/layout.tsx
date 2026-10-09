@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { getSessionCookiePayload } from "@/lib/session-token";
 import { AppShell } from "@/components/navigation/app-shell";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+// Reconstruction UI (Nocturne Opulence) — Plus Jakarta Sans remplace Manrope
+// dans toute l'app, conformément au design system validé (PRD section 3).
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
@@ -26,8 +28,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const showChrome = Boolean(payload?.sessionId);
 
   return (
-    <html lang="fr" className={`${manrope.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-paper text-navy">
+    // Reconstruction UI — SAMA HOME = dark premium par défaut (pas de
+    // sélecteur de thème pour ce lot ; voir Paramètres > Apparence &
+    // Logo, lot ultérieur, pour une préférence réglable).
+    <html lang="fr" data-theme="dark" className={`${plusJakartaSans.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-surface text-fg">
         {showChrome ? <AppShell>{children}</AppShell> : children}
       </body>
     </html>

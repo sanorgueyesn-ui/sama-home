@@ -2,20 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 
-// Audit Client/Réservation, Bloc 6 (PRIORITAIRE) — navigation persistante
-// présente sur TOUTE page authentifiée, pour qu'aucun écran ne soit un
-// cul-de-sac : barre d'onglets fixe en mobile ET tablette, barre latérale
-// fixe à partir du breakpoint desktop (lg, 1024px) uniquement — en dessous,
-// réserver 240px à une sidebar en flux décentrait visuellement le contenu
-// par rapport au viewport (expérimentation /clients, non généralisée).
-// Le logo/texte "SAMA HOME" remplace le placeholder
-// "Résidence Atlantique" visible sur la maquette (nom de marque incohérent,
-// signalé dans le rapport d'audit — non repris ici).
+// Navigation persistante présente sur TOUTE page authentifiée, pour
+// qu'aucun écran ne soit un cul-de-sac : barre d'onglets fixe en mobile ET
+// tablette, barre latérale fixe à partir du breakpoint desktop (lg,
+// 1024px) uniquement — en dessous, réserver 240px à une sidebar en flux
+// décentrait visuellement le contenu par rapport au viewport.
+//
+// Reconstruction UI (maquettes Stitch validées, design system Nocturne
+// Opulence) — barre principale réduite à Accueil/Séjour/Dépenses (règle
+// stricte des 3 éléments, PRD section 2.3). "Séjour" pointe vers /sejour
+// (Lot 2) — hub Louer/Réserver, voir app/sejour/page.tsx ; /reservations et
+// /locations restent des routes métier à part entière, jamais supprimées.
+// "Locataires" n'est plus un item principal (absent
+// de la bottom nav des maquettes) mais reste joignable depuis Menu/sidebar,
+// jamais retiré de l'app. « Finances » et « Sécurité » restent `disabled:
+// true` : aucune route réelle derrière (vérifié).
+//
+// Le logo/texte "SAMA HOME" remplace le placeholder "Résidence Atlantique"
+// visible sur l'ancienne maquette (nom de marque incohérent, signalé dans
+// le rapport d'audit — non repris ici).
 
-type NavItem = { href: string; label: string; mobileLabel?: string; icon: (active: boolean) => ReactNode };
+type NavItem = {
+  href?: string;
+  label: string;
+  icon: (active: boolean) => ReactNode;
+  /** Élément de la MAQUETTE AT sans page fonctionnelle réelle derrière —
+   * affiché mais non cliquable, jamais une fausse destination. */
+  disabled?: boolean;
+};
 
 function iconProps(active: boolean) {
   return {
@@ -76,6 +93,14 @@ function PeopleIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
+function UserIcon({ active }: { active: boolean }) {
+  return (
+    <svg {...iconProps(active)}>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.8 19.5c0-4 3.2-6.2 7.2-6.2s7.2 2.2 7.2 6.2" />
+    </svg>
+  );
+}
 function WalletIcon({ active }: { active: boolean }) {
   return (
     <svg {...iconProps(active)}>
@@ -94,6 +119,21 @@ function CashIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
+function FinanceIcon({ active }: { active: boolean }) {
+  return (
+    <svg {...iconProps(active)}>
+      <path d="M4 18V9M10 18V5M16 18v-7M21 18V3" />
+    </svg>
+  );
+}
+function SecurityIcon({ active }: { active: boolean }) {
+  return (
+    <svg {...iconProps(active)}>
+      <path d="M12 3.5 5 6v5.5c0 4.8 3 7.8 7 9 4-1.2 7-4.2 7-9V6l-7-2.5Z" />
+      <path d="M9.3 12 11 13.7 14.8 10" />
+    </svg>
+  );
+}
 function GearIcon({ active }: { active: boolean }) {
   return (
     <svg {...iconProps(active)}>
@@ -102,12 +142,10 @@ function GearIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
-function MoreIcon({ active }: { active: boolean }) {
+function MenuIcon({ active }: { active: boolean }) {
   return (
     <svg {...iconProps(active)}>
-      <circle cx="5" cy="12" r="1.3" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.3" fill="currentColor" />
-      <circle cx="19" cy="12" r="1.3" fill="currentColor" />
+      <path d="M4 7h16M4 12h16M4 17h16" />
     </svg>
   );
 }
@@ -121,56 +159,182 @@ function LogoutIcon() {
   );
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Tableau de bord", mobileLabel: "Accueil", icon: (a) => <HomeIcon active={a} /> },
+// Toujours visibles : barre principale mobile ET premier groupe de la
+// sidebar PC. Exactement 3 éléments (PRD section 2.3) — jamais
+// Locataires/Réservations/Locations/Paramètres ici.
+const PRIMARY_ITEMS: NavItem[] = [
+  { href: "/", label: "Accueil", icon: (a) => <HomeIcon active={a} /> },
+  { href: "/sejour", label: "Séjour", icon: (a) => <KeyIcon active={a} /> },
+  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
+];
+
+// Fonctions secondaires/admin : Menu mobile/tablette ET reste de la sidebar
+// PC. Ordre demandé : Logements, Réservations, Locations, Locataires,
+// Finances, Caisse, Paramètres, Utilisateurs, Sécurité. Finances et
+// Sécurité désactivées — voir le commentaire d'en-tête.
+const MENU_ITEMS: NavItem[] = [
   { href: "/logements", label: "Logements", icon: (a) => <BuildingIcon active={a} /> },
   { href: "/reservations", label: "Réservations", icon: (a) => <CalendarIcon active={a} /> },
   { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} /> },
-  { href: "/clients", label: "Clients", icon: (a) => <PeopleIcon active={a} /> },
-  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
+  { href: "/clients", label: "Locataires", icon: (a) => <PeopleIcon active={a} /> },
+  { label: "Finances", icon: (a) => <FinanceIcon active={a} />, disabled: true },
   { href: "/caisse", label: "Caisse", icon: (a) => <CashIcon active={a} /> },
   { href: "/settings", label: "Paramètres", icon: (a) => <GearIcon active={a} /> },
+  { href: "/settings/users", label: "Utilisateurs", icon: (a) => <UserIcon active={a} /> },
+  { label: "Sécurité", icon: (a) => <SecurityIcon active={a} />, disabled: true },
 ];
-
-// Bloc 6 — mobile : Accueil/Logements/Réservations/Locations toujours
-// visibles, le reste (Clients/Dépenses/Paramètres) derrière "Plus".
-const MOBILE_PRIMARY = NAV_ITEMS.slice(0, 4);
-const MOBILE_MORE = NAV_ITEMS.slice(4);
+// La sidebar PC groupe Logements→Caisse puis Paramètres→Sécurité ; dérivé
+// de MENU_ITEMS plutôt que dupliqué.
+const PC_GROUP_OPERATIONS = MENU_ITEMS.slice(0, 6);
+const PC_GROUP_ADMIN = MENU_ITEMS.slice(6);
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Audit 11A — éléments réellement focalisables à l'intérieur du dialogue
+ * (menu mobile/tablette), recalculés à chaque pression de touche plutôt que
+ * mis en cache, pour rester corrects même si la liste change (ex. items
+ * `disabled`, déjà exclus car rendus en `<span>` non focalisable). */
+function getFocusable(container: HTMLElement) {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+  );
+}
+
+/** Une entrée de nav (sidebar PC ou feuille Menu) — gère le cas `disabled`
+ * en rendu non interactif, jamais un lien mort. */
+function NavRow({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
+  if (item.disabled || !item.href) {
+    return (
+      <span
+        aria-disabled="true"
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-fg/30"
+      >
+        {item.icon(false)}
+        {item.label}
+        <span className="ml-auto rounded-full bg-fg/10 px-2 py-0.5 text-[10px] font-bold text-fg/45">
+          Bientôt
+        </span>
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${
+        active ? "bg-navy text-white" : "text-fg/70 hover:bg-surface-sunken"
+      }`}
+    >
+      {item.icon(active)}
+      {item.label}
+    </Link>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Audit 11A — tant que le dialogue est ouvert : focus déplacé vers son
+  // premier élément, Échap le ferme, Tab/Maj+Tab restent bornés à son
+  // contenu (le reste de la page est déjà rendu `inert`, donc inatteignable
+  // au clavier — cette boucle ne fait que rendre la navigation cyclique
+  // plutôt que de sortir vers le chrome du navigateur), et le focus revient
+  // au bouton « Menu » à la fermeture, quelle que soit la façon dont elle a
+  // été déclenchée (Fermer, overlay, Échap, clic sur un lien du menu).
+  useEffect(() => {
+    if (!menuOpen) return;
+    const dialog = dialogRef.current;
+    const menuButton = menuButtonRef.current;
+    if (!dialog) return;
+
+    // Le focus initial cible le premier lien du menu plutôt que le bouton
+    // "Fermer" (lui aussi focalisable, en première position dans le DOM) :
+    // "Fermer" est un calque plein écran invisible — un anneau de focus
+    // dessus serait imperceptible (confirmé visuellement). Il reste
+    // atteignable normalement via Maj+Tab depuis le premier lien.
+    const firstNavItem = dialog.querySelector<HTMLElement>("nav a[href], nav button:not([disabled])");
+    const focusable = getFocusable(dialog);
+    (firstNavItem ?? focusable[0] ?? dialog).focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMenuOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !dialog) return;
+      const items = getFocusable(dialog);
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      menuButton?.focus();
+    };
+  }, [menuOpen]);
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
-      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-navy/10 lg:bg-white lg:px-3 lg:py-6">
-        <div className="mb-6 px-3 text-lg font-extrabold tracking-tight text-navy">SAMA HOME</div>
+      <aside
+        inert={menuOpen}
+        className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-border/10 lg:bg-surface-raised lg:px-3 lg:py-6"
+      >
+        <div className="mb-6 px-3 text-lg font-extrabold tracking-tight text-fg">SAMA HOME</div>
         <nav className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${
-                  active ? "bg-navy text-white" : "text-navy/70 hover:bg-paper"
-                }`}
-              >
-                {item.icon(active)}
-                {item.label}
-              </Link>
-            );
-          })}
+          {PRIMARY_ITEMS.map((item) => (
+            <NavRow key={item.label} item={item} active={isActive(pathname, item.href!)} />
+          ))}
+
+          <div className="my-3 border-t border-border/10" />
+
+          {PC_GROUP_OPERATIONS.map((item) => (
+            <NavRow
+              key={item.label}
+              item={item}
+              active={!item.disabled && isActive(pathname, item.href!)}
+            />
+          ))}
+
+          <div className="my-3 border-t border-border/10" />
+
+          {PC_GROUP_ADMIN.map((item) => (
+            <NavRow
+              key={item.label}
+              item={item}
+              active={!item.disabled && isActive(pathname, item.href!)}
+            />
+          ))}
         </nav>
         <form action={logout}>
           <button
             type="submit"
-            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-navy/70 hover:bg-paper"
+            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-fg/70 hover:bg-surface-sunken"
           >
             <LogoutIcon />
             Déconnexion
@@ -178,67 +342,93 @@ export function AppShell({ children }: { children: ReactNode }) {
         </form>
       </aside>
 
-      <div className="min-w-0 flex-1 pb-20 lg:pb-0">{children}</div>
+      {/* Header mobile/tablette — PRD section 5.1 : Paramètres | SAMA HOME |
+          Menu. Absent en desktop (lg), où la sidebar porte déjà ces accès. */}
+      <header
+        inert={menuOpen}
+        className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/10 bg-surface-raised px-4 lg:hidden"
+      >
+        <Link
+          href="/settings"
+          aria-label="Paramètres"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-fg/70 hover:bg-surface-sunken"
+        >
+          <GearIcon active={isActive(pathname, "/settings")} />
+        </Link>
+        <span className="text-sm font-extrabold tracking-tight text-fg">SAMA HOME</span>
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Menu"
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-fg/70 hover:bg-surface-sunken"
+        >
+          <MenuIcon active={menuOpen} />
+        </button>
+      </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-navy/10 bg-white [padding-bottom:env(safe-area-inset-bottom)] lg:hidden">
-        {MOBILE_PRIMARY.map((item) => {
-          const active = isActive(pathname, item.href);
+      <div inert={menuOpen} className="min-w-0 flex-1 pb-28 lg:pb-0">
+        {children}
+      </div>
+
+      {/* Barre flottante — maquette Stitch (Séjour responsive) : EXACTEMENT 3
+          items (Accueil/Séjour/Dépenses), plus de 4e item "Menu" ici — le
+          Menu reste accessible uniquement depuis le header (bouton ☰ à
+          droite), jamais retiré de l'app. */}
+      <nav
+        inert={menuOpen}
+        className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex h-16 items-stretch gap-1 rounded-[28px] border border-border/10 bg-surface-raised px-2 shadow-card lg:hidden"
+      >
+        {PRIMARY_ITEMS.map((item) => {
+          const active = isActive(pathname, item.href!);
           return (
             <Link
               key={item.href}
-              href={item.href}
-              onClick={() => setMoreOpen(false)}
-              className={`flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-                active ? "text-navy" : "text-navy/40"
-              }`}
+              href={item.href!}
+              onClick={() => setMenuOpen(false)}
+              className="flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-bold"
             >
-              {item.icon(active)}
-              {item.mobileLabel ?? item.label}
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                  active ? "bg-navy text-white" : "text-fg/40"
+                }`}
+              >
+                {item.icon(active)}
+              </span>
+              <span className={active ? "text-fg" : "text-fg/40"}>{item.label}</span>
             </Link>
           );
         })}
-        <button
-          type="button"
-          onClick={() => setMoreOpen(true)}
-          aria-label="Plus de modules"
-          aria-haspopup="dialog"
-          aria-expanded={moreOpen}
-          className={`flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-            moreOpen || MOBILE_MORE.some((i) => isActive(pathname, i.href)) ? "text-navy" : "text-navy/40"
-          }`}
-        >
-          <MoreIcon active={moreOpen} />
-          Plus
-        </button>
       </nav>
 
-      {moreOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end lg:hidden" role="dialog" aria-modal="true">
+      {menuOpen ? (
+        <div
+          ref={dialogRef}
+          tabIndex={-1}
+          className="fixed inset-0 z-50 flex items-end outline-none lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+        >
           <button
             type="button"
             aria-label="Fermer"
-            onClick={() => setMoreOpen(false)}
+            onClick={() => setMenuOpen(false)}
             className="absolute inset-0 bg-navy/40"
           />
-          <div className="relative w-full rounded-t-2xl bg-white px-4 pt-4 [padding-bottom:calc(env(safe-area-inset-bottom)+1.5rem)]">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-navy/15" />
+          <div className="relative w-full rounded-t-2xl bg-surface-raised px-4 pt-4 [padding-bottom:calc(env(safe-area-inset-bottom)+1.5rem)]">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-fg/15" />
             <nav className="flex flex-col gap-1">
-              {MOBILE_MORE.map((item) => {
-                const active = isActive(pathname, item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMoreOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold ${
-                      active ? "bg-navy text-white" : "text-navy"
-                    }`}
-                  >
-                    {item.icon(active)}
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {MENU_ITEMS.map((item) => (
+                <NavRow
+                  key={item.label}
+                  item={item}
+                  active={!item.disabled && isActive(pathname, item.href!)}
+                  onNavigate={() => setMenuOpen(false)}
+                />
+              ))}
               <form action={logout}>
                 <button
                   type="submit"

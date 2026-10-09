@@ -22,6 +22,52 @@
 
   --background: var(--color-paper);
   --foreground: var(--color-navy);
+
+  /* AT-1 — Fondation visuelle (MAQUETTE AT). Couche sémantique de
+     surfaces/texte, volontairement SÉPARÉE de la palette de marque
+     ci-dessus : navy/coral/paper/ink restent des couleurs FIXES, jamais
+     réassignées par thème, pour ne rien casser sur les pages qui les
+     utilisent encore directement (tout ce qui n'a pas encore été migré
+     vers ce système, lots AT-2 et suivants). Seuls ces tokens-ci varient
+     entre clair et sombre ; un composant qui les utilise devient
+     automatiquement compatible avec les deux. Valeurs ci-dessous =
+     identiques à l'existant (paper/white/navy) : aucun changement visuel
+     tant qu'aucune page n'adopte ces tokens.
+   */
+  --color-surface: var(--color-paper);
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #eef1f0;
+  --color-fg: var(--color-navy);
+  --color-border: var(--color-navy);
+  --shadow-card: 0 1px 2px rgba(18, 48, 74, 0.05), 0 8px 20px rgba(18, 48, 74, 0.06);
+}
+
+/* Sombre = direction visuelle principale du produit — activé par
+   data-theme="dark" sur <html> (voir layout.tsx, posé par défaut depuis la
+   reconstruction UI). Valeurs recalibrées sur le design system Stitch
+   validé "Nocturne Opulence" (voir sama-home-references/ui-mockup/) :
+   surface/fg/border reprennent ses tokens Material exacts (background,
+   surface-container, surface-container-lowest, on-surface) ; les couleurs
+   fonctionnelles (success/danger/warning/info/neutral) gardent les mêmes
+   teintes que le mode clair quand Nocturne Opulence les documente à
+   l'identique (danger/warning), et passent en fond translucide pour les
+   badges de statut plutôt qu'un aplat pastel (qui jurerait sur fond sombre). */
+:root[data-theme="dark"] {
+  --color-surface: #0b141a;
+  --color-surface-raised: #182127;
+  --color-surface-sunken: #060f15;
+  --color-fg: #f7f8f6;
+  --color-border: #f7f8f6;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  --color-success: #10b981;
+  --color-success-bg: rgba(16, 185, 129, 0.12);
+  --color-danger-bg: rgba(229, 72, 77, 0.12);
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-info: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-neutral: #94a3b8;
+  --color-neutral-bg: rgba(148, 163, 184, 0.1);
 }
 
 @theme inline {
@@ -45,11 +91,23 @@
   --color-neutral: var(--color-neutral);
   --color-neutral-bg: var(--color-neutral-bg);
 
-  --font-sans: var(--font-manrope);
+  /* AT-1 — tokens sémantiques (voir :root ci-dessus) exposés comme
+     utilitaires Tailwind : bg-surface, bg-surface-raised, bg-surface-sunken,
+     text-fg (+ text-fg/NN via le modificateur d'opacité natif, même
+     convention que text-navy/50 déjà utilisé partout), border-border,
+     shadow-card. */
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-fg: var(--color-fg);
+  --color-border: var(--color-border);
+  --shadow-card: var(--shadow-card);
+
+  --font-sans: var(--font-plus-jakarta-sans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-surface);
+  color: var(--color-fg);
   font-family: var(--font-sans), -apple-system, sans-serif;
 }
