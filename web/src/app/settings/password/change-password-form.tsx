@@ -45,7 +45,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
         {pending ? "Enregistrement..." : "CONFIRMER"}
       </button>

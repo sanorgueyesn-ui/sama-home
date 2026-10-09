@@ -27,7 +27,7 @@ export function EditUserForm({
     <form action={formAction} className="flex flex-col gap-4">
       <Field id="name" label="Nom" type="text" required defaultValue={defaultName} errors={errors?.name} />
       <div>
-        <label htmlFor="role" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="role" className="mb-1.5 block text-xs font-bold text-fg">
           Rôle
         </label>
         <select
@@ -35,7 +35,7 @@ export function EditUserForm({
           name="role"
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           {ROLE_OPTIONS.map((r) => (
             <option key={r.value} value={r.value}>
@@ -59,7 +59,7 @@ export function EditUserForm({
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
         {pending ? "Enregistrement..." : "ENREGISTRER LES MODIFICATIONS"}
       </button>

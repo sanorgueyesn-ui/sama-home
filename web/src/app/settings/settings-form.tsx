@@ -20,7 +20,7 @@ export function SettingsForm({
   const errors = state?.errors;
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-4 lg:mx-auto lg:w-full lg:max-w-2xl">
       <Field
         id="establishmentName"
         label="Nom de l'établissement"
@@ -75,7 +75,7 @@ export function SettingsForm({
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
         {pending ? "Enregistrement..." : "ENREGISTRER"}
       </button>

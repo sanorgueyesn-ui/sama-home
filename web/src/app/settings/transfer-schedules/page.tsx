@@ -40,30 +40,30 @@ export default async function TransferSchedulesPage(props: PageProps<"/settings/
   const activeAccounts = accounts.filter((a) => a.active).map((a) => ({ id: a.id, label: a.label, bankName: a.bankName }));
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <div className="mb-2 flex items-center gap-3">
         <Link
           href="/settings"
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-navy"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="flex-1 text-xl font-extrabold text-navy">Virements programmés</h1>
+        <h1 className="flex-1 text-xl font-extrabold text-fg">Virements programmés</h1>
         <Link
           href="/settings/transfer-schedules/new"
-          className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+          className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
         >
           + Nouvelle
         </Link>
       </div>
-      <p className="mb-4 text-xs font-medium text-navy/50">
+      <p className="mb-4 text-xs font-medium text-fg/50">
         Automatisez la préparation de vos versements bancaires sans effectuer automatiquement les transferts.
       </p>
 
-      <p className="mb-4 rounded-xl bg-paper px-4 py-3 text-xs font-medium text-navy/60">
+      <p className="mb-4 rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60">
         Lorsqu&apos;une échéance arrive, SAMA HOME crée un virement programmé (statut <strong>SCHEDULED</strong>).
         Vous devrez ensuite l&apos;effectuer depuis Caisse → Virements bancaires — jamais automatiquement.
       </p>
@@ -89,29 +89,29 @@ export default async function TransferSchedulesPage(props: PageProps<"/settings/
           action={
             <Link
               href="/settings/transfer-schedules/new"
-              className="flex h-11 items-center rounded-xl bg-navy px-5 text-sm font-bold text-white"
+              className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
             >
               + Nouvelle programmation
             </Link>
           }
         />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {schedules.map((schedule) => {
             const account = accountById.get(schedule.bankAccountId);
             return (
               <Card key={schedule.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-navy">
+                    <p className="truncate text-sm font-bold text-fg">
                       {account ? `${account.bankName} · ${account.label}` : "Compte introuvable"}
                     </p>
-                    <p className="mt-1 text-lg font-extrabold text-navy">
+                    <p className="mt-1 text-lg font-extrabold text-fg">
                       {schedule.amountType === "FIXED"
                         ? fmtFcfa(schedule.fixedAmount ?? 0)
                         : `${schedule.percentage ?? 0} % du solde disponible`}
                     </p>
-                    <p className="mt-0.5 text-xs font-semibold text-navy/60">{FREQUENCY_LABELS[schedule.frequency] ?? schedule.frequency}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-fg/60">{FREQUENCY_LABELS[schedule.frequency] ?? schedule.frequency}</p>
                   </div>
                   <span
                     className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 ${schedule.active ? "bg-success-bg" : "bg-neutral-bg"}`}
@@ -123,7 +123,7 @@ export default async function TransferSchedulesPage(props: PageProps<"/settings/
                   </span>
                 </div>
 
-                <div className="mt-2.5 flex flex-col gap-0.5 text-xs font-medium text-navy/50">
+                <div className="mt-2.5 flex flex-col gap-0.5 text-xs font-medium text-fg/50">
                   <span>
                     {schedule.active ? "Prochaine génération" : "Prochaine génération (en pause)"} : {fmtDateTime(schedule.nextRunAt)}
                   </span>

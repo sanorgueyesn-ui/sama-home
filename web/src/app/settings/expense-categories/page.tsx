@@ -26,21 +26,21 @@ export default async function ExpenseCategoriesPage(props: PageProps<"/settings/
   const categories = await listExpenseCategoriesForSettings();
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <div className="mb-5 flex items-center gap-3">
         <Link
           href="/settings"
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-navy"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="flex-1 text-xl font-extrabold text-navy">Catégories de dépenses</h1>
+        <h1 className="flex-1 text-xl font-extrabold text-fg">Catégories de dépenses</h1>
         <Link
           href="/settings/expense-categories/new"
-          className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+          className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
         >
           + Nouvelle
         </Link>
@@ -64,7 +64,7 @@ export default async function ExpenseCategoriesPage(props: PageProps<"/settings/
           action={
             <Link
               href="/settings/expense-categories/new"
-              className="flex h-11 items-center rounded-xl bg-navy px-5 text-sm font-bold text-white"
+              className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
             >
               + Nouvelle catégorie
             </Link>
@@ -75,11 +75,11 @@ export default async function ExpenseCategoriesPage(props: PageProps<"/settings/
           {categories.map((category) => (
             <div
               key={category.id}
-              className="flex items-center justify-between gap-3 border-b border-[#E7EAEE] py-3 last:border-0"
+              className="flex items-center justify-between gap-3 border-b border-border/10 py-3 last:border-0"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-bold text-navy">{category.name}</p>
+                  <p className="truncate text-sm font-bold text-fg">{category.name}</p>
                   {!category.active ? (
                     <span className="shrink-0 rounded-full bg-neutral-bg px-2 py-0.5 text-[10px] font-bold text-neutral">
                       Désactivée
@@ -87,7 +87,7 @@ export default async function ExpenseCategoriesPage(props: PageProps<"/settings/
                   ) : null}
                 </div>
                 {category._count.expenses > 0 ? (
-                  <p className="mt-0.5 text-xs font-medium text-navy/50">
+                  <p className="mt-0.5 text-xs font-medium text-fg/50">
                     Utilisée dans l&apos;historique ({category._count.expenses})
                   </p>
                 ) : null}

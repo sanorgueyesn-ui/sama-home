@@ -50,7 +50,7 @@ export function CreateBankAccountForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="label" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="label" className="mb-1.5 block text-xs font-bold text-fg">
           Libellé
         </label>
         <input
@@ -59,13 +59,13 @@ export function CreateBankAccountForm() {
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Ex. Compte principal"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {errors?.label ? <p className="mt-1 text-xs font-medium text-danger">{errors.label}</p> : null}
       </div>
 
       <div>
-        <label htmlFor="bankName" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="bankName" className="mb-1.5 block text-xs font-bold text-fg">
           Banque
         </label>
         <input
@@ -74,14 +74,14 @@ export function CreateBankAccountForm() {
           value={bankName}
           onChange={(e) => setBankName(e.target.value)}
           placeholder="Ex. Ecobank"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {errors?.bankName ? <p className="mt-1 text-xs font-medium text-danger">{errors.bankName}</p> : null}
       </div>
 
       <div>
-        <label htmlFor="maskedAccountNumber" className="mb-1.5 block text-xs font-bold text-navy">
-          Numéro de compte <span className="font-medium text-navy/40">(optionnel, masqué)</span>
+        <label htmlFor="maskedAccountNumber" className="mb-1.5 block text-xs font-bold text-fg">
+          Numéro de compte <span className="font-medium text-fg/40">(optionnel, masqué)</span>
         </label>
         <input
           id="maskedAccountNumber"
@@ -89,9 +89,9 @@ export function CreateBankAccountForm() {
           value={maskedAccountNumber}
           onChange={(e) => setMaskedAccountNumber(e.target.value)}
           placeholder="Ex. •••• 4821"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
-        <p className="mt-1 text-[11px] font-medium text-navy/40">
+        <p className="mt-1 text-[11px] font-medium text-fg/40">
           Ne jamais saisir le numéro complet — uniquement une référence masquée.
         </p>
       </div>
@@ -107,14 +107,14 @@ export function CreateBankAccountForm() {
           type="button"
           onClick={() => router.push("/settings/bank-accounts")}
           disabled={pending}
-          className="h-14 flex-1 rounded-2xl border border-navy/15 text-base font-extrabold text-navy disabled:opacity-40"
+          className="h-14 flex-1 rounded-2xl border border-border/15 text-base font-extrabold text-fg disabled:opacity-40"
         >
           Annuler
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="h-14 flex-1 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+          className="h-14 flex-1 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
         >
           {pending ? "..." : "Créer"}
         </button>

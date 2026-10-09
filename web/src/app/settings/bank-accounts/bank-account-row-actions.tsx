@@ -85,7 +85,7 @@ export function BankAccountRowActions({
     return (
       <div className="flex w-full flex-col gap-2 py-1">
         <div>
-          <label htmlFor={`label-${id}`} className="mb-1 block text-xs font-bold text-navy">
+          <label htmlFor={`label-${id}`} className="mb-1 block text-xs font-bold text-fg">
             Libellé
           </label>
           <input
@@ -93,11 +93,11 @@ export function BankAccountRowActions({
             type="text"
             value={editLabel}
             onChange={(e) => setEditLabel(e.target.value)}
-            className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
         <div>
-          <label htmlFor={`bank-${id}`} className="mb-1 block text-xs font-bold text-navy">
+          <label htmlFor={`bank-${id}`} className="mb-1 block text-xs font-bold text-fg">
             Banque
           </label>
           <input
@@ -105,12 +105,12 @@ export function BankAccountRowActions({
             type="text"
             value={editBankName}
             onChange={(e) => setEditBankName(e.target.value)}
-            className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
         <div>
-          <label htmlFor={`masked-${id}`} className="mb-1 block text-xs font-bold text-navy">
-            Numéro masqué <span className="font-medium text-navy/40">(optionnel)</span>
+          <label htmlFor={`masked-${id}`} className="mb-1 block text-xs font-bold text-fg">
+            Numéro masqué <span className="font-medium text-fg/40">(optionnel)</span>
           </label>
           <input
             id={`masked-${id}`}
@@ -118,7 +118,7 @@ export function BankAccountRowActions({
             value={editMasked}
             onChange={(e) => setEditMasked(e.target.value)}
             placeholder="Ex. •••• 4821"
-            className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
         {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
@@ -127,7 +127,7 @@ export function BankAccountRowActions({
             type="button"
             onClick={reset}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl border border-navy/15 text-xs font-extrabold text-navy disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
             Annuler
           </button>
@@ -135,7 +135,7 @@ export function BankAccountRowActions({
             type="button"
             onClick={handleUpdate}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl bg-navy text-xs font-extrabold text-white disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
             {pending ? "..." : "Enregistrer"}
           </button>
@@ -151,7 +151,7 @@ export function BankAccountRowActions({
           type="button"
           disabled={pending}
           onClick={() => setEditing(true)}
-          className="h-8 rounded-lg border border-navy/15 px-2.5 text-[11px] font-bold text-navy disabled:opacity-60"
+          className="h-8 rounded-lg border border-border/15 px-2.5 text-[11px] font-bold text-fg disabled:opacity-60"
         >
           Modifier
         </button>

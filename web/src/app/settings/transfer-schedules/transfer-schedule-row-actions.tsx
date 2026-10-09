@@ -135,14 +135,14 @@ export function TransferScheduleRowActions({
     return (
       <div className="flex flex-col gap-2.5 py-1">
         <div>
-          <label htmlFor={`account-${id}`} className="mb-1 block text-xs font-bold text-navy">
+          <label htmlFor={`account-${id}`} className="mb-1 block text-xs font-bold text-fg">
             Compte bancaire
           </label>
           <select
             id={`account-${id}`}
             value={accountStillActive ? editAccountId : ""}
             onChange={(e) => setEditAccountId(e.target.value)}
-            className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
             <option value="">Sélectionner un compte...</option>
             {accounts.map((a) => (
@@ -159,14 +159,14 @@ export function TransferScheduleRowActions({
         </div>
 
         <div>
-          <label htmlFor={`frequency-${id}`} className="mb-1 block text-xs font-bold text-navy">
+          <label htmlFor={`frequency-${id}`} className="mb-1 block text-xs font-bold text-fg">
             Fréquence
           </label>
           <select
             id={`frequency-${id}`}
             value={editFrequency}
             onChange={(e) => setEditFrequency(e.target.value as TransferFrequency)}
-            className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
             {FREQUENCY_OPTIONS.map((f) => (
               <option key={f.value} value={f.value}>
@@ -177,19 +177,21 @@ export function TransferScheduleRowActions({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-bold text-navy">Type de montant</label>
+          <label className="mb-1 block text-xs font-bold text-fg">Type de montant</label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setEditAmountType("FIXED")}
-              className={`h-10 flex-1 rounded-lg border text-xs font-extrabold ${editAmountType === "FIXED" ? "border-navy bg-navy text-white" : "border-navy/15 text-navy"}`}
+              aria-pressed={editAmountType === "FIXED"}
+              className={`h-10 flex-1 rounded-lg border text-xs font-extrabold ${editAmountType === "FIXED" ? "border-navy bg-navy text-white" : "border-border/15 text-fg"}`}
             >
               Montant fixe
             </button>
             <button
               type="button"
               onClick={() => setEditAmountType("PERCENTAGE")}
-              className={`h-10 flex-1 rounded-lg border text-xs font-extrabold ${editAmountType === "PERCENTAGE" ? "border-navy bg-navy text-white" : "border-navy/15 text-navy"}`}
+              aria-pressed={editAmountType === "PERCENTAGE"}
+              className={`h-10 flex-1 rounded-lg border text-xs font-extrabold ${editAmountType === "PERCENTAGE" ? "border-navy bg-navy text-white" : "border-border/15 text-fg"}`}
             >
               Pourcentage
             </button>
@@ -198,7 +200,7 @@ export function TransferScheduleRowActions({
 
         {editAmountType === "FIXED" ? (
           <div>
-            <label htmlFor={`fixed-${id}`} className="mb-1 block text-xs font-bold text-navy">
+            <label htmlFor={`fixed-${id}`} className="mb-1 block text-xs font-bold text-fg">
               Montant (FCFA)
             </label>
             <input
@@ -207,12 +209,12 @@ export function TransferScheduleRowActions({
               min={1}
               value={editFixedAmount}
               onChange={(e) => setEditFixedAmount(e.target.value)}
-              className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+              className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
           </div>
         ) : (
           <div>
-            <label htmlFor={`pct-${id}`} className="mb-1 block text-xs font-bold text-navy">
+            <label htmlFor={`pct-${id}`} className="mb-1 block text-xs font-bold text-fg">
               Pourcentage (%)
             </label>
             <input
@@ -222,16 +224,16 @@ export function TransferScheduleRowActions({
               max={100}
               value={editPercentage}
               onChange={(e) => setEditPercentage(e.target.value)}
-              className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+              className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
-            <p className="mt-1 text-[11px] font-medium text-navy/40">
+            <p className="mt-1 text-[11px] font-medium text-fg/40">
               Calculé sur le solde théorique disponible au moment de la génération, plafonné au disponible.
             </p>
           </div>
         )}
 
         <div>
-          <label htmlFor={`next-${id}`} className="mb-1 block text-xs font-bold text-navy">
+          <label htmlFor={`next-${id}`} className="mb-1 block text-xs font-bold text-fg">
             Prochaine génération
           </label>
           <input
@@ -239,7 +241,7 @@ export function TransferScheduleRowActions({
             type="datetime-local"
             value={editNextRunAt}
             onChange={(e) => setEditNextRunAt(e.target.value)}
-            className="h-10 w-full rounded-lg border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
 
@@ -250,7 +252,7 @@ export function TransferScheduleRowActions({
             type="button"
             onClick={reset}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl border border-navy/15 text-xs font-extrabold text-navy disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
             Annuler
           </button>
@@ -258,7 +260,7 @@ export function TransferScheduleRowActions({
             type="button"
             onClick={handleUpdate}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl bg-navy text-xs font-extrabold text-white disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
             {pending ? "..." : "Enregistrer"}
           </button>
@@ -274,7 +276,7 @@ export function TransferScheduleRowActions({
           type="button"
           disabled={pending}
           onClick={() => setEditing(true)}
-          className="h-8 rounded-lg border border-navy/15 px-2.5 text-[11px] font-bold text-navy disabled:opacity-60"
+          className="h-8 rounded-lg border border-border/15 px-2.5 text-[11px] font-bold text-fg disabled:opacity-60"
         >
           Modifier
         </button>

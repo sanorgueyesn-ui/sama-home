@@ -18,21 +18,21 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
   const users = await listUsers();
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <div className="mb-5 flex items-center gap-3">
         <Link
           href="/settings"
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-navy"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="flex-1 text-xl font-extrabold text-navy">Utilisateurs</h1>
+        <h1 className="flex-1 text-xl font-extrabold text-fg">Utilisateurs</h1>
         <Link
           href="/settings/users/new"
-          className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+          className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
         >
           + Nouvel
         </Link>
@@ -54,28 +54,28 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
         </p>
       ) : null}
 
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {users.map((u) => (
           <Card key={u.id} className="p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-extrabold text-navy">{u.name}</p>
-                <p className="mt-0.5 text-xs font-semibold text-navy/60">
+                <p className="text-sm font-extrabold text-fg">{u.name}</p>
+                <p className="mt-0.5 text-xs font-semibold text-fg/60">
                   @{u.username} · {ROLE_LABELS[u.role] ?? u.role}
                 </p>
               </div>
-              <span className="text-[11px] font-medium text-navy/40">Depuis {fmtDate(u.createdAt)}</span>
+              <span className="text-[11px] font-medium text-fg/40">Depuis {fmtDate(u.createdAt)}</span>
             </div>
             <div className="mt-3 flex gap-2.5">
               <Link
                 href={`/settings/users/${u.id}/edit`}
-                className="flex h-10 flex-1 items-center justify-center rounded-xl border border-navy/15 text-xs font-extrabold text-navy"
+                className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border/15 text-xs font-extrabold text-fg"
               >
                 Modifier
               </Link>
               <Link
                 href={`/settings/users/${u.id}/reset-password`}
-                className="flex h-10 flex-1 items-center justify-center rounded-xl border border-navy/15 text-xs font-extrabold text-navy"
+                className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border/15 text-xs font-extrabold text-fg"
               >
                 Réinitialiser le mot de passe
               </Link>

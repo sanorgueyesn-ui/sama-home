@@ -38,7 +38,7 @@ export function CreateExpenseCategoryForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="name" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="name" className="mb-1.5 block text-xs font-bold text-fg">
           Nom
         </label>
         <input
@@ -47,7 +47,7 @@ export function CreateExpenseCategoryForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ex. Électricité"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {error ? <p className="mt-1 text-xs font-medium text-danger">{error}</p> : null}
       </div>
@@ -57,14 +57,14 @@ export function CreateExpenseCategoryForm() {
           type="button"
           onClick={() => router.push("/settings/expense-categories")}
           disabled={pending}
-          className="h-14 flex-1 rounded-2xl border border-navy/15 text-base font-extrabold text-navy disabled:opacity-40"
+          className="h-14 flex-1 rounded-2xl border border-border/15 text-base font-extrabold text-fg disabled:opacity-40"
         >
           Annuler
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="h-14 flex-1 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+          className="h-14 flex-1 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
         >
           {pending ? "..." : "Créer"}
         </button>

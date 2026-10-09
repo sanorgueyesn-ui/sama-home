@@ -12,9 +12,9 @@ import {
 type Mode = "idle" | "rename" | "deactivate" | "delete";
 
 const textareaClass =
-  "min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy";
+  "min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange";
 const inputClass =
-  "h-11 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy";
+  "h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange";
 
 /**
  * Bloc 16.3 — un seul composant par ligne pour renommer/activer/désactiver/
@@ -124,7 +124,7 @@ export function ExpenseCategoryRowActions({
   if (mode === "rename") {
     return (
       <div className="flex w-full flex-col gap-2 py-1">
-        <label htmlFor={nameFieldId} className="text-xs font-bold text-navy">
+        <label htmlFor={nameFieldId} className="text-xs font-bold text-fg">
           Nom
         </label>
         <input
@@ -140,7 +140,7 @@ export function ExpenseCategoryRowActions({
             type="button"
             onClick={reset}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl border border-navy/15 text-xs font-extrabold text-navy disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
             Annuler
           </button>
@@ -148,7 +148,7 @@ export function ExpenseCategoryRowActions({
             type="button"
             onClick={handleRename}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl bg-navy text-xs font-extrabold text-white disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
             {pending ? "..." : "Enregistrer"}
           </button>
@@ -160,11 +160,11 @@ export function ExpenseCategoryRowActions({
   if (mode === "deactivate") {
     return (
       <div className="flex w-full flex-col gap-2 py-1">
-        <p className="text-xs font-medium text-navy/70">
+        <p className="text-xs font-medium text-fg/70">
           Cette catégorie ne pourra plus être utilisée pour les nouvelles dépenses. Les dépenses existantes seront
           conservées.
         </p>
-        <label htmlFor={reasonFieldId} className="text-xs font-bold text-navy">
+        <label htmlFor={reasonFieldId} className="text-xs font-bold text-fg">
           Motif
         </label>
         <textarea
@@ -180,7 +180,7 @@ export function ExpenseCategoryRowActions({
             type="button"
             onClick={reset}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl border border-navy/15 text-xs font-extrabold text-navy disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
             Annuler
           </button>
@@ -188,7 +188,7 @@ export function ExpenseCategoryRowActions({
             type="button"
             onClick={handleDeactivate}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl bg-navy text-xs font-extrabold text-white disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
             {pending ? "..." : "Désactiver"}
           </button>
@@ -200,11 +200,11 @@ export function ExpenseCategoryRowActions({
   if (mode === "delete") {
     return (
       <div className="flex w-full flex-col gap-2 py-1">
-        <p className="text-xs font-medium text-navy/70">
+        <p className="text-xs font-medium text-fg/70">
           La suppression est définitive. Si cette catégorie est déjà utilisée par une dépense, elle ne pourra pas
           être supprimée.
         </p>
-        <label htmlFor={reasonFieldId} className="text-xs font-bold text-navy">
+        <label htmlFor={reasonFieldId} className="text-xs font-bold text-fg">
           Motif de suppression
         </label>
         <textarea
@@ -220,7 +220,7 @@ export function ExpenseCategoryRowActions({
             type="button"
             onClick={reset}
             disabled={pending}
-            className="h-10 flex-1 rounded-xl border border-navy/15 text-xs font-extrabold text-navy disabled:opacity-60"
+            className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
             Annuler
           </button>
@@ -247,7 +247,7 @@ export function ExpenseCategoryRowActions({
             setNewName(name);
             setMode("rename");
           }}
-          className="h-8 rounded-lg border border-navy/15 px-2.5 text-[11px] font-bold text-navy disabled:opacity-60"
+          className="h-8 rounded-lg border border-border/15 px-2.5 text-[11px] font-bold text-fg disabled:opacity-60"
         >
           Renommer
         </button>
@@ -256,7 +256,7 @@ export function ExpenseCategoryRowActions({
             type="button"
             disabled={pending}
             onClick={() => setMode("deactivate")}
-            className="h-8 rounded-lg bg-paper px-2.5 text-[11px] font-bold text-navy/70 disabled:opacity-60"
+            className="h-8 rounded-lg bg-surface-sunken px-2.5 text-[11px] font-bold text-fg/70 disabled:opacity-60"
           >
             Désactiver
           </button>
