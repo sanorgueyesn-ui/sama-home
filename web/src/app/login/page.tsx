@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import { login } from "@/app/actions/auth";
 
@@ -51,7 +50,7 @@ export default function LoginPage() {
               type="text"
               autoComplete="username"
               required
-              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy focus-visible:ring-2 focus-visible:ring-navy"
             />
           </div>
 
@@ -68,7 +67,7 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
-              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 pr-11 text-sm text-navy outline-none focus:border-navy"
+              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 pr-11 text-sm text-navy outline-none focus:border-navy focus-visible:ring-2 focus-visible:ring-navy"
             />
             <button
               type="button"
@@ -111,7 +110,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-sm text-navy">
               <input
                 type="checkbox"
@@ -121,9 +120,9 @@ export default function LoginPage() {
               />
               Se souvenir de moi
             </label>
-            <Link href="#" className="text-xs font-semibold text-coral">
-              Mot de passe oublié ?
-            </Link>
+            <p className="text-xs font-medium text-navy/60">
+              Mot de passe oublié ? Contactez un administrateur.
+            </p>
           </div>
 
           {state?.error && (
