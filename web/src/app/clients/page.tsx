@@ -20,9 +20,9 @@ export default async function ClientsPage(props: PageProps<"/clients">) {
   const { items, truncated } = await listClients(query);
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:px-8 lg:ml-[max(0px,calc((100vw_-_48rem)/2_-_15rem))] lg:mr-auto lg:w-[min(48rem,calc(100vw_-_15rem))] lg:max-w-none lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-navy">Clients</h1>
+        <h1 className="text-2xl font-extrabold text-fg">Clients</h1>
         <Link
           href="/clients/new"
           className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
@@ -63,7 +63,7 @@ export default async function ClientsPage(props: PageProps<"/clients">) {
           }
         />
       ) : (
-        <div className="mt-4 flex flex-col gap-2.5">
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {items.map((client) => (
             <Link key={client.id} href={`/clients/${client.id}`}>
               <Card className="flex items-center gap-3 p-4">
@@ -71,17 +71,17 @@ export default async function ClientsPage(props: PageProps<"/clients">) {
                   {initials(client.name)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-navy">{client.name}</p>
-                  <p className="text-xs font-medium text-navy/60">{client.phone}</p>
+                  <p className="truncate text-sm font-bold text-fg">{client.name}</p>
+                  <p className="text-xs font-medium text-fg/60">{client.phone}</p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B7C0C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-fg/40">
                   <path d="m9 6 6 6-6 6" />
                 </svg>
               </Card>
             </Link>
           ))}
           {truncated && (
-            <p className="pt-1 text-center text-xs font-medium text-navy/50">
+            <p className="pt-1 text-center text-xs font-medium text-fg/50 md:col-span-2 lg:col-span-3">
               Affinez votre recherche pour voir plus de résultats.
             </p>
           )}

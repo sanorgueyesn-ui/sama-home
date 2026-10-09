@@ -76,7 +76,7 @@ export function ClientForm({
       <button
         type="button"
         onClick={() => setShowMore((v) => !v)}
-        className="flex items-center gap-1.5 self-start text-xs font-bold text-navy underline"
+        className="flex items-center gap-1.5 self-start text-xs font-bold text-fg underline"
         aria-expanded={showMore}
       >
         {showMore ? "− Masquer les informations complémentaires" : "+ Informations complémentaires"}
@@ -103,8 +103,8 @@ export function ClientForm({
         />
 
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-navy">
-            Type de pièce <span className="ml-1 font-medium text-navy/40">(optionnel)</span>
+          <label className="mb-1.5 block text-xs font-bold text-fg">
+            Type de pièce <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
           </label>
           <div className="mb-2 flex flex-wrap gap-2">
             {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
@@ -113,7 +113,7 @@ export function ClientForm({
                 type="button"
                 onClick={() => setIdDocumentType(suggestion)}
                 className={`rounded-full px-3.5 py-2 text-xs font-bold ${
-                  idDocumentType === suggestion ? "bg-navy text-white" : "bg-paper text-navy"
+                  idDocumentType === suggestion ? "bg-navy text-white" : "bg-surface-raised text-fg"
                 }`}
               >
                 {suggestion}
@@ -126,7 +126,7 @@ export function ClientForm({
             value={idDocumentType}
             onChange={(e) => setIdDocumentType(e.target.value)}
             placeholder="Ou saisir un autre type"
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.idDocumentType?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
