@@ -1,8 +1,10 @@
+// Reconstruction UI — voir le commentaire équivalent dans
+// app/locations/status-badge.tsx (même pattern, même raison).
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  CONFIRMED: { label: "Confirmée", color: "#F59E0B", bg: "#FDF1DC" },
-  ARRIVED: { label: "Arrivée", color: "#2563EB", bg: "#E7EEFC" },
-  CANCELLED: { label: "Annulée", color: "#E5484D", bg: "#FBEAEA" },
-  COMPLETED: { label: "Terminée", color: "#52606D", bg: "#EBEDEE" },
+  CONFIRMED: { label: "Confirmée", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
+  ARRIVED: { label: "Arrivée", color: "var(--color-info)", bg: "var(--color-info-bg)" },
+  CANCELLED: { label: "Annulée", color: "var(--color-danger)", bg: "var(--color-danger-bg)" },
+  COMPLETED: { label: "Terminée", color: "var(--color-neutral)", bg: "var(--color-neutral-bg)" },
 };
 
 export function ReservationStatusBadge({ status }: { status: string }) {
