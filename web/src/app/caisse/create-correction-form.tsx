@@ -42,7 +42,7 @@ export function CreateCorrectionForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-12 items-center justify-center rounded-xl border border-navy/15 text-sm font-extrabold text-navy"
+        className="flex h-12 items-center justify-center rounded-xl border border-border/15 text-sm font-extrabold text-fg"
       >
         + Correction de caisse
       </button>
@@ -50,10 +50,10 @@ export function CreateCorrectionForm() {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-navy/15 p-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/15 p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-extrabold text-navy">Correction de caisse</p>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-navy/50 underline">
+        <p className="text-sm font-extrabold text-fg">Correction de caisse</p>
+        <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-fg/50 underline">
           Annuler
         </button>
       </div>
@@ -61,7 +61,7 @@ export function CreateCorrectionForm() {
         Une correction est une opération exceptionnelle et traçable.
       </p>
       <div>
-        <label htmlFor="correctionAmount" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="correctionAmount" className="mb-1.5 block text-xs font-bold text-fg">
           Montant (FCFA, signé)
         </label>
         <input
@@ -70,18 +70,18 @@ export function CreateCorrectionForm() {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Ex. 5000 ou -5000"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
       <div>
-        <label htmlFor="correctionReason" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="correctionReason" className="mb-1.5 block text-xs font-bold text-fg">
           Justification
         </label>
         <textarea
           id="correctionReason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
       {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
@@ -90,7 +90,7 @@ export function CreateCorrectionForm() {
           type="button"
           onClick={() => setOpen(false)}
           disabled={pending}
-          className="h-12 flex-1 rounded-xl border border-navy/15 text-sm font-extrabold text-navy disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-border/15 text-sm font-extrabold text-fg disabled:opacity-60"
         >
           Annuler
         </button>
@@ -98,7 +98,7 @@ export function CreateCorrectionForm() {
           type="button"
           disabled={pending}
           onClick={handleSubmit}
-          className="h-12 flex-1 rounded-xl bg-navy text-sm font-extrabold text-white disabled:opacity-40"
+          className="h-12 flex-1 rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
         >
           {pending ? "..." : "Enregistrer"}
         </button>

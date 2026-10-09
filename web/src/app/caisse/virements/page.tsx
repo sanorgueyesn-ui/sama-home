@@ -63,35 +63,35 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
   const userName = (id: string | null) => (id ? (users.find((u) => u.id === id)?.name ?? "—") : "—");
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-5 pt-6 pb-24 md:pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-6 pb-24 md:max-w-none md:px-8 md:pb-10 lg:px-10">
       <div className="flex items-center gap-3">
         <Link
           href="/caisse"
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-navy"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="flex-1 text-xl font-extrabold text-navy">Virements bancaires</h1>
+        <h1 className="flex-1 text-xl font-extrabold text-fg">Virements bancaires</h1>
         <Link
           href="/caisse/virements/new"
-          className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+          className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
         >
           + Nouveau
         </Link>
       </div>
-      <p className="mt-1 text-xs font-medium text-navy/50">
+      <p className="mt-1 text-xs font-medium text-fg/50 lg:max-w-2xl">
         Transferts d&apos;argent de la caisse vers les comptes bancaires.
       </p>
 
-      <p className="mt-4 rounded-xl bg-paper px-4 py-3 text-xs font-medium text-navy/60">
+      <p className="mt-4 rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60 lg:max-w-2xl">
         Un virement bancaire transfère de l&apos;argent de la caisse vers la banque. Il ne constitue pas une dépense.
       </p>
 
       {done === "created" ? (
-        <p className="mt-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">Virement créé.</p>
+        <p className="mt-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success lg:max-w-2xl">Virement créé.</p>
       ) : null}
 
       {transfers.length === 0 ? (
@@ -108,7 +108,7 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
             action={
               <Link
                 href="/caisse/virements/new"
-                className="flex h-11 items-center rounded-xl bg-navy px-5 text-sm font-bold text-white"
+                className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
               >
                 + Nouveau virement
               </Link>
@@ -116,15 +116,15 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
           />
         </div>
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-4 grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
           {transfers.map((t) => {
             const account = accountById.get(t.bankAccountId);
             return (
               <Card key={t.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-lg font-extrabold text-navy">{fmtFcfa(t.amount)}</p>
-                    <p className="mt-0.5 truncate text-xs font-semibold text-navy/60">
+                    <p className="text-lg font-extrabold text-fg">{fmtFcfa(t.amount)}</p>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-fg/60">
                       {account ? `${account.label} · ${account.bankName}` : "Compte introuvable"}
                     </p>
                   </div>
@@ -133,7 +133,7 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
 
                 {/* Bloc G, section 13 — traçabilité : uniquement les champs
                     réellement présents sur BankTransfer, rien d'inventé. */}
-                <div className="mt-2.5 flex flex-col gap-0.5 text-xs font-medium text-navy/50">
+                <div className="mt-2.5 flex flex-col gap-0.5 text-xs font-medium text-fg/50">
                   <span>
                     Créé le {fmtDateTime(t.createdAt)} par {userName(t.createdByUserId)}
                   </span>

@@ -8,18 +8,18 @@ function fmtDateTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
-const TYPE_META: Record<CashActivityEntry["type"], { label: string; color: string; bg: string }> = {
-  PAYMENT_CASH: { label: "Entrée", color: "#16A34A", bg: "#E8F5EC" },
-  EXPENSE_CASH: { label: "Sortie", color: "#E5484D", bg: "#FBEAEA" },
-  BANK_TRANSFER: { label: "Versement", color: "#2563EB", bg: "#E7EEFC" },
-  CORRECTION: { label: "Correction", color: "#F59E0B", bg: "#FDF1DC" },
+const TYPE_META: Record<CashActivityEntry["type"], { label: string; text: string; bg: string }> = {
+  PAYMENT_CASH: { label: "Entrée", text: "text-success", bg: "bg-success-bg" },
+  EXPENSE_CASH: { label: "Sortie", text: "text-danger", bg: "bg-danger-bg" },
+  BANK_TRANSFER: { label: "Versement", text: "text-info", bg: "bg-info-bg" },
+  CORRECTION: { label: "Correction", text: "text-warning", bg: "bg-warning-bg" },
 };
 
 /** Bloc E, section 9 — construite à partir de Payment/Expense/BankTransfer/CashCorrection existants, jamais d'un CashMovement. */
 export function CashActivityList({ entries }: { entries: CashActivityEntry[] }) {
   if (entries.length === 0) {
     return (
-      <p className="rounded-xl bg-paper px-4 py-6 text-center text-sm font-medium text-navy/50">
+      <p className="rounded-xl bg-surface-sunken px-4 py-6 text-center text-sm font-medium text-fg/50">
         Aucune activité pour cette session.
       </p>
     );
@@ -32,24 +32,21 @@ export function CashActivityList({ entries }: { entries: CashActivityEntry[] }) 
         return (
           <div
             key={`${entry.type}-${entry.id}`}
-            className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-[0_1px_2px_rgba(18,48,74,0.05)]"
+            className="flex items-center justify-between gap-3 rounded-xl bg-surface-raised px-4 py-3 shadow-card"
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-bold"
-                  style={{ color: meta.color, background: meta.bg }}
-                >
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${meta.text} ${meta.bg}`}>
                   {meta.label}
                 </span>
-                <span className="truncate text-xs font-semibold text-navy/60">{fmtDateTime(entry.date)}</span>
+                <span className="truncate text-xs font-semibold text-fg/60">{fmtDateTime(entry.date)}</span>
               </div>
-              <p className="mt-1 truncate text-sm font-bold text-navy">{entry.label}</p>
+              <p className="mt-1 truncate text-sm font-bold text-fg">{entry.label}</p>
               {entry.reference ? (
-                <p className="truncate text-xs font-medium text-navy/50">Réf. {entry.reference}</p>
+                <p className="truncate text-xs font-medium text-fg/50">Réf. {entry.reference}</p>
               ) : null}
             </div>
-            <p className="shrink-0 text-sm font-extrabold" style={{ color: entry.amount >= 0 ? "#16A34A" : "#E5484D" }}>
+            <p className={`shrink-0 text-sm font-extrabold ${entry.amount >= 0 ? "text-success" : "text-danger"}`}>
               {entry.amount >= 0 ? "+" : ""}
               {fmtFcfa(entry.amount)}
             </p>

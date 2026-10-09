@@ -53,79 +53,83 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div>
-        <label htmlFor="bankAccountId" className="mb-1.5 block text-xs font-bold text-navy">
-          Compte bancaire
-        </label>
-        <select
-          id="bankAccountId"
-          value={bankAccountId}
-          onChange={(e) => setBankAccountId(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
-        >
-          <option value="">Sélectionner un compte...</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.label} · {a.bankName}
-            </option>
-          ))}
-        </select>
+      <div className="md:grid md:grid-cols-2 md:gap-4">
+        <div>
+          <label htmlFor="bankAccountId" className="mb-1.5 block text-xs font-bold text-fg">
+            Compte bancaire
+          </label>
+          <select
+            id="bankAccountId"
+            value={bankAccountId}
+            onChange={(e) => setBankAccountId(e.target.value)}
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          >
+            <option value="">Sélectionner un compte...</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.label} · {a.bankName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mt-4 md:mt-0">
+          <label htmlFor="amount" className="mb-1.5 block text-xs font-bold text-fg">
+            Montant (FCFA)
+          </label>
+          <input
+            id="amount"
+            type="number"
+            min={1}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          />
+        </div>
+      </div>
+
+      <div className="md:grid md:grid-cols-2 md:gap-4">
+        <div>
+          <label htmlFor="scheduledAt" className="mb-1.5 block text-xs font-bold text-fg">
+            Date prévue <span className="font-medium text-fg/40">(optionnel — laisser vide pour un brouillon)</span>
+          </label>
+          <input
+            id="scheduledAt"
+            type="datetime-local"
+            value={scheduledAt}
+            onChange={(e) => setScheduledAt(e.target.value)}
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          />
+        </div>
+
+        <div className="mt-4 md:mt-0">
+          <label htmlFor="reference" className="mb-1.5 block text-xs font-bold text-fg">
+            Référence <span className="font-medium text-fg/40">(optionnel)</span>
+          </label>
+          <input
+            id="reference"
+            type="text"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            placeholder="Ex. numéro de bordereau"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          />
+        </div>
       </div>
 
       <div>
-        <label htmlFor="amount" className="mb-1.5 block text-xs font-bold text-navy">
-          Montant (FCFA)
-        </label>
-        <input
-          id="amount"
-          type="number"
-          min={1}
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="scheduledAt" className="mb-1.5 block text-xs font-bold text-navy">
-          Date prévue <span className="font-medium text-navy/40">(optionnel — laisser vide pour un brouillon)</span>
-        </label>
-        <input
-          id="scheduledAt"
-          type="datetime-local"
-          value={scheduledAt}
-          onChange={(e) => setScheduledAt(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="reference" className="mb-1.5 block text-xs font-bold text-navy">
-          Référence <span className="font-medium text-navy/40">(optionnel)</span>
-        </label>
-        <input
-          id="reference"
-          type="text"
-          value={reference}
-          onChange={(e) => setReference(e.target.value)}
-          placeholder="Ex. numéro de bordereau"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-navy">
-          Note <span className="font-medium text-navy/40">(optionnel)</span>
+        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-fg">
+          Note <span className="font-medium text-fg/40">(optionnel)</span>
         </label>
         <textarea
           id="note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
-      <p className="rounded-xl bg-paper px-4 py-3 text-xs font-medium text-navy/60">
+      <p className="rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60">
         Un virement bancaire transfère de l&apos;argent de la caisse vers la banque. Il ne constitue pas une dépense.
       </p>
 
@@ -140,14 +144,14 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
           type="button"
           onClick={() => router.push("/caisse/virements")}
           disabled={pending}
-          className="h-14 flex-1 rounded-2xl border border-navy/15 text-base font-extrabold text-navy disabled:opacity-40"
+          className="h-14 flex-1 rounded-2xl border border-border/15 text-base font-extrabold text-fg disabled:opacity-40"
         >
           Annuler
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="h-14 flex-1 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+          className="h-14 flex-1 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
         >
           {pending ? "..." : "Créer"}
         </button>

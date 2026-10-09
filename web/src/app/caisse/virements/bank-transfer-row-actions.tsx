@@ -70,7 +70,7 @@ export function BankTransferRowActions({
             type="button"
             disabled={pending}
             onClick={handleEffect}
-            className="h-10 flex-1 rounded-xl bg-navy text-xs font-extrabold text-white disabled:opacity-40"
+            className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-40"
           >
             {pending ? "..." : "Effectuer le virement"}
           </button>

@@ -80,17 +80,17 @@ export function ModifyClosureForm({
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="text-center text-xs font-bold text-navy underline">
+      <button type="button" onClick={() => setOpen(true)} className="text-center text-xs font-bold text-fg underline">
         Modifier cette clôture
       </button>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-navy/15 p-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/15 p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-extrabold text-navy">Modification d&apos;une clôture validée</p>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-navy/50 underline">
+        <p className="text-sm font-extrabold text-fg">Modification d&apos;une clôture validée</p>
+        <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-fg/50 underline">
           Annuler
         </button>
       </div>
@@ -98,13 +98,13 @@ export function ModifyClosureForm({
         Ceci modifie un historique déjà validé. L&apos;ancien et le nouvel état seront conservés (journal d&apos;audit).
       </p>
 
-      <div className="rounded-xl bg-paper px-4 py-3">
-        <p className="text-xs font-bold text-navy/50">SOLDE THÉORIQUE (non modifiable)</p>
-        <p className="mt-1 text-lg font-extrabold text-navy">{fmtFcfa(closingTheoreticalBalance)}</p>
+      <div className="rounded-xl bg-surface-sunken px-4 py-3">
+        <p className="text-xs font-bold text-fg/50">SOLDE THÉORIQUE (non modifiable)</p>
+        <p className="mt-1 text-lg font-extrabold text-fg">{fmtFcfa(closingTheoreticalBalance)}</p>
       </div>
 
       <div>
-        <label htmlFor="modifyPhysicalCount" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="modifyPhysicalCount" className="mb-1.5 block text-xs font-bold text-fg">
           Comptage physique
         </label>
         <input
@@ -113,7 +113,7 @@ export function ModifyClosureForm({
           min={0}
           value={physicalCount}
           onChange={(e) => setPhysicalCount(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
@@ -123,39 +123,39 @@ export function ModifyClosureForm({
             Écart : {variance! > 0 ? "+" : ""}
             {fmtFcfa(variance!)}
           </p>
-          <label htmlFor="modifyVarianceReason" className="mt-1.5 mb-1.5 block text-xs font-bold text-navy">
+          <label htmlFor="modifyVarianceReason" className="mt-1.5 mb-1.5 block text-xs font-bold text-fg">
             Justification de l&apos;écart
           </label>
           <textarea
             id="modifyVarianceReason"
             value={varianceReason}
             onChange={(e) => setVarianceReason(e.target.value)}
-            className="min-h-16 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+            className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
       ) : null}
 
       <div>
-        <label htmlFor="modifyCloseNote" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="modifyCloseNote" className="mb-1.5 block text-xs font-bold text-fg">
           Note
         </label>
         <textarea
           id="modifyCloseNote"
           value={closeNote}
           onChange={(e) => setCloseNote(e.target.value)}
-          className="min-h-16 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
       <div>
-        <label htmlFor="modifyReason" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="modifyReason" className="mb-1.5 block text-xs font-bold text-fg">
           Motif de la modification
         </label>
         <textarea
           id="modifyReason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="min-h-16 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
@@ -165,7 +165,7 @@ export function ModifyClosureForm({
         type="button"
         disabled={pending}
         onClick={handleSubmit}
-        className="flex h-12 items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white disabled:opacity-40"
+        className="flex h-12 items-center justify-center rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
       >
         {pending ? "..." : "Enregistrer la modification"}
       </button>

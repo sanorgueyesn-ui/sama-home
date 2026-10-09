@@ -77,17 +77,17 @@ export function OpenCashSessionForm({
   if (mode === "normal" && hasPreviousSession) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="rounded-xl bg-paper px-4 py-3">
-          <p className="text-xs font-bold text-navy/50">MONTANT D&apos;OUVERTURE PROPOSÉ</p>
-          <p className="mt-1 text-xl font-extrabold text-navy">{fmtFcfa(proposedBalance ?? 0)}</p>
-          {proposedOriginLabel ? <p className="mt-1 text-xs font-medium text-navy/50">{proposedOriginLabel}</p> : null}
+        <div className="rounded-xl bg-surface-sunken px-4 py-3">
+          <p className="text-xs font-bold text-fg/50">MONTANT D&apos;OUVERTURE PROPOSÉ</p>
+          <p className="mt-1 text-xl font-extrabold text-fg">{fmtFcfa(proposedBalance ?? 0)}</p>
+          {proposedOriginLabel ? <p className="mt-1 text-xs font-medium text-fg/50">{proposedOriginLabel}</p> : null}
         </div>
         {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
         <button
           type="button"
           disabled={pending}
           onClick={handleNormalOpen}
-          className="flex h-14 items-center justify-center rounded-2xl bg-navy text-base font-extrabold text-white disabled:opacity-40"
+          className="flex h-14 items-center justify-center rounded-2xl bg-brand-orange text-base font-extrabold text-ink disabled:opacity-40"
         >
           {pending ? "..." : "Ouvrir la caisse"}
         </button>
@@ -98,7 +98,7 @@ export function OpenCashSessionForm({
               setMode("manual");
               setError(null);
             }}
-            className="text-center text-xs font-bold text-navy underline"
+            className="text-center text-xs font-bold text-fg underline"
           >
             Ouverture manuelle exceptionnelle
           </button>
@@ -117,7 +117,7 @@ export function OpenCashSessionForm({
         </p>
       </div>
       <div>
-        <label htmlFor="manualAmount" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="manualAmount" className="mb-1.5 block text-xs font-bold text-fg">
           Montant d&apos;ouverture (FCFA)
         </label>
         <input
@@ -126,11 +126,11 @@ export function OpenCashSessionForm({
           min={0}
           value={manualAmount}
           onChange={(e) => setManualAmount(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-4 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
       <div>
-        <label htmlFor="manualReason" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="manualReason" className="mb-1.5 block text-xs font-bold text-fg">
           Justification
         </label>
         <textarea
@@ -138,7 +138,7 @@ export function OpenCashSessionForm({
           value={manualReason}
           onChange={(e) => setManualReason(e.target.value)}
           placeholder="Ex. Première mise en service de la caisse."
-          className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
       {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
@@ -151,7 +151,7 @@ export function OpenCashSessionForm({
               setError(null);
             }}
             disabled={pending}
-            className="h-12 flex-1 rounded-xl border border-navy/15 text-sm font-extrabold text-navy disabled:opacity-60"
+            className="h-12 flex-1 rounded-xl border border-border/15 text-sm font-extrabold text-fg disabled:opacity-60"
           >
             Annuler
           </button>
@@ -160,7 +160,7 @@ export function OpenCashSessionForm({
           type="button"
           disabled={pending}
           onClick={handleManualOpen}
-          className="h-12 flex-1 rounded-xl bg-navy text-sm font-extrabold text-white disabled:opacity-40"
+          className="h-12 flex-1 rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
         >
           {pending ? "..." : "Ouvrir manuellement"}
         </button>
