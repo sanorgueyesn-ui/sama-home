@@ -1,9 +1,11 @@
 import { computeRentalTimeState, formatRentalTimeText } from "@/lib/rental-status";
 
+// Lot 4 — couleurs en var(--color-X) (globals.css) pour suivre le thème
+// dark, même pattern que les autres badges de statut de l'app.
 const STATE_META = {
-  normal: { color: "#16A34A", bg: "#E8F5EC" },
-  near: { color: "#F59E0B", bg: "#FDF1DC" },
-  overdue: { color: "#E5484D", bg: "#FBEAEA" },
+  normal: { color: "var(--color-success)", bg: "var(--color-success-bg)" },
+  near: { color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
+  overdue: { color: "var(--color-danger)", bg: "var(--color-danger-bg)" },
 };
 
 /**

@@ -4,10 +4,10 @@ function SkeletonBlock({ className }: { className: string }) {
 
 export default function LocationsLoading() {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
       <SkeletonBlock className="h-8 w-36" />
       <SkeletonBlock className="mt-4 h-12 w-full" />
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         <SkeletonBlock className="h-[120px] w-full" />
         <SkeletonBlock className="h-[120px] w-full" />
         <SkeletonBlock className="h-[120px] w-full" />

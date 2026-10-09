@@ -34,12 +34,12 @@ export default async function LocationsPage(props: PageProps<"/locations">) {
   const paymentSummaries = await getRentalPaymentSummaries(prisma, items);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 pt-6 pb-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-28 md:max-w-none md:px-8 md:pb-10 lg:px-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-navy">Locations</h1>
+        <h1 className="text-2xl font-extrabold text-fg">Locations</h1>
         <Link
           href="/locations/new"
-          className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+          className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
         >
           + Nouvelle
         </Link>
@@ -69,49 +69,54 @@ export default async function LocationsPage(props: PageProps<"/locations">) {
           action={
             <Link
               href="/locations/new"
-              className="flex h-11 items-center rounded-xl bg-navy px-5 text-sm font-bold text-white"
+              className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
             >
               + Nouvelle location
             </Link>
           }
         />
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {items.map((r) => {
             const summary = paymentSummaries.get(r.id);
+            const remaining = summary?.remaining ?? r.amount;
             return (
               <Link key={r.id} href={`/locations/${r.id}`}>
+                {/* Hiérarchie Lot 4 §6 : 1. logement 2. statut 3. temps
+                    4. client 5. montant/restant. */}
                 <Card className="p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-extrabold text-navy">{r.client.name}</p>
-                      <p className="mt-0.5 text-xs font-semibold text-navy/60">
-                        {r.property.name} · {r.client.phone}
-                      </p>
-                    </div>
+                    <p className="truncate text-sm font-extrabold text-fg">{r.property.name}</p>
                     <RentalStatusBadge status={r.status} />
                   </div>
-                  <div className="mt-2.5 flex items-center gap-4 text-xs font-semibold text-navy">
-                    <span>Arrivée {fmtTime(r.arrivalAt)}</span>
-                    <span>Départ prévu {fmtTime(r.plannedDepartureAt)}</span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="text-xs font-semibold text-navy/60">
-                      {fmtFcfa(r.amount)} · Payé {fmtFcfa(summary?.totalPaid ?? 0)} · Reste{" "}
-                      {fmtFcfa(summary?.remaining ?? r.amount)}
-                    </div>
-                  </div>
+
                   {r.status === "ACTIVE" ? (
-                    <div className="mt-2.5">
+                    <div className="mt-2">
                       <RentalTimeIndicator now={now} plannedDepartureAt={r.plannedDepartureAt} />
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="mt-2 flex items-center gap-4 text-xs font-semibold text-fg/60">
+                      <span>Arrivée {fmtTime(r.arrivalAt)}</span>
+                      <span>Départ {fmtTime(r.plannedDepartureAt)}</span>
+                    </div>
+                  )}
+
+                  <p className="mt-2.5 truncate text-xs font-semibold text-fg/70">
+                    {r.client.name} · {r.client.phone}
+                  </p>
+
+                  <div className="mt-2 flex items-center justify-between border-t border-border/10 pt-2 text-xs font-semibold text-fg/60">
+                    <span>{fmtFcfa(r.amount)}</span>
+                    <span className={remaining > 0 ? "font-bold text-warning" : "font-bold text-success"}>
+                      {remaining > 0 ? `Reste ${fmtFcfa(remaining)}` : "Payé en totalité"}
+                    </span>
+                  </div>
                 </Card>
               </Link>
             );
           })}
           {truncated && (
-            <p className="pt-1 text-center text-xs font-medium text-navy/50">
+            <p className="col-span-full pt-1 text-center text-xs font-medium text-fg/50">
               Affinez la recherche pour voir plus de résultats.
             </p>
           )}

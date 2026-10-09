@@ -185,10 +185,10 @@ export function RentalForm({
     <form action={formAction} className="flex flex-col gap-4">
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label htmlFor="clientId" className="block text-xs font-bold text-navy">
+          <label htmlFor="clientId" className="block text-xs font-bold text-fg">
             Client
           </label>
-          <Link href={newClientHref} className="text-xs font-bold text-navy underline">
+          <Link href={newClientHref} className="text-xs font-bold text-fg underline">
             + Nouveau client
           </Link>
         </div>
@@ -197,7 +197,7 @@ export function RentalForm({
           name="clientId"
           value={clientId}
           onChange={(e) => setClientId(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           <option value="">Sélectionner un client...</option>
           {clients.map((c) => (
@@ -207,7 +207,7 @@ export function RentalForm({
           ))}
         </select>
         {selectedClient ? (
-          <p className="mt-1.5 text-xs font-semibold text-navy/60">Téléphone : {selectedClient.phone}</p>
+          <p className="mt-1.5 text-xs font-semibold text-fg/60">Téléphone : {selectedClient.phone}</p>
         ) : null}
         {errors?.clientId?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -217,7 +217,7 @@ export function RentalForm({
       </div>
 
       <div>
-        <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
           Logement
         </label>
         <select
@@ -225,7 +225,7 @@ export function RentalForm({
           name="propertyId"
           value={propertyId}
           onChange={(e) => setPropertyId(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           <option value="">Sélectionner un logement...</option>
           {properties.map((p) => (
@@ -243,7 +243,7 @@ export function RentalForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="date" className="mb-1.5 block text-xs font-bold text-navy">
+          <label htmlFor="date" className="mb-1.5 block text-xs font-bold text-fg">
             Date
           </label>
           <input
@@ -252,7 +252,7 @@ export function RentalForm({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.date?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -261,7 +261,7 @@ export function RentalForm({
           ))}
         </div>
         <div>
-          <label htmlFor="arrivalTime" className="mb-1.5 block text-xs font-bold text-navy">
+          <label htmlFor="arrivalTime" className="mb-1.5 block text-xs font-bold text-fg">
             Heure d&apos;arrivée
           </label>
           <input
@@ -270,7 +270,7 @@ export function RentalForm({
             type="time"
             value={arrivalTime}
             onChange={(e) => setArrivalTime(e.target.value)}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.arrivalTime?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -281,7 +281,7 @@ export function RentalForm({
       </div>
 
       <div>
-        <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
           Tarif
         </label>
         {propertyId && activeTariffs.length === 0 ? (
@@ -295,7 +295,7 @@ export function RentalForm({
             value={effectiveTariffId}
             onChange={(e) => setTariffId(e.target.value)}
             disabled={!propertyId}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy disabled:opacity-50"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange disabled:opacity-50"
           >
             <option value="">{propertyId ? "Sélectionner un tarif..." : "Choisissez d'abord un logement"}</option>
             {activeTariffs.map((t) => (
@@ -312,21 +312,21 @@ export function RentalForm({
         ))}
       </div>
 
-      <div className="rounded-xl bg-paper px-4 py-3">
+      <div className="rounded-xl bg-surface-sunken px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-navy/60">Départ prévu</span>
-          <span className="text-sm font-extrabold text-navy">{departurePreview ?? "—"}</span>
+          <span className="text-xs font-bold text-fg/60">Départ prévu</span>
+          <span className="text-sm font-extrabold text-fg">{departurePreview ?? "—"}</span>
         </div>
         <div className="mt-1.5 flex items-center justify-between">
-          <span className="text-xs font-bold text-navy/60">Montant</span>
-          <span className="text-sm font-extrabold text-navy">
+          <span className="text-xs font-bold text-fg/60">Montant</span>
+          <span className="text-sm font-extrabold text-fg">
             {selectedTariff ? fmtFcfa(selectedTariff.amount) : "—"}
           </span>
         </div>
       </div>
 
       {availability.checking ? (
-        <p className="text-xs font-semibold text-navy/50">Vérification de la disponibilité...</p>
+        <p className="text-xs font-semibold text-fg/50">Vérification de la disponibilité...</p>
       ) : availability.available === true ? (
         <div className="flex items-center gap-2.5 rounded-xl bg-success-bg px-4 py-3 text-success">
           <span className="h-2 w-2 rounded-full bg-success" />
@@ -352,7 +352,7 @@ export function RentalForm({
             </p>
           </div>
           <div>
-            <label htmlFor="retroactiveReason" className="mb-1.5 block text-xs font-bold text-navy">
+            <label htmlFor="retroactiveReason" className="mb-1.5 block text-xs font-bold text-fg">
               Justification
             </label>
             <textarea
@@ -361,7 +361,7 @@ export function RentalForm({
               value={retroactiveReason}
               onChange={(e) => setRetroactiveReason(e.target.value)}
               placeholder="Ex. Client arrivé avant l'enregistrement."
-              className="min-h-16 w-full resize-none rounded-xl border border-navy/15 bg-paper px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+              className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface-raised px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
           </div>
         </div>
@@ -372,7 +372,7 @@ export function RentalForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-navy">
+          <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-fg">
             Acompte (FCFA)
           </label>
           <input
@@ -382,7 +382,7 @@ export function RentalForm({
             min={0}
             value={deposit}
             onChange={(e) => setDeposit(Number(e.target.value))}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.deposit?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -391,12 +391,12 @@ export function RentalForm({
           ))}
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-navy">Mode de paiement</label>
+          <label className="mb-1.5 block text-xs font-bold text-fg">Mode de paiement</label>
           <input type="hidden" name="depositMethod" value={depositMethod} />
           <select
             value={depositMethod}
             onChange={(e) => setDepositMethod(e.target.value)}
-            className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
             <option value="">—</option>
             {PAYMENT_MODES.map((m) => (
@@ -409,8 +409,8 @@ export function RentalForm({
       </div>
 
       <div>
-        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-navy">
-          Note <span className="ml-1 font-medium text-navy/40">(optionnel)</span>
+        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-fg">
+          Note <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
         </label>
         <textarea
           id="note"
@@ -418,7 +418,7 @@ export function RentalForm({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Informations complémentaires"
-          className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-4 py-3 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface-raised px-4 py-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
@@ -426,7 +426,7 @@ export function RentalForm({
         <div className="flex flex-col gap-3 rounded-xl bg-warning-bg px-4 py-3">
           <p className="text-sm font-bold text-warning">Pièce d&apos;identité requise pour ce séjour.</p>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-navy">Type de pièce</label>
+            <label className="mb-1.5 block text-xs font-bold text-fg">Type de pièce</label>
             <input type="hidden" name="idDocumentType" value={idDocumentType} />
             <div className="flex flex-wrap gap-2">
               {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
@@ -434,10 +434,11 @@ export function RentalForm({
                   key={suggestion}
                   type="button"
                   onClick={() => setIdDocumentType(suggestion)}
+                  aria-pressed={idDocumentType === suggestion}
                   className={`h-10 rounded-full border px-3.5 text-xs font-bold transition-colors ${
                     idDocumentType === suggestion
                       ? "border-navy bg-navy text-white"
-                      : "border-navy/15 bg-paper text-navy"
+                      : "border-border/15 bg-surface-raised text-fg"
                   }`}
                 >
                   {suggestion}
@@ -451,7 +452,7 @@ export function RentalForm({
             ))}
           </div>
           <div>
-            <label htmlFor="idDocumentNumber" className="mb-1.5 block text-xs font-bold text-navy">
+            <label htmlFor="idDocumentNumber" className="mb-1.5 block text-xs font-bold text-fg">
               Numéro de pièce
             </label>
             <input
@@ -461,7 +462,7 @@ export function RentalForm({
               value={idDocumentNumber}
               onChange={(e) => setIdDocumentNumber(e.target.value)}
               placeholder="Numéro"
-              className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+              className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
             {errors?.idDocumentNumber?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -481,7 +482,7 @@ export function RentalForm({
       <button
         type="submit"
         disabled={pending || !canSubmit}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
         {pending ? "Enregistrement..." : "CONFIRMER LA LOCATION"}
       </button>

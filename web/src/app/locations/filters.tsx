@@ -43,8 +43,8 @@ export function RentalFilters({
 
   return (
     <div className="mt-4">
-      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)] focus-within:border-navy">
-        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7A87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-surface-raised px-3.5 shadow-card focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange">
+        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-fg/40" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
@@ -54,7 +54,7 @@ export function RentalFilters({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher par nom ou téléphone..."
           aria-label="Rechercher une location par nom ou téléphone"
-          className="flex-1 bg-transparent text-sm text-navy outline-none placeholder:text-navy/40"
+          className="flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg/40"
         />
       </div>
 
@@ -65,7 +65,7 @@ export function RentalFilters({
             type="button"
             onClick={() => pushParams(query, chip.value, defaultPropertyId)}
             className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold ${
-              defaultTime === chip.value ? "bg-navy text-white" : "bg-white text-navy"
+              defaultTime === chip.value ? "bg-brand-orange text-ink" : "bg-surface-raised text-fg"
             }`}
           >
             {chip.label}
@@ -78,7 +78,7 @@ export function RentalFilters({
           value={defaultPropertyId}
           onChange={(e) => pushParams(query, defaultTime, e.target.value)}
           aria-label="Filtrer par logement"
-          className="mt-3 h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none focus:border-navy"
+          className="mt-3 h-11 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           <option value="">Tous les logements</option>
           {properties.map((p) => (

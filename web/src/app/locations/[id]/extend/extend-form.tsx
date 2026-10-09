@@ -79,15 +79,15 @@ export function ExtendForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-xl bg-paper px-4 py-3">
-        <p className="text-xs font-bold text-navy/60">Fin actuelle</p>
-        <p className="mt-0.5 text-lg font-extrabold text-navy">
+      <div className="rounded-xl bg-surface-sunken px-4 py-3">
+        <p className="text-xs font-bold text-fg/60">Fin actuelle</p>
+        <p className="mt-0.5 text-lg font-extrabold text-fg">
           {new Date(currentPlannedDeparture).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-bold text-navy">Choisir une prolongation</p>
+        <p className="mb-2 text-xs font-bold text-fg">Choisir une prolongation</p>
         <div className="flex flex-wrap gap-2">
           {tariffOptions.map((t) => (
             <button
@@ -95,7 +95,7 @@ export function ExtendForm({
               type="button"
               onClick={() => setSelectedId(t.id)}
               className={`rounded-full px-4 py-2.5 text-xs font-bold ${
-                selectedId === t.id ? "bg-navy text-white" : "bg-paper text-navy"
+                selectedId === t.id ? "bg-brand-orange text-ink" : "bg-surface-raised text-fg"
               }`}
             >
               +{formatDuration(t.durationValue, t.durationUnit)} — {fmtFcfa(t.amount)}
@@ -105,7 +105,7 @@ export function ExtendForm({
       </div>
 
       {availability.checking ? (
-        <p className="text-xs font-semibold text-navy/50">Vérification de la disponibilité...</p>
+        <p className="text-xs font-semibold text-fg/50">Vérification de la disponibilité...</p>
       ) : availability.available === true ? (
         <div className="flex items-center gap-2.5 rounded-xl bg-success-bg px-4 py-3 text-success">
           <span className="h-2 w-2 rounded-full bg-success" />
@@ -136,7 +136,7 @@ export function ExtendForm({
         type="button"
         disabled={pending || availability.available !== true}
         onClick={handleConfirm}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
         {pending ? "Enregistrement..." : "CONFIRMER LA PROLONGATION"}
       </button>
