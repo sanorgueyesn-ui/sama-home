@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "backup": "tsx scripts/backup-db.mts",
-    "restore": "tsx scripts/restore-db.mts"
+    "restore": "tsx scripts/restore-db.mts",
+    "test:transfer-frequency": "tsx scripts/test-transfer-frequency.mts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

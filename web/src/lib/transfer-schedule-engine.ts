@@ -74,7 +74,11 @@ export async function catchUpSchedule(scheduleId: string, now: Date): Promise<Ca
           }
 
           const dueAt = fresh.nextRunAt;
-          const nextRunAt = advanceNextRunAt(dueAt, fresh.frequency);
+          // Lot "Virements mensuels — ancre durable" : `fresh.anchorDay`
+          // relu depuis la base à chaque itération (même discipline que le
+          // reste de cette transaction) — jamais dérivé de `dueAt`, qui
+          // peut déjà être une date clampée par un mois court.
+          const nextRunAt = advanceNextRunAt(dueAt, fresh.frequency, fresh.anchorDay);
 
           const account = await tx.bankAccount.findUnique({ where: { id: fresh.bankAccountId } });
           if (!account || !account.active) {

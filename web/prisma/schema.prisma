@@ -857,6 +857,19 @@ model TransferSchedule {
   percentage  Int?
 
   nextRunAt DateTime
+  /// Lot "Virements mensuels — ancre durable" : jour du mois (1-31)
+  /// voulu par l'utilisateur, préservé indépendamment du clampage de
+  /// `nextRunAt` par des mois plus courts (ex. ancre 31, `nextRunAt`
+  /// ramené à 28 en février — l'ancre reste 31 pour redevenir effective
+  /// dès un mois qui le permet). Recalculé uniquement quand `nextRunAt`
+  /// est explicitement modifié par un humain (création, ou modification
+  /// manuelle de la date) — jamais par le rattrapage automatique
+  /// (`catchUpSchedule`), jamais par une simple modification du montant.
+  /// Nullable pour les lignes créées avant ce lot (contrainte CHECK en
+  /// migration, même style que `TransferSchedule_amount_type_check`) ;
+  /// `advanceNextRunAt` retombe sur l'ancien comportement (dérivé de
+  /// `nextRunAt`) tant qu'il est absent.
+  anchorDay Int?
   active    Boolean  @default(true)
 
   createdByUserId String

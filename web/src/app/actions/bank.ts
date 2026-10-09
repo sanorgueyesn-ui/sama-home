@@ -5,6 +5,7 @@ import { Prisma, type TransferFrequency } from "@/generated/prisma/client";
 import { getCurrentUser, verifySession } from "@/lib/dal";
 import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cash-data";
 import { catchUpSchedule, isSerializationConflict } from "@/lib/transfer-schedule-engine";
+import { resolveAnchorDayOnCreate, resolveAnchorDayOnUpdate } from "@/lib/transfer-frequency";
 import { BankAccountSchema, TransferScheduleSchema } from "@/lib/definitions";
 
 /**
@@ -386,6 +387,7 @@ export async function createTransferSchedule(input: {
           fixedAmount: parsed.data.fixedAmount ?? null,
           percentage: parsed.data.percentage ?? null,
           nextRunAt: parsed.data.nextRunAt,
+          anchorDay: resolveAnchorDayOnCreate(parsed.data.nextRunAt),
           createdByUserId: user.id,
         },
       });
@@ -460,6 +462,11 @@ export async function updateTransferSchedule(
           fixedAmount: parsed.data.fixedAmount ?? null,
           percentage: parsed.data.percentage ?? null,
           nextRunAt: parsed.data.nextRunAt,
+          // Ne déplace l'ancre que si `nextRunAt` a réellement changé — une
+          // simple modification du montant/pourcentage/fréquence renvoie la
+          // même date depuis le formulaire et ne doit jamais la recalculer
+          // à partir d'une valeur potentiellement déjà clampée.
+          anchorDay: resolveAnchorDayOnUpdate(existing.nextRunAt, existing.anchorDay, parsed.data.nextRunAt),
         },
       });
 
