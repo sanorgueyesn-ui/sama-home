@@ -237,8 +237,14 @@ enum PaymentMethod {
 model Reservation {
   id String @id @default(cuid())
 
-  clientId String
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  /// Lot "Reservation — Client facultatif" : nullable depuis ce lot — un
+  /// séjour court (<48h, seuil partagé avec lib/identity.ts
+  /// IDENTITY_REQUIRED_THRESHOLD_HOURS) peut être créé sans client. Un
+  /// séjour >=48h continue d'exiger un client, imposé côté serveur
+  /// (createReservation/updateReservation), jamais seulement par l'absence
+  /// de contrainte ici.
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: Restrict)
 
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
