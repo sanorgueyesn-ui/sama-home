@@ -1,35 +1,25 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/dal";
-import { logout } from "@/app/actions/auth";
 import { StatCard } from "@/components/dashboard/stat-card";
-import {
-  AvailableIcon,
-  OccupiedIcon,
-  ReservationsIcon,
-  RevenueIcon,
-  ExpenseIcon,
-  BalanceIcon,
-} from "@/components/dashboard/stat-icons";
-import { PropertyStatusGrid, type PropertyGridItem } from "@/components/dashboard/property-status-grid";
-import { PropertyHero } from "@/components/dashboard/property-hero";
-import { TodayActivityTable, type ActivityRow } from "@/components/dashboard/today-activity-table";
-import { RevenueChart } from "@/components/dashboard/revenue-chart";
-import { ReservationStatusBadge } from "@/app/reservations/status-badge";
-import { RentalStatusBadge } from "@/app/locations/status-badge";
-import {
-  getFinancialSummary,
-  getPropertyStatusCounts,
-  getTodayArrivals,
-  getTodayDepartures,
-  getActiveRentalsWithPayments,
-  getWeeklyFinancialTrend,
-} from "@/lib/dashboard-data";
+import { AvailableIcon, OccupiedIcon, ReservationsIcon, RevenueIcon } from "@/components/dashboard/stat-icons";
+import { MyProperties, type MyPropertyItem } from "@/components/dashboard/my-properties";
+import { getFinancialSummary, getPropertyStatusCounts, getTodayArrivals, getTodayDepartures } from "@/lib/dashboard-data";
 import { listProperties } from "@/lib/properties-data";
-import { listReservations } from "@/lib/reservations-data";
+import { listActivePropertiesWithActiveTariffs } from "@/lib/reservations-data";
+import { listExpenses } from "@/lib/expenses-data";
 import { getPropertyStatuses, PROPERTY_STATUS_META } from "@/lib/property-status";
-import { computeRentalTimeState } from "@/lib/rental-status";
-import { formatDuration } from "@/lib/duration";
 import { prisma } from "@/lib/prisma";
+
+// Reconstruction stricte Stitch (Accueil) — background d'ambiance GLOBAL,
+// jamais dérivé de Property.photo (règle absolue de ce lot). Même asset de
+// marque que les tours précédents, utilisé ici uniquement comme fond —
+// jamais un bandeau Hero, jamais lié à un logement précis. Vérifié une fois
+// par rendu serveur, aucune nouvelle dépendance ; si l'asset n'existe pas,
+// aucune image n'est affichée (jamais inventée).
+const BRAND_AMBIANCE_PUBLIC_PATH = "/images/hero/sama-home-default-hero.png";
+const brandAmbianceExists = existsSync(join(process.cwd(), "public", "images", "hero", "sama-home-default-hero.png"));
 
 function fmtFcfa(amount: number) {
   const sign = amount < 0 ? "-" : "";
@@ -38,17 +28,8 @@ function fmtFcfa(amount: number) {
 function fmtDateHeader(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(d);
 }
-
-function ActivityCountRow({ label, value, dotColor }: { label: string; value: number; dotColor: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl bg-paper px-4 py-3">
-      <div className="flex items-center gap-2.5">
-        <span className="h-2 w-2 rounded-full" style={{ background: dotColor }} />
-        <span className="text-sm font-semibold text-navy">{label}</span>
-      </div>
-      <span className="text-sm font-extrabold text-navy">{value}</span>
-    </div>
-  );
+function fmtTime(d: Date) {
+  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 export default async function Dashboard() {
@@ -59,48 +40,60 @@ export default async function Dashboard() {
 
   const propertyCount = await prisma.property.count();
 
-  const [financial, propertyCounts, arrivals, departures, activeRentals, propertiesForGrid, weeklyTrend, upcomingReservations] =
+  const [financial, propertyCounts, arrivals, departures, propertiesForGrid, tariffProperties, recentExpenses] =
     await Promise.all([
       getFinancialSummary(now),
       getPropertyStatusCounts(),
       getTodayArrivals(),
       getTodayDepartures(now),
-      getActiveRentalsWithPayments(),
       listProperties(),
-      getWeeklyFinancialTrend(now),
-      listReservations({ timeFilter: "upcoming" }),
+      // Reconstruction UI (Accueil, "Mes biens") — même fonction déjà
+      // utilisée et validée par /sejour, pour le "Dès X FCFA" : aucune
+      // nouvelle requête inventée, juste réutilisée ici aussi.
+      listActivePropertiesWithActiveTariffs(),
+      // Reconstruction stricte Stitch — "Dépenses récentes" (colonne
+      // droite desktop) : fonction déjà existante (module Dépenses),
+      // jamais touchée, simplement réutilisée ici.
+      listExpenses({ period: "today" }),
     ]);
 
-  // Hero dashboard (identité visuelle) — dérivé du résultat déjà chargé par
-  // listProperties() ci-dessus, aucune nouvelle requête. Règle validée :
-  // premier logement ACTIF avec une photo, dans l'ordre déjà renvoyé par
-  // listProperties() (tri par nom) ; aucune photo -> composant en repli.
-  const heroProperty = propertiesForGrid.items.find((p) => p.active && p.photo) ?? null;
+  // Pourcentages (maquette Stitch) — calculés localement à partir des
+  // compteurs réels déjà chargés, jamais une valeur inventée.
+  const pct = (n: number) => (propertyCount > 0 ? Math.round((n / propertyCount) * 100) : 0);
 
-  // "État des logements" (maquettes tablette/PC) — même combo listProperties +
-  // getPropertyStatuses déjà utilisé par /logements, pas une nouvelle requête.
+  // "Mes biens" — même combo listProperties + getPropertyStatuses déjà
+  // utilisé par /logements, pas une nouvelle requête. `capacity` :
+  // Property.capacity, déjà en base (donnée réelle, jamais 0 en pratique).
+  // `fromPrice` : même calcul que sejour/page.tsx (tarif actif le moins
+  // cher, `null` si aucun — jamais inventé).
   const gridStatuses = await getPropertyStatuses(propertiesForGrid.items, now);
-  const gridItems: PropertyGridItem[] = propertiesForGrid.items.map((p) => ({
+  const fromPriceByProperty = new Map<string, number>();
+  for (const p of tariffProperties) {
+    if (p.tariffs.length === 0) continue;
+    fromPriceByProperty.set(p.id, Math.min(...p.tariffs.map((t) => t.amount)));
+  }
+  const myPropertiesItems: MyPropertyItem[] = propertiesForGrid.items.map((p) => ({
     id: p.id,
     name: p.name,
     type: p.type,
     photo: p.photo,
+    capacity: p.capacity,
     status: gridStatuses.get(p.id) ?? "UNAVAILABLE",
+    fromPrice: fromPriceByProperty.get(p.id) ?? null,
   }));
 
-  // "Locations et réservations du jour" (maquettes tablette/PC) — fusion des
-  // mêmes `arrivals`/`departures` déjà chargés pour la section "Activité du
-  // jour" mobile, juste rendus en table plutôt qu'en deux listes séparées.
-  const activityRows: ActivityRow[] = [
+  // "Planning du jour" (colonne droite desktop, maquette Stitch) — fusion
+  // des mêmes `arrivals`/`departures` déjà chargés, triée par heure. Même
+  // données que les lots précédents, juste reprises ici pour la colonne
+  // latérale plutôt qu'un tableau en zone centrale (Stitch n'a pas de
+  // tableau d'activité en zone centrale).
+  const planningRows = [
     ...arrivals.map((r) => ({
       id: `res-${r.id}`,
       href: `/reservations/${r.id}`,
       time: r.arrivalTime,
-      clientName: r.client.name,
+      clientName: r.client?.name ?? "Sans client",
       propertyName: r.property.name,
-      typeLabel: formatDuration(r.durationValue, r.durationUnit),
-      amount: r.amount,
-      badge: <ReservationStatusBadge status={r.status} />,
     })),
     ...departures.map((r) => ({
       id: `dep-${r.id}`,
@@ -108,270 +101,277 @@ export default async function Dashboard() {
       time: r.plannedDepartureAt,
       clientName: r.client.name,
       propertyName: r.property.name,
-      typeLabel: formatDuration(r.durationValue, r.durationUnit),
-      amount: r.amount,
-      badge: <RentalStatusBadge status={r.status} />,
     })),
   ].sort((a, b) => a.time.getTime() - b.time.getTime());
 
-  // "Locations à échéance" (maquette mobile, bloc Activité du jour) — réutilise
-  // exactement computeRentalTimeState (Phase 7) sur les locations actives déjà
-  // chargées, aucun nouveau seuil inventé.
-  const dueRentalsCount = activeRentals.items.filter(
-    (r) => computeRentalTimeState(now, r.plannedDepartureAt) !== "normal",
-  ).length;
-
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 pt-6 pb-28 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+      {/* Background d'ambiance GLOBAL (maquette Stitch) — fixed, derrière
+          tout le contenu, jamais lié à Property.photo (règle absolue de ce
+          lot : aucune `heroProperty`/recherche du premier logement avec
+          photo). Asset de marque statique uniquement. Aucune hauteur
+          réservée dans le flux (position fixed, pas de place prise). */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {brandAmbianceExists ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={BRAND_AMBIANCE_PUBLIC_PATH} alt="" className="h-full w-full object-cover opacity-15" />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-b from-navy/70 via-surface/92 to-surface" />
+      </div>
+
       {/* HEADER — commun aux 3 largeurs */}
       <div className="flex items-center justify-between gap-3">
-        {/* min-w-0 : un enfant flex refuse par défaut de rétrécir sous la
-            largeur naturelle de son contenu (min-width:auto, pas 0) — sans
-            cette classe, "Tableau de bord" + la date pousse la ligne, et donc
-            la page entière, plus large que le viewport en mobile/tablette. */}
         <div className="min-w-0">
-          <h1 className="text-2xl font-extrabold text-navy">Tableau de bord</h1>
-          <p className="mt-0.5 truncate text-sm font-medium capitalize text-navy/60">{fmtDateHeader(now)}</p>
+          <h1 className="text-xl font-extrabold text-fg sm:truncate sm:text-2xl">Bonjour {user.name.split(" ")[0]} 👋</h1>
+          <p className="mt-0.5 truncate text-sm font-medium capitalize text-fg/60">{fmtDateHeader(now)}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Actions rapides en en-tête — maquette PC uniquement */}
-          <div className="hidden lg:flex lg:items-center lg:gap-2">
-            <Link
-              href="/reservations/new"
-              className="flex h-10 items-center rounded-xl bg-success px-4 text-xs font-bold text-white"
-            >
-              + Nouvelle réservation
-            </Link>
-            <Link
-              href="/locations/new"
-              className="flex h-10 items-center rounded-xl bg-info px-4 text-xs font-bold text-white"
-            >
-              + Nouvelle location
-            </Link>
-          </div>
-          <form action={logout}>
-            <button type="submit" className="h-10 rounded-xl border border-navy/15 px-4 text-xs font-bold text-navy">
-              Déconnexion
-            </button>
-          </form>
+        {/* CTA desktop — maquette Stitch (couleurs exactes : orange plein +
+            navy plein, pas un style neutre). */}
+        <div className="hidden lg:flex lg:items-center lg:gap-2">
+          <Link
+            href="/locations/new"
+            className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink"
+          >
+            🔑 Nouveau séjour (Louer)
+          </Link>
+          <Link
+            href="/reservations/new"
+            className="flex h-10 items-center rounded-xl border border-border/15 bg-navy px-4 text-xs font-semibold text-white"
+          >
+            📅 Enregistrer réservation
+          </Link>
         </div>
       </div>
-      <p className="mt-1 text-xs font-medium text-navy/40">
+      <p className="mt-1 text-xs font-medium text-fg/40">
         Connecté en tant que {user.name} ({user.role}).
       </p>
 
-      <PropertyHero
-        property={
-          heroProperty ? { name: heroProperty.name, type: heroProperty.type, photo: heroProperty.photo } : null
-        }
-      />
+      {/* CTA tablette — mêmes routes, libellés Stitch tablette. */}
+      <div className="mt-3 hidden gap-2 md:flex lg:hidden">
+        <Link
+          href="/locations/new"
+          className="flex h-10 flex-1 items-center justify-center rounded-xl bg-brand-orange text-xs font-bold text-ink"
+        >
+          + Louer un bien
+        </Link>
+        <Link
+          href="/reservations/new"
+          className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border/15 bg-navy text-xs font-semibold text-white"
+        >
+          + Réserver
+        </Link>
+      </div>
 
-      {/* ===================== MOBILE (< md) ===================== */}
-      <div className="md:hidden">
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <StatCard
-            label="DISPONIBLES"
-            value={String(propertyCounts.AVAILABLE)}
-            color={PROPERTY_STATUS_META.AVAILABLE.color}
-            icon={AvailableIcon}
-            iconBg="#E8F5EC"
-          />
-          <StatCard
-            label="OCCUPÉS"
-            value={String(propertyCounts.OCCUPIED)}
-            color={PROPERTY_STATUS_META.OCCUPIED.color}
-            icon={OccupiedIcon}
-            iconBg="#FBEAEA"
-          />
-          <StatCard
-            label="RÉSERVÉS"
-            value={String(propertyCounts.RESERVED)}
-            color={PROPERTY_STATUS_META.RESERVED.color}
-          />
-          <StatCard
-            label="INDISPONIBLE"
-            value={String(propertyCounts.UNAVAILABLE)}
-            color={PROPERTY_STATUS_META.UNAVAILABLE.color}
-          />
-          <StatCard
-            label="RECETTES DU JOUR"
-            value={fmtFcfa(financial.revenueToday)}
-            color="#16A34A"
-            icon={RevenueIcon}
-            iconBg="#E8F5EC"
-          />
-          <StatCard
-            label="DÉPENSES DU JOUR"
-            value={fmtFcfa(financial.expenseToday)}
-            color="#E5484D"
-            icon={ExpenseIcon}
-            iconBg="#FBEAEA"
-          />
-        </div>
+      {/* ===================== STATISTIQUES — AVANT MES BIENS (maquette Stitch, les 3 largeurs) ===================== */}
 
-        <div className="mt-3 rounded-2xl bg-success-bg px-4 py-3.5">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/60">
-              <BalanceIcon className="h-4 w-4 text-success" />
+      {/* MOBILE : bloc Recettes du jour mis en avant + matrice compacte 4 cases */}
+      <div className="mt-5 md:hidden">
+        <div className="rounded-2xl border border-brand-orange/25 bg-surface-raised p-4">
+          <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-brand-orange">
+            <RevenueIcon className="h-4 w-4" /> Recettes du jour
+          </span>
+          <div className="mt-1.5 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold text-fg">{fmtFcfa(financial.revenueToday)}</span>
+            <span className="text-[11px] font-semibold text-fg/50">
+              {financial.paymentCountToday} règlement{financial.paymentCountToday > 1 ? "s" : ""}
             </span>
-            <p className="text-[11px] font-bold text-success">SOLDE DU JOUR</p>
           </div>
-          <p className="mt-1 text-xl font-extrabold text-success">{fmtFcfa(financial.balanceToday)}</p>
         </div>
-
-        <div className="mt-5 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-navy">Activité du jour</h2>
-          <Link href="/reservations" className="text-xs font-bold text-navy underline">
-            Voir tout
-          </Link>
-        </div>
-        <div className="mt-2.5 flex flex-col gap-2">
-          <ActivityCountRow label="Arrivées" value={arrivals.length} dotColor="#16A34A" />
-          <ActivityCountRow label="Départs" value={departures.length} dotColor="#F59E0B" />
-          <ActivityCountRow label="Réservations à venir" value={upcomingReservations.total} dotColor="#2563EB" />
-          <ActivityCountRow label="Locations à échéance" value={dueRentalsCount} dotColor="#52606D" />
-        </div>
-      </div>
-
-      {/* ===================== TABLETTE (md à <lg) ===================== */}
-      <div className="hidden md:block lg:hidden">
-        <div className="mt-4 grid grid-cols-4 gap-3">
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          <StatCard label="BIENS" value={String(propertyCount)} sub="Total" />
           <StatCard
-            label="DISPONIBLES"
+            label="DISPO"
             value={String(propertyCounts.AVAILABLE)}
+            sub={`${pct(propertyCounts.AVAILABLE)}%`}
             color={PROPERTY_STATUS_META.AVAILABLE.color}
-            icon={AvailableIcon}
-            iconBg="#E8F5EC"
           />
           <StatCard
             label="OCCUPÉS"
             value={String(propertyCounts.OCCUPIED)}
+            sub={`${pct(propertyCounts.OCCUPIED)}%`}
             color={PROPERTY_STATUS_META.OCCUPIED.color}
-            icon={OccupiedIcon}
-            iconBg="#FBEAEA"
           />
           <StatCard
             label="RÉSERVÉS"
             value={String(propertyCounts.RESERVED)}
+            sub={`${pct(propertyCounts.RESERVED)}%`}
             color={PROPERTY_STATUS_META.RESERVED.color}
           />
-          <StatCard
-            label="RECETTES DU JOUR"
-            value={fmtFcfa(financial.revenueToday)}
-            color="#16A34A"
-            icon={RevenueIcon}
-            iconBg="#E8F5EC"
-          />
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <StatCard
-            label="DÉPENSES DU JOUR"
-            value={fmtFcfa(financial.expenseToday)}
-            color="#E5484D"
-            icon={ExpenseIcon}
-            iconBg="#FBEAEA"
-          />
-          <StatCard
-            label="SOLDE DU JOUR"
-            value={fmtFcfa(financial.balanceToday)}
-            color={financial.balanceToday >= 0 ? "#16A34A" : "#E5484D"}
-            icon={BalanceIcon}
-            iconBg={financial.balanceToday >= 0 ? "#E8F5EC" : "#FBEAEA"}
-          />
-        </div>
-
-        <div className="mt-5 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-navy">État des logements</h2>
-          <Link href="/logements" className="text-xs font-bold text-navy underline">
-            Voir tout
-          </Link>
-        </div>
-        <PropertyStatusGrid items={gridItems.slice(0, 4)} />
-
-        <div className="mt-5 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-navy">Locations et réservations du jour</h2>
-          <Link href="/reservations" className="text-xs font-bold text-navy underline">
-            Voir tout
-          </Link>
-        </div>
-        <TodayActivityTable rows={activityRows} showAmount={false} />
       </div>
 
-      {/* ===================== PC (lg+) ===================== */}
-      <div className="hidden lg:block">
-        <div className="mt-4 grid grid-cols-5 gap-3">
+      {/* TABLETTE : grille 4 colonnes (Biens / Disponibles / Occupés / Recettes) */}
+      <div className="hidden md:block lg:hidden">
+        <div className="mt-5 grid grid-cols-4 gap-3">
+          <StatCard label="BIENS" value={String(propertyCount)} sub="Total gérés" />
           <StatCard
-            label="LOGEMENTS DISPONIBLES"
-            value={`${propertyCounts.AVAILABLE}/${propertyCount}`}
+            label="DISPONIBLES"
+            value={String(propertyCounts.AVAILABLE)}
+            sub={`${pct(propertyCounts.AVAILABLE)}% prêts`}
             color={PROPERTY_STATUS_META.AVAILABLE.color}
             icon={AvailableIcon}
-            iconBg="#E8F5EC"
+            iconBg="var(--color-success-bg)"
           />
           <StatCard
-            label="LOGEMENTS OCCUPÉS"
-            value={`${propertyCounts.OCCUPIED}/${propertyCount}`}
+            label="OCCUPÉS"
+            value={String(propertyCounts.OCCUPIED)}
+            sub={`${pct(propertyCounts.OCCUPIED)}% en séjour`}
             color={PROPERTY_STATUS_META.OCCUPIED.color}
             icon={OccupiedIcon}
-            iconBg="#FBEAEA"
+            iconBg="var(--color-danger-bg)"
           />
           <StatCard
-            label="RÉSERVATIONS AUJOURD'HUI"
-            value={String(arrivals.length)}
-            color="#2563EB"
-            icon={ReservationsIcon}
-            iconBg="#E7EEFC"
-          />
-          <StatCard
-            label="RECETTES DU JOUR"
+            label="RECETTES"
             value={fmtFcfa(financial.revenueToday)}
-            color="#16A34A"
+            sub={`${financial.paymentCountToday} règlement${financial.paymentCountToday > 1 ? "s" : ""}`}
+            color="var(--color-success)"
             icon={RevenueIcon}
-            iconBg="#E8F5EC"
+            iconBg="var(--color-success-bg)"
+          />
+        </div>
+      </div>
+
+      {/* DESKTOP : grille 5 colonnes (Biens / Disponibles / Occupés / Réservés / Recettes) */}
+      <div className="hidden lg:block">
+        <div className="mt-5 grid grid-cols-5 gap-3">
+          <StatCard label="BIENS" value={String(propertyCount)} sub="Logements inscrits" />
+          <StatCard
+            label="DISPONIBLES"
+            value={String(propertyCounts.AVAILABLE)}
+            sub={`${pct(propertyCounts.AVAILABLE)}%`}
+            color={PROPERTY_STATUS_META.AVAILABLE.color}
+            icon={AvailableIcon}
+            iconBg="var(--color-success-bg)"
           />
           <StatCard
-            label="DÉPENSES DU JOUR"
-            value={fmtFcfa(financial.expenseToday)}
-            color="#E5484D"
-            icon={ExpenseIcon}
-            iconBg="#FBEAEA"
+            label="OCCUPÉS"
+            value={String(propertyCounts.OCCUPIED)}
+            sub={`${pct(propertyCounts.OCCUPIED)}%`}
+            color={PROPERTY_STATUS_META.OCCUPIED.color}
+            icon={OccupiedIcon}
+            iconBg="var(--color-danger-bg)"
+          />
+          <StatCard
+            label="RÉSERVÉS"
+            value={String(propertyCounts.RESERVED)}
+            sub={`${pct(propertyCounts.RESERVED)}%`}
+            color={PROPERTY_STATUS_META.RESERVED.color}
+            icon={ReservationsIcon}
+            iconBg="var(--color-warning-bg)"
+          />
+          <StatCard
+            label="RECETTES JOUR"
+            value={fmtFcfa(financial.revenueToday)}
+            sub={`${financial.paymentCountToday} règlement${financial.paymentCountToday > 1 ? "s" : ""}`}
+            color="var(--color-success)"
+            icon={RevenueIcon}
+            iconBg="var(--color-success-bg)"
           />
         </div>
+      </div>
 
-        <div className="mt-5 grid grid-cols-[2fr_1fr] gap-5">
-          <div>
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-navy">État des logements</h2>
-              <Link href="/logements" className="text-xs font-bold text-navy underline">
-                Voir tout
-              </Link>
-            </div>
-            <PropertyStatusGrid items={gridItems.slice(0, 8)} />
-          </div>
-          <div>
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-navy">Locations du jour</h2>
-              <Link href="/reservations" className="text-xs font-bold text-navy underline">
-                Voir tout
-              </Link>
-            </div>
-            <TodayActivityTable rows={activityRows} showAmount={true} />
-          </div>
+      {/* ===================== MES BIENS (titre commun aux 3 largeurs) ===================== */}
+      <div className="mt-5 flex items-center justify-between">
+        <h2 className="text-sm font-extrabold text-fg">
+          Mes biens <span className="font-normal text-fg/40">({propertyCount})</span>
+        </h2>
+        <Link href="/logements" className="text-xs font-bold text-fg underline">
+          Voir tout
+        </Link>
+      </div>
+
+      {/* Desktop : Mes biens (colonne principale) + colonne droite
+          Planning/Dépenses/Accès rapide (maquette Stitch). Mobile/tablette :
+          pas de colonne droite, Mes biens pleine largeur (grid-cols ne
+          s'applique qu'à partir de lg). */}
+      <div className="lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-6">
+        <div>
+          <MyProperties items={myPropertiesItems} />
         </div>
 
-        <div className="mt-5 grid grid-cols-[2fr_1fr] gap-5">
+        <aside className="mt-5 hidden lg:mt-0 lg:flex lg:flex-col lg:gap-5">
+          {/* Planning du jour */}
           <div>
-            <h2 className="text-sm font-extrabold text-navy">Recettes et dépenses (7 derniers jours)</h2>
-            <RevenueChart data={weeklyTrend} />
-          </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-success-bg px-5 py-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/60">
-                <BalanceIcon className="h-3.5 w-3.5 text-success" />
-              </span>
-              <p className="text-xs font-bold text-success">SOLDE</p>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-fg">Planning du jour</h3>
+            <div className="mt-2.5 flex flex-col gap-2">
+              {planningRows.length === 0 ? (
+                <p className="text-xs font-medium text-fg/50">Aucune arrivée ni départ prévu aujourd&apos;hui.</p>
+              ) : (
+                planningRows.map((row) => (
+                  <Link
+                    key={row.id}
+                    href={row.href}
+                    className="rounded-xl border-l-2 border-brand-orange bg-surface-sunken p-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-fg">
+                      <span className="truncate">{row.propertyName}</span>
+                      <span className="shrink-0 text-brand-orange">{fmtTime(row.time)}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-[11px] text-fg/50">{row.clientName}</p>
+                  </Link>
+                ))
+              )}
             </div>
-            <p className="mt-1 text-2xl font-extrabold text-success">{fmtFcfa(financial.balanceToday)}</p>
           </div>
+
+          {/* Dépenses récentes */}
+          <div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-fg">Dépenses récentes</h3>
+              <Link href="/depenses/new" className="text-[11px] font-bold text-brand-orange hover:underline">
+                + Ajouter
+              </Link>
+            </div>
+            <div className="mt-2.5 flex flex-col gap-2">
+              {recentExpenses.items.length === 0 ? (
+                <p className="text-xs font-medium text-fg/50">Aucune dépense aujourd&apos;hui.</p>
+              ) : (
+                recentExpenses.items.slice(0, 4).map((expense) => (
+                  <div
+                    key={expense.id}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-border/10 bg-surface-sunken px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-fg">{expense.categoryNameSnapshot}</p>
+                      <p className="text-[10px] text-fg/50">{fmtTime(expense.paidAt)}</p>
+                    </div>
+                    <span className="shrink-0 text-xs font-bold text-coral">-{fmtFcfa(expense.amount)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Accès Rapide Séjour */}
+          <div className="rounded-2xl border border-border/10 bg-gradient-to-br from-navy to-surface-raised p-4">
+            <p className="text-xs font-bold text-fg">🔑 Espace Séjour Unifié</p>
+            <p className="mt-1 text-[11px] leading-snug text-fg/60">
+              Un seul concept pour louer immédiatement ou réserver à l&apos;avance sans changer de vue.
+            </p>
+            <Link
+              href="/sejour"
+              className="mt-2.5 block rounded-xl bg-brand-orange py-1.5 text-center text-xs font-bold text-ink"
+            >
+              Ouvrir Séjour
+            </Link>
+          </div>
+        </aside>
+      </div>
+
+      {/* ===================== FLUX OPÉRATIONNELS RAPIDES — mobile uniquement (maquette Stitch) ===================== */}
+      <div className="mt-5 md:hidden">
+        <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-fg/40">Flux opérationnels rapides</p>
+        <div className="mt-2 grid grid-cols-2 gap-2.5">
+          <Link href="/sejour" className="rounded-xl border border-border/10 bg-surface-raised p-3.5">
+            <span className="text-lg">🔑</span>
+            <p className="mt-1.5 text-sm font-bold text-fg">Gérer Séjour</p>
+            <p className="text-[11px] text-fg/50">Check-in / Check-out</p>
+          </Link>
+          <Link href="/depenses/new" className="rounded-xl border border-border/10 bg-surface-raised p-3.5">
+            <span className="text-lg">💸</span>
+            <p className="mt-1.5 text-sm font-bold text-fg">Saisir Dépense</p>
+            <p className="text-[11px] text-fg/50">Factures &amp; Achats</p>
+          </Link>
         </div>
       </div>
 
