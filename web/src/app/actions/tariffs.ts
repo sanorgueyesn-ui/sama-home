@@ -70,7 +70,8 @@ export async function createTariff(
 
   try {
     await prisma.tariff.create({ data: { ...parsed.data, propertyId } });
-  } catch {
+  } catch (error) {
+    console.error(`createTariff(propertyId=${propertyId}) — échec inattendu de la création du tarif :`, error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 
@@ -104,7 +105,8 @@ export async function updateTariff(
 
   try {
     await prisma.tariff.update({ where: { id: tariffId }, data: parsed.data });
-  } catch {
+  } catch (error) {
+    console.error(`updateTariff(${tariffId}) — échec inattendu de la mise à jour du tarif :`, error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 

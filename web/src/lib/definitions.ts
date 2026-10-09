@@ -253,6 +253,22 @@ export type ReservationFormState =
     }
   | undefined;
 
+/**
+ * Lot "Reservation — client facultatif" — variante de ReservationSchema où
+ * `clientId` devient facultatif (séjour court, <48h). Dérivée via `.extend()`
+ * pour ne jamais dupliquer les autres champs. `ReservationSchema` elle-même
+ * reste intacte et continue d'exiger un client : elle est encore réutilisée
+ * telle quelle par `parseRentalForm` (actions/rentals.ts), où le client
+ * reste obligatoire — non concerné par ce lot, jamais touché.
+ */
+export const ReservationClientOptionalSchema = ReservationSchema.extend({
+  clientId: z
+    .string()
+    .trim()
+    .transform((v) => (v.length === 0 ? undefined : v))
+    .optional(),
+});
+
 // ---------------------------------------------------------------------------
 // Phase 8 — Paiements
 // ---------------------------------------------------------------------------

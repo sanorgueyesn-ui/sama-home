@@ -33,15 +33,15 @@ export function PaymentForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="rounded-xl bg-paper px-4 py-3">
+      <div className="rounded-xl bg-surface-sunken px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-navy/60">Reste à payer</span>
-          <span className="text-base font-extrabold text-navy">{fmtFcfa(remaining)}</span>
+          <span className="text-xs font-bold text-fg/60">Reste à payer</span>
+          <span className="text-base font-extrabold text-fg">{fmtFcfa(remaining)}</span>
         </div>
       </div>
 
       <div>
-        <label htmlFor="amount" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="amount" className="mb-1.5 block text-xs font-bold text-fg">
           Montant encaissé (FCFA)
         </label>
         <input
@@ -52,7 +52,7 @@ export function PaymentForm({
           max={remaining}
           value={amount}
           onChange={(e) => setAmount(Number(e.target.value))}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {!amountValid ? (
           <p className="mt-1 text-xs font-medium text-danger">
@@ -67,7 +67,7 @@ export function PaymentForm({
       </div>
 
       <div>
-        <label htmlFor="method" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="method" className="mb-1.5 block text-xs font-bold text-fg">
           Mode de paiement
         </label>
         <select
@@ -75,7 +75,7 @@ export function PaymentForm({
           name="method"
           value={method}
           onChange={(e) => setMethod(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           {PAYMENT_MODES.map((m) => (
             <option key={m.value} value={m.value}>
@@ -91,8 +91,8 @@ export function PaymentForm({
       </div>
 
       <div>
-        <label htmlFor="reference" className="mb-1.5 block text-xs font-bold text-navy">
-          Référence <span className="ml-1 font-medium text-navy/40">(optionnel)</span>
+        <label htmlFor="reference" className="mb-1.5 block text-xs font-bold text-fg">
+          Référence <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
         </label>
         <input
           id="reference"
@@ -101,7 +101,7 @@ export function PaymentForm({
           value={reference}
           onChange={(e) => setReference(e.target.value)}
           placeholder="Ex. identifiant de transaction Wave"
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {errors?.reference?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -111,8 +111,8 @@ export function PaymentForm({
       </div>
 
       <div>
-        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-navy">
-          Note <span className="ml-1 font-medium text-navy/40">(optionnel)</span>
+        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-fg">
+          Note <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
         </label>
         <textarea
           id="note"
@@ -120,7 +120,7 @@ export function PaymentForm({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Informations complémentaires"
-          className="min-h-20 w-full resize-none rounded-xl border border-navy/15 bg-paper px-4 py-3 text-sm text-navy outline-none focus:border-navy"
+          className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface-raised px-4 py-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
@@ -133,7 +133,7 @@ export function PaymentForm({
       <button
         type="submit"
         disabled={pending || !amountValid}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
+        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
         {pending ? "Enregistrement..." : "CONFIRMER L'ENCAISSEMENT"}
       </button>

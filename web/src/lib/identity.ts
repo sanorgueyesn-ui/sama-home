@@ -22,7 +22,10 @@ export type IdentityCheckResult =
 
 /**
  * Règle exacte validée :
- * - Séjour < 48h → jamais requis.
+ * - Séjour < 48h → jamais requis (client lui-même facultatif, voir lot
+ *   "Reservation — Client facultatif" — ni client ni identité exigés).
+ * - Séjour ≥ 48h ET aucun client → refusé : un client est obligatoire avant
+ *   même de pouvoir parler d'identité.
  * - Séjour ≥ 48h ET le client a déjà une identité en dossier → ne jamais la
  *   redemander, ne jamais l'écraser (même si des valeurs sont soumises).
  * - Séjour ≥ 48h ET le client n'a PAS d'identité en dossier → les valeurs
@@ -34,11 +37,14 @@ export type IdentityCheckResult =
 export function checkIdentityRequirement(
   arrivalTime: Date,
   departureTime: Date,
-  client: ClientIdentity,
+  client: ClientIdentity | null,
   submitted: SubmittedIdentity,
 ): IdentityCheckResult {
   if (!requiresIdentity(arrivalTime, departureTime)) {
     return { ok: true, updateClientWith: null };
+  }
+  if (!client) {
+    return { ok: false, message: "Le client est obligatoire pour un séjour de 48 h ou plus." };
   }
   if (client.idDocumentType && client.idDocumentNumber) {
     return { ok: true, updateClientWith: null };

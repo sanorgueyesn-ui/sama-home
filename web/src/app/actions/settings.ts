@@ -33,7 +33,8 @@ export async function updateSettings(
       update: parsed.data,
       create: { id: SETTINGS_ID, ...parsed.data },
     });
-  } catch {
+  } catch (error) {
+    console.error("updateSettings() — échec inattendu de l'enregistrement :", error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 

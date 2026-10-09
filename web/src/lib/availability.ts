@@ -62,7 +62,9 @@ export async function findAvailabilityConflict(
       id: reservationConflict.id,
       arrivalTime: reservationConflict.arrivalTime,
       departureTime: reservationConflict.departureTime,
-      clientName: reservationConflict.client.name,
+      // Lot "Reservation — client facultatif" : client désormais nullable
+      // sur Reservation (pas sur Rental, branche ci-dessous inchangée).
+      clientName: reservationConflict.client?.name ?? "Client non renseigné",
     };
   }
 

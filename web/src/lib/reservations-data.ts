@@ -21,6 +21,12 @@ export async function listActivePropertiesWithActiveTariffs() {
       id: true,
       name: true,
       type: true,
+      // Reconstruction UI (Séjour, Lot 2 correctif) — `photo` ajouté pour la
+      // grille de cartes desktop (photo réelle si elle existe, sinon le repli
+      // existant PropertyPhoto) ; champ déjà sur `Property`, ajout d'un
+      // simple `select`, aucun changement de comportement pour les appelants
+      // existants (reservation-form.tsx) qui l'ignorent simplement.
+      photo: true,
       tariffs: {
         where: { active: true },
         select: { id: true, label: true, type: true, durationValue: true, durationUnit: true, amount: true },
@@ -34,6 +40,11 @@ export async function listActivePropertiesWithActiveTariffs() {
 export async function listReservations(filters: {
   timeFilter?: ReservationTimeFilter;
   propertyId?: string;
+  /** AT-7 — historique d'un locataire (clients/[id]/page.tsx). Un `clientId`
+   * spécifique ne peut structurellement jamais matcher une réservation
+   * `clientId = null` (séjour court sans client) — exclusion automatique,
+   * aucune logique supplémentaire nécessaire. */
+  clientId?: string;
   status?: ReservationStatus;
   query?: string;
 }) {
@@ -50,6 +61,7 @@ export async function listReservations(filters: {
 
   const where = {
     ...(filters.propertyId ? { propertyId: filters.propertyId } : {}),
+    ...(filters.clientId ? { clientId: filters.clientId } : {}),
     ...(filters.status ? { status: filters.status } : {}),
     ...(timeFilter === "today" ? { date: { gte: startOfToday, lt: endOfToday } } : {}),
     ...(timeFilter === "upcoming"

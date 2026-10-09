@@ -71,7 +71,7 @@ export function PropertyHero({ property }: { property: HeroProperty }) {
   const heroImageSrc = property?.photo ?? (defaultHeroExists ? DEFAULT_HERO_PUBLIC_PATH : null);
 
   return (
-    <div className="relative mt-4 h-[140px] w-full overflow-hidden rounded-2xl md:h-[190px] lg:h-[240px]">
+    <div className="relative mt-4 h-[96px] w-full overflow-hidden rounded-2xl md:h-[190px] lg:h-[240px]">
       {heroImageSrc ? (
         <>
           {/* Plain <img>, pas next/image : même choix que PropertyPhoto (URL

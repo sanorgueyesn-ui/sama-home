@@ -22,6 +22,10 @@ export type FinancialSummary = {
   revenueMonth: number;
   expenseMonth: number;
   balanceMonth: number;
+  /** Reconstruction UI (Accueil, maquette Stitch) — nombre de Payment reçus
+   * aujourd'hui ("3 règlements validés"). Même agrégat que revenueToday,
+   * juste le COUNT à côté du SUM déjà calculé — aucune nouvelle requête. */
+  paymentCountToday: number;
 };
 
 /**
@@ -40,7 +44,7 @@ export async function getFinancialSummary(now: Date = new Date()): Promise<Finan
   const month = monthRange(now);
 
   const [revenueTodayAgg, revenueMonthAgg, expenseTodayAgg, expenseMonthAgg] = await Promise.all([
-    prisma.payment.aggregate({ where: { paidAt: today }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { paidAt: today }, _sum: { amount: true }, _count: true }),
     prisma.payment.aggregate({ where: { paidAt: month }, _sum: { amount: true } }),
     prisma.expense.aggregate({ where: { paidAt: today }, _sum: { amount: true } }),
     prisma.expense.aggregate({ where: { paidAt: month }, _sum: { amount: true } }),
@@ -59,6 +63,7 @@ export async function getFinancialSummary(now: Date = new Date()): Promise<Finan
     revenueMonth,
     expenseMonth,
     balanceMonth: revenueMonth - expenseMonth,
+    paymentCountToday: revenueTodayAgg._count,
   };
 }
 

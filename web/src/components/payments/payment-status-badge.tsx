@@ -1,11 +1,12 @@
 import type { PaymentStatus } from "@/lib/payment-summary";
 
-// Same three tokens already used across the app (globals.css --color-danger/
-// -warning/-success) — not new colors invented for this badge.
+// Mêmes 3 tokens déjà utilisés partout dans l'app (globals.css
+// --color-danger/-warning/-success), exprimés en var() pour suivre le thème
+// dark — pas de nouvelle couleur inventée pour ce badge.
 const STATUS_META: Record<PaymentStatus, { label: string; color: string; bg: string }> = {
-  NON_PAYE: { label: "Non payé", color: "#E5484D", bg: "#FBEAEA" },
-  PARTIEL: { label: "Partiel", color: "#F59E0B", bg: "#FDF1DC" },
-  PAYE: { label: "Payé", color: "#16A34A", bg: "#E8F5EC" },
+  NON_PAYE: { label: "Non payé", color: "var(--color-danger)", bg: "var(--color-danger-bg)" },
+  PARTIEL: { label: "Partiel", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
+  PAYE: { label: "Payé", color: "var(--color-success)", bg: "var(--color-success-bg)" },
 };
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {

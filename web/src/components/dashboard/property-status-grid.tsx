@@ -20,7 +20,7 @@ export type PropertyGridItem = {
  */
 export function PropertyStatusGrid({ items }: { items: PropertyGridItem[] }) {
   if (items.length === 0) {
-    return <p className="mt-2.5 text-sm font-medium text-navy/50">Aucun logement enregistré.</p>;
+    return <p className="mt-2.5 text-sm font-medium text-fg/50">Aucun logement enregistré.</p>;
   }
   return (
     <div className="mt-2.5 grid grid-cols-4 gap-3">
@@ -29,7 +29,7 @@ export function PropertyStatusGrid({ items }: { items: PropertyGridItem[] }) {
           <Card className="overflow-hidden p-0">
             <PropertyPhoto photo={property.photo} type={property.type} className="h-20 w-full" />
             <div className="p-2.5">
-              <p className="truncate text-xs font-extrabold text-navy">{property.name}</p>
+              <p className="truncate text-xs font-extrabold text-fg">{property.name}</p>
               <div className="mt-1.5">
                 <StatusBadge status={property.status} />
               </div>

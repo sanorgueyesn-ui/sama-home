@@ -7,7 +7,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { verifySession } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
-import { checkIdentityRequirement } from "@/lib/identity";
+import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
 import { checkRetroactiveArrival } from "@/lib/retroactive-checkin";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 
@@ -35,8 +35,8 @@ function parseRentalForm(formData: FormData) {
     deposit: formData.get("deposit"),
     depositMethod: formData.get("depositMethod"),
     note: formData.get("note"),
-    idDocumentType: formData.get("idDocumentType"),
-    idDocumentNumber: formData.get("idDocumentNumber"),
+    idDocumentType: formData.get("idDocumentType") ?? undefined,
+    idDocumentNumber: formData.get("idDocumentNumber") ?? undefined,
     retroactiveReason: formData.get("retroactiveReason"),
   });
 }
@@ -237,7 +237,7 @@ export async function createRentalDirect(
  */
 export async function checkInReservation(
   reservationId: string,
-  options?: { actualArrivalAt?: string; reason?: string },
+  options?: { actualArrivalAt?: string; reason?: string; clientId?: string },
 ): Promise<{ error?: string }> {
   const { userId } = await verifySession();
 
@@ -253,6 +253,45 @@ export async function checkInReservation(
   }
   if (reservation.status !== "CONFIRMED") {
     return { error: "Cette réservation n'est plus confirmée." };
+  }
+
+  // Mini-lot "Check-in — identifier le client manquant" : Rental.clientId
+  // reste obligatoire (non touché). Si la réservation a déjà un client, il
+  // est utilisé tel quel — un `options.clientId` fourni par erreur n'écrase
+  // JAMAIS silencieusement un client déjà associé (section 5). Si elle n'en
+  // a pas (séjour court, lot "Reservation — client facultatif"), le client
+  // choisi à l'écran de check-in devient obligatoire ici.
+  let clientId: string;
+  let clientWasMissing = false;
+  if (reservation.clientId) {
+    clientId = reservation.clientId;
+  } else {
+    // Incohérence qui ne devrait jamais exister (createReservation/
+    // updateReservation imposent déjà un client dès 48h) : refuser
+    // proprement plutôt que de laisser le petit sélecteur de check-in
+    // "réparer" silencieusement une réservation qui aurait aussi dû
+    // recueillir une pièce d'identité, jamais collectée ici.
+    if (requiresIdentity(reservation.arrivalTime, reservation.departureTime)) {
+      return {
+        error:
+          "Cette réservation de 48 h ou plus nécessite un client et une pièce d'identité — corrigez-la depuis sa fiche avant de faire entrer.",
+      };
+    }
+    if (!options?.clientId) {
+      return { error: "Un client est requis pour faire entrer ce séjour." };
+    }
+    // Existence vérifiée explicitement — jamais de confiance aveugle dans un
+    // id transmis par le client (pas d'IDOR : n'importe quel client existant
+    // est une cible légitime, comme pour la création de réservation).
+    const selectedClient = await prisma.client.findUnique({
+      where: { id: options.clientId },
+      select: { id: true },
+    });
+    if (!selectedClient) {
+      return { error: "Client introuvable." };
+    }
+    clientId = selectedClient.id;
+    clientWasMissing = true;
   }
 
   // Bloc 21 — arrivée rétroactive : si `options.actualArrivalAt` est fourni,
@@ -297,7 +336,7 @@ export async function checkInReservation(
         }
         const rental = await tx.rental.create({
           data: {
-            clientId: reservation.clientId,
+            clientId,
             propertyId: reservation.propertyId,
             reservationId: reservation.id,
             tariffId: reservation.tariffId,
@@ -333,7 +372,16 @@ export async function checkInReservation(
             },
           },
         });
-        await tx.reservation.update({ where: { id: reservationId }, data: { status: "ARRIVED" } });
+        await tx.reservation.update({
+          where: { id: reservationId },
+          data: {
+            status: "ARRIVED",
+            // La réservation reflète désormais le client réellement entré —
+            // sinon sa fiche afficherait "Sans client" indéfiniment malgré
+            // une Location bien associée à un vrai client.
+            ...(clientWasMissing ? { clientId } : {}),
+          },
+        });
         return rental.id;
       },
       { isolationLevel: "Serializable" },

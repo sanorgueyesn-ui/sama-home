@@ -34,7 +34,8 @@ export async function createProperty(
   try {
     const property = await prisma.property.create({ data: parsed.data });
     propertyId = property.id;
-  } catch {
+  } catch (error) {
+    console.error("createProperty() — échec inattendu de la création du logement :", error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 
@@ -56,7 +57,8 @@ export async function updateProperty(
 
   try {
     await prisma.property.update({ where: { id }, data: parsed.data });
-  } catch {
+  } catch (error) {
+    console.error(`updateProperty(${id}) — échec inattendu de la mise à jour du logement :`, error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 

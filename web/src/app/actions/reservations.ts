@@ -6,11 +6,11 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
-import { checkIdentityRequirement } from "@/lib/identity";
-import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
+import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
+import { ReservationClientOptionalSchema, type ReservationFormState } from "@/lib/definitions";
 
 function parseReservationForm(formData: FormData) {
-  return ReservationSchema.safeParse({
+  return ReservationClientOptionalSchema.safeParse({
     clientId: formData.get("clientId"),
     propertyId: formData.get("propertyId"),
     tariffId: formData.get("tariffId"),
@@ -19,8 +19,8 @@ function parseReservationForm(formData: FormData) {
     deposit: formData.get("deposit"),
     depositMethod: formData.get("depositMethod"),
     note: formData.get("note"),
-    idDocumentType: formData.get("idDocumentType"),
-    idDocumentNumber: formData.get("idDocumentNumber"),
+    idDocumentType: formData.get("idDocumentType") ?? undefined,
+    idDocumentNumber: formData.get("idDocumentNumber") ?? undefined,
   });
 }
 
@@ -98,12 +98,14 @@ export async function createReservation(
   const { clientId, propertyId, tariffId, date, arrivalTime, deposit, depositMethod, note, idDocumentType, idDocumentNumber } = parsed.data;
 
   // Bloc 17 — every existence/coherence rule re-checked server-side.
+  // Lot "Reservation — client facultatif" : clientId peut être absent
+  // (séjour court) — ne tenter la recherche que s'il a été soumis.
   const [client, property, tariff] = await Promise.all([
-    prisma.client.findUnique({ where: { id: clientId } }),
+    clientId ? prisma.client.findUnique({ where: { id: clientId } }) : Promise.resolve(null),
     prisma.property.findUnique({ where: { id: propertyId } }),
     prisma.tariff.findUnique({ where: { id: tariffId } }),
   ]);
-  if (!client) return { message: "Client introuvable." };
+  if (clientId && !client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
   if (!property.active) return { message: "Ce logement est désactivé." };
   if (!tariff) return { message: "Tarif introuvable." };
@@ -128,6 +130,10 @@ export async function createReservation(
   // (avant la transaction) pour pouvoir refuser immédiatement avec un
   // message clair ; la mise à jour du client, elle, reste dans la
   // transaction ci-dessous pour rester atomique avec la réservation.
+  // Lot "Reservation — client facultatif" : checkIdentityRequirement refuse
+  // désormais elle-même (même seuil de 48h) si client est null, avec le
+  // message "Le client est obligatoire pour un séjour de 48 h ou plus." —
+  // une seule fonction, un seul seuil, pour les deux règles liées.
   const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
     idDocumentType,
     idDocumentNumber,
@@ -148,12 +154,12 @@ export async function createReservation(
         if (conflict) {
           throw new AvailabilityConflictError(formatConflictMessage(conflict));
         }
-        if (identityCheck.updateClientWith) {
-          await tx.client.update({ where: { id: clientId }, data: identityCheck.updateClientWith });
+        if (identityCheck.updateClientWith && client) {
+          await tx.client.update({ where: { id: client.id }, data: identityCheck.updateClientWith });
         }
         const reservation = await tx.reservation.create({
           data: {
-            clientId,
+            clientId: client?.id ?? null,
             propertyId,
             tariffId,
             date: new Date(`${date}T00:00:00`),
@@ -237,12 +243,14 @@ export async function updateReservation(
   // fields are also hidden from the edit form itself — see reservation-form.tsx.
   const { clientId, propertyId, tariffId, date, arrivalTime, note } = parsed.data;
 
+  // Lot "Reservation — client facultatif" : même traitement qu'à la
+  // création — clientId peut être absent (séjour court).
   const [client, property, tariff] = await Promise.all([
-    prisma.client.findUnique({ where: { id: clientId } }),
+    clientId ? prisma.client.findUnique({ where: { id: clientId } }) : Promise.resolve(null),
     prisma.property.findUnique({ where: { id: propertyId } }),
     prisma.tariff.findUnique({ where: { id: tariffId } }),
   ]);
-  if (!client) return { message: "Client introuvable." };
+  if (clientId && !client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
   if (!property.active) return { message: "Ce logement est désactivé." };
   if (!tariff) return { message: "Tarif introuvable." };
@@ -264,6 +272,17 @@ export async function updateReservation(
   const amount = tariffChanged ? tariff.amount : existing.amount;
 
   const departureDateTime = computeDepartureTime(arrivalDateTime, durationValue, durationUnit);
+
+  // Lot "Reservation — client facultatif", section 7 : une édition ne doit
+  // jamais pouvoir retirer le client d'un séjour >=48h (même seuil que
+  // lib/identity.ts, réutilisé — pas de nouvelle constante). L'édition ne
+  // redemande jamais les pièces d'identité (comportement inchangé, voir
+  // reservation-form.tsx isEdit) : seule la présence du client est vérifiée
+  // ici, pas checkIdentityRequirement (qui exigerait aussi des documents
+  // jamais collectés par ce formulaire).
+  if (requiresIdentity(arrivalDateTime, departureDateTime) && !client) {
+    return { message: "Le client est obligatoire pour un séjour de 48 h ou plus." };
+  }
 
   if (existing.deposit > amount) {
     return {
@@ -287,7 +306,7 @@ export async function updateReservation(
         await tx.reservation.update({
           where: { id },
           data: {
-            clientId,
+            clientId: client?.id ?? null,
             propertyId,
             tariffId,
             date: new Date(`${date}T00:00:00`),

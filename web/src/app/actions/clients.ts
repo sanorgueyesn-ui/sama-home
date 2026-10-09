@@ -27,8 +27,16 @@ function parseClientForm(formData: FormData) {
  * attacker-controllable form data (Bloc 23: never trust the browser), so it
  * is only ever honored against this exact allowlist — never redirected to
  * verbatim — to rule out an open redirect.
+ *
+ * Mini-lot "Check-in — identifier le client manquant" : élargi pour
+ * accepter aussi une fiche réservation (`/reservations/<id>`), d'où "+
+ * Nouveau client" peut désormais être lancé depuis le sélecteur de check-in
+ * — même garde-fou, juste un segment de chemin supplémentaire dans le même
+ * groupe `reservations/...`, toujours ancré, toujours sans caractère `/`
+ * permis dans le segment final (donc jamais `/reservations/<id>/edit` ou
+ * `/reservations/<id>/pay`, qui ne matchent pas ce motif).
  */
-const RETURN_TO_PATTERN = /^\/(reservations|locations)\/new(\?[\w=&%.-]*)?$/;
+const RETURN_TO_PATTERN = /^\/(reservations\/[a-zA-Z0-9]+|locations\/new)(\?[\w=&%.-]*)?$/;
 
 function safeReturnTo(formData: FormData): string | null {
   const value = formData.get("returnTo");
@@ -57,7 +65,8 @@ export async function createClient(
   try {
     const client = await prisma.client.create({ data: parsed.data });
     clientId = client.id;
-  } catch {
+  } catch (error) {
+    console.error("createClient() — échec inattendu de la création du client :", error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 
@@ -83,7 +92,8 @@ export async function updateClient(
 
   try {
     await prisma.client.update({ where: { id }, data: parsed.data });
-  } catch {
+  } catch (error) {
+    console.error(`updateClient(${id}) — échec inattendu de la mise à jour du client :`, error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 

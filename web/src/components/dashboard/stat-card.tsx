@@ -5,13 +5,19 @@ import { Card } from "@/components/ui/card";
 export function StatCard({
   label,
   value,
+  sub,
   color,
   bg,
   icon: Icon,
   iconBg,
+  className = "",
 }: {
   label: string;
   value: string;
+  /** Petite annotation sous la valeur (maquette Stitch) — ex. un
+   * pourcentage calculé localement à partir de compteurs réels déjà
+   * chargés, ou un libellé comme "Total gérés". Jamais un chiffre inventé. */
+  sub?: string;
   color?: string;
   bg?: string;
   /** Optional pictogram, shown inside a small pastel badge (`iconBg`) next
@@ -22,9 +28,15 @@ export function StatCard({
   /** Badge background — a light/pastel tone, reusing existing tokens
    * (e.g. the same hex as --color-success-bg/--color-danger-bg/--color-info-bg). */
   iconBg?: string;
+  /** Extra classes on the outer Card — e.g. `col-span-2` to let one tile
+   * span a wider slot in a grid (Reconstruction UI, Accueil mobile). */
+  className?: string;
 }) {
   return (
-    <Card className="px-4 py-3.5" style={bg ? { background: bg } : undefined}>
+    <Card
+      className={`border border-border/10 px-4 py-3.5 ${className}`}
+      style={bg ? { background: bg } : undefined}
+    >
       <div className="flex items-center gap-2">
         {Icon ? (
           <span
@@ -34,11 +46,12 @@ export function StatCard({
             <Icon className="h-4 w-4 md:h-3.5 md:w-3.5" style={color ? { color } : undefined} />
           </span>
         ) : null}
-        <p className="text-[11px] font-bold text-navy/50">{label}</p>
+        <p className="text-[11px] font-bold text-fg/50">{label}</p>
       </div>
-      <p className={`mt-1 text-xl font-extrabold ${color ? "" : "text-navy"}`} style={color ? { color } : undefined}>
+      <p className={`mt-1 text-xl font-extrabold ${color ? "" : "text-fg"}`} style={color ? { color } : undefined}>
         {value}
       </p>
+      {sub ? <p className="mt-0.5 text-[11px] font-semibold text-fg/50">{sub}</p> : null}
     </Card>
   );
 }

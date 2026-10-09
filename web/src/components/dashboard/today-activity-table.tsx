@@ -27,7 +27,7 @@ function fmtFcfa(amount: number) {
  */
 export function TodayActivityTable({ rows, showAmount }: { rows: ActivityRow[]; showAmount: boolean }) {
   if (rows.length === 0) {
-    return <p className="mt-2.5 text-sm font-medium text-navy/50">Aucune activité aujourd&apos;hui.</p>;
+    return <p className="mt-2.5 text-sm font-medium text-fg/50">Aucune activité aujourd&apos;hui.</p>;
   }
   return (
     // overflow-x-auto confiné à la table elle-même : un <table> en
@@ -39,7 +39,7 @@ export function TodayActivityTable({ rows, showAmount }: { rows: ActivityRow[]; 
     <div className="mt-2.5 overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="text-xs font-bold text-navy/50">
+          <tr className="text-xs font-bold text-fg/50">
             <th className="pb-2 pr-3 font-bold">Heure</th>
             <th className="pb-2 pr-3 font-bold">Client</th>
             <th className="pb-2 pr-3 font-bold">Logement</th>
@@ -50,16 +50,16 @@ export function TodayActivityTable({ rows, showAmount }: { rows: ActivityRow[]; 
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.id} className="border-t border-navy/10">
-              <td className="py-2.5 pr-3 font-semibold text-navy">{fmtTime(row.time)}</td>
+            <tr key={row.id} className="border-t border-border/10">
+              <td className="py-2.5 pr-3 font-semibold text-fg">{fmtTime(row.time)}</td>
               <td className="py-2.5 pr-3">
-                <Link href={row.href} className="font-bold text-navy hover:underline">
+                <Link href={row.href} className="font-bold text-fg hover:underline">
                   {row.clientName}
                 </Link>
               </td>
-              <td className="py-2.5 pr-3 text-navy/70">{row.propertyName}</td>
-              <td className="py-2.5 pr-3 text-navy/70">{row.typeLabel}</td>
-              {showAmount ? <td className="py-2.5 pr-3 font-semibold text-navy">{fmtFcfa(row.amount)}</td> : null}
+              <td className="py-2.5 pr-3 text-fg/70">{row.propertyName}</td>
+              <td className="py-2.5 pr-3 text-fg/70">{row.typeLabel}</td>
+              {showAmount ? <td className="py-2.5 pr-3 font-semibold text-fg">{fmtFcfa(row.amount)}</td> : null}
               <td className="py-2.5">{row.badge}</td>
             </tr>
           ))}

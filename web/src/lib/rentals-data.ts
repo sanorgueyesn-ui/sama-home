@@ -10,6 +10,8 @@ export type RentalTimeFilter = "active" | "completed" | "cancelled" | "all";
 export async function listRentals(filters: {
   timeFilter?: RentalTimeFilter;
   propertyId?: string;
+  /** AT-7 — historique d'un locataire (clients/[id]/page.tsx). */
+  clientId?: string;
   query?: string;
   date?: string;
 }) {
@@ -28,6 +30,7 @@ export async function listRentals(filters: {
 
   const where = {
     ...(filters.propertyId ? { propertyId: filters.propertyId } : {}),
+    ...(filters.clientId ? { clientId: filters.clientId } : {}),
     ...(status ? { status } : {}),
     ...(filters.date
       ? {

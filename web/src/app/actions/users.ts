@@ -52,7 +52,8 @@ export async function createUser(
   const passwordHash = await hashPassword(password);
   try {
     await prisma.user.create({ data: { username, name, passwordHash, role } });
-  } catch {
+  } catch (error) {
+    console.error("createUser() — échec inattendu de la création de l'utilisateur :", error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
   }
 
@@ -108,6 +109,7 @@ export async function updateUser(
     if (error instanceof UserActionError) {
       return { message: error.message };
     }
+    console.error(`updateUser(${id}) — échec inattendu de la mise à jour :`, error);
     return {
       message: isDemotingFromAdmin
         ? "Le statut administrateur vient peut-être de changer à l'instant. Veuillez vérifier et réessayer."

@@ -8,9 +8,9 @@ function fmtFcfa(amount: number) {
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="flex items-center justify-between border-b border-[#E7EAEE] py-3 last:border-0">
-      <span className="text-[11px] font-bold text-navy/50">{label}</span>
-      <span className={strong ? "text-base font-extrabold text-navy" : "text-sm font-semibold text-navy"}>
+    <div className="flex items-center justify-between border-b border-border/10 py-3 last:border-0">
+      <span className="text-[11px] font-bold text-fg/50">{label}</span>
+      <span className={strong ? "text-base font-extrabold text-fg" : "text-sm font-semibold text-fg"}>
         {value}
       </span>
     </div>
@@ -33,7 +33,7 @@ export function PaymentSummaryCard({
   return (
     <Card className="mt-3 px-4">
       <div className="flex items-center justify-between pt-3">
-        <p className="text-[11px] font-bold text-navy/50">SITUATION FINANCIÈRE</p>
+        <p className="text-[11px] font-bold text-fg/50">SITUATION FINANCIÈRE</p>
         <PaymentStatusBadge status={summary.status} />
       </div>
       {extraRows?.map((r) => <Row key={r.label} label={r.label} value={r.value} />)}

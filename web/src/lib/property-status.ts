@@ -24,14 +24,19 @@ export type PropertyStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "UNAVAILABL
  */
 export const RESERVATION_HORIZON_HOURS = 24;
 
+// Reconstruction UI — couleurs exprimées via les tokens CSS sémantiques
+// (var(--color-success) etc., voir globals.css) plutôt qu'en hex figé, pour
+// que ces badges suivent automatiquement le thème clair/sombre actif. Pure
+// présentation : les 4 statuts eux-mêmes et la logique ci-dessus (Bloc 19)
+// sont inchangés.
 export const PROPERTY_STATUS_META: Record<
   PropertyStatus,
   { label: string; color: string; bg: string }
 > = {
-  AVAILABLE: { label: "Disponible", color: "#16A34A", bg: "#E8F5EC" },
-  OCCUPIED: { label: "Occupé", color: "#E5484D", bg: "#FBEAEA" },
-  RESERVED: { label: "Réservé", color: "#F59E0B", bg: "#FDF1DC" },
-  UNAVAILABLE: { label: "Indisponible", color: "#52606D", bg: "#EBEDEE" },
+  AVAILABLE: { label: "Disponible", color: "var(--color-success)", bg: "var(--color-success-bg)" },
+  OCCUPIED: { label: "Occupé", color: "var(--color-danger)", bg: "var(--color-danger-bg)" },
+  RESERVED: { label: "Réservé", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
+  UNAVAILABLE: { label: "Indisponible", color: "var(--color-neutral)", bg: "var(--color-neutral-bg)" },
 };
 
 /**
