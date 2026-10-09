@@ -34,7 +34,7 @@ export function ExpenseForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="categoryId" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="categoryId" className="mb-1.5 block text-xs font-bold text-fg">
           Catégorie
         </label>
         <select
@@ -42,7 +42,7 @@ export function ExpenseForm({
           name="categoryId"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           <option value="">Sélectionner une catégorie...</option>
           {categories.map((c) => (
@@ -61,7 +61,7 @@ export function ExpenseForm({
       <Field id="amount" label="Montant (FCFA)" type="number" min={1} required errors={errors?.amount} />
 
       <div>
-        <label htmlFor="method" className="mb-1.5 block text-xs font-bold text-navy">
+        <label htmlFor="method" className="mb-1.5 block text-xs font-bold text-fg">
           Mode de paiement
         </label>
         <select
@@ -69,7 +69,7 @@ export function ExpenseForm({
           name="method"
           value={method}
           onChange={(e) => setMethod(e.target.value)}
-          className="h-12 w-full rounded-xl border border-navy/15 bg-paper px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           {METHOD_OPTIONS.map((m) => (
             <option key={m.value} value={m.value}>

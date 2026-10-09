@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 const PERIOD_CHIPS: { value: string; label: string }[] = [
   { value: "today", label: "Aujourd'hui" },
   { value: "month", label: "Ce mois" },
-  { value: "all", label: "Tout" },
+  { value: "all", label: "Toutes" },
 ];
 
 const METHOD_OPTIONS: { value: string; label: string }[] = [
@@ -59,8 +59,8 @@ export function ExpenseFilters({
 
   return (
     <div className="mt-4">
-      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-white px-3.5 shadow-[0_1px_2px_rgba(18,48,74,0.05)] focus-within:border-navy">
-        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7A87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-surface-raised px-3.5 shadow-card focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange">
+        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-fg/40" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
@@ -70,7 +70,7 @@ export function ExpenseFilters({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher par référence ou note..."
           aria-label="Rechercher une dépense par référence ou note"
-          className="flex-1 bg-transparent text-sm text-navy outline-none placeholder:text-navy/40"
+          className="flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg/40"
         />
       </div>
 
@@ -80,8 +80,8 @@ export function ExpenseFilters({
             key={chip.value}
             type="button"
             onClick={() => pushParams(query, chip.value, defaultCategory, defaultMethod)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold ${
-              defaultPeriod === chip.value ? "bg-navy text-white" : "bg-white text-navy"
+            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition-colors ${
+              defaultPeriod === chip.value ? "bg-brand-orange text-ink" : "bg-surface-raised text-fg"
             }`}
           >
             {chip.label}
@@ -94,7 +94,7 @@ export function ExpenseFilters({
           value={defaultCategory}
           onChange={(e) => pushParams(query, defaultPeriod, e.target.value, defaultMethod)}
           aria-label="Filtrer par catégorie"
-          className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-11 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           <option value="">Toutes catégories</option>
           {categories.map((c) => (
@@ -107,7 +107,7 @@ export function ExpenseFilters({
           value={defaultMethod}
           onChange={(e) => pushParams(query, defaultPeriod, defaultCategory, e.target.value)}
           aria-label="Filtrer par mode de paiement"
-          className="h-11 w-full rounded-xl border border-navy/10 bg-white px-3 text-sm text-navy outline-none focus:border-navy"
+          className="h-11 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
           <option value="">Tous les modes</option>
           {METHOD_OPTIONS.map((m) => (
