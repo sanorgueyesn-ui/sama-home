@@ -158,6 +158,27 @@ function LogoutIcon() {
     </svg>
   );
 }
+function PlatformIcon({ active }: { active: boolean }) {
+  return (
+    <svg {...iconProps(active)}>
+      <path d="M12 3 4 7l8 4 8-4-8-4Z" />
+      <path d="M4 12l8 4 8-4" />
+      <path d="M4 17l8 4 8-4" />
+    </svg>
+  );
+}
+
+// Phase 3G / Lot D12-P61 — jamais ajouté à MENU_ITEMS/PRIMARY_ITEMS
+// ci-dessus : ces tableaux sont statiques et leur longueur/ordre conditionne
+// le découpage PC_GROUP_OPERATIONS/PC_GROUP_ADMIN (slice(0,6)/slice(6)) et la
+// règle stricte des 3 éléments de la barre principale — y insérer un élément
+// conditionnel aurait décalé ces index. Rendu séparément, conditionné par
+// `isPlatformAdmin`, après les groupes existants.
+const PLATFORM_NAV_ITEM: NavItem = {
+  href: "/plateforme",
+  label: "Espace plateforme",
+  icon: (a) => <PlatformIcon active={a} />,
+};
 
 // Toujours visibles : barre principale mobile ET premier groupe de la
 // sidebar PC. Exactement 3 éléments (PRD section 2.3) — jamais
@@ -242,7 +263,21 @@ function NavRow({
   );
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  isPlatformAdmin = false,
+}: {
+  children: ReactNode;
+  /**
+   * Phase 3G / Lot D12-P61 — reçu depuis layout.tsx, déjà résolu via
+   * getCurrentUserOrNull() (jamais recalculé ici, jamais une nouvelle
+   * requête). Contrôle UNIQUEMENT l'affichage du lien "Espace plateforme" —
+   * ne constitue jamais une protection : `requirePlatformAdmin()` (dal.ts)
+   * reste le seul contrôle d'autorisation réel sur /plateforme. Jamais
+   * déduit de `role === "ADMIN"`/`"GESTIONNAIRE"`.
+   */
+  isPlatformAdmin?: boolean;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -330,6 +365,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               active={!item.disabled && isActive(pathname, item.href!)}
             />
           ))}
+
+          {isPlatformAdmin ? (
+            <>
+              <div className="my-3 border-t border-border/10" />
+              <NavRow item={PLATFORM_NAV_ITEM} active={isActive(pathname, PLATFORM_NAV_ITEM.href!)} />
+            </>
+          ) : null}
         </nav>
         <form action={logout}>
           <button
@@ -429,6 +471,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onNavigate={() => setMenuOpen(false)}
                 />
               ))}
+              {isPlatformAdmin ? (
+                <NavRow
+                  item={PLATFORM_NAV_ITEM}
+                  active={isActive(pathname, PLATFORM_NAV_ITEM.href!)}
+                  onNavigate={() => setMenuOpen(false)}
+                />
+              ) : null}
               <form action={logout}>
                 <button
                   type="submit"

@@ -34,11 +34,11 @@
      identiques à l'existant (paper/white/navy) : aucun changement visuel
      tant qu'aucune page n'adopte ces tokens.
    */
-  --color-surface: var(--color-paper);
-  --color-surface-raised: #ffffff;
-  --color-surface-sunken: #eef1f0;
-  --color-fg: var(--color-navy);
-  --color-border: var(--color-navy);
+  --color-surface: #e9e7e0;
+  --color-surface-raised: #f3f0e8;
+  --color-surface-sunken: #d9d9d0;
+  --color-fg: #26332d;
+  --color-border: #d1d0c7;
   --shadow-card: 0 1px 2px rgba(18, 48, 74, 0.05), 0 8px 20px rgba(18, 48, 74, 0.06);
 }
 
