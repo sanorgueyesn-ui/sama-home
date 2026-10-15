@@ -61,7 +61,7 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
               <div>
                 <p className="text-sm font-extrabold text-fg">{u.name}</p>
                 <p className="mt-0.5 text-xs font-semibold text-fg/60">
-                  @{u.username} · {ROLE_LABELS[u.role] ?? u.role}
+                  @{u.username} · {u.role ? ROLE_LABELS[u.role] ?? u.role : "Sans rôle"}
                 </p>
               </div>
               <span className="text-[11px] font-medium text-fg/40">Depuis {fmtDate(u.createdAt)}</span>

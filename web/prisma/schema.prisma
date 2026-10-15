@@ -13,6 +13,71 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
+// Multi-tenant — Établissements (Phase 1 : schéma additif uniquement)
+// ---------------------------------------------------------------------------
+
+enum EstablishmentStatus {
+  /// Inscription créée, en attente d'approbation explicite par un
+  /// administrateur de plateforme — aucun accès aux fonctionnalités métier.
+  PENDING
+  /// Approuvé — accès complet, strictement limité à ses propres données.
+  ACTIVE
+  /// Refusé explicitement — ne redevient jamais PENDING automatiquement.
+  REJECTED
+  /// Était ACTIVE, suspendu manuellement par un administrateur de
+  /// plateforme — distinct d'une expiration d'abonnement (voir Subscription
+  /// ci-dessous, axe totalement indépendant de ce statut).
+  SUSPENDED
+}
+
+/// Un établissement (tenant). Toutes les données métier existantes
+/// (Client, Property, Reservation, Rental, Payment, Expense*, CashRegister,
+/// CashSession, CashCorrection, BankAccount, BankTransfer, TransferSchedule)
+/// seront rattachées à un établissement via `establishmentId` — nullable
+/// dans cette Phase 1 (migration strictement additive), rendu obligatoire
+/// seulement après le backfill complet des données existantes (Phase
+/// ultérieure, non couverte ici). `Session` n'a volontairement AUCUNE
+/// colonne de rattachement propre : elle hérite du tenant via
+/// `Session.userId -> User.establishmentId`.
+///
+/// Suppression : jamais une suppression SQL physique depuis l'application
+/// (décision produit validée — désactivation définitive avec conservation
+/// physique des données). `onDelete: Restrict` partout, cohérent avec la
+/// convention déjà en place sur chaque relation de ce schéma.
+model Establishment {
+  id        String              @id @default(cuid())
+  name      String
+  status    EstablishmentStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  users    User[]
+  settings Settings?
+
+  clients           Client[]
+  properties        Property[]
+  tariffs           Tariff[]
+  reservations      Reservation[]
+  rentals           Rental[]
+  rentalExtensions  RentalExtension[]
+  payments          Payment[]
+  expenseCategories ExpenseCategory[]
+  expenses          Expense[]
+  auditLogs         AuditLog[]
+  cashRegisters     CashRegister[]
+  cashSessions      CashSession[]
+  cashCorrections   CashCorrection[]
+  bankAccounts      BankAccount[]
+  bankTransfers     BankTransfer[]
+  transferSchedules TransferSchedule[]
+
+  notifications Notification[]
+  subscription  Subscription?
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
 // Phase 2 — Authentification
 // ---------------------------------------------------------------------------
 
@@ -22,14 +87,44 @@ enum UserRole {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   /// Identifiant de connexion (voir écran "Splash / Connexion" de la maquette)
-  username     String   @unique
+  username     String  @unique
   passwordHash String
   name         String
-  role         UserRole @default(GESTIONNAIRE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  /// Lot multi-tenant — collecté uniquement pour les comptes créés via
+  /// l'inscription publique d'un établissement (nécessaire pour les
+  /// notifications d'approbation/refus) ; jamais exigé pour les comptes
+  /// créés en interne par un ADMIN existant (`createUser`, inchangé).
+  email        String?
+
+  /// Nullable depuis le lot multi-tenant : un compte de plateforme
+  /// (`isPlatformAdmin = true`) n'a pas de rôle d'établissement — ce champ
+  /// n'a de sens que pour un compte rattaché à un établissement. Plus de
+  /// valeur par défaut (l'ancien `@default(GESTIONNAIRE)` est retiré :
+  /// un compte de plateforme créé sans préciser `role` doit rester NULL,
+  /// jamais hériter silencieusement d'un rôle d'établissement trompeur).
+  /// Une contrainte CHECK liant `role` et `establishmentId` (les deux
+  /// renseignés ensemble, ou aucun des deux) sera ajoutée dans une phase
+  /// ultérieure, après le backfill des comptes existants — jamais dans
+  /// cette migration additive.
+  role UserRole?
+
+  /// Lot multi-tenant — `true` uniquement pour le compte spécial
+  /// d'administration de la plateforme (distinct du compte habituel de
+  /// gestion d'un établissement). Jamais accordé implicitement : voir le
+  /// plan de bootstrap (hors périmètre de cette Phase 1).
+  isPlatformAdmin Boolean @default(false)
+
+  /// Nullable : NULL pour un compte de plateforme (aucun établissement),
+  /// renseigné pour tout compte d'établissement. `onDelete: Restrict` —
+  /// cohérent avec la convention déjà en place sur chaque relation de ce
+  /// schéma (jamais de perte silencieuse de compte).
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   sessions Session[]
 
@@ -48,6 +143,12 @@ model User {
   bankTransfersCreated     BankTransfer[]     @relation("BankTransferCreatedBy")
   bankTransfersEffected    BankTransfer[]     @relation("BankTransferEffectedBy")
   transferSchedulesCreated TransferSchedule[]
+
+  /// Lot multi-tenant — plateforme et abonnements.
+  notificationReads             NotificationRead[]
+  subscriptionPaymentsConfirmed SubscriptionPayment[] @relation("SubscriptionPaymentConfirmedBy")
+
+  @@index([establishmentId])
 }
 
 /// Session serveur (DB-backed) : la valeur en base fait autorité, le cookie
@@ -85,6 +186,11 @@ model Client {
   idDocumentNumber String?
   notes            String?
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -95,6 +201,7 @@ model Client {
 
   @@index([phone])
   @@index([name])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -115,9 +222,15 @@ enum PropertyType {
 /// réservations CONFIRMED proches et des locations ACTIVE (Phase 7) — sans
 /// qu'aucune colonne supplémentaire n'ait été ajoutée ici.
 ///
-/// `photo` est une simple URL (String?) collée par le gestionnaire : pas
-/// d'upload de fichier, pas de service de stockage externe, conformément à
-/// la consigne de la Phase 4 ("ne pas ajouter Cloudinary/S3 sans besoin réel").
+/// `photo` (lot "Téléversement durable des images") : stocke désormais soit
+/// une clé d'objet du Bucket Railway (S3-compatible, "logements/<uuid>.ext",
+/// générée par src/lib/image-upload.ts — jamais le nom de fichier fourni par
+/// l'utilisateur), soit, pour toute donnée enregistrée AVANT ce lot, un lien
+/// http(s) collé directement (ancien mode V1, conservé tel quel, jamais
+/// migré automatiquement). Les deux formats sont résolus en URL d'affichage
+/// au point de lecture (src/lib/properties-data.ts, src/lib/reservations-data.ts)
+/// via src/lib/object-storage.ts — aucune migration de colonne n'était
+/// nécessaire, String? convenait déjà aux deux formats.
 model Property {
   id          String       @id @default(cuid())
   name        String
@@ -126,6 +239,12 @@ model Property {
   capacity    Int
   photo       String?
   active      Boolean      @default(true)
+
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -135,6 +254,7 @@ model Property {
 
   @@index([type])
   @@index([active])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -192,6 +312,11 @@ model Tariff {
   amount        Int
   active        Boolean      @default(true)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -200,6 +325,7 @@ model Tariff {
 
   @@index([propertyId])
   @@index([propertyId, active])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -252,6 +378,11 @@ model Reservation {
   tariffId String
   tariff   Tariff @relation(fields: [tariffId], references: [id], onDelete: Restrict)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   /// Jour calendaire de l'arrivée (affichage/filtrage "aujourd'hui/à venir").
   date DateTime
 
@@ -288,6 +419,7 @@ model Reservation {
   @@index([clientId])
   @@index([arrivalTime])
   @@index([status])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -331,6 +463,11 @@ model Rental {
 
   tariffId String?
   tariff   Tariff? @relation(fields: [tariffId], references: [id], onDelete: Restrict)
+
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
 
   /// Heure RÉELLE d'arrivée — peut différer de l'heure prévue de la
   /// réservation d'origine, qui elle reste inchangée pour toujours (Bloc 9).
@@ -400,6 +537,7 @@ model Rental {
   @@index([propertyId, status])
   @@index([clientId])
   @@index([status])
+  @@index([establishmentId])
 }
 
 /// Journal append-only d'une prolongation (Bloc 15) : préserve le détail de
@@ -412,6 +550,11 @@ model RentalExtension {
   rentalId String
   rental   Rental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   durationValue Int
   durationUnit  DurationUnit
   amount        Int
@@ -419,6 +562,7 @@ model RentalExtension {
   createdAt DateTime @default(now())
 
   @@index([rentalId])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -459,6 +603,11 @@ model Payment {
   rentalId String?
   rental   Rental? @relation(fields: [rentalId], references: [id], onDelete: Restrict)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   amount Int
   method PaymentMethod
 
@@ -475,6 +624,7 @@ model Payment {
 
   @@index([reservationId])
   @@index([rentalId])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -496,12 +646,18 @@ model ExpenseCategory {
   active   Boolean @default(true)
   position Int     @default(0)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   expenses Expense[]
 
   @@index([active, position])
+  @@index([establishmentId])
 }
 
 /// Argent SORTANT de l'activité — jamais mélangé avec `Payment` (argent
@@ -523,6 +679,11 @@ model Expense {
 
   categoryId String
   category   ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
 
   /// Copie figée du nom de la catégorie au moment de la création (Bloc
   /// 16.1) — un renommage ultérieur de `ExpenseCategory.name` ne doit
@@ -549,6 +710,7 @@ model Expense {
   @@index([paidAt])
   @@index([categoryId])
   @@index([method])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -559,19 +721,35 @@ model Expense {
 /// aucun modèle existant ne porte ces données (Property est par logement,
 /// pas pour la résidence dans son ensemble).
 ///
-/// Singleton délibéré : un seul enregistrement, toujours lu/écrit via
-/// `id = "singleton"` (voir src/lib/settings-data.ts et
-/// src/app/actions/settings.ts). Préféré à un modèle générique
-/// `Setting{key,value}` — les champs sont fixes, connus et structurés
-/// (Bloc 15 demande explicitement d'éviter un KV générique dans ce cas).
+/// Singleton délibéré À L'ORIGINE : un seul enregistrement, toujours lu/écrit
+/// via `id = "singleton"` (voir src/lib/settings-data.ts et
+/// src/app/actions/settings.ts) — convention APPLICATIVE uniquement, jamais
+/// imposée par le schéma (`id` est un `cuid()` ordinaire, rien n'empêchait
+/// déjà une deuxième ligne). Lot multi-tenant : `establishmentId` (nullable
+/// dans cette Phase 1, deviendra `@unique` non nul après le backfill) portera
+/// désormais une ligne par établissement, remplaçant `SETTINGS_ID` — pas
+/// un changement de structure, une clarification de ce qui était déjà vrai.
 ///
-/// Pas de champ logo : aucune infrastructure d'upload de fichier n'existe
-/// dans le projet (Property.photo lui-même n'est qu'une URL collée, jamais
-/// un vrai stockage) ; les logos officiels restent des fichiers statiques
-/// dans public/brand/, affichés tels quels — voir le rapport Phase 11,
-/// section 10, pour la décision documentée (Bloc 17).
+/// `logoUrl` (lot "Apparence & Logo", puis "Téléversement durable des
+/// images") : même convention que `Property.photo` — une clé d'objet du
+/// Bucket Railway (nouveau mode) ou, pour toute donnée antérieure à ce
+/// second lot, un lien http(s) collé directement (ancien mode V1, conservé
+/// tel quel). Résolu en URL d'affichage (src/app/settings/page.tsx) ou en
+/// octets bruts pour le contrat PDF (src/lib/contract-data.ts) via
+/// src/lib/object-storage.ts — jamais une URL transmise telle quelle au
+/// générateur PDF (bucket privé, pas d'accès réseau direct possible). Le
+/// logo OFFICIEL SAMA HOME (fichier statique dans public/brand/, affiché sur
+/// la page Paramètres) reste distinct et non modifiable : celui-ci est le
+/// logo propre de l'établissement exploitant l'application.
 model Settings {
   id String @id @default(cuid())
+
+  /// Lot multi-tenant / Phase 3F Lot D12-C — rendu obligatoire après
+  /// confirmation que le backfill (Phase 2B) a bien rattaché l'unique ligne
+  /// existante à son établissement : une ligne de paramètres par
+  /// établissement, jamais partagée.
+  establishmentId String       @unique
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
 
   establishmentName String
   phone             String
@@ -579,6 +757,21 @@ model Settings {
   address           String
   email             String?
   description       String?
+  logoUrl           String?
+
+  /// Lot "Personnalisation des couleurs" — palette de marque personnalisée,
+  /// au niveau de l'établissement (comme `logoUrl`). NULL sur les trois
+  /// colonnes = couleurs par défaut SAMA HOME (#12304A / #E5484D / #F59E0B),
+  /// résolues au moment de la lecture, jamais écrites en dur ici. Les trois
+  /// colonnes sont toujours NULL ensemble ou renseignées ensemble (contrainte
+  /// CHECK en migration) : l'interface propose des palettes complètes
+  /// prédéfinies, jamais un remplacement partiel d'une seule des trois
+  /// couleurs qui casserait la cohérence déjà validée (contraste) de la
+  /// palette. Indépendant des jetons sémantiques (succès/erreur/avertissement/
+  /// information) et du thème clair/sombre, qui restent inchangés.
+  primaryColor   String?
+  secondaryColor String?
+  accentColor    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -605,11 +798,26 @@ model Settings {
 /// `oldValue`/`newValue` en `Json?` : instantané structuré plutôt qu'une
 /// chaîne — type Postgres/Prisma déjà standard, pas une nouvelle convention
 /// inventée. `null` pour `oldValue` sur une création (rien n'existait avant).
+///
+/// Lot multi-tenant : `establishmentId` nullable — renseigné pour une
+/// action métier *au sein* d'un établissement, non pertinent pour une
+/// décision de plateforme (approbation/refus d'un établissement), où
+/// `entityId` identifie déjà la cible sans ambiguïté.
 model AuditLog {
   id String @id @default(cuid())
 
-  userId String
-  user   User   @relation("AuditLogUser", fields: [userId], references: [id], onDelete: Restrict)
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
+  /// Phase 3G / Lot D12-P88 — nullable : `NULL` signifie une action
+  /// déclenchée par le SYSTÈME, sans acteur humain réel (ex.
+  /// `ESTABLISHMENT_AUTO_APPROVED`, créé par `registerEstablishment()`
+  /// elle-même, une action PUBLIQUE sans utilisateur authentifié — jamais
+  /// un acteur humain fabriqué pour satisfaire une contrainte NOT NULL).
+  /// Tout journal déjà existant, créé par une action humaine réelle,
+  /// conserve son `userId` réel, inchangé par cette migration additive.
+  userId String?
+  user   User?   @relation("AuditLogUser", fields: [userId], references: [id], onDelete: Restrict)
 
   action     String
   entityType String
@@ -622,6 +830,7 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@index([userId])
+  @@index([establishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -637,12 +846,18 @@ model CashRegister {
   name   String
   active Boolean @default(true)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   sessions CashSession[]
 
   @@index([active])
+  @@index([establishmentId])
 }
 
 enum CashSessionStatus {
@@ -668,6 +883,11 @@ model CashSession {
 
   cashRegisterId String
   cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Restrict)
+
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
 
   status CashSessionStatus @default(OPEN)
 
@@ -709,6 +929,7 @@ model CashSession {
   @@index([cashRegisterId, status])
   @@index([openedAt])
   @@index([closedAt])
+  @@index([establishmentId])
 }
 
 /// La SEULE ligne financière saisie manuellement dans toute cette
@@ -725,6 +946,11 @@ model CashCorrection {
   cashSessionId String
   cashSession   CashSession @relation(fields: [cashSessionId], references: [id], onDelete: Restrict)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   amount Int
   reason String
 
@@ -735,6 +961,7 @@ model CashCorrection {
 
   @@index([cashSessionId])
   @@index([userId])
+  @@index([establishmentId])
 }
 
 /// Référence d'un compte bancaire externe — jamais de données sensibles en
@@ -752,6 +979,11 @@ model BankAccount {
   maskedAccountNumber  String?
   active               Boolean @default(true)
 
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
   createdByUserId String
   createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
 
@@ -762,6 +994,7 @@ model BankAccount {
   schedules TransferSchedule[]
 
   @@index([active])
+  @@index([establishmentId])
 }
 
 enum BankTransferStatus {
@@ -784,6 +1017,11 @@ model BankTransfer {
 
   bankAccountId String
   bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
 
   amount Int
   status BankTransferStatus @default(DRAFT)
@@ -813,10 +1051,12 @@ model BankTransfer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([transferScheduleId, scheduledAt], map: "BankTransfer_schedule_date_unique")
   @@index([bankAccountId])
   @@index([cashSessionId])
   @@index([status])
   @@index([transferScheduleId])
+  @@index([establishmentId])
 }
 
 enum TransferFrequency {
@@ -843,6 +1083,11 @@ model TransferSchedule {
 
   bankAccountId String
   bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+
+  /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
+  /// deviendra obligatoire après le backfill des données existantes.
+  establishmentId String?
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
 
   frequency  TransferFrequency
   amountType TransferAmountType
@@ -882,4 +1127,211 @@ model TransferSchedule {
 
   @@index([bankAccountId])
   @@index([active, nextRunAt])
+  @@index([establishmentId])
+}
+
+// ---------------------------------------------------------------------------
+// Multi-tenant — Administration de la plateforme, notifications, abonnements
+// (Phase 1 : schéma additif uniquement — aucune donnée créée ici)
+// ---------------------------------------------------------------------------
+
+enum NotificationChannel {
+  EMAIL
+  INTERNAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+/// Couvre à la fois les e-mails (suivi d'envoi : `status`/`attempts`/
+/// `lastError`) et les notifications internes de plateforme (suivi de
+/// lecture individuel via `NotificationRead`, par administrateur de
+/// plateforme — jamais un état de lecture partagé). Écrite dans la MÊME
+/// transaction que l'événement qui la déclenche (inscription, approbation,
+/// refus, suspension, réactivation) — son statut d'envoi reste toujours
+/// découplé de l'opération métier : un échec d'e-mail ne modifie jamais
+/// `Establishment.status` ni `Subscription`.
+model Notification {
+  id      String              @id @default(cuid())
+  channel NotificationChannel
+  /// Ex. "ESTABLISHMENT_SIGNUP" | "ESTABLISHMENT_APPROVED" |
+  /// "ESTABLISHMENT_REJECTED" | "ESTABLISHMENT_SUSPENDED" |
+  /// "ESTABLISHMENT_REACTIVATED" | "SUBSCRIPTION_EXPIRING_SOON" — chaîne
+  /// libre volontairement (pas un enum) : la liste des événements évoluera
+  /// sans migration de schéma à chaque ajout.
+  event   String
+
+  relatedEstablishmentId String?
+  relatedEstablishment   Establishment? @relation(fields: [relatedEstablishmentId], references: [id], onDelete: Restrict)
+
+  /// Renseigné uniquement si `channel = EMAIL` — jamais un secret.
+  recipientEmail String?
+  subject        String
+
+  status   NotificationStatus @default(PENDING)
+  /// Incrémenté à chaque nouvelle tentative — une tentative MET À JOUR
+  /// cette même ligne, ne crée jamais de ligne dupliquée pour le même
+  /// événement (idempotence des relances, par construction).
+  attempts Int                @default(0)
+  /// Message sûr uniquement (ex. nom de l'erreur) — jamais une trace
+  /// complète susceptible de révéler une configuration sensible, même
+  /// principe déjà appliqué à deleteImageObject() (src/lib/object-storage.ts).
+  lastError String?
+
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  reads NotificationRead[]
+
+  @@index([channel, status])
+  @@index([relatedEstablishmentId])
+}
+
+/// État de lecture INDIVIDUEL par administrateur de plateforme — la
+/// `Notification` elle-même reste une ligne unique et partagée (traçabilité
+/// intacte, voir aussi `AuditLog` pour l'historique des décisions), seule
+/// la lecture devient personnelle. "Non lu pour MOI" = absence de ligne ici
+/// pour (notificationId, mon userId). `onDelete: Cascade` sur
+/// `notificationId` (seule exception au `Restrict` sinon systématique dans
+/// ce schéma) : un reçu de lecture n'a aucune signification indépendante de
+/// la notification qu'il concerne, contrairement à toute donnée métier.
+model NotificationRead {
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  readAt DateTime @default(now())
+
+  @@id([notificationId, userId])
+}
+
+/// Un abonnement par établissement — créé UNIQUEMENT au moment de
+/// l'approbation (jamais à l'inscription : l'essai démarre à la date
+/// d'approbation, décision produit validée), dans la même transaction que
+/// le passage de `Establishment.status` à `ACTIVE`.
+///
+/// Volontairement AUCUN champ "status" stocké : l'état effectif (en essai /
+/// payant actif / expiré) est entièrement DÉRIVÉ de la comparaison entre
+/// `currentPeriodEnd` et l'instant présent — ce projet n'a aucune tâche
+/// planifiée pour faire basculer activement un tel champ, qui risquerait
+/// de diverger silencieusement de la réalité. `currentPeriodEnd` est la
+/// seule source de vérité sur l'accès aux fonctionnalités payantes —
+/// vérifiée SEULEMENT après que `Establishment.status === ACTIVE` (axes
+/// indépendants, jamais fusionnés).
+model Subscription {
+  id              String @id @default(cuid())
+  establishmentId String @unique
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
+  trialStartedAt   DateTime
+  currentPeriodEnd DateTime
+
+  /// Idempotence du rappel d'expiration (déclenché à la demande, à
+  /// l'ouverture du tableau de bord plateforme — aucune tâche planifiée
+  /// dans ce projet) : un rappel n'est créé pour la période courante que si
+  /// cette valeur diffère de `currentPeriodEnd`. Une confirmation de
+  /// paiement qui avance `currentPeriodEnd` réarme naturellement
+  /// l'éligibilité à un rappel pour la PROCHAINE période, sans jamais
+  /// renvoyer un rappel déjà émis pour la période déjà traitée.
+  reminderSentForPeriodEnd DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments SubscriptionPayment[]
+
+  @@index([currentPeriodEnd])
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+/// Historique append-only des paiements d'abonnement — jamais écrasé.
+/// Confirmation UNIQUEMENT manuelle par un administrateur de plateforme
+/// (décision produit validée : jamais un simple retour de navigateur
+/// considéré comme une preuve de paiement). Double confirmation/double
+/// prolongation empêchée au niveau applicatif par un `updateMany` filtré
+/// sur `status: PENDING` (même mécanisme déjà utilisé par
+/// updateSettings()/saveBrandColors() de ce projet) — jamais seulement une
+/// vérification lue puis agie séparément, qui laisserait une fenêtre de
+/// course concurrente.
+model SubscriptionPayment {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  /// FCFA entier — même convention que Tariff.amount/Payment.amount.
+  amount       Int
+  /// 3 aujourd'hui (voir PricingSettings ci-dessous) — jamais codé en dur
+  /// dans la logique de prolongation, toujours lu depuis cette ligne.
+  periodMonths Int
+  status       PaymentStatus @default(PENDING)
+  /// Justificatif libre (référence de virement/mobile money) — jamais un
+  /// numéro de carte ni un secret.
+  reference    String?
+
+  confirmedByUserId String?
+  confirmedBy       User?   @relation("SubscriptionPaymentConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: Restrict)
+
+  /// Renseignés uniquement à la confirmation — jamais avant.
+  periodStartedAt DateTime?
+  periodEndedAt   DateTime?
+
+  createdAt   DateTime  @default(now())
+  confirmedAt DateTime?
+
+  @@index([subscriptionId])
+  @@index([status])
+}
+
+/// Paramètres de tarification à l'échelle de TOUTE la plateforme — à ne
+/// jamais confondre avec `Settings`, qui reste propre à chaque établissement.
+/// Modifiable uniquement par un administrateur de plateforme.
+///
+/// Correction (audit Phase 1.1/1.2) : contrairement à l'ancienne convention
+/// de `Settings` (jamais imposée par le schéma), l'unicité d'une seule ligne
+/// est ici RÉELLEMENT garantie en base — `id` est un identifiant fixe
+/// (`'singleton'`), verrouillé par une contrainte CHECK ajoutée à la main en
+/// migration (`PricingSettings_singleton_check`), même technique déjà
+/// utilisée dans ce projet pour `Settings_brand_colors_all_or_none_check`.
+/// Toute tentative d'insertion avec un autre id est rejetée par le CHECK ;
+/// toute tentative avec le même id est rejetée par l'unicité de la clé
+/// primaire déjà existante.
+model PricingSettings {
+  id                  String   @id @default("singleton")
+  trialDurationMonths Int      @default(2)
+  periodMonths        Int      @default(3)
+  periodPriceFcfa     Int      @default(9900)
+  updatedAt           DateTime @updatedAt
+}
+
+/// Réglages globaux de PLATEFORME — Phase 3G / Lot D12-P88 — distinct de
+/// `PricingSettings` ci-dessus (qui reste strictement tarifaire ; mélanger
+/// un réglage de workflow dans une table nommée "Pricing" aurait été
+/// trompeur, signalé comme choix lors de l'audit D12-P87). Même technique
+/// de singleton verrouillé par contrainte CHECK réelle en base
+/// (`PlatformSettings_singleton_check`) que `PricingSettings` ci-dessus.
+/// Modifiable uniquement par un administrateur de plateforme
+/// (`requirePlatformAdmin()`), jamais par un ADMIN d'établissement.
+model PlatformSettings {
+  id String @id @default("singleton")
+
+  /// Mode manuel par défaut (`false`) — une inscription publique
+  /// (`registerEstablishment()`) reste `PENDING` tant qu'un administrateur
+  /// de plateforme ne l'approuve pas explicitement. Si `true`,
+  /// `registerEstablishment()` approuve l'établissement et crée son
+  /// abonnement d'essai directement, dans la MÊME transaction que
+  /// l'inscription elle-même — jamais un `PENDING` intermédiaire visible.
+  /// Basculer ce réglage ne modifie jamais un établissement déjà existant.
+  autoApproveEstablishments Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
 }

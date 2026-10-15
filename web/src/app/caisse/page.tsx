@@ -127,12 +127,19 @@ export default async function CaissePage() {
           )}
 
           <div className="mt-5">
-            <OpenCashSessionForm
-              role={user.role}
-              proposedBalance={proposedBalance}
-              proposedOriginLabel={proposedOriginLabel}
-              hasPreviousSession={hasPreviousSession}
-            />
+            {user.role ? (
+              <OpenCashSessionForm
+                role={user.role}
+                proposedBalance={proposedBalance}
+                proposedOriginLabel={proposedOriginLabel}
+                hasPreviousSession={hasPreviousSession}
+              />
+            ) : (
+              <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
+                Votre compte n&apos;a pas de rôle d&apos;établissement — contactez un administrateur pour ouvrir la
+                caisse.
+              </p>
+            )}
           </div>
         </div>
       </div>

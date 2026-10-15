@@ -29,7 +29,14 @@ export default async function EditUserPage(props: PageProps<"/settings/users/[id
       </div>
 
       <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
-        <EditUserForm userId={user.id} defaultName={user.name} defaultRole={user.role} />
+        {user.role ? (
+          <EditUserForm userId={user.id} defaultName={user.name} defaultRole={user.role} />
+        ) : (
+          <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
+            Ce compte n&apos;a pas de rôle d&apos;établissement — la modification du rôle n&apos;est pas disponible
+            ici.
+          </p>
+        )}
       </div>
     </div>
   );
