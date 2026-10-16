@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PHONE_REGEX } from "@/lib/phone";
 
 export const LoginSchema = z.object({
   username: z.string().trim().min(1, "Identifiant requis."),
@@ -16,15 +17,9 @@ export type LoginFormState =
 // Phase 3 — Clients
 // ---------------------------------------------------------------------------
 
-/**
- * Règle de téléphone (documentée, comme demandé) : après suppression des
- * espaces/points/tirets, le numéro doit faire 8 à 15 chiffres, avec un "+"
- * initial optionnel. Volontairement pas restreint à l'indicatif sénégalais
- * (+221) : un client peut être étranger. Le résultat est ce qui est stocké
- * en base, pour que la recherche par téléphone soit fiable quel que soit le
- * formatage saisi par le gestionnaire.
- */
-const PHONE_REGEX = /^\+?[0-9]{8,15}$/;
+// Règle de téléphone : voir src/lib/phone.ts (définition unique, le résultat
+// est ce qui est stocké en base, pour que la recherche par téléphone soit
+// fiable quel que soit le formatage saisi par le gestionnaire).
 
 const optionalText = (max: number, label: string) =>
   z
@@ -100,21 +95,20 @@ export const PropertySchema = z.object({
         .min(1, "Minimum 1 personne.")
         .max(50, "Maximum 50 personnes."),
     ),
-  // Simple URL collée par le gestionnaire — pas d'upload de fichier (voir
-  // consigne Phase 4, section PHOTO).
-  photo: z
-    .string()
-    .trim()
-    .max(2048, "URL trop longue.")
-    .transform((v) => (v.length === 0 ? undefined : v))
-    .pipe(z.url("URL de photo invalide.").optional())
-    .optional(),
   active: z.boolean(),
 });
 
+// Lot "Téléversement durable des images" — `photo` n'est plus un champ texte
+// validé par ce schéma : c'est désormais un fichier (image/jpeg|png|webp),
+// lu et validé séparément dans src/app/actions/properties.ts (contenu réel
+// du fichier via src/lib/image-upload.ts, jamais l'extension/le
+// Content-Type déclaré). La clé d'erreur `photo` reste possible dans
+// `PropertyFormState` pour que le formulaire puisse toujours afficher un
+// message de refus (fichier invalide/trop volumineux), bien qu'elle ne
+// provienne plus de ce schéma Zod.
 export type PropertyFormState =
   | {
-      errors?: Partial<Record<keyof z.infer<typeof PropertySchema>, string[]>>;
+      errors?: Partial<Record<keyof z.infer<typeof PropertySchema>, string[]>> & { photo?: string[] };
       message?: string;
     }
   | undefined;
@@ -412,9 +406,14 @@ export const SettingsSchema = z.object({
   description: optionalText(500, "Description"),
 });
 
+// Lot "Téléversement durable des images" — `logoUrl` n'est plus un champ
+// texte validé par ce schéma : c'est désormais un fichier, lu et validé
+// séparément dans src/app/actions/settings.ts (même principe que
+// PropertySchema.photo ci-dessus). La clé d'erreur `logoUrl` reste possible
+// dans `SettingsFormState` pour que le formulaire puisse afficher un refus.
 export type SettingsFormState =
   | {
-      errors?: Partial<Record<keyof z.infer<typeof SettingsSchema>, string[]>>;
+      errors?: Partial<Record<keyof z.infer<typeof SettingsSchema>, string[]>> & { logoUrl?: string[] };
       message?: string;
     }
   | undefined;
@@ -467,6 +466,42 @@ export type CreateUserFormState =
   | {
       errors?: Partial<Record<keyof z.infer<typeof CreateUserSchema>, string[]>>;
       message?: string;
+    }
+  | undefined;
+
+/**
+ * Phase 3G / Lot D12-P78 — inscription publique d'un établissement
+ * (`/register`), distincte de `CreateUserSchema` (création d'un utilisateur
+ * par un ADMIN déjà existant, pour son propre établissement). Décision
+ * produit explicitement confirmée pour ce lot : aucun champ "identifiant"
+ * séparé dans la maquette fournie — l'adresse e-mail saisie ici sert à la
+ * fois de `User.username` (identifiant de connexion réel) et de
+ * `User.email` (déjà prévu par le schéma pour les notifications
+ * d'approbation/refus), jamais deux valeurs indépendantes inventées.
+ * `email` obligatoire ici (contrairement à `ClientSchema.email`, optionnel)
+ * — seule cette inscription a besoin d'un email systématiquement présent.
+ */
+export const EstablishmentRegistrationSchema = z.object({
+  establishmentName: z
+    .string()
+    .trim()
+    .min(1, "Le nom de l'établissement est obligatoire.")
+    .max(120, "Nom de l'établissement : 120 caractères maximum."),
+  managerName: z.string().trim().min(1, "Votre nom est obligatoire.").max(120, "Nom : 120 caractères maximum."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "L'adresse e-mail est obligatoire.")
+    .max(180, "Email : 180 caractères maximum.")
+    .pipe(z.email("Adresse e-mail invalide.")),
+  password: newPasswordField(),
+});
+
+export type EstablishmentRegistrationFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof EstablishmentRegistrationSchema>, string[]>>;
+      message?: string;
+      success?: boolean;
     }
   | undefined;
 
@@ -545,3 +580,35 @@ export const TransferScheduleSchema = z
       path: ["amountType"],
     },
   );
+
+/**
+ * Phase 3G / Lot D12-P103 — bornes explicitement retenues pour ce lot (pas
+ * de valeur arbitraire) : durées en mois raisonnables pour un essai ou une
+ * période d'abonnement (1 à 12 — au-delà, une "durée" perdrait son sens
+ * pratique pour ce produit), prix en FCFA borné pour éviter une saisie
+ * aberrante (0, négative, ou démesurée) tout en couvrant largement la plage
+ * réaliste d'un abonnement mensuel/trimestriel pour un seul établissement.
+ */
+export const PricingSettingsSchema = z.object({
+  trialDurationMonths: z
+    .number()
+    .int("La durée d'essai doit être un nombre entier de mois.")
+    .min(1, "La durée d'essai doit être d'au moins 1 mois.")
+    .max(12, "La durée d'essai ne peut pas dépasser 12 mois."),
+  periodMonths: z
+    .number()
+    .int("La durée de période doit être un nombre entier de mois.")
+    .min(1, "La durée de période doit être d'au moins 1 mois.")
+    .max(12, "La durée de période ne peut pas dépasser 12 mois."),
+  periodPriceFcfa: z
+    .number()
+    .int("Le prix doit être un nombre entier de FCFA.")
+    .min(500, "Le prix doit être d'au moins 500 FCFA.")
+    .max(1_000_000, "Le prix ne peut pas dépasser 1 000 000 FCFA."),
+});
+
+export type PricingSettingsFormState = {
+  errors?: Partial<Record<keyof z.infer<typeof PricingSettingsSchema>, string[]>>;
+  message?: string;
+  success?: boolean;
+};
