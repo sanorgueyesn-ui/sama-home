@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getTheme } from "@/lib/theme";
 import { AuthLogo } from "@/components/auth/auth-logo";
 import { FeatureList } from "@/components/auth/feature-list";
@@ -77,6 +78,13 @@ export default async function LoginPage() {
             <div className="mt-6">
               <OAuthButtons />
             </div>
+
+            <p className="mt-6 text-center text-sm font-medium text-fg/60">
+              Pas encore de compte ?{" "}
+              <Link href="/register" className="font-bold text-navy underline-offset-2 hover:underline">
+                Créer mon espace
+              </Link>
+            </p>
           </div>
         </div>
       </div>
