@@ -3,10 +3,16 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { verifySession, requireActiveEstablishment } from "@/lib/dal";
 import { getSessionCookiePayload } from "@/lib/session-token";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { SettingsSchema, ChangePasswordSchema, type SettingsFormState, type ChangePasswordFormState } from "@/lib/definitions";
+import { readImageUploadFromFormData } from "@/lib/image-upload";
+import { uploadImageObject, deleteImageObject } from "@/lib/object-storage";
+import { getS3Client, getBucketName } from "@/lib/s3-client";
+
+const LOGO_KEY_PREFIX = "logos";
 
 /**
  * Bloc 4/5/16 — server-validated, upserted against the establishment's own
@@ -14,12 +20,9 @@ import { SettingsSchema, ChangePasswordSchema, type SettingsFormState, type Chan
  * (jamais depuis le navigateur) plutôt que par l'ancien identifiant fixe
  * `SETTINGS_ID`.
  *
- * D12-P162 — le téléversement de logo (Bucket S3) est volontairement HORS
- * PÉRIMÈTRE de ce correctif multi-tenant : cette fonction ne touche plus du
- * tout `logoUrl`. Le code S3 correspondant reste présent ailleurs dans
- * l'arbre de travail (`src/lib/image-upload.ts`, `src/lib/object-storage.ts`,
- * `src/lib/s3-client.ts`), non modifié, en attente d'un lot dédié et audité
- * séparément.
+ * D12-P171 — gestion du logo (Bucket S3) réintégrée (retirée temporairement
+ * en D12-P162 pour isoler le correctif multi-tenant du build Railway, sans
+ * jamais supprimer le code S3 lui-même).
  */
 export async function updateSettings(
   _prevState: SettingsFormState,
@@ -58,15 +61,97 @@ export async function updateSettings(
     return { errors: parsed.error.flatten().fieldErrors };
   }
 
-  try {
-    await prisma.settings.upsert({
-      where: { establishmentId: user.establishmentId },
-      update: parsed.data,
-      create: { establishmentId: user.establishmentId, ...parsed.data },
-    });
-  } catch (error) {
-    console.error("updateSettings() — échec inattendu de l'enregistrement :", error);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+  // Lot "Téléversement durable des images" — `logoUrl` stocke désormais une
+  // clé du Bucket Railway, jamais une URL collée. Le logo OFFICIEL SAMA HOME
+  // (public/brand/, affiché plus haut sur cette page) reste distinct et non
+  // modifiable depuis ce formulaire. `user.establishmentId` transmis pour
+  // que chaque nouveau logo reçoive une clé tenant-aware
+  // (logos/<establishmentId>/<uuid>.ext).
+  const upload = await readImageUploadFromFormData(formData, "logo", LOGO_KEY_PREFIX, user.establishmentId);
+  if (upload && "error" in upload) {
+    return { errors: { logoUrl: [upload.error] } };
+  }
+  const removeLogo = formData.get("removeLogo") === "on";
+
+  // `updatedAt` lu ici et revérifié ci-dessous (verrou optimiste —
+  // correction M1, audit "Téléversement durable des images").
+  const existing = await prisma.settings.findUnique({
+    where: { establishmentId: user.establishmentId },
+    select: { logoUrl: true, updatedAt: true },
+  });
+
+  let nextLogoUrl = existing?.logoUrl ?? null; // par défaut : inchangé
+  if (upload) {
+    try {
+      await uploadImageObject(getS3Client(), getBucketName(), upload.key, upload.bytes, upload.contentType);
+    } catch (error) {
+      console.error("updateSettings() — échec du téléversement du logo :", error);
+      // L'ancien logo et sa référence en base restent intacts.
+      return { errors: { logoUrl: ["Échec de l'envoi du logo. L'ancien logo est conservé."] } };
+    }
+    nextLogoUrl = upload.key;
+  } else if (removeLogo) {
+    nextLogoUrl = null;
+  }
+
+  if (existing) {
+    // `updateMany` (pas `upsert`/`update`) : seule méthode Prisma acceptant
+    // un filtre supplémentaire (`updatedAt`) au-delà de la clé unique dans
+    // son `where`. Si quelqu'un d'autre a modifié les paramètres entre
+    // notre lecture ci-dessus et cette écriture, 0 ligne affectée.
+    let result: { count: number };
+    try {
+      result = await prisma.settings.updateMany({
+        where: { establishmentId: user.establishmentId, updatedAt: existing.updatedAt },
+        data: { ...parsed.data, logoUrl: nextLogoUrl },
+      });
+    } catch (error) {
+      console.error("updateSettings() — échec inattendu de l'enregistrement :", error);
+      if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
+      return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    }
+    if (result.count === 0) {
+      // Modifiés par quelqu'un d'autre entre notre lecture et notre
+      // écriture. Notre éventuel nouveau logo n'est référencé par aucune
+      // ligne : orphelin, nettoyé immédiatement.
+      if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
+      return {
+        message: "Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez.",
+      };
+    }
+  } else {
+    // Premier enregistrement des paramètres de CET établissement — `id`
+    // généré normalement (`@default(cuid())`), jamais recopié d'un autre
+    // établissement.
+    try {
+      await prisma.settings.create({
+        data: { establishmentId: user.establishmentId, ...parsed.data, logoUrl: nextLogoUrl },
+      });
+    } catch (error) {
+      // Phase 3G / Lot D12-P44 — collision de création concurrente :
+      // `Settings_establishmentId_key` (migration 20261012000000).
+      const isConcurrentCreation =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002" &&
+        typeof error.message === "string" &&
+        error.message.includes("Settings_establishmentId_key");
+      if (isConcurrentCreation) {
+        if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
+        return {
+          message: "Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez.",
+        };
+      }
+      console.error("updateSettings() — échec inattendu de la création des paramètres :", error);
+      if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
+      return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    }
+  }
+
+  // Suppression de l'ANCIEN logo seulement APRÈS confirmation que NOTRE
+  // écriture a réellement été appliquée — jamais avant, jamais en cas de
+  // conflit (traité ci-dessus).
+  if (existing?.logoUrl && existing.logoUrl !== nextLogoUrl) {
+    await deleteImageObject(getS3Client(), getBucketName(), existing.logoUrl);
   }
 
   revalidatePath("/settings");

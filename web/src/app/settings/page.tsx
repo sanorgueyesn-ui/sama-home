@@ -18,6 +18,12 @@ import { listProperties } from "@/lib/properties-data";
 import { listExpenseCategoriesForSettings } from "@/lib/expense-categories-data";
 import { listUsers } from "@/lib/users-data";
 import { listBankAccounts, listTransferSchedules } from "@/lib/bank-data";
+import { getTheme } from "@/lib/theme";
+import { ThemeSection } from "./theme-section";
+import { BrandColorsSection } from "./brand-colors-section";
+import { resolveBrandColors, resolvePaletteId } from "@/lib/brand-colors";
+import { resolveImageDisplayUrl } from "@/lib/object-storage";
+import { getS3Client, getBucketName } from "@/lib/s3-client";
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -34,8 +40,15 @@ function plural(n: number, singular: string, plural: string) {
 
 export default async function SettingsPage(props: PageProps<"/settings">) {
   const { saved, passwordChanged } = await props.searchParams;
-  const [user, settings] = await Promise.all([getCurrentUser(), getSettings()]);
+  const [user, settings, theme] = await Promise.all([getCurrentUser(), getSettings(), getTheme()]);
   const isAdmin = user.role === "ADMIN";
+  // Lot "Téléversement durable des images" — `settings.logoUrl` est la clé
+  // brute stockée (ou un lien hérité) ; résolue ici en URL d'affichage
+  // prête à l'emploi avant d'être transmise au formulaire (voir
+  // src/lib/object-storage.ts pour les deux formats coexistants).
+  const logoDisplayUrl = settings?.logoUrl
+    ? await resolveImageDisplayUrl(getS3Client(), getBucketName(), settings.logoUrl)
+    : null;
 
   // Bloc Lot Paramètres 2 — uniquement des données déjà chargées par les
   // mécanismes existants (mêmes fonctions gelées que les pages CRUD
@@ -117,7 +130,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
             Logo officiel SAMA HOME — non modifiable depuis cette page.
           </p>
         </div>
-        <SettingsForm defaultValues={settings ?? undefined} />
+        <SettingsForm defaultValues={settings ? { ...settings, logoUrl: logoDisplayUrl } : undefined} />
       </section>
 
       {/* Grille des modules réellement disponibles (Lot Paramètres 2) —
@@ -173,6 +186,13 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
           </>
         ) : null}
       </div>
+
+      <ThemeSection current={theme} />
+
+      <BrandColorsSection
+        currentPaletteId={resolvePaletteId(settings)}
+        currentColors={resolveBrandColors(settings)}
+      />
 
       {/* Compte — fonctionnalité réelle existante, non reconstruite en carte
           (hors des 7 cartes autorisées par ce lot), simplement repositionnée
