@@ -2,9 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { Prisma, type TransferFrequency } from "@/generated/prisma/client";
-import { getCurrentUser, verifySession } from "@/lib/dal";
+import { getCurrentUser, verifySession, requireActiveEstablishment } from "@/lib/dal";
 import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cash-data";
-import { catchUpSchedule, isSerializationConflict } from "@/lib/transfer-schedule-engine";
+import { catchUpSchedule, isSerializationConflict, isBankTransferScheduleDateUniqueViolation } from "@/lib/transfer-schedule-engine";
 import { resolveAnchorDayOnCreate, resolveAnchorDayOnUpdate } from "@/lib/transfer-frequency";
 import { BankAccountSchema, TransferScheduleSchema } from "@/lib/definitions";
 
@@ -27,9 +27,29 @@ export async function createBankAccount(input: {
   bankName: string;
   maskedAccountNumber?: string;
 }): Promise<{ error?: string; errors?: Record<string, string[]>; id?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : aucune fonction
+  // de ce fichier n'était gardée par requireActiveEstablishment(), alors que
+  // tariffs.ts/expenses.ts le sont déjà pour des actions de même nature.
+  // Placée avant le contrôle de rôle ADMIN, même ordre que createTariff().
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un compte bancaire." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut créer un compte bancaire." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un compte bancaire." };
   }
 
   const parsed = BankAccountSchema.safeParse(input);
@@ -44,6 +64,7 @@ export async function createBankAccount(input: {
         bankName: parsed.data.bankName,
         maskedAccountNumber: parsed.data.maskedAccountNumber ?? null,
         createdByUserId: user.id,
+        establishmentId: user.establishmentId,
       },
     });
     await tx.auditLog.create({
@@ -55,6 +76,7 @@ export async function createBankAccount(input: {
         reason: null,
         oldValue: Prisma.DbNull,
         newValue: { label: created.label, bankName: created.bankName, active: true },
+        establishmentId: user.establishmentId,
       },
     });
     return created;
@@ -67,9 +89,27 @@ export async function updateBankAccount(
   id: string,
   input: { label: string; bankName: string; maskedAccountNumber?: string },
 ): Promise<{ error?: string; errors?: Record<string, string[]> }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
+  // que createBankAccount() ci-dessus.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce compte bancaire." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut modifier un compte bancaire." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce compte bancaire." };
   }
 
   const parsed = BankAccountSchema.safeParse(input);
@@ -79,18 +119,23 @@ export async function updateBankAccount(
 
   try {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.bankAccount.findUnique({ where: { id } });
+      // Phase 3D / Lot D6 — un compte d'un autre établissement est
+      // désormais indistinguable d'un id inexistant.
+      const existing = await tx.bankAccount.findFirst({ where: { id, establishmentId: user.establishmentId } });
       if (!existing) {
         throw new BankActionError("Compte bancaire introuvable.");
       }
-      await tx.bankAccount.update({
-        where: { id },
+      const result = await tx.bankAccount.updateMany({
+        where: { id, establishmentId: user.establishmentId },
         data: {
           label: parsed.data.label,
           bankName: parsed.data.bankName,
           maskedAccountNumber: parsed.data.maskedAccountNumber ?? null,
         },
       });
+      if (result.count === 0) {
+        throw new BankActionError("Compte bancaire introuvable.");
+      }
       await tx.auditLog.create({
         data: {
           userId: user.id,
@@ -108,6 +153,7 @@ export async function updateBankAccount(
             bankName: parsed.data.bankName,
             maskedAccountNumber: parsed.data.maskedAccountNumber ?? null,
           },
+          establishmentId: user.establishmentId,
         },
       });
     });
@@ -121,23 +167,64 @@ export async function updateBankAccount(
   return {};
 }
 
+// Phase 3G / Lot D12-P42 — faille signalée en D12-P41 : désactiver un compte
+// ne prévenait jamais l'administrateur que des programmations actives le
+// référençaient encore (elles continuent d'avancer silencieusement leur
+// échéance sans jamais générer de virement tant que le compte reste
+// désactivé, voir catchUpSchedule). Message singulier/pluriel distinct,
+// jamais de pluriel français incorrect à 1.
+function formatActiveScheduleWarning(count: number): string {
+  if (count === 1) {
+    return "Compte bancaire désactivé. Attention : 1 programmation de virements est toujours active et ne générera plus de virements tant que ce compte restera désactivé.";
+  }
+  return `Compte bancaire désactivé. Attention : ${count} programmations de virements sont toujours actives et ne généreront plus de virements tant que ce compte restera désactivé.`;
+}
+
 /** Désactivation uniquement — jamais de suppression physique (BLOC 7 : "pas de suppression destructive si le compte possède un historique"). Idempotent si déjà inactif (pas de faux AuditLog). */
-export async function deactivateBankAccount(id: string): Promise<{ error?: string }> {
+export async function deactivateBankAccount(id: string): Promise<{ error?: string; warning?: string }> {
+  // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
+  // volontairement JAMAIS gardée par requireActiveEstablishment(), même
+  // principe que toggleActive()/toggleTariffActive() (direction
+  // désactivation) — désactiver un compte réduit l'exposition de
+  // l'établissement, jamais ne l'augmente.
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut désactiver un compte bancaire." };
   }
+  // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de désactiver ce compte bancaire." };
+  }
 
+  let activeScheduleCount = 0;
   try {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.bankAccount.findUnique({ where: { id } });
+      const existing = await tx.bankAccount.findFirst({ where: { id, establishmentId: user.establishmentId } });
       if (!existing) {
         throw new BankActionError("Compte bancaire introuvable.");
       }
       if (!existing.active) {
         return;
       }
-      await tx.bankAccount.update({ where: { id }, data: { active: false } });
+      // Phase 3G / Lot D12-P42 — compté après confirmation d'appartenance à
+      // l'établissement, filtré par `bankAccountId` ET `establishmentId`.
+      // Lecture seule, dans la même transaction que la désactivation, sans
+      // isolation Serializable supplémentaire (aucune invariante numérique à
+      // protéger ici, juste une information d'affichage) : une programmation
+      // créée ou réactivée entre ce comptage et la validation de cette
+      // transaction ne serait pas reflétée — le nombre retourné est l'état
+      // observé au moment du contrôle, jamais présenté comme une garantie
+      // durable.
+      activeScheduleCount = await tx.transferSchedule.count({
+        where: { bankAccountId: id, establishmentId: user.establishmentId, active: true },
+      });
+      const result = await tx.bankAccount.updateMany({
+        where: { id, establishmentId: user.establishmentId },
+        data: { active: false },
+      });
+      if (result.count === 0) {
+        throw new BankActionError("Compte bancaire introuvable.");
+      }
       await tx.auditLog.create({
         data: {
           userId: user.id,
@@ -147,6 +234,7 @@ export async function deactivateBankAccount(id: string): Promise<{ error?: strin
           reason: null,
           oldValue: { active: true },
           newValue: { active: false },
+          establishmentId: user.establishmentId,
         },
       });
     });
@@ -157,6 +245,9 @@ export async function deactivateBankAccount(id: string): Promise<{ error?: strin
     return { error: "Une erreur est survenue. Veuillez réessayer." };
   }
 
+  if (activeScheduleCount > 0) {
+    return { warning: formatActiveScheduleWarning(activeScheduleCount) };
+  }
   return {};
 }
 
@@ -173,7 +264,26 @@ export async function createBankTransfer(input: {
   reference?: string;
   note?: string;
 }): Promise<{ error?: string; id?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : createBankTransfer()
+  // crée un nouvel engagement financier, même raison que createBankAccount()
+  // ci-dessus.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un virement." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un virement." };
+  }
 
   if (input.status !== "DRAFT" && input.status !== "SCHEDULED") {
     return { error: "Statut initial invalide." };
@@ -185,7 +295,12 @@ export async function createBankTransfer(input: {
   try {
     const transfer = await prisma.$transaction(
       async (tx) => {
-        const account = await tx.bankAccount.findUnique({ where: { id: input.bankAccountId } });
+        // Phase 3D / Lot D8 — le compte bancaire cible doit appartenir au
+        // même établissement ; aucun virement n'est créé s'il est absent ou
+        // appartient à un autre établissement (même message, indistinguable).
+        const account = await tx.bankAccount.findFirst({
+          where: { id: input.bankAccountId, establishmentId: user.establishmentId },
+        });
         if (!account) {
           throw new BankActionError("Compte bancaire introuvable.");
         }
@@ -202,6 +317,7 @@ export async function createBankTransfer(input: {
             reference: input.reference?.trim() || null,
             note: input.note?.trim() || null,
             createdByUserId: user.id,
+            establishmentId: user.establishmentId,
           },
         });
 
@@ -214,6 +330,7 @@ export async function createBankTransfer(input: {
             reason: null,
             oldValue: Prisma.DbNull,
             newValue: { bankAccountId: input.bankAccountId, amount: input.amount, status: input.status },
+            establishmentId: user.establishmentId,
           },
         });
 
@@ -238,12 +355,36 @@ export async function createBankTransfer(input: {
  * plutôt que de déduire deux fois.
  */
 export async function effectBankTransfer(id: string): Promise<{ error?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : effectuer un
+  // virement déplace réellement de la trésorerie (DRAFT/SCHEDULED →
+  // EFFECTED) — action financière réelle, jamais risk-reducing, donc gardée
+  // comme une création, contrairement à cancelBankTransfer() ci-dessous.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de confirmer ce virement." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de confirmer ce virement." };
+  }
 
   try {
     await prisma.$transaction(
       async (tx) => {
-        const transfer = await tx.bankTransfer.findUnique({ where: { id } });
+        // Phase 3D / Lot D6 (priorité critique) — le virement doit
+        // appartenir à l'établissement courant. Un virement extérieur est
+        // désormais indistinguable d'un virement inexistant : il ne peut ni
+        // être marqué EFFECTED, ni affecter la trésorerie de cet établissement.
+        const transfer = await tx.bankTransfer.findFirst({ where: { id, establishmentId: user.establishmentId } });
         if (!transfer) {
           throw new BankActionError("Virement introuvable.");
         }
@@ -254,19 +395,32 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
           throw new BankActionError("Ce virement a été annulé et ne peut plus être effectué.");
         }
 
-        const account = await tx.bankAccount.findUnique({ where: { id: transfer.bankAccountId } });
+        // Le compte bancaire associé (seul compte référencé par ce modèle —
+        // la "source" est la caisse elle-même, pas une seconde BankAccount)
+        // doit lui aussi appartenir au même établissement : un virement
+        // historique mal rattaché ne doit jamais être réputé valide sur la
+        // seule foi de son propre `establishmentId`.
+        const account = await tx.bankAccount.findFirst({
+          where: { id: transfer.bankAccountId, establishmentId: user.establishmentId },
+        });
         if (!account || !account.active) {
           throw new BankActionError("Ce compte bancaire est désactivé.");
         }
 
-        const register = await resolveDefaultCashRegister(tx);
+        // Phase 3D / Lot D6 — la session de caisse utilisée pour le calcul
+        // de disponibilité doit elle aussi appartenir à cet établissement :
+        // sans ce filtre, computeTheoreticalBalance() recevrait une session
+        // dont le solde pourrait ne pas refléter la bonne trésorerie.
+        const register = await resolveDefaultCashRegister(tx, user.establishmentId);
         const session = await tx.cashSession.findFirst({
-          where: { cashRegisterId: register.id, status: "OPEN" },
+          where: { cashRegisterId: register.id, status: "OPEN", establishmentId: user.establishmentId },
         });
         if (!session) {
           throw new BankActionError("Aucune session de caisse ouverte — impossible de confirmer ce virement.");
         }
 
+        // Règle financière inchangée — même calcul, même seuil, aucune
+        // nouvelle logique comptable inventée.
         const available = await computeTheoreticalBalance(tx, session);
         if (transfer.amount > available) {
           throw new BankActionError(
@@ -275,10 +429,15 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
         }
 
         const effectedAt = new Date();
-        await tx.bankTransfer.update({
-          where: { id },
+        // Phase 3D / Lot D6 — écriture finale filtrée par établissement en
+        // plus de l'id, jamais seulement la vérification faite ci-dessus.
+        const result = await tx.bankTransfer.updateMany({
+          where: { id, establishmentId: user.establishmentId },
           data: { status: "EFFECTED", effectedAt, effectedByUserId: user.id, cashSessionId: session.id },
         });
+        if (result.count === 0) {
+          throw new BankActionError("Virement introuvable.");
+        }
 
         await tx.auditLog.create({
           data: {
@@ -289,6 +448,7 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
             reason: null,
             oldValue: { status: transfer.status },
             newValue: { status: "EFFECTED", cashSessionId: session.id, amount: transfer.amount },
+            establishmentId: user.establishmentId,
           },
         });
       },
@@ -306,12 +466,21 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
 
 /** BLOC 17 — DRAFT/SCHEDULED uniquement ; EFFECTED jamais annulable (correction via CashCorrection si nécessaire, jamais une annulation destructive). Idempotent si déjà CANCELLED. Transaction Serializable (Bloc I.1) : un effectBankTransfer() concurrent gagnant la course fait échouer cette transaction plutôt que d'écraser silencieusement un virement déjà EFFECTED. */
 export async function cancelBankTransfer(id: string): Promise<{ error?: string }> {
+  // Phase 3G / Lot D12-P110 — décision explicite : volontairement JAMAIS
+  // gardée par requireActiveEstablishment(), même principe que
+  // cancelReservation()/cancelRental() — annuler un virement non encore
+  // effectué réduit l'exposition de l'établissement (ne s'applique d'ailleurs
+  // jamais à un virement déjà EFFECTED, voir le contrôle ci-dessous).
   const user = await getCurrentUser();
+  // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler ce virement." };
+  }
 
   try {
     await prisma.$transaction(
       async (tx) => {
-        const transfer = await tx.bankTransfer.findUnique({ where: { id } });
+        const transfer = await tx.bankTransfer.findFirst({ where: { id, establishmentId: user.establishmentId } });
         if (!transfer) {
           throw new BankActionError("Virement introuvable.");
         }
@@ -321,7 +490,13 @@ export async function cancelBankTransfer(id: string): Promise<{ error?: string }
         if (transfer.status === "CANCELLED") {
           return;
         }
-        await tx.bankTransfer.update({ where: { id }, data: { status: "CANCELLED" } });
+        const result = await tx.bankTransfer.updateMany({
+          where: { id, establishmentId: user.establishmentId },
+          data: { status: "CANCELLED" },
+        });
+        if (result.count === 0) {
+          throw new BankActionError("Virement introuvable.");
+        }
         await tx.auditLog.create({
           data: {
             userId: user.id,
@@ -331,6 +506,7 @@ export async function cancelBankTransfer(id: string): Promise<{ error?: string }
             reason: null,
             oldValue: { status: transfer.status },
             newValue: { status: "CANCELLED" },
+            establishmentId: user.establishmentId,
           },
         });
       },
@@ -359,9 +535,27 @@ export async function createTransferSchedule(input: {
   percentage?: number;
   nextRunAt: Date;
 }): Promise<{ error?: string; errors?: Record<string, string[]>; id?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
+  // que createBankAccount() ci-dessus.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de configurer une programmation." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut configurer une programmation de versement." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de configurer une programmation." };
   }
 
   const parsed = TransferScheduleSchema.safeParse(input);
@@ -371,7 +565,11 @@ export async function createTransferSchedule(input: {
 
   try {
     const schedule = await prisma.$transaction(async (tx) => {
-      const account = await tx.bankAccount.findUnique({ where: { id: parsed.data.bankAccountId } });
+      // Phase 3D / Lot D8 — le compte bancaire cible doit appartenir au
+      // même établissement avant de créer la programmation.
+      const account = await tx.bankAccount.findFirst({
+        where: { id: parsed.data.bankAccountId, establishmentId: user.establishmentId },
+      });
       if (!account) {
         throw new BankActionError("Compte bancaire introuvable.");
       }
@@ -389,6 +587,7 @@ export async function createTransferSchedule(input: {
           nextRunAt: parsed.data.nextRunAt,
           anchorDay: resolveAnchorDayOnCreate(parsed.data.nextRunAt),
           createdByUserId: user.id,
+          establishmentId: user.establishmentId,
         },
       });
 
@@ -407,6 +606,7 @@ export async function createTransferSchedule(input: {
             fixedAmount: parsed.data.fixedAmount ?? null,
             percentage: parsed.data.percentage ?? null,
           },
+          establishmentId: user.establishmentId,
         },
       });
 
@@ -432,9 +632,27 @@ export async function updateTransferSchedule(
     nextRunAt: Date;
   },
 ): Promise<{ error?: string; errors?: Record<string, string[]> }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
+  // que createBankAccount() ci-dessus.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette programmation." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut modifier une programmation de versement." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette programmation." };
   }
 
   const parsed = TransferScheduleSchema.safeParse(input);
@@ -444,17 +662,25 @@ export async function updateTransferSchedule(
 
   try {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.transferSchedule.findUnique({ where: { id } });
+      // Phase 3D / Lot D6 — la programmation ciblée ET le nouveau compte
+      // bancaire qu'on lui assigne doivent tous deux appartenir au même
+      // établissement : sans ce second filtre, une programmation pourrait
+      // être redirigée vers le compte d'un autre établissement.
+      const existing = await tx.transferSchedule.findFirst({
+        where: { id, establishmentId: user.establishmentId },
+      });
       if (!existing) {
         throw new BankActionError("Programmation introuvable.");
       }
-      const account = await tx.bankAccount.findUnique({ where: { id: parsed.data.bankAccountId } });
+      const account = await tx.bankAccount.findFirst({
+        where: { id: parsed.data.bankAccountId, establishmentId: user.establishmentId },
+      });
       if (!account || !account.active) {
         throw new BankActionError("Ce compte bancaire est désactivé.");
       }
 
-      await tx.transferSchedule.update({
-        where: { id },
+      const result = await tx.transferSchedule.updateMany({
+        where: { id, establishmentId: user.establishmentId },
         data: {
           bankAccountId: parsed.data.bankAccountId,
           frequency: parsed.data.frequency,
@@ -469,6 +695,9 @@ export async function updateTransferSchedule(
           anchorDay: resolveAnchorDayOnUpdate(existing.nextRunAt, existing.anchorDay, parsed.data.nextRunAt),
         },
       });
+      if (result.count === 0) {
+        throw new BankActionError("Programmation introuvable.");
+      }
 
       await tx.auditLog.create({
         data: {
@@ -493,6 +722,7 @@ export async function updateTransferSchedule(
             percentage: parsed.data.percentage ?? null,
             nextRunAt: parsed.data.nextRunAt.toISOString(),
           },
+          establishmentId: user.establishmentId,
         },
       });
     });
@@ -508,21 +738,36 @@ export async function updateTransferSchedule(
 
 /** Idempotent si déjà inactive. */
 export async function deactivateTransferSchedule(id: string): Promise<{ error?: string }> {
+  // Phase 3G / Lot D12-P110 — décision explicite, même principe que
+  // deactivateBankAccount() ci-dessus : volontairement JAMAIS gardée par
+  // requireActiveEstablishment().
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut désactiver une programmation de versement." };
   }
+  // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de désactiver cette programmation." };
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.transferSchedule.findUnique({ where: { id } });
+      const existing = await tx.transferSchedule.findFirst({
+        where: { id, establishmentId: user.establishmentId },
+      });
       if (!existing) {
         throw new BankActionError("Programmation introuvable.");
       }
       if (!existing.active) {
         return;
       }
-      await tx.transferSchedule.update({ where: { id }, data: { active: false } });
+      const result = await tx.transferSchedule.updateMany({
+        where: { id, establishmentId: user.establishmentId },
+        data: { active: false },
+      });
+      if (result.count === 0) {
+        throw new BankActionError("Programmation introuvable.");
+      }
       await tx.auditLog.create({
         data: {
           userId: user.id,
@@ -532,6 +777,7 @@ export async function deactivateTransferSchedule(id: string): Promise<{ error?: 
           reason: null,
           oldValue: { active: true },
           newValue: { active: false },
+          establishmentId: user.establishmentId,
         },
       });
     });
@@ -575,11 +821,33 @@ export async function generateDueScheduledTransfers(): Promise<{ generated: numb
   // aucune restriction de rôle au-delà d'être authentifié (même garde que
   // toute autre lecture de ce projet), voir BLOC 20 : aucun utilisateur
   // système inventé, la génération n'est l'action d'aucun humain précis.
-  await verifySession();
+  // Phase 3G / Lot D12-P33 — faille confirmée en D12-P32 : la sélection des
+  // programmations échues n'était pas filtrée par établissement, permettant
+  // à l'utilisateur déclencheur de provoquer, par la simple consultation
+  // d'une page, des écritures réelles (BankTransfer créés, nextRunAt avancé)
+  // sur des programmations appartenant à d'autres établissements. Confiné
+  // désormais à l'établissement de l'utilisateur déclencheur, sans changer
+  // le comportement pour les programmations qui lui appartiennent déjà.
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : cette
+  // génération automatique crée de vrais `BankTransfer` (status SCHEDULED) et
+  // avance `nextRunAt` — un établissement suspendu ou à l'abonnement expiré
+  // ne doit pas continuer à produire silencieusement de nouvelles écritures
+  // financières à chaque consultation de page. Retour silencieux à `{generated:
+  // 0}` (même convention que le cas `NO_ESTABLISHMENT` déjà existant
+  // ci-dessous) plutôt qu'une erreur : cette fonction n'est jamais appelée
+  // directement par un formulaire, donc aucun message utilisateur à afficher.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    return { generated: 0 };
+  }
+  const { user } = access;
+  if (!user.establishmentId) {
+    return { generated: 0 };
+  }
   const now = new Date();
 
   const dueSchedules = await prisma.transferSchedule.findMany({
-    where: { active: true, nextRunAt: { lte: now } },
+    where: { active: true, nextRunAt: { lte: now }, establishmentId: user.establishmentId },
     select: { id: true },
   });
 
@@ -594,10 +862,29 @@ export async function generateDueScheduledTransfers(): Promise<{ generated: numb
       // observabilité, mais pas davantage qu'avant (déjà silencieux).
       // Toute AUTRE erreur est, elle, inattendue : journalisée plutôt que
       // masquée, sans bloquer le traitement des programmations suivantes.
-      console.error(
-        `generateDueScheduledTransfers() — échec inattendu pour la programmation ${scheduleId} :`,
-        result.stoppedOnError,
-      );
+      // Phase 3G / Lot D12-P36 — une violation de la contrainte
+      // `BankTransfer_schedule_date_unique` (code Prisma P2002) tombe ici,
+      // jamais dans la branche "conflit de sérialisation" ci-dessus :
+      // signalée explicitement dans les journaux, `generated` n'est jamais
+      // incrémenté pour cette itération (voir catchUpSchedule), donc aucun
+      // faux succès n'est jamais retourné à l'appelant.
+      //
+      // Phase 3G / Lot D12-P39 — confirmée empiriquement (test de
+      // concurrence réel, D12-P37) comme une variante bénigne de
+      // concurrence perdue, distinguée ici du cas générique pour ne pas
+      // l'alarmer de la même façon qu'une erreur réellement inattendue.
+      // `generated` reste inchangé, aucune relecture de `nextRunAt`
+      // ajoutée, aucune reprise automatique.
+      if (isBankTransferScheduleDateUniqueViolation(result.stoppedOnError)) {
+        console.error(
+          `generateDueScheduledTransfers() — programmation ${scheduleId} : tentative concurrente a rencontré la contrainte anti-doublon (BankTransfer_schedule_date_unique) — échéance déjà traitée par une autre exécution, aucune action nécessaire.`,
+        );
+      } else {
+        console.error(
+          `generateDueScheduledTransfers() — échec inattendu pour la programmation ${scheduleId} :`,
+          result.stoppedOnError,
+        );
+      }
     }
   }
 

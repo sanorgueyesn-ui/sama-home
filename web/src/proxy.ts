@@ -32,17 +32,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Phase 3G / Lot D12-P86 — transmet le chemin au layout racine (Server
-  // Component, qui n'a pas directement accès à l'URL courante) via un
-  // en-tête de la REQUÊTE transmise en aval (jamais un en-tête de réponse au
-  // navigateur) : seul moyen standard pour src/app/layout.tsx de choisir
-  // entre la navigation métier (AppShell) et la console de plateforme
-  // (PlatformShell) sans dupliquer la logique d'authentification déjà
-  // ci-dessus, strictement inchangée. Aucune incidence sur les redirections
-  // existantes (les deux blocs au-dessus restent exactement les mêmes).
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  // D12-P206 — la sélection entre navigation métier (AppShell) et console
+  // de plateforme (PlatformShell) ne passe plus par un en-tête posé ici
+  // (src/app/layout.tsx, Server Component partagé par les deux, n'était
+  // jamais ré-exécuté lors d'une navigation côté client entre les deux —
+  // la coquille restait figée, cause du rapport D12-P205). Ce choix est
+  // désormais fait par src/components/shell-switcher.tsx (composant client,
+  // usePathname()). Aucune incidence sur les redirections ci-dessus,
+  // strictement inchangées.
+  return NextResponse.next();
 }
 
 export const config = {

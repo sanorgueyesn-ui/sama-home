@@ -35,7 +35,46 @@ function isSerializationConflict(error: unknown): boolean {
   // un conflit de concurrence attendu ; toute autre erreur est remontée
   // (journalisée par l'appelant), jamais masquée silencieusement comme un
   // simple conflit.
+  //
+  // Phase 3G / Lot D12-P36 — depuis l'ajout de la contrainte unique
+  // `BankTransfer_schedule_date_unique` (D12-P32 à P35), une violation
+  // porte le code Prisma P2002, jamais P2034 : cette comparaison exacte
+  // continue de l'exclure correctement (déjà vrai avant la contrainte,
+  // désormais vérifié pertinent). Un P2002 tombe donc dans le même chemin
+  // que toute autre erreur inattendue — jamais traité comme un aléa de
+  // concurrence silencieux, jamais une reprise automatique ajoutée ici.
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034";
+}
+
+/**
+ * Phase 3G / Lot D12-P39 — reconnaît spécifiquement une violation de la
+ * contrainte `BankTransfer_schedule_date_unique` (D12-P36), confirmée
+ * empiriquement par un test de concurrence réel (D12-P37) : la ligne de
+ * transaction concurrente perdante échoue avec le code Prisma P2002,
+ * jamais P2034 — une variante bénigne de concurrence perdue (un seul
+ * virement committé pour l'échéance, exactement comme voulu), simplement
+ * détectée une étape plus tard que le cas `caughtUp` (après la tentative
+ * d'insertion plutôt qu'avant).
+ *
+ * `error.meta` est typé `Record<string, unknown>` par Prisma lui-même
+ * (aucune garantie structurelle sur `target`, jamais vérifié empiriquement
+ * dans ce projet pour ce code d'erreur précis) — DÉLIBÉRÉMENT PAS utilisé
+ * ici pour éviter une détection fragile fondée sur une supposition. Le
+ * message, lui, a été empiriquement capturé lors du test D12-P37 et nomme
+ * la contrainte de façon explicite et non ambiguë ("Unique constraint
+ * failed on the constraint: `BankTransfer_schedule_date_unique`") — c'est
+ * la seule base utilisée ici. Si le format du message venait à changer
+ * dans une future version de Prisma, cette fonction retourne simplement
+ * `false` : l'erreur retombe alors dans le journal générique "échec
+ * inattendu" déjà existant, jamais masquée.
+ */
+function isBankTransferScheduleDateUniqueViolation(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002" &&
+    typeof error.message === "string" &&
+    error.message.includes("BankTransfer_schedule_date_unique")
+  );
 }
 
 /**
@@ -86,11 +125,35 @@ export async function catchUpSchedule(scheduleId: string, now: Date): Promise<Ca
             return;
           }
 
+          // Phase 3B / Lot B2 — aucun utilisateur n'est à l'origine de cette
+          // génération paresseuse (déclenchée par la simple consultation de
+          // /caisse/virements par n'importe quel utilisateur authentifié,
+          // voir le commentaire de generateDueScheduledTransfers dans
+          // src/app/actions/bank.ts) : l'établissement du virement généré ne
+          // peut donc PAS venir d'une session en cours. Il vient exclusivement
+          // de la programmation elle-même (`fresh.establishmentId`, déjà
+          // résolu et vérifié à sa création — createTransferSchedule), revérifié
+          // cohérent avec son propre compte bancaire — jamais un repli sur
+          // l'établissement historique, jamais une valeur devinée. Si l'un des
+          // deux est absent ou s'ils diffèrent, cette programmation précise
+          // arrête son propre traitement (erreur non masquée, voir le
+          // `console.error` de l'appelant) sans affecter les autres
+          // programmations dues traitées par le même appel : aucun mélange
+          // possible entre échéanciers de deux établissements différents,
+          // chaque itération ne lisant/écrivant jamais que ses propres
+          // données.
+          if (!fresh.establishmentId || !account.establishmentId || fresh.establishmentId !== account.establishmentId) {
+            throw new Error(
+              `Programmation ${fresh.id} : établissement introuvable ou incohérent avec son compte bancaire — génération automatique arrêtée pour cette programmation.`,
+            );
+          }
+          const establishmentId = fresh.establishmentId;
+
           let amount: number;
           if (fresh.amountType === "FIXED") {
             amount = fresh.fixedAmount!;
           } else {
-            const register = await resolveDefaultCashRegister(tx);
+            const register = await resolveDefaultCashRegister(tx, establishmentId);
             const session = await tx.cashSession.findFirst({
               where: { cashRegisterId: register.id, status: "OPEN" },
             });
@@ -112,6 +175,7 @@ export async function catchUpSchedule(scheduleId: string, now: Date): Promise<Ca
               scheduledAt: dueAt,
               createdByUserId: fresh.createdByUserId,
               transferScheduleId: fresh.id,
+              establishmentId,
             },
           });
 
@@ -133,4 +197,4 @@ export async function catchUpSchedule(scheduleId: string, now: Date): Promise<Ca
   return { generated, reachedCap: true, stoppedOnError: null };
 }
 
-export { isSerializationConflict };
+export { isSerializationConflict, isBankTransferScheduleDateUniqueViolation };

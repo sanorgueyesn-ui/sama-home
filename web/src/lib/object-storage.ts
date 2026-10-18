@@ -34,6 +34,30 @@ export type S3ClientLike = Pick<S3Client, "send">;
 /** URL présignée courte durée — jamais stockée en base (seule la clé l'est). */
 const DISPLAY_URL_EXPIRY_SECONDS = 15 * 60;
 
+function isSafeExternalUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    const host = url.hostname.toLowerCase();
+    if (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1" ||
+      host === "169.254.169.254" ||
+      host.endsWith(".internal") ||
+      host.endsWith(".local") ||
+      /^10\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function isExternalUrl(value: string): boolean {
   return value.startsWith("http://") || value.startsWith("https://");
 }
@@ -126,8 +150,9 @@ export async function resolveImagePdfSource(
   if (!format) return null;
 
   try {
-    if (isExternalUrl(stored)) {
-      const response = await fetch(stored);
+        if (isExternalUrl(stored)) {
+      if (!isSafeExternalUrl(stored)) return null;
+      const response = await fetch(stored, { signal: AbortSignal.timeout(3000) });
       if (!response.ok) return null;
       return { data: Buffer.from(await response.arrayBuffer()), format };
     }

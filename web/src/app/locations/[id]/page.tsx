@@ -7,6 +7,8 @@ import { CompleteButton, CancelRentalButton } from "./action-buttons";
 import { getRentalById } from "@/lib/rentals-data";
 import { listPaymentsForRental } from "@/lib/payments-data";
 import { getRentalPaymentSummary } from "@/lib/payment-summary";
+import { getSettings } from "@/lib/settings-data";
+import { buildRentalWhatsAppLink } from "@/lib/whatsapp";
 import { prisma } from "@/lib/prisma";
 import { formatDuration } from "@/lib/duration";
 import { PaymentSummaryCard } from "@/components/payments/payment-summary-card";
@@ -41,10 +43,22 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
     notFound();
   }
 
-  const [summary, payments] = await Promise.all([
+  const [summary, payments, settings] = await Promise.all([
     getRentalPaymentSummary(prisma, id),
     listPaymentsForRental(id),
+    getSettings(),
   ]);
+  // Lot "WhatsApp — locations" — même mécanisme que les réservations (wa.me,
+  // PHONE_REGEX), jamais un lien construit à partir d'un numéro absent/invalide.
+  const whatsapp = buildRentalWhatsAppLink({
+    clientName: rental.client.name,
+    clientPhone: rental.client.phone,
+    establishmentName: settings?.establishmentName ?? "notre établissement",
+    propertyName: rental.property.name,
+    arrivalAt: rental.arrivalAt,
+    plannedDepartureAt: rental.plannedDepartureAt,
+    amount: rental.amount,
+  });
   const now = new Date();
   const isActive = rental.status === "ACTIVE";
   const canPay = isActive && summary.remaining > 0;
@@ -173,6 +187,28 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
             >
               Prolonger
             </Link>
+            {/* Lien direct (pas <Link> de next/navigation) : la route cible
+                renvoie un flux binaire PDF, pas une page React. */}
+            <a
+              href={`/locations/${rental.id}/contract`}
+              className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg"
+            >
+              Télécharger le contrat (PDF)
+            </a>
+            {whatsapp.ok ? (
+              <a
+                href={whatsapp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-14 items-center justify-center rounded-2xl border border-success/40 bg-success-bg text-sm font-extrabold text-success"
+              >
+                Envoyer sur WhatsApp
+              </a>
+            ) : (
+              <p className="rounded-xl bg-neutral-bg px-3 py-2.5 text-center text-xs font-medium text-fg/60">
+                {whatsapp.reason} Impossible de préparer le message WhatsApp.
+              </p>
+            )}
             <CompleteButton id={rental.id} />
             <CancelRentalButton id={rental.id} />
           </div>

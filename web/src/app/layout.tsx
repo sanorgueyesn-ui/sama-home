@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { getSessionCookiePayload } from "@/lib/session-token";
@@ -8,8 +7,7 @@ import { getCurrentUserOrNull } from "@/lib/dal";
 import { getSettings } from "@/lib/settings-data";
 import { getTheme } from "@/lib/theme";
 import { resolveBrandColors, DEFAULT_BRAND_COLORS } from "@/lib/brand-colors";
-import { AppShell } from "@/components/navigation/app-shell";
-import { PlatformShell } from "@/components/platform/platform-shell";
+import { ShellSwitcher } from "@/components/shell-switcher";
 
 // Reconstruction UI (Nocturne Opulence) — Plus Jakarta Sans remplace Manrope
 // dans toute l'app, conformément au design system validé (PRD section 3).
@@ -31,25 +29,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // s'appuyer sur verifySession()/getCurrentUser() (src/lib/dal.ts), seuls
   // contrôles authentifiants réels. Un cookie absent/invalide (ex. /login)
   // masque simplement la navigation, sans jamais court-circuiter l'accès.
-  const [payload, theme, currentUser, headersList] = await Promise.all([
+  const [payload, theme, currentUser] = await Promise.all([
     getSessionCookiePayload(),
     getTheme(),
     getCurrentUserOrNull(),
-    headers(),
   ]);
   const showChrome = Boolean(payload?.sessionId);
-
-  // Phase 3G / Lot D12-P86 — sépare la console de plateforme (`/plateforme`
-  // et ses sous-pages) de la navigation métier : le chemin ne peut pas être
-  // lu directement dans un layout Server Component, d'où l'en-tête
-  // `x-pathname` posé par `src/proxy.ts` (jamais un mécanisme
-  // d'autorisation — la seule vérification réelle reste
-  // `requirePlatformAdmin()`, appelée indépendamment par le layout et les
-  // pages de `/plateforme`). Un compte métier qui atteindrait cette URL par
-  // erreur verrait au pire la coquille de la console avant d'être
-  // immédiatement redirigé par la page elle-même — jamais un accès réel.
-  const pathname = headersList.get("x-pathname") ?? "";
-  const isPlatformConsole = pathname === "/plateforme" || pathname.startsWith("/plateforme/");
 
   // Lot "Personnalisation des couleurs" / Phase 3F Lot D12-E — contrairement
   // à `showChrome` ci-dessus (cookie seul, cosmétique), les paramètres ne
@@ -88,23 +73,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       style={brandColorVars}
     >
       <body className="min-h-full flex flex-col bg-surface text-fg">
-        {isPlatformConsole ? (
-          // Phase 3G / Lot D12-P86 — jamais AppShell ici : console
-          // entièrement distincte, sa propre navigation, son propre thème
-          // sombre fixe. `requirePlatformAdmin()` reste la seule
-          // autorisation réelle (vérifiée indépendamment par ce composant
-          // et par chaque page de /plateforme) — ce rendu ne constitue
-          // jamais une protection à lui seul.
-          <PlatformShell>{children}</PlatformShell>
-        ) : showChrome ? (
-          // Phase 3G / Lot D12-P61 — `isPlatformAdmin` déjà résolu ci-dessus
-          // par le même appel à getCurrentUserOrNull() (mémoïsé par cache(),
-          // aucune requête supplémentaire) : simplement transmis en prop,
-          // jamais une nouvelle lecture utilisateur dans AppShell lui-même.
-          <AppShell isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}>{children}</AppShell>
-        ) : (
-          children
-        )}
+        {/* D12-P206 — la sélection AppShell/PlatformShell est déléguée à
+            ShellSwitcher (composant client, usePathname()) : voir son
+            commentaire pour la raison (le calcul ne peut pas rester ici,
+            ce layout racine n'étant pas ré-exécuté lors d'une navigation
+            côté client entre les routes métier et /plateforme). */}
+        <ShellSwitcher showChrome={showChrome} isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}>
+          {children}
+        </ShellSwitcher>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import "server-only";
 import type { RentalStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { getCurrentUser } from "@/lib/dal";
 
 const LIST_LIMIT = 50;
 
@@ -15,7 +15,11 @@ export async function listRentals(filters: {
   query?: string;
   date?: string;
 }) {
-  await verifySession();
+  // Phase 3C / Lot C1 — getCurrentUser() pour résoudre l'établissement.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { items: [], total: 0, truncated: false };
+  }
 
   const timeFilter = filters.timeFilter ?? "active";
   const trimmedQuery = filters.query?.trim();
@@ -29,6 +33,7 @@ export async function listRentals(filters: {
   const status = statusFor[timeFilter];
 
   const where = {
+    establishmentId: user.establishmentId,
     ...(filters.propertyId ? { propertyId: filters.propertyId } : {}),
     ...(filters.clientId ? { clientId: filters.clientId } : {}),
     ...(status ? { status } : {}),
@@ -68,10 +73,12 @@ export async function listRentals(filters: {
   return { items, total, truncated: total > items.length };
 }
 
+/** Phase 3C / Lot C2 — une location d'un autre établissement est traitée comme introuvable. */
 export async function getRentalById(id: string) {
-  await verifySession();
-  return prisma.rental.findUnique({
-    where: { id },
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return null;
+  return prisma.rental.findFirst({
+    where: { id, establishmentId: user.establishmentId },
     include: {
       client: true,
       property: { select: { id: true, name: true, type: true, active: true } },
@@ -82,11 +89,17 @@ export async function getRentalById(id: string) {
   });
 }
 
-/** For the property detail page: link straight to the occupying rental when OCCUPIED. */
+/**
+ * For the property detail page: link straight to the occupying rental when
+ * OCCUPIED. Phase 3C / Lot C2 — `establishmentId` filtré explicitement :
+ * `propertyId` seul ne suffit pas tant que la lecture par identifiant du
+ * logement lui-même n'est pas vérifiée au point d'appel de cette fonction.
+ */
 export async function getActiveRentalForProperty(propertyId: string) {
-  await verifySession();
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return null;
   return prisma.rental.findFirst({
-    where: { propertyId, status: "ACTIVE" },
+    where: { propertyId, status: "ACTIVE", establishmentId: user.establishmentId },
     select: { id: true },
   });
 }

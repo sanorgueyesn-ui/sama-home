@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import {
   SESSION_COOKIE_NAME,
   encryptSessionCookie,
@@ -45,8 +46,20 @@ export async function deleteSession() {
   const payload = await getSessionCookiePayload();
 
   if (payload?.sessionId) {
-    await prisma.session.delete({ where: { id: payload.sessionId } }).catch(() => {
-      // Already gone (expired cleanup, double logout, ...) — not an error.
+    // Phase 3G / Lot D12-P46-R1 — faille signalée en D12-P45 : ce `catch`
+    // masquait auparavant TOUTE erreur, pas seulement le cas attendu
+    // ("déjà absente"). P2025 ("Record to delete does not exist") est le
+    // seul cas bénin (expiration déjà nettoyée, double déconnexion...) ;
+    // toute autre erreur est désormais journalisée plutôt que masquée —
+    // jamais de cookie, de jeton ni de secret dans le message, seul le nom
+    // de l'erreur est loggé. La suppression du cookie et la redirection
+    // restent inconditionnelles dans tous les cas (voir plus bas) : un
+    // échec en base ne bloque jamais la déconnexion côté interface.
+    await prisma.session.delete({ where: { id: payload.sessionId } }).catch((error: unknown) => {
+      const isAlreadyGone = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
+      if (!isAlreadyGone) {
+        console.error("deleteSession() — échec inattendu de la suppression de la session :", error);
+      }
     });
   }
 

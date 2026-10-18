@@ -33,6 +33,7 @@ export function BankAccountRowActions({
   const [editBankName, setEditBankName] = useState(bankName);
   const [editMasked, setEditMasked] = useState(maskedAccountNumber ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   function reset() {
     setEditing(false);
@@ -71,11 +72,20 @@ export function BankAccountRowActions({
   function handleDeactivate() {
     if (!confirm(`Désactiver « ${label} » ? Il ne pourra plus être utilisé pour de nouveaux versements.`)) return;
     setError(null);
+    setWarning(null);
     startTransition(async () => {
       const result = await deactivateBankAccount(id);
       if (result.error) {
         setError(result.error);
         return;
+      }
+      // Phase 3G / Lot D12-P42 — avertissement informatif (pas une erreur) :
+      // le compte a bien été désactivé, mais des programmations actives le
+      // référencent encore. Conservé localement après le router.refresh()
+      // (ce composant client n'est pas démonté par un rafraîchissement de
+      // données serveur), jamais perdu silencieusement.
+      if (result.warning) {
+        setWarning(result.warning);
       }
       router.refresh();
     });
@@ -167,6 +177,7 @@ export function BankAccountRowActions({
         ) : null}
       </div>
       {error ? <p className="max-w-48 text-right text-[10.5px] font-medium text-danger">{error}</p> : null}
+      {warning ? <p className="max-w-48 text-right text-[10.5px] font-medium text-warning">{warning}</p> : null}
     </div>
   );
 }

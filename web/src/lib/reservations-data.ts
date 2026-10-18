@@ -1,7 +1,9 @@
 import "server-only";
 import type { ReservationStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { getCurrentUser } from "@/lib/dal";
+import { resolveImageDisplayUrl } from "@/lib/object-storage";
+import { getS3Client, getBucketName } from "@/lib/s3-client";
 
 const LIST_LIMIT = 50;
 
@@ -14,9 +16,13 @@ export type ReservationTimeFilter = "today" | "upcoming" | "past" | "cancelled" 
  * tarif actif pour ce logement." per Bloc 10, not hide the property.
  */
 export async function listActivePropertiesWithActiveTariffs() {
-  await verifySession();
-  return prisma.property.findMany({
-    where: { active: true },
+  // Phase 3C / Lot C1 — getCurrentUser() pour résoudre l'établissement.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return [];
+  }
+  const properties = await prisma.property.findMany({
+    where: { active: true, establishmentId: user.establishmentId },
     select: {
       id: true,
       name: true,
@@ -35,6 +41,17 @@ export async function listActivePropertiesWithActiveTariffs() {
     },
     orderBy: { name: "asc" },
   });
+  // Lot "Téléversement durable des images" — même résolution clé->URL
+  // d'affichage que src/lib/properties-data.ts (voir ce fichier pour le
+  // détail des deux formats de valeur stockée coexistant en base). Le
+  // client S3 n'est obtenu que pour les logements ayant réellement une
+  // photo (même garde que withResolvedPhoto, properties-data.ts).
+  return Promise.all(
+    properties.map(async (property) => {
+      if (!property.photo) return property;
+      return { ...property, photo: await resolveImageDisplayUrl(getS3Client(), getBucketName(), property.photo) };
+    }),
+  );
 }
 
 export async function listReservations(filters: {
@@ -48,7 +65,11 @@ export async function listReservations(filters: {
   status?: ReservationStatus;
   query?: string;
 }) {
-  await verifySession();
+  // Phase 3C / Lot C1 — getCurrentUser() pour résoudre l'établissement.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { items: [], total: 0, truncated: false };
+  }
 
   const now = new Date();
   const startOfToday = new Date(now);
@@ -60,6 +81,7 @@ export async function listReservations(filters: {
   const trimmedQuery = filters.query?.trim();
 
   const where = {
+    establishmentId: user.establishmentId,
     ...(filters.propertyId ? { propertyId: filters.propertyId } : {}),
     ...(filters.clientId ? { clientId: filters.clientId } : {}),
     ...(filters.status ? { status: filters.status } : {}),
@@ -99,10 +121,12 @@ export async function listReservations(filters: {
   return { items, total, truncated: total > items.length };
 }
 
+/** Phase 3C / Lot C2 — une réservation d'un autre établissement est traitée comme introuvable. */
 export async function getReservationById(id: string) {
-  await verifySession();
-  return prisma.reservation.findUnique({
-    where: { id },
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return null;
+  return prisma.reservation.findFirst({
+    where: { id, establishmentId: user.establishmentId },
     include: {
       client: true,
       property: { select: { id: true, name: true, type: true, active: true } },

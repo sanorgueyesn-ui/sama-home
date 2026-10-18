@@ -13,20 +13,28 @@ import type { CashSession } from "@/generated/prisma/client";
  * nouvelle : la somme des 4 composantes ci-dessous doit toujours égaler
  * exactement le `theoreticalBalance` déjà renvoyé par
  * `getCurrentCashSession()` — vérifié explicitement par test.
+ *
+ * Phase 3C / Lot C1 — même filtre `establishmentId` que
+ * `computeTheoreticalBalance` (src/lib/cash-data.ts), pour la même raison :
+ * `Payment`/`Expense` n'ont pas de FK vers `CashSession`, seulement bornés
+ * par date — sans ce filtre, un autre établissement avec des mouvements
+ * CASH dans la même fenêtre serait compté ici. `establishmentId` vient de
+ * la session elle-même (déjà établissement-scopée), jamais recalculé.
  */
 export async function getCashSessionBreakdown(
-  session: Pick<CashSession, "id" | "openingBalance" | "openedAt" | "closedAt">,
+  session: Pick<CashSession, "id" | "openingBalance" | "openedAt" | "closedAt" | "establishmentId">,
 ) {
   await verifySession();
   const windowEnd = session.closedAt ?? new Date();
+  const establishmentFilter = session.establishmentId ? { establishmentId: session.establishmentId } : {};
 
   const [cashInAgg, cashOutAgg, transfersOutAgg, correctionsAgg] = await Promise.all([
     prisma.payment.aggregate({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd } },
+      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
       _sum: { amount: true },
     }),
     prisma.expense.aggregate({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd } },
+      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
       _sum: { amount: true },
     }),
     prisma.bankTransfer.aggregate({
@@ -69,20 +77,22 @@ export type CashActivityEntry = {
  * `CashCorrection`), jamais d'un `CashMovement`. `amount` est toujours
  * signé ici (positif = entrée, négatif = sortie) pour un affichage direct.
  */
+/** Phase 3C / Lot C1 — même filtre `establishmentId` que getCashSessionBreakdown ci-dessus, même raison. */
 export async function getCashSessionActivity(
-  session: Pick<CashSession, "id" | "openedAt" | "closedAt">,
+  session: Pick<CashSession, "id" | "openedAt" | "closedAt" | "establishmentId">,
   limit = 50,
 ): Promise<CashActivityEntry[]> {
   await verifySession();
   const windowEnd = session.closedAt ?? new Date();
+  const establishmentFilter = session.establishmentId ? { establishmentId: session.establishmentId } : {};
 
   const [payments, expenses, transfers, corrections] = await Promise.all([
     prisma.payment.findMany({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd } },
+      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
       select: { id: true, amount: true, paidAt: true, reference: true },
     }),
     prisma.expense.findMany({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd } },
+      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
       select: { id: true, amount: true, paidAt: true, reference: true, categoryNameSnapshot: true },
     }),
     prisma.bankTransfer.findMany({

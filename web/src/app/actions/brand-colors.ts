@@ -49,6 +49,9 @@ export async function saveBrandColors(colors: BrandColors | null): Promise<{ err
   if (!user.establishmentId) {
     return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer une palette." };
   }
+  if (user.role !== "ADMIN") {
+    return { error: "Seul un administrateur d'établissement peut modifier les couleurs de marque." };
+  }
 
   let nextColors: { primaryColor: string | null; secondaryColor: string | null; accentColor: string | null };
 

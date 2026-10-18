@@ -1,7 +1,7 @@
 import "server-only";
 import type { PaymentMethod } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { getCurrentUser } from "@/lib/dal";
 import { todayRange, monthRange, type DateRange } from "@/lib/period";
 
 // Bloc 11 — "NE PAS charger une quantité illimitée de dépenses en mémoire."
@@ -26,13 +26,18 @@ export async function listExpenses(filters: {
   method?: PaymentMethod;
   query?: string;
 }) {
-  await verifySession();
+  // Phase 3C / Lot C1 — getCurrentUser() pour résoudre l'établissement.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { items: [], total: 0, truncated: false, totalAmount: 0, byCategory: [] };
+  }
 
   const period = filters.period ?? "month";
   const range = periodRange(period);
   const trimmedQuery = filters.query?.trim();
 
   const where = {
+    establishmentId: user.establishmentId,
     ...(range ? { paidAt: range } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(filters.method ? { method: filters.method } : {}),

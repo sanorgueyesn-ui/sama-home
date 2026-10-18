@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
@@ -48,12 +48,22 @@ export async function checkRentalAvailability(input: {
   date: string;
   arrivalTime: string;
 }): Promise<{ available: boolean; message?: string; departureTime?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P15 — faille confirmée en D12-P14 : même nature que
+  // checkAvailability/checkExtensionAvailability (D12-P11/P13) — le tarif
+  // n'était pas filtré par établissement, et `input.propertyId` est fourni
+  // par l'appelant, permettant d'interroger la disponibilité réelle (nom de
+  // client inclus via formatConflictMessage) d'un logement d'un autre
+  // établissement. Filtrer le tarif suffit (invariant : un Tariff n'est créé
+  // que rattaché à un logement du même établissement).
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return { available: false };
 
   if (!input.propertyId || !input.tariffId || !input.date || !input.arrivalTime) {
     return { available: false };
   }
-  const tariff = await prisma.tariff.findUnique({ where: { id: input.tariffId } });
+  const tariff = await prisma.tariff.findFirst({
+    where: { id: input.tariffId, establishmentId: user.establishmentId },
+  });
   if (!tariff || tariff.propertyId !== input.propertyId) {
     return { available: false };
   }
@@ -81,7 +91,30 @@ export async function createRentalDirect(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
-  const { userId } = await verifySession();
+  // Phase 3G / Lot D12-P6 — requireActiveEstablishment() placé en tout
+  // premier, avant parseRentalForm et toute lecture métier, transaction ou
+  // écriture. Comble l'incohérence confirmée en D12-P5 : "Nouvelle location
+  // directe" crée elle aussi une nouvelle affaire commerciale (Rental +
+  // Payment éventuel) sans réservation préalable, exactement comme
+  // createReservation (déjà câblée, Lot D12-O13) — même squelette, mêmes
+  // messages, aucune nouvelle politique inventée.
+  // checkRentalAvailability()/completeRental()/cancelRental()/
+  // checkExtensionAvailability()/extendRental()/checkInReservation restent
+  // inchangées (hors périmètre de ce lot).
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer une location." };
+      case "INACTIVE":
+        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
   const parsed = parseRentalForm(formData);
   if (!parsed.success) {
@@ -107,10 +140,14 @@ export async function createRentalDirect(
     retroactiveReason,
   } = parsed.data;
 
+  // Phase 3F / Lot D12-I — chaque lecture filtrée par `establishmentId` :
+  // un client/logement/tarif d'un autre établissement suit désormais
+  // exactement le même message "introuvable"/"désactivé" déjà existant
+  // ci-dessous, jamais une création référençant une ressource extérieure.
   const [client, property, tariff] = await Promise.all([
-    prisma.client.findUnique({ where: { id: clientId } }),
-    prisma.property.findUnique({ where: { id: propertyId } }),
-    prisma.tariff.findUnique({ where: { id: tariffId } }),
+    prisma.client.findFirst({ where: { id: clientId, establishmentId: user.establishmentId } }),
+    prisma.property.findFirst({ where: { id: propertyId, establishmentId: user.establishmentId } }),
+    prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } }),
   ]);
   if (!client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
@@ -180,16 +217,17 @@ export async function createRentalDirect(
             amount,
             deposit,
             note,
-            registeredByUserId: userId,
+            registeredByUserId: user.id,
             retroactiveReason: retroCheck.isRetroactive ? retroactiveReason : null,
+            establishmentId: user.establishmentId,
           },
         });
         // Bloc 15 — traçabilité : AuditLog créé atomiquement avec la Rental,
         // dans la même transaction Serializable (jamais l'un sans l'autre).
-        // userId vient exclusivement de verifySession(), jamais du formulaire.
+        // userId vient exclusivement de getCurrentUser(), jamais du formulaire.
         await tx.auditLog.create({
           data: {
-            userId,
+            userId: user.id,
             action: "RENTAL_CREATED_DIRECT",
             entityType: "Rental",
             entityId: rental.id,
@@ -200,6 +238,7 @@ export async function createRentalDirect(
               plannedDepartureAt: departureDateTime.toISOString(),
               isRetroactive: retroCheck.isRetroactive,
             },
+            establishmentId: user.establishmentId,
           },
         });
         // Phase 8, Bloc 1/5 — same rule as createReservation: the initial
@@ -208,7 +247,12 @@ export async function createRentalDirect(
         // onward. No Payment for deposit = 0.
         if (deposit > 0) {
           await tx.payment.create({
-            data: { rentalId: rental.id, amount: deposit, method: depositMethod ?? "OTHER" },
+            data: {
+              rentalId: rental.id,
+              amount: deposit,
+              method: depositMethod ?? "OTHER",
+              establishmentId: user.establishmentId,
+            },
           });
         }
         return rental.id;
@@ -239,10 +283,58 @@ export async function checkInReservation(
   reservationId: string,
   options?: { actualArrivalAt?: string; reason?: string; clientId?: string },
 ): Promise<{ error?: string }> {
-  const { userId } = await verifySession();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : checkInReservation()
+  // n'était gardée que par getCurrentUser(), jamais par
+  // requireActiveEstablishment(), contrairement à createRentalDirect() dans
+  // ce même fichier (D12-P6) — alors que cette fonction crée elle aussi une
+  // Rental réelle (occupation effective d'un logement). Même emplacement et
+  // mêmes messages que createRentalDirect(), jamais reformulés.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de faire entrer ce séjour." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de faire entrer ce séjour." };
+  }
 
-  const reservation = await prisma.reservation.findUnique({ where: { id: reservationId } });
+  // Phase 3G / Lot D12-P2 — filtrée par établissement (faille signalée en
+  // D12-O16/D12-P1 : cette lecture n'appliquait auparavant aucun filtre,
+  // permettant à un appelant d'un autre établissement de faire entrer un
+  // séjour qui ne lui appartenait pas). `property`/`tariff`/`client` inclus
+  // pour la défense en profondeur ci-dessous — ne jamais se fier uniquement
+  // au filtre sur `Reservation.establishmentId` pour garantir que les
+  // entités référencées appartiennent elles aussi au même établissement
+  // (même principe que `contract-data.ts`).
+  const reservation = await prisma.reservation.findFirst({
+    where: { id: reservationId, establishmentId: user.establishmentId },
+    include: {
+      property: { select: { establishmentId: true } },
+      tariff: { select: { establishmentId: true } },
+      client: { select: { establishmentId: true } },
+    },
+  });
   if (!reservation) {
+    return { error: "Réservation introuvable." };
+  }
+  if (
+    reservation.property.establishmentId !== user.establishmentId ||
+    reservation.tariff.establishmentId !== user.establishmentId ||
+    (reservation.client && reservation.client.establishmentId !== user.establishmentId)
+  ) {
+    // Incohérence qui ne devrait jamais exister (createReservation/
+    // updateReservation ne rattachent déjà qu'à des entités du même
+    // établissement) — traitée comme "introuvable", jamais révélée, par
+    // défense en profondeur.
     return { error: "Réservation introuvable." };
   }
   if (reservation.status === "ARRIVED") {
@@ -281,10 +373,11 @@ export async function checkInReservation(
       return { error: "Un client est requis pour faire entrer ce séjour." };
     }
     // Existence vérifiée explicitement — jamais de confiance aveugle dans un
-    // id transmis par le client (pas d'IDOR : n'importe quel client existant
-    // est une cible légitime, comme pour la création de réservation).
-    const selectedClient = await prisma.client.findUnique({
-      where: { id: options.clientId },
+    // id transmis par le client. Phase 3G / Lot D12-P2 — filtrée par
+    // établissement (faille signalée en D12-P1 : acceptait auparavant
+    // n'importe quel client existant, y compris d'un autre établissement).
+    const selectedClient = await prisma.client.findFirst({
+      where: { id: options.clientId, establishmentId: user.establishmentId },
       select: { id: true },
     });
     if (!selectedClient) {
@@ -319,7 +412,14 @@ export async function checkInReservation(
   try {
     rentalId = await prisma.$transaction(
       async (tx) => {
-        const fresh = await tx.reservation.findUniqueOrThrow({ where: { id: reservationId } });
+        // Phase 3G / Lot D12-P2 — filtrée par établissement (même faille
+        // que la lecture initiale ci-dessus) : `findFirstOrThrow` lève si
+        // absente ou d'un autre établissement, tombant dans le `catch`
+        // générique existant ci-dessous — jamais un message distinct qui
+        // révélerait l'existence d'une réservation étrangère.
+        const fresh = await tx.reservation.findFirstOrThrow({
+          where: { id: reservationId, establishmentId: user.establishmentId },
+        });
         if (fresh.status !== "CONFIRMED") {
           throw new RentalActionError("Cette réservation n'est plus confirmée.");
         }
@@ -351,15 +451,16 @@ export async function checkInReservation(
             // it be conserved ("note si applicable"). Self-caught during the
             // Phase 12 flow inspection.
             note: reservation.note,
-            registeredByUserId: userId,
+            registeredByUserId: user.id,
             retroactiveReason: retroCheck.isRetroactive ? options?.reason : null,
+            establishmentId: user.establishmentId,
           },
         });
         // Bloc 15 — traçabilité : même règle que createRentalDirect, AuditLog
         // atomique dans la même transaction Serializable.
         await tx.auditLog.create({
           data: {
-            userId,
+            userId: user.id,
             action: "RENTAL_CREATED_FROM_CHECKIN",
             entityType: "Rental",
             entityId: rental.id,
@@ -370,6 +471,7 @@ export async function checkInReservation(
               plannedDepartureAt: plannedDeparture.toISOString(),
               isRetroactive: retroCheck.isRetroactive,
             },
+            establishmentId: user.establishmentId,
           },
         });
         await tx.reservation.update({
@@ -411,23 +513,40 @@ export async function checkInReservation(
  * `cancelBankTransfer()`, Bloc I.1).
  */
 export async function completeRental(id: string): Promise<{ error?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
+  // volontairement JAMAIS gardée par requireActiveEstablishment(), même
+  // principe que cancelReservation()/cancelRental() dans ce fichier — terminer
+  // normalement un séjour EN COURS réduit l'exposition de l'établissement
+  // (libère le logement), jamais ne l'augmente. Un établissement suspendu
+  // doit rester capable de clôturer ses locations déjà actives.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de terminer cette location." };
+  }
 
-  const rental = await prisma.rental.findUnique({ where: { id } });
+  // Une location d'un autre établissement est indistinguable d'un id inexistant.
+  const rental = await prisma.rental.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!rental) return { error: "Location introuvable." };
   if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
 
   try {
     await prisma.$transaction(
       async (tx) => {
-        const fresh = await tx.rental.findUniqueOrThrow({ where: { id } });
+        // Phase 3D / Lot D4 — la relecture transactionnelle doit elle aussi
+        // filtrer par établissement : une vérification faite uniquement
+        // hors transaction (ci-dessus) ne suffit pas, cette relecture est le
+        // seul état réellement garanti au moment de l'écriture qui suit.
+        const fresh = await tx.rental.findFirstOrThrow({ where: { id, establishmentId: user.establishmentId } });
         if (fresh.status !== "ACTIVE") {
           throw new RentalActionError("Cette location n'est plus active.");
         }
-        await tx.rental.update({
-          where: { id },
+        const result = await tx.rental.updateMany({
+          where: { id, establishmentId: user.establishmentId },
           data: { status: "COMPLETED", actualDepartureAt: new Date() },
         });
+        if (result.count === 0) {
+          throw new RentalActionError("Location introuvable.");
+        }
       },
       { isolationLevel: "Serializable" },
     );
@@ -448,13 +567,32 @@ export async function completeRental(id: string): Promise<{ error?: string }> {
 
 /** Annulation (Bloc 4 "si nécessaire") — avant la fin réelle du séjour. */
 export async function cancelRental(id: string): Promise<{ error?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P110 — décision explicite, même principe que
+  // completeRental()/cancelReservation() ci-dessus : volontairement JAMAIS
+  // gardée par requireActiveEstablishment() — annuler une location réduit
+  // l'exposition de l'établissement, jamais ne l'augmente.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette location." };
+  }
 
-  const rental = await prisma.rental.findUnique({ where: { id } });
+  const rental = await prisma.rental.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!rental) return { error: "Location introuvable." };
   if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
 
-  await prisma.rental.update({ where: { id }, data: { status: "CANCELLED" } });
+  // Phase 3G / Lot D12-P18 — faille confirmée en D12-P17 : contrairement à
+  // completeRental/extendRental, ce filtre ne portait pas sur `status`,
+  // laissant une fenêtre de course où une location passée à COMPLETED (ou
+  // tout autre statut) par une opération concurrente juste avant cette
+  // écriture pouvait malgré tout être annulée. `status: "ACTIVE"` ajouté au
+  // `where` rend ce contrôle atomique avec l'écriture elle-même.
+  const result = await prisma.rental.updateMany({
+    where: { id, establishmentId: user.establishmentId, status: "ACTIVE" },
+    data: { status: "CANCELLED" },
+  });
+  if (result.count === 0) {
+    return { error: "Cette location n'est plus active." };
+  }
 
   revalidatePath("/locations");
   revalidatePath(`/locations/${id}`);
@@ -470,12 +608,24 @@ export async function checkExtensionAvailability(input: {
   rentalId: string;
   tariffId: string;
 }): Promise<{ available: boolean; message?: string; newEnd?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P11 — faille confirmée en D12-P10 : ni la location ni
+  // le tarif n'étaient filtrés par établissement, permettant à un appelant
+  // authentifié d'interroger la disponibilité réelle (nom de client inclus
+  // via formatConflictMessage) d'une location appartenant à un autre
+  // établissement. `getCurrentUser()` remplace `verifySession()` pour
+  // disposer de `establishmentId` ; même réponse `{ available: false }`
+  // pour un id absent ou étranger — jamais révélé lequel.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return { available: false };
 
-  const rental = await prisma.rental.findUnique({ where: { id: input.rentalId } });
+  const rental = await prisma.rental.findFirst({
+    where: { id: input.rentalId, establishmentId: user.establishmentId },
+  });
   if (!rental || rental.status !== "ACTIVE") return { available: false };
 
-  const tariff = await prisma.tariff.findUnique({ where: { id: input.tariffId } });
+  const tariff = await prisma.tariff.findFirst({
+    where: { id: input.tariffId, establishmentId: user.establishmentId },
+  });
   if (!tariff || tariff.propertyId !== rental.propertyId) return { available: false };
 
   const newEnd = computeDepartureTime(rental.plannedDepartureAt, tariff.durationValue, tariff.durationUnit);
@@ -501,13 +651,39 @@ export async function checkExtensionAvailability(input: {
  * not match what this property actually charges for 2 hours).
  */
 export async function extendRental(rentalId: string, tariffId: string): Promise<{ error?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P9 — requireActiveEstablishment() placé en tout
+  // premier, avant toute lecture métier. Comble l'incohérence confirmée en
+  // D12-P8 : une prolongation crée une nouvelle période facturable (nouvelle
+  // RentalExtension, montant dû incrémenté), contrairement à
+  // completeRental/cancelRental/checkInReservation qui ne font que clôturer
+  // ou gérer un engagement déjà existant — même raisonnement que pour
+  // createReservation/createRentalDirect (déjà câblées), mêmes messages,
+  // aucune nouvelle politique inventée.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de prolonger cette location." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
-  const rental = await prisma.rental.findUnique({ where: { id: rentalId } });
+  // La location doit appartenir à l'établissement courant — indistinguable
+  // d'un id inexistant sinon.
+  const rental = await prisma.rental.findFirst({ where: { id: rentalId, establishmentId: user.establishmentId } });
   if (!rental) return { error: "Location introuvable." };
   if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
 
-  const tariff = await prisma.tariff.findUnique({ where: { id: tariffId } });
+  // Le tarif de prolongation doit lui aussi appartenir au même établissement
+  // (en plus du contrôle déjà existant : compatible avec le bien de la
+  // location, via `tariff.propertyId !== rental.propertyId`).
+  const tariff = await prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } });
   if (!tariff || tariff.propertyId !== rental.propertyId || !tariff.active) {
     return { error: "Tarif de prolongation invalide pour ce logement." };
   }
@@ -517,6 +693,20 @@ export async function extendRental(rentalId: string, tariffId: string): Promise<
   try {
     await prisma.$transaction(
       async (tx) => {
+        // Phase 3G / Lot D12-P9 — faille confirmée en D12-P8 : contrairement
+        // à completeRental, cette transaction ne relisait jusqu'ici jamais
+        // le statut de la location, et l'écriture finale ne le filtrait pas
+        // non plus — une location clôturée/annulée de façon concurrente
+        // juste avant cette transaction pouvait malgré tout être prolongée.
+        // Même pattern que completeRental : relecture filtrée par
+        // établissement, refus avant toute vérification de conflit et toute
+        // écriture si le statut n'est plus ACTIVE.
+        const fresh = await tx.rental.findFirstOrThrow({
+          where: { id: rentalId, establishmentId: user.establishmentId },
+        });
+        if (fresh.status !== "ACTIVE") {
+          throw new RentalActionError("Cette location n'est plus active.");
+        }
         const conflict = await findAvailabilityConflict(tx, {
           propertyId: rental.propertyId,
           arrivalTime: rental.plannedDepartureAt,
@@ -526,18 +716,27 @@ export async function extendRental(rentalId: string, tariffId: string): Promise<
         if (conflict) {
           throw new RentalActionError(formatConflictMessage(conflict));
         }
+        // Phase 3D / Lot D4 — gap découvert en Lot D1 : cette création ne
+        // rattachait jusqu'ici `RentalExtension` à aucun établissement. Le
+        // champ existe et est nullable dans le schéma (Phase 1 multi-tenant,
+        // jamais appliqué) — corrigé ici avec la valeur de la location déjà
+        // vérifiée ci-dessus, jamais une valeur distincte ou devinée.
         await tx.rentalExtension.create({
           data: {
             rentalId: rental.id,
             durationValue: tariff.durationValue,
             durationUnit: tariff.durationUnit,
             amount: tariff.amount,
+            establishmentId: rental.establishmentId,
           },
         });
-        await tx.rental.update({
-          where: { id: rentalId },
+        const result = await tx.rental.updateMany({
+          where: { id: rentalId, establishmentId: user.establishmentId },
           data: { plannedDepartureAt: newEnd, amount: { increment: tariff.amount } },
         });
+        if (result.count === 0) {
+          throw new RentalActionError("Location introuvable.");
+        }
       },
       { isolationLevel: "Serializable" },
     );

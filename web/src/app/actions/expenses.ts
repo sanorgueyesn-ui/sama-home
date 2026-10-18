@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { requireActiveEstablishment } from "@/lib/dal";
 import { ExpenseSchema, type ExpenseFormState } from "@/lib/definitions";
 
 class ExpenseActionError extends Error {}
@@ -28,7 +28,26 @@ export async function createExpense(
   _prevState: ExpenseFormState,
   formData: FormData,
 ): Promise<ExpenseFormState> {
-  await verifySession();
+  // Phase 3G / Lot D12-O2 — action pilote du garde centralisé
+  // requireActiveEstablishment() (voir audit D12-O1 : fichier à fonction
+  // unique, aucun effet de bord S3, impact métier d'un faux refus le plus
+  // faible des candidats). Remplace l'ancien contrôle `!user.establishmentId`
+  // seul : couvre désormais aussi le statut de l'établissement et celui de
+  // l'abonnement, strictement séparés (voir dal.ts).
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer une dépense." };
+      case "INACTIVE":
+        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
   const parsed = ExpenseSchema.safeParse({
     categoryId: formData.get("categoryId"),
@@ -45,7 +64,13 @@ export async function createExpense(
   try {
     await prisma.$transaction(
       async (tx) => {
-        const category = await tx.expenseCategory.findUnique({ where: { id: categoryId } });
+        // Phase 3F / Lot D12-J — filtrée par établissement : une catégorie
+        // d'un autre établissement suit désormais exactement le même
+        // message "introuvable" déjà existant, jamais une dépense
+        // référençant une catégorie extérieure.
+        const category = await tx.expenseCategory.findFirst({
+          where: { id: categoryId, establishmentId: user.establishmentId },
+        });
         if (!category) {
           throw new ExpenseActionError("Catégorie introuvable.");
         }
@@ -62,6 +87,7 @@ export async function createExpense(
             method,
             reference,
             note,
+            establishmentId: user.establishmentId,
           },
         });
       },

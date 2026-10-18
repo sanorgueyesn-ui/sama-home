@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { requireActiveEstablishment } from "@/lib/dal";
 import { ClientSchema, type ClientFormState } from "@/lib/definitions";
 
 function parseClientForm(formData: FormData) {
@@ -53,7 +53,24 @@ export async function createClient(
   // Re-verified here even though every /clients route is already behind
   // proxy.ts + the page's own verifySession() call: a Server Action is a
   // public endpoint in its own right and must never trust the caller.
-  await verifySession();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : createClient()
+  // n'était gardée que par getCurrentUser(), jamais par
+  // requireActiveEstablishment(), contrairement à updateClient() dans ce même
+  // fichier (D12-O4). Même emplacement et mêmes messages, jamais reformulés.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un client." };
+      case "INACTIVE":
+        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
   const parsed = parseClientForm(formData);
   if (!parsed.success) {
@@ -63,7 +80,7 @@ export async function createClient(
 
   let clientId: string;
   try {
-    const client = await prisma.client.create({ data: parsed.data });
+    const client = await prisma.client.create({ data: { ...parsed.data, establishmentId: user.establishmentId } });
     clientId = client.id;
   } catch (error) {
     console.error("createClient() — échec inattendu de la création du client :", error);
@@ -83,18 +100,55 @@ export async function updateClient(
   _prevState: ClientFormState,
   formData: FormData,
 ): Promise<ClientFormState> {
-  await verifySession();
+  // Phase 3G / Lot D12-O4 — deuxième câblage de requireActiveEstablishment()
+  // après le pilote createExpense (D12-O2) : fichier à 2 fonctions, aucun
+  // effet de bord (pas de S3, pas de transaction, pas de verrou optimiste),
+  // risque métier le plus faible des candidates examinées (voir audit
+  // D12-O3). Remplace l'ancien contrôle `!user.establishmentId` seul :
+  // couvre désormais aussi le statut de l'établissement et celui de
+  // l'abonnement, strictement séparés (voir dal.ts).
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce client." };
+      case "INACTIVE":
+        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
+  // Validations inchangées (idDocumentType/idDocumentNumber inclus, aucun
+  // fichier associé à un client — seul `Property`/`Settings` ont des
+  // téléversements S3, hors périmètre ici).
   const parsed = parseClientForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
 
+  // Phase 3D / Lot D3 — `updateMany` (pas `update`, qui n'accepte que la clé
+  // unique) : un client d'un autre établissement est désormais indistinguable
+  // d'un id inexistant (même message "Client introuvable.", même chemin de
+  // code), là où l'ancien `update` aurait levé une erreur Prisma générique
+  // non distinguée pour un id inexistant — amélioration nécessaire pour
+  // satisfaire cette règle, pas un changement de comportement pour le cas
+  // normal (même établissement, succès inchangé).
+  let result: { count: number };
   try {
-    await prisma.client.update({ where: { id }, data: parsed.data });
+    result = await prisma.client.updateMany({
+      where: { id, establishmentId: user.establishmentId },
+      data: parsed.data,
+    });
   } catch (error) {
     console.error(`updateClient(${id}) — échec inattendu de la mise à jour du client :`, error);
     return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+  }
+  if (result.count === 0) {
+    return { message: "Client introuvable." };
   }
 
   revalidatePath("/clients");

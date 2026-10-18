@@ -1,6 +1,6 @@
 // Reconstruction UI — voir le commentaire équivalent dans
 // app/locations/status-badge.tsx (même pattern, même raison).
-const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+export const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   CONFIRMED: { label: "Confirmée", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
   ARRIVED: { label: "Arrivée", color: "var(--color-info)", bg: "var(--color-info-bg)" },
   CANCELLED: { label: "Annulée", color: "var(--color-danger)", bg: "var(--color-danger-bg)" },

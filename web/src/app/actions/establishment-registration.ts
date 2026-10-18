@@ -8,6 +8,7 @@ import {
   EstablishmentRegistrationSchema,
   type EstablishmentRegistrationFormState,
 } from "@/lib/definitions";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 class EstablishmentRegistrationError extends Error {}
 
@@ -72,6 +73,11 @@ export async function registerEstablishment(
   _prevState: EstablishmentRegistrationFormState,
   formData: FormData,
 ): Promise<EstablishmentRegistrationFormState> {
+  const ip = await getClientIp();
+  const rate = checkRateLimit(`register:${ip}`, 3, 600);
+  if (!rate.allowed) {
+    return { message: "Trop de tentatives d'inscription depuis cette adresse. Veuillez patienter avant de réessayer." };
+  }
   const parsed = EstablishmentRegistrationSchema.safeParse({
     establishmentName: formData.get("establishmentName"),
     managerName: formData.get("managerName"),
@@ -134,3 +140,4 @@ export async function registerEstablishment(
 
   return { success: true };
 }
+

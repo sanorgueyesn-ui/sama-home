@@ -10,3 +10,8 @@ desktop.ini
 /.claude/
 
 # The web/ Next.js app manages its own ignores (node_modules, .next, .env*, etc.)
+
+# Database dumps and sensitive database exports
+*.dump
+*.sql
+*.zip

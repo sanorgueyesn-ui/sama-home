@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import { getCurrentUser } from "@/lib/dal";
+import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
 import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cash-data";
 
 /**
@@ -27,10 +27,30 @@ class CashActionError extends Error {}
 export async function openCashSession(
   manual?: { openingBalance: number; reason: string },
 ): Promise<{ error?: string; id?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : aucune fonction
+  // de ce fichier n'était gardée par requireActiveEstablishment(). Ouvrir une
+  // nouvelle session de caisse démarre un nouveau cycle financier — gardée
+  // comme une création, contrairement à closeCashSession() ci-dessous.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'ouvrir une caisse." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
   if (manual && user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut ouvrir une caisse manuellement." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'ouvrir une caisse." };
   }
 
   let manualReason: string | undefined;
@@ -47,7 +67,7 @@ export async function openCashSession(
   try {
     const session = await prisma.$transaction(
       async (tx) => {
-        const register = await resolveDefaultCashRegister(tx);
+        const register = await resolveDefaultCashRegister(tx, user.establishmentId);
         if (!register.active) {
           throw new CashActionError("Cette caisse est désactivée.");
         }
@@ -91,6 +111,7 @@ export async function openCashSession(
             openingIsManual,
             openingReason,
             openedByUserId: user.id,
+            establishmentId: user.establishmentId,
           },
         });
 
@@ -103,6 +124,7 @@ export async function openCashSession(
             reason: openingReason,
             oldValue: Prisma.DbNull,
             newValue: { cashRegisterId: register.id, openingBalance, openingIsManual },
+            establishmentId: user.establishmentId,
           },
         });
 
@@ -131,7 +153,19 @@ export async function closeCashSession(input: {
   varianceReason?: string | null;
   closeNote?: string | null;
 }): Promise<{ error?: string }> {
+  // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
+  // volontairement JAMAIS gardée par requireActiveEstablishment() — clôturer
+  // une session déjà ouverte permet de boucler proprement un cycle financier
+  // en cours ; bloquer cette clôture laisserait un établissement suspendu
+  // avec une caisse éternellement ouverte, jamais réconciliée. Même principe
+  // que cancelReservation()/completeRental() : une action qui termine un état
+  // en cours n'augmente jamais l'exposition de l'établissement.
   const user = await getCurrentUser();
+  // Phase 3B / Lot B2 — résolu côté serveur depuis la session, jamais depuis
+  // le navigateur ; jamais un repli sur l'établissement historique.
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de clôturer la caisse." };
+  }
 
   const physicalCount = input.physicalCount ?? null;
   if (physicalCount !== null && (!Number.isInteger(physicalCount) || physicalCount < 0)) {
@@ -141,9 +175,14 @@ export async function closeCashSession(input: {
   try {
     await prisma.$transaction(
       async (tx) => {
-        const register = await resolveDefaultCashRegister(tx);
+        const register = await resolveDefaultCashRegister(tx, user.establishmentId);
+        // Phase 3D / Lot D5 — `establishmentId` filtré directement sur la
+        // session elle-même, en plus de son registre de rattachement : le
+        // champ est la source d'autorité (déjà renseigné à la création de
+        // la session, Lot B), jamais seulement supposé correct via la chaîne
+        // registre → session.
         const session = await tx.cashSession.findFirst({
-          where: { cashRegisterId: register.id, status: "OPEN" },
+          where: { cashRegisterId: register.id, status: "OPEN", establishmentId: user.establishmentId },
         });
         if (!session) {
           throw new CashActionError("Aucune session de caisse ouverte.");
@@ -164,8 +203,11 @@ export async function closeCashSession(input: {
           }
         }
 
-        await tx.cashSession.update({
-          where: { id: session.id },
+        // Phase 3D / Lot D5 — `updateMany` + vérification du `count` :
+        // écriture finale filtrée par établissement en plus de l'id, jamais
+        // seulement la vérification faite par la lecture ci-dessus.
+        const result = await tx.cashSession.updateMany({
+          where: { id: session.id, establishmentId: user.establishmentId },
           data: {
             status: "CLOSED",
             closingTheoreticalBalance,
@@ -177,6 +219,9 @@ export async function closeCashSession(input: {
             closedByUserId: user.id,
           },
         });
+        if (result.count === 0) {
+          throw new CashActionError("Aucune session de caisse ouverte.");
+        }
 
         await tx.auditLog.create({
           data: {
@@ -187,6 +232,7 @@ export async function closeCashSession(input: {
             reason: varianceReason,
             oldValue: Prisma.DbNull,
             newValue: { closingTheoreticalBalance, physicalCount, variance },
+            establishmentId: user.establishmentId,
           },
         });
       },
@@ -214,9 +260,28 @@ export async function modifyClosedCashSession(
   changes: { physicalCount?: number | null; varianceReason?: string | null; closeNote?: string | null },
   reason: string,
 ): Promise<{ error?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : modifie un
+  // enregistrement financier existant (correction rétroactive) — gardée
+  // comme les autres actions de modification de ce lot.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette clôture." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut modifier une clôture validée." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette clôture." };
   }
 
   const trimmedReason = reason?.trim();
@@ -235,7 +300,18 @@ export async function modifyClosedCashSession(
   try {
     await prisma.$transaction(
       async (tx) => {
-        const existing = await tx.cashSession.findUnique({ where: { id: cashSessionId } });
+        // Phase 3D / Lot D5 — gap le plus sévère identifié en Lot D1 : cette
+        // lecture se contentait d'un `findUnique({id})`, contournant
+        // entièrement la chaîne registre/établissement déjà en place pour
+        // le reste du module caisse. `establishmentId` est un champ direct
+        // de `CashSession` (renseigné une seule fois à sa création, jamais
+        // modifié depuis) — l'autorité la plus fiable, plus directe qu'une
+        // dérivation via `CashRegister`. Une session d'un autre établissement
+        // est désormais indistinguable d'une session inexistante (même
+        // message, même chemin de code).
+        const existing = await tx.cashSession.findFirst({
+          where: { id: cashSessionId, establishmentId: user.establishmentId },
+        });
         if (!existing) {
           throw new CashActionError("Session de caisse introuvable.");
         }
@@ -262,8 +338,10 @@ export async function modifyClosedCashSession(
         const nextCloseNote =
           changes.closeNote !== undefined ? changes.closeNote?.trim() || null : existing.closeNote;
 
-        await tx.cashSession.update({
-          where: { id: cashSessionId },
+        // Phase 3D / Lot D5 — `updateMany` + vérification du `count` :
+        // écriture finale filtrée par établissement en plus de l'id.
+        const result = await tx.cashSession.updateMany({
+          where: { id: cashSessionId, establishmentId: user.establishmentId },
           data: {
             physicalCount: nextPhysicalCount,
             variance: nextVariance,
@@ -271,6 +349,9 @@ export async function modifyClosedCashSession(
             closeNote: nextCloseNote,
           },
         });
+        if (result.count === 0) {
+          throw new CashActionError("Session de caisse introuvable.");
+        }
 
         await tx.auditLog.create({
           data: {
@@ -291,6 +372,7 @@ export async function modifyClosedCashSession(
               varianceReason: nextVarianceReason,
               closeNote: nextCloseNote,
             },
+            establishmentId: user.establishmentId,
           },
         });
       },
@@ -317,9 +399,28 @@ export async function createCashCorrection(
   amount: number,
   reason: string,
 ): Promise<{ error?: string; id?: string }> {
-  const user = await getCurrentUser();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
+  // que openCashSession() ci-dessus : création d'un nouvel ajustement
+  // financier.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une correction de caisse." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
   if (user.role !== "ADMIN") {
     return { error: "Seul un administrateur peut créer une correction de caisse." };
+  }
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une correction de caisse." };
   }
   if (!Number.isInteger(amount) || amount === 0) {
     return { error: "Le montant de la correction doit être un nombre entier non nul." };
@@ -332,16 +433,25 @@ export async function createCashCorrection(
   try {
     const correction = await prisma.$transaction(
       async (tx) => {
-        const register = await resolveDefaultCashRegister(tx);
+        const register = await resolveDefaultCashRegister(tx, user.establishmentId);
+        // Phase 3D / Lot D5, règle 8 — la session ciblée doit elle aussi
+        // appartenir à l'établissement avant de créer la correction, même
+        // raison que closeCashSession() ci-dessus.
         const session = await tx.cashSession.findFirst({
-          where: { cashRegisterId: register.id, status: "OPEN" },
+          where: { cashRegisterId: register.id, status: "OPEN", establishmentId: user.establishmentId },
         });
         if (!session) {
           throw new CashActionError("Aucune session de caisse ouverte.");
         }
 
         const created = await tx.cashCorrection.create({
-          data: { cashSessionId: session.id, amount, reason: trimmedReason, userId: user.id },
+          data: {
+            cashSessionId: session.id,
+            amount,
+            reason: trimmedReason,
+            userId: user.id,
+            establishmentId: user.establishmentId,
+          },
         });
 
         await tx.auditLog.create({
@@ -353,6 +463,7 @@ export async function createCashCorrection(
             reason: trimmedReason,
             oldValue: Prisma.DbNull,
             newValue: { cashSessionId: session.id, amount },
+            establishmentId: user.establishmentId,
           },
         });
 

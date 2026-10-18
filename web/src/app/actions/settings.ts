@@ -48,6 +48,9 @@ export async function updateSettings(
   if (!user.establishmentId) {
     return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer les paramètres." };
   }
+  if (user.role !== "ADMIN") {
+    return { message: "Seul un administrateur d'établissement peut modifier ces paramètres." };
+  }
 
   const parsed = SettingsSchema.safeParse({
     establishmentName: formData.get("establishmentName"),

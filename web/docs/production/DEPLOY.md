@@ -28,8 +28,13 @@ Aucune variable `NEXT_PUBLIC_*` n'existe dans ce projet (confirmé par audit, Bl
    qui exige une connexion TCP directe)
 3. Générer et définir SESSION_SECRET :
    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-4. npx prisma migrate deploy   (applique les 13 migrations, déterministe,
-   testé avec succès sur une base vierge — Bloc P)
+4. npx prisma migrate deploy   (applique les 21 migrations réelles,
+   déterministe, testé avec succès sur une base vierge — Bloc P ; le
+   nombre exact doit être revérifié avant chaque déploiement avec
+   `find prisma/migrations -maxdepth 1 -type d | grep -v '^prisma/migrations$' | wc -l`
+   — jamais `ls prisma/migrations | wc -l` seul, qui compte aussi
+   `migration_lock.toml` et surestime le nombre réel de migrations —
+   jamais recopié d'un rapport antérieur)
 5. npm run build                (prisma generate && next build)
 6. Définir SEED_ADMIN_USERNAME / SEED_ADMIN_PASSWORD / SEED_ADMIN_NAME
    puis : npx prisma db seed    (crée le premier ADMIN, idempotent —

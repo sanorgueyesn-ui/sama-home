@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
@@ -54,13 +54,28 @@ export async function checkAvailability(input: {
   arrivalTime: string;
   excludeReservationId?: string;
 }): Promise<{ available: boolean; message?: string; departureTime?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P13 — faille confirmée en D12-P12 : le tarif n'était
+  // pas filtré par établissement, et `input.propertyId` est entièrement
+  // fourni par l'appelant — un utilisateur authentifié pouvait interroger
+  // la disponibilité réelle (nom de client inclus via formatConflictMessage)
+  // d'un logement appartenant à un autre établissement. `getCurrentUser()`
+  // remplace `verifySession()` pour disposer de `establishmentId` ; même
+  // réponse `{ available: false }` pour un id absent ou étranger — jamais
+  // révélé lequel. Filtrer le tarif suffit : un Tariff n'est créé que
+  // rattaché à un logement du même établissement (invariant garanti à la
+  // création, createTariff), donc une fois `tariff.propertyId ===
+  // input.propertyId` confirmé, ce logement appartient lui aussi au bon
+  // établissement.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return { available: false };
 
   if (!input.propertyId || !input.tariffId || !input.date || !input.arrivalTime) {
     return { available: false };
   }
 
-  const tariff = await prisma.tariff.findUnique({ where: { id: input.tariffId } });
+  const tariff = await prisma.tariff.findFirst({
+    where: { id: input.tariffId, establishmentId: user.establishmentId },
+  });
   if (!tariff || tariff.propertyId !== input.propertyId) {
     return { available: false };
   }
@@ -89,7 +104,29 @@ export async function createReservation(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
-  await verifySession();
+  // Phase 3G / Lot D12-O13 — requireActiveEstablishment() placé en tout
+  // premier, avant toute lecture métier (client/logement/tarif), avant le
+  // contrôle d'identité et avant la transaction Serializable. Ne concerne
+  // volontairement que la CRÉATION d'une nouvelle réservation (voir audit
+  // D12-O12) : checkAvailability()/updateReservation()/cancelReservation()
+  // gèrent des séjours déjà engagés et restent hors périmètre, inchangées.
+  // Remplace l'ancien contrôle `!user.establishmentId` seul : couvre
+  // désormais aussi le statut de l'établissement et celui de l'abonnement,
+  // strictement séparés (voir dal.ts).
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer une réservation." };
+      case "INACTIVE":
+        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
 
   const parsed = parseReservationForm(formData);
   if (!parsed.success) {
@@ -100,10 +137,16 @@ export async function createReservation(
   // Bloc 17 — every existence/coherence rule re-checked server-side.
   // Lot "Reservation — client facultatif" : clientId peut être absent
   // (séjour court) — ne tenter la recherche que s'il a été soumis.
+  // Phase 3F / Lot D12-I — chaque lecture filtrée par `establishmentId` :
+  // un client/logement/tarif d'un autre établissement suit désormais
+  // exactement le même message "introuvable"/"désactivé" déjà existant
+  // ci-dessous, jamais une création référençant une ressource extérieure.
   const [client, property, tariff] = await Promise.all([
-    clientId ? prisma.client.findUnique({ where: { id: clientId } }) : Promise.resolve(null),
-    prisma.property.findUnique({ where: { id: propertyId } }),
-    prisma.tariff.findUnique({ where: { id: tariffId } }),
+    clientId
+      ? prisma.client.findFirst({ where: { id: clientId, establishmentId: user.establishmentId } })
+      : Promise.resolve(null),
+    prisma.property.findFirst({ where: { id: propertyId, establishmentId: user.establishmentId } }),
+    prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } }),
   ]);
   if (clientId && !client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
@@ -171,6 +214,7 @@ export async function createReservation(
             deposit,
             depositMethod: depositMethod ?? null,
             note,
+            establishmentId: user.establishmentId,
           },
         });
         // Phase 8, Bloc 1/5: the initial acompte is now ALSO represented as
@@ -188,6 +232,7 @@ export async function createReservation(
               // method chosen is an existing, allowed case) — OTHER is the
               // honest "unspecified" fallback, never a guessed method.
               method: depositMethod ?? "OTHER",
+              establishmentId: user.establishmentId,
             },
           });
         }
@@ -219,9 +264,30 @@ export async function updateReservation(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
-  await verifySession();
+  // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : updateReservation()
+  // n'était gardée que par getCurrentUser(), jamais par
+  // requireActiveEstablishment(), contrairement à createReservation() dans ce
+  // même fichier. Même emplacement et mêmes messages, jamais reformulés.
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette réservation." };
+      case "INACTIVE":
+        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
+  if (!user.establishmentId) {
+    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette réservation." };
+  }
 
-  const existing = await prisma.reservation.findUnique({ where: { id } });
+  // Une réservation d'un autre établissement est indistinguable d'un id inexistant.
+  const existing = await prisma.reservation.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!existing) {
     return { message: "Réservation introuvable." };
   }
@@ -244,11 +310,16 @@ export async function updateReservation(
   const { clientId, propertyId, tariffId, date, arrivalTime, note } = parsed.data;
 
   // Lot "Reservation — client facultatif" : même traitement qu'à la
-  // création — clientId peut être absent (séjour court).
+  // création — clientId peut être absent (séjour court). Phase 3D / Lot D4 —
+  // `establishmentId` ajouté aux trois lectures : un `clientId`/`propertyId`/
+  // `tariffId` d'un autre établissement est désormais traité exactement
+  // comme un id inexistant (mêmes messages déjà présents ci-dessous).
   const [client, property, tariff] = await Promise.all([
-    clientId ? prisma.client.findUnique({ where: { id: clientId } }) : Promise.resolve(null),
-    prisma.property.findUnique({ where: { id: propertyId } }),
-    prisma.tariff.findUnique({ where: { id: tariffId } }),
+    clientId
+      ? prisma.client.findFirst({ where: { id: clientId, establishmentId: user.establishmentId } })
+      : Promise.resolve(null),
+    prisma.property.findFirst({ where: { id: propertyId, establishmentId: user.establishmentId } }),
+    prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } }),
   ]);
   if (clientId && !client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
@@ -303,8 +374,11 @@ export async function updateReservation(
         if (conflict) {
           throw new AvailabilityConflictError(formatConflictMessage(conflict));
         }
-        await tx.reservation.update({
-          where: { id },
+        // Phase 3D / Lot D4 — `updateMany` + vérification du `count` :
+        // écriture finale filtrée par établissement en plus de l'id, jamais
+        // seulement la vérification faite hors transaction ci-dessus.
+        const result = await tx.reservation.updateMany({
+          where: { id, establishmentId: user.establishmentId },
           data: {
             clientId: client?.id ?? null,
             propertyId,
@@ -319,6 +393,9 @@ export async function updateReservation(
             note,
           },
         });
+        if (result.count === 0) {
+          throw new AvailabilityConflictError("Réservation introuvable.");
+        }
       },
       { isolationLevel: "Serializable" },
     );
@@ -339,17 +416,49 @@ export async function updateReservation(
 }
 
 export async function cancelReservation(id: string): Promise<{ error?: string }> {
-  await verifySession();
+  // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
+  // volontairement JAMAIS gardée par requireActiveEstablishment(), par
+  // analogie directe avec le principe déjà établi pour toggleActive()/
+  // toggleTariffActive() (D12-P52/P53) — une action qui RÉDUIT une
+  // réservation future plutôt que d'en créer une nouvelle ne doit jamais être
+  // bloquée par le statut de l'établissement ou l'expiration de l'abonnement :
+  // un établissement suspendu doit au contraire rester capable de se
+  // désengager de ses réservations en cours, jamais forcé de les maintenir
+  // actives. `createReservation()`/`updateReservation()` (qui créent ou
+  // prolongent un engagement) restent, elles, gardées.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette réservation." };
+  }
 
   // Phase 14 audit (Bloc 7): findUniqueOrThrow with no guard here would
   // throw uncaught for a nonexistent/tampered id — every other action in
-  // this file already returns a graceful { error } instead.
-  const existing = await prisma.reservation.findUnique({ where: { id } });
+  // this file already returns a graceful { error } instead. Phase 3D / Lot
+  // D4 — une réservation d'un autre établissement suit désormais ce même
+  // chemin "introuvable".
+  const existing = await prisma.reservation.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!existing) {
     return { error: "Réservation introuvable." };
   }
+  // Phase 3G / Lot D12-P4 — faille confirmée en D12-P3 : cette fonction
+  // n'exigeait auparavant aucun statut particulier, contrairement à
+  // updateReservation ; seule l'interface masquait le bouton pour un statut
+  // différent de CONFIRMED (restriction purement visuelle, jamais une
+  // protection serveur). Une réservation ARRIVED pouvait ainsi être annulée
+  // par un appel direct, désynchronisant son statut de la Rental déjà créée.
+  if (existing.status !== "CONFIRMED") {
+    return {
+      error: "Cette réservation n'est plus annulable (statut actuel).",
+    };
+  }
 
-  await prisma.reservation.update({ where: { id }, data: { status: "CANCELLED" } });
+  const result = await prisma.reservation.updateMany({
+    where: { id, establishmentId: user.establishmentId },
+    data: { status: "CANCELLED" },
+  });
+  if (result.count === 0) {
+    return { error: "Réservation introuvable." };
+  }
 
   revalidatePath("/reservations");
   revalidatePath(`/reservations/${id}`);

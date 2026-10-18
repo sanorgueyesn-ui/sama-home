@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
-import { ReservationStatusBadge } from "@/app/reservations/status-badge";
+import { ReservationStatusBadge, STATUS_META } from "@/app/reservations/status-badge";
 import { CancelButton } from "./cancel-button";
 import { CheckInButton } from "./check-in-button";
 import { getReservationById } from "@/lib/reservations-data";
 import { listClientsForSelect } from "@/lib/clients-data";
 import { listPaymentsForReservation } from "@/lib/payments-data";
 import { getReservationPaymentSummary } from "@/lib/payment-summary";
+import { getSettings } from "@/lib/settings-data";
 import { prisma } from "@/lib/prisma";
 import { formatDuration } from "@/lib/duration";
+import { buildReservationWhatsAppLink } from "@/lib/whatsapp";
 import { PaymentSummaryCard } from "@/components/payments/payment-summary-card";
 import { PaymentHistory } from "@/components/payments/payment-history";
 
@@ -40,11 +42,30 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
     notFound();
   }
 
-  const [summary, payments] = await Promise.all([
+  const [summary, payments, settings] = await Promise.all([
     getReservationPaymentSummary(prisma, id),
     listPaymentsForReservation(id),
+    getSettings(),
   ]);
   const canModify = reservation.status === "CONFIRMED";
+  // Lot "Confirmation par WhatsApp" — lien construit uniquement à partir de
+  // données réellement enregistrées ; `{ ok: false }` (client absent ou
+  // numéro invalide) est géré explicitement dans le rendu ci-dessous, jamais
+  // un lien incorrect.
+  const whatsapp = reservation.client
+    ? buildReservationWhatsAppLink({
+        clientName: reservation.client.name,
+        clientPhone: reservation.client.phone,
+        establishmentName: settings?.establishmentName ?? "notre établissement",
+        propertyName: reservation.property.name,
+        arrivalAt: reservation.arrivalTime,
+        departureAt: reservation.departureTime,
+        durationLabel: formatDuration(reservation.durationValue, reservation.durationUnit),
+        amount: reservation.amount,
+        deposit: reservation.deposit,
+        statusLabel: STATUS_META[reservation.status]?.label ?? reservation.status,
+      })
+    : ({ ok: false, reason: "Cette réservation n'a pas de client associé." } as const);
   const canPay = canModify && summary.remaining > 0;
   // Mini-lot "Check-in — identifier le client manquant" : le serveur
   // (checkInReservation) reste l'autorité réelle, y compris pour le cas
@@ -149,6 +170,20 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
             >
               Modifier
             </Link>
+            {whatsapp.ok ? (
+              <a
+                href={whatsapp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-14 items-center justify-center rounded-2xl border border-success/40 bg-success-bg text-sm font-extrabold text-success"
+              >
+                Envoyer sur WhatsApp
+              </a>
+            ) : (
+              <p className="rounded-xl bg-neutral-bg px-3 py-2.5 text-center text-xs font-medium text-fg/60">
+                {whatsapp.reason} Impossible de préparer le message WhatsApp.
+              </p>
+            )}
             <CancelButton id={reservation.id} />
           </div>
         ) : (

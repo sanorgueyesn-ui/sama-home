@@ -17,6 +17,7 @@ Cette documentation distingue systématiquement :
 | [ROLLBACK.md](./ROLLBACK.md) | Rollback code vs rollback DB — ce qui est possible et ce qui ne l'est pas |
 | [INCIDENTS.md](./INCIDENTS.md) | Procédures d'urgence : ce qui existe, ce qui reste à mettre en place |
 | [MONITORING.md](./MONITORING.md) | État réel du monitoring (ABSENT) et ce qu'il faudra configurer |
+| [BOOTSTRAP_PLATFORM_ADMIN.md](./BOOTSTRAP_PLATFORM_ADMIN.md) | Création du premier administrateur de plateforme : script dédié (`scripts/bootstrap-platform-admin.mts`, jamais encore exécuté) et procédure manuelle alternative |
 
 ## Ce qui est ACTUELLEMENT CONFIGURÉ (code et outils, vérifié dans ce bloc)
 

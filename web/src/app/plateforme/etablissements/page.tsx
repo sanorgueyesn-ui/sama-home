@@ -22,11 +22,11 @@ const STATUS_BADGE: Record<EstablishmentListView["status"], { label: string; cla
  * fidèlement l'absence de ligne `Subscription` (cas réel : établissement
  * encore `PENDING`, ou historique incohérent).
  */
-function SubscriptionState({ currentPeriodEnd }: { currentPeriodEnd: Date | null }) {
+function SubscriptionState({ currentPeriodEnd, now }: { currentPeriodEnd: Date | null; now: number }) {
   if (!currentPeriodEnd) {
     return <span className="text-white/40">Aucun abonnement</span>;
   }
-  const expired = currentPeriodEnd.getTime() <= Date.now();
+  const expired = currentPeriodEnd.getTime() <= now;
   return (
     <span className={expired ? "font-semibold text-danger" : "text-white/60"}>
       {expired ? "Expiré le " : "Valide jusqu'au "}
@@ -35,7 +35,7 @@ function SubscriptionState({ currentPeriodEnd }: { currentPeriodEnd: Date | null
   );
 }
 
-function EstablishmentRow({ establishment }: { establishment: EstablishmentListView }) {
+function EstablishmentRow({ establishment, now }: { establishment: EstablishmentListView; now: number }) {
   const badge = STATUS_BADGE[establishment.status];
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -53,7 +53,7 @@ function EstablishmentRow({ establishment }: { establishment: EstablishmentListV
           {establishment.userCount} utilisateur{establishment.userCount > 1 ? "s" : ""}
         </p>
         <p className="mt-1 text-[11px]">
-          <SubscriptionState currentPeriodEnd={establishment.subscriptionCurrentPeriodEnd} />
+          <SubscriptionState currentPeriodEnd={establishment.subscriptionCurrentPeriodEnd} now={now} />
         </p>
       </div>
 
@@ -112,7 +112,7 @@ export default async function PlatformEstablishmentsPage(props: PageProps<"/plat
       ) : (
         <div className="mt-5 flex flex-col gap-3">
           {items.map((establishment) => (
-            <EstablishmentRow key={establishment.id} establishment={establishment} />
+            <EstablishmentRow key={establishment.id} establishment={establishment} now={now} />
           ))}
           {truncated && (
             <p className="pt-1 text-center text-xs font-medium text-white/50">
@@ -124,3 +124,4 @@ export default async function PlatformEstablishmentsPage(props: PageProps<"/plat
     </div>
   );
 }
+

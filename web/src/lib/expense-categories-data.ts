@@ -1,16 +1,20 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { verifySession, requireAdmin } from "@/lib/dal";
+import { getCurrentUser, requireAdmin } from "@/lib/dal";
 
 /**
  * Bloc 16.2 — catégories proposées pour CRÉER une nouvelle dépense : actives
  * uniquement (règle métier Bloc 16.1 : "une catégorie inactive ne peut pas
  * être utilisée pour une nouvelle dépense"), triées par `position`.
+ * Phase 3C / Lot C1 — getCurrentUser() pour résoudre l'établissement.
  */
 export async function listActiveExpenseCategories() {
-  await verifySession();
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return [];
+  }
   return prisma.expenseCategory.findMany({
-    where: { active: true },
+    where: { active: true, establishmentId: user.establishmentId },
     orderBy: { position: "asc" },
   });
 }
@@ -22,9 +26,13 @@ export async function listActiveExpenseCategories() {
  * de l'historique, même si elle n'est plus proposée à la création).
  */
 export async function listExpenseCategoriesForFilter() {
-  await verifySession();
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return [];
+  }
   return prisma.expenseCategory.findMany({
     where: {
+      establishmentId: user.establishmentId,
       OR: [{ active: true }, { expenses: { some: {} } }],
     },
     orderBy: { position: "asc" },
@@ -46,8 +54,12 @@ export async function listExpenseCategoriesForFilter() {
  * explication (Bloc 16.3, section 14).
  */
 export async function listExpenseCategoriesForSettings() {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!admin.establishmentId) {
+    return [];
+  }
   return prisma.expenseCategory.findMany({
+    where: { establishmentId: admin.establishmentId },
     orderBy: [{ position: "asc" }, { name: "asc" }],
     include: { _count: { select: { expenses: true } } },
   });

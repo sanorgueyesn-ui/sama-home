@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getCurrentUser } from "@/lib/dal";
 import { todayRange, monthRange } from "@/lib/period";
 import { getPropertyStatuses, type PropertyStatus } from "@/lib/property-status";
 import { getRentalPaymentSummaries } from "@/lib/payment-summary";
@@ -38,16 +38,23 @@ export type FinancialSummary = {
  * "ne pas additionner Reservation.deposit + Payment").
  */
 export async function getFinancialSummary(now: Date = new Date()): Promise<FinancialSummary> {
-  await verifySession();
+  // Phase 3C / Lot C1 — getCurrentUser() pour résoudre l'établissement ;
+  // sans lui, un résumé financier à zéro plutôt que les chiffres de tous
+  // les établissements.
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { revenueToday: 0, expenseToday: 0, balanceToday: 0, revenueMonth: 0, expenseMonth: 0, balanceMonth: 0, paymentCountToday: 0 };
+  }
 
   const today = todayRange(now);
   const month = monthRange(now);
+  const establishmentId = user.establishmentId;
 
   const [revenueTodayAgg, revenueMonthAgg, expenseTodayAgg, expenseMonthAgg] = await Promise.all([
-    prisma.payment.aggregate({ where: { paidAt: today }, _sum: { amount: true }, _count: true }),
-    prisma.payment.aggregate({ where: { paidAt: month }, _sum: { amount: true } }),
-    prisma.expense.aggregate({ where: { paidAt: today }, _sum: { amount: true } }),
-    prisma.expense.aggregate({ where: { paidAt: month }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { paidAt: today, establishmentId }, _sum: { amount: true }, _count: true }),
+    prisma.payment.aggregate({ where: { paidAt: month, establishmentId }, _sum: { amount: true } }),
+    prisma.expense.aggregate({ where: { paidAt: today, establishmentId }, _sum: { amount: true } }),
+    prisma.expense.aggregate({ where: { paidAt: month, establishmentId }, _sum: { amount: true } }),
   ]);
 
   const revenueToday = revenueTodayAgg._sum.amount ?? 0;
@@ -69,9 +76,23 @@ export async function getFinancialSummary(now: Date = new Date()): Promise<Finan
 
 /** Bloc 6 — counts by computed status, using the exact Phase 7 batch service. */
 export async function getPropertyStatusCounts(): Promise<Record<PropertyStatus, number>> {
-  await verifySession();
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return { AVAILABLE: 0, OCCUPIED: 0, RESERVED: 0, UNAVAILABLE: 0 };
+  }
 
-  const properties = await prisma.property.findMany({ select: { id: true, active: true }, take: 500 });
+  // Phase 3C / Lot C1 — `establishmentId` filtré ICI, sur la liste de
+  // propriétés résolue : getPropertyStatuses() (src/lib/property-status.ts)
+  // reste une fonction pure sans contexte de session, volontairement non
+  // modifiée dans ce lot — sa correction n'est possible et nécessaire que
+  // parce que les `ids` qu'elle reçoit sont déjà strictement scopés à un
+  // seul établissement ici (une Rental/Reservation ne peut matcher que les
+  // `id` de `properties`, qui n'appartiennent déjà qu'à cet établissement).
+  const properties = await prisma.property.findMany({
+    where: { establishmentId: user.establishmentId },
+    select: { id: true, active: true },
+    take: 500,
+  });
   const statuses = await getPropertyStatuses(properties);
 
   const counts: Record<PropertyStatus, number> = { AVAILABLE: 0, OCCUPIED: 0, RESERVED: 0, UNAVAILABLE: 0 };
@@ -111,10 +132,13 @@ export async function getTodayArrivals() {
  * already exist — not a new business rule.
  */
 export async function getTodayDepartures(now: Date = new Date()) {
-  await verifySession();
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return [];
+  }
   const today = todayRange(now);
   return prisma.rental.findMany({
-    where: { status: "ACTIVE", plannedDepartureAt: today },
+    where: { status: "ACTIVE", plannedDepartureAt: today, establishmentId: user.establishmentId },
     include: {
       client: { select: { id: true, name: true, phone: true } },
       property: { select: { id: true, name: true } },
@@ -134,7 +158,10 @@ export type DailyFinancialPoint = { date: Date; revenue: number; expense: number
  * total. Lecture seule, jamais appelée par un chemin d'écriture.
  */
 export async function getWeeklyFinancialTrend(now: Date = new Date()): Promise<DailyFinancialPoint[]> {
-  await verifySession();
+  const user = await getCurrentUser();
+  if (!user.establishmentId) {
+    return [];
+  }
 
   const days: DailyFinancialPoint[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -142,8 +169,8 @@ export async function getWeeklyFinancialTrend(now: Date = new Date()): Promise<D
     day.setDate(day.getDate() - i);
     const { gte, lt } = todayRange(day);
     const [revenueAgg, expenseAgg] = await Promise.all([
-      prisma.payment.aggregate({ where: { paidAt: { gte, lt } }, _sum: { amount: true } }),
-      prisma.expense.aggregate({ where: { paidAt: { gte, lt } }, _sum: { amount: true } }),
+      prisma.payment.aggregate({ where: { paidAt: { gte, lt }, establishmentId: user.establishmentId }, _sum: { amount: true } }),
+      prisma.expense.aggregate({ where: { paidAt: { gte, lt }, establishmentId: user.establishmentId }, _sum: { amount: true } }),
     ]);
     days.push({ date: gte, revenue: revenueAgg._sum.amount ?? 0, expense: expenseAgg._sum.amount ?? 0 });
   }

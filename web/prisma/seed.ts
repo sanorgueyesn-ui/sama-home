@@ -44,12 +44,20 @@ async function seedAdmin() {
   console.log(`Compte créé : ${user.username} (${user.role}).`);
 }
 
-// Bloc 16.1 — mêmes 10 catégories historiques que l'ancien enum
-// `ExpenseCategory`, dans le même ordre (voir la migration
-// add_expense_category_table, qui les crée déjà pour la base de dev
-// actuelle). Ce seed est un filet de sécurité idempotent pour tout
-// environnement où ces lignes n'existeraient pas encore — jamais une
-// deuxième source qui pourrait diverger de la migration.
+// D12-P135 — DÉSACTIVÉ : sur une base neuve, ces 10 catégories (insérées en
+// SQL brut par la migration 20261001233836_add_expense_category_table, à une
+// époque antérieure à `ExpenseCategory.establishmentId`) ne sont JAMAIS
+// rattachées à un établissement par aucune migration ultérieure (vérifié
+// exhaustivement sur les 21 migrations) — ce seed les retrouvait par leur
+// seul `name` (sans filtre `establishmentId`) et ne faisait donc jamais que
+// les laisser orphelines pour toujours, invisibles de tout établissement
+// réel (voir src/lib/expense-categories-data.ts, qui filtre toujours sur un
+// `establishmentId` réel, jamais `null`). Chaque nouvel établissement reçoit
+// désormais ses propres catégories de départ au moment de son activation
+// (voir createTrialSubscriptionAndAudit(), src/lib/establishment-activation.ts)
+// — jamais une catégorie globale, jamais un rattachement rétroactif.
+// Fonction conservée (jamais appelée) pour ne perdre aucune trace du code
+// historique.
 const EXPENSE_CATEGORIES = [
   { name: "Loyer", position: 0 },
   { name: "Électricité", position: 1 },
@@ -82,7 +90,9 @@ async function seedExpenseCategories() {
 
 async function main() {
   await seedAdmin();
-  await seedExpenseCategories();
+  // D12-P135 — seedExpenseCategories() n'est plus appelée (voir le
+  // commentaire de EXPENSE_CATEGORIES ci-dessus) : chaque établissement
+  // reçoit désormais ses propres catégories à son activation.
 }
 
 main()

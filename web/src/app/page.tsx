@@ -38,7 +38,12 @@ export default async function Dashboard() {
   const user = await getCurrentUser();
   const now = new Date();
 
-  const propertyCount = await prisma.property.count();
+  // Phase 3C / Lot C2 — `establishmentId` résolu depuis `user` ci-dessus
+  // (déjà présent), jamais depuis une donnée transmise par le navigateur.
+  // Sans établissement, 0 plutôt que le total de tous les établissements.
+  const propertyCount = user.establishmentId
+    ? await prisma.property.count({ where: { establishmentId: user.establishmentId } })
+    : 0;
 
   const [financial, propertyCounts, arrivals, departures, propertiesForGrid, tariffProperties, recentExpenses] =
     await Promise.all([

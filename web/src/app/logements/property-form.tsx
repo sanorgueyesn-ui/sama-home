@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { PropertyFormState } from "@/lib/definitions";
 
@@ -9,6 +9,7 @@ type PropertyFormValues = {
   type?: "ROOM" | "APARTMENT";
   description?: string;
   capacity?: number;
+  /** URL d'affichage déjà résolue par la page (présignée ou héritée) — jamais la clé brute du bucket. */
   photo?: string;
   active?: boolean;
 };
@@ -26,10 +27,38 @@ export function PropertyForm({
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const [type, setType] = useState<"ROOM" | "APARTMENT">(defaultValues?.type ?? "ROOM");
+  const [newPhotoPreview, setNewPhotoPreview] = useState<string | null>(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
+  const objectUrlRef = useRef<string | null>(null);
   const errors = state?.errors;
 
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      objectUrlRef.current = url;
+      setNewPhotoPreview(url);
+      setRemovePhoto(false);
+    } else {
+      setNewPhotoPreview(null);
+    }
+  }
+
+  const currentPhoto = defaultValues?.photo ?? null;
+  const previewToShow = newPhotoPreview ?? (removePhoto ? null : currentPhoto);
+
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-4" encType="multipart/form-data">
       <div>
         <label className="mb-1.5 block text-xs font-bold text-fg">Type de logement</label>
         <input type="hidden" name="type" value={type} />
@@ -88,15 +117,50 @@ export function PropertyForm({
         errors={errors?.description}
         placeholder="Détails complémentaires (facultatif)"
       />
-      <Field
-        id="photo"
-        label="Photo"
-        type="url"
-        defaultValue={defaultValues?.photo}
-        errors={errors?.photo}
-        hint="Lien vers une image déjà en ligne (aucun envoi de fichier en V1)."
-        placeholder="https://..."
-      />
+
+      <div>
+        <label htmlFor="photo" className="mb-1.5 block text-xs font-bold text-fg">
+          Photo<span className="ml-1 font-medium text-fg/40">(optionnel)</span>
+        </label>
+
+        {previewToShow ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewToShow}
+            alt="Aperçu de la photo"
+            className="mb-2 h-32 w-full rounded-xl border border-border/15 object-cover"
+          />
+        ) : null}
+
+        <input
+          id="photo"
+          name="photo"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-fg file:mr-3 file:h-10 file:rounded-lg file:border-0 file:bg-surface-sunken file:px-4 file:text-sm file:font-bold file:text-fg"
+        />
+        <p className="mt-1 text-xs text-fg/50">JPEG, PNG ou WebP, 5 Mo maximum.</p>
+
+        {currentPhoto && !newPhotoPreview ? (
+          <label className="mt-2 flex items-center gap-2 text-sm font-semibold text-fg">
+            <input
+              type="checkbox"
+              name="removePhoto"
+              checked={removePhoto}
+              onChange={(e) => setRemovePhoto(e.target.checked)}
+              className="h-4 w-4 accent-navy"
+            />
+            Retirer la photo actuelle
+          </label>
+        ) : null}
+
+        {errors?.photo?.map((error) => (
+          <p key={error} className="mt-1 text-xs font-medium text-danger">
+            {error}
+          </p>
+        ))}
+      </div>
 
       {showActiveToggle ? (
         <label className="flex items-center gap-2.5 text-sm font-bold text-fg">
