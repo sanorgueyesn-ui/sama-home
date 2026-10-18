@@ -6,6 +6,16 @@ import { createSession } from "@/lib/session";
 import { hashPassword } from "@/lib/password";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
 
+function getRedirectUri(request: NextRequest): string {
+  if (process.env.APP_URL) {
+    const base = process.env.APP_URL.replace(/\/+$/, "");
+    return `${base}/api/auth/callback/google`;
+  }
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+  const proto = request.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}/api/auth/callback/google`;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
@@ -38,10 +48,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Détermination de l'URI de redirection exacte
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
-  const proto = request.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
-  const redirectUri = `${proto}://${host}/api/auth/callback/google`;
+  const redirectUri = getRedirectUri(request);
 
   try {
     // 3. Échange du code d'autorisation contre les jetons

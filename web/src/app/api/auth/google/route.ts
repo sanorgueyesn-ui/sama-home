@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 
+function getRedirectUri(request: NextRequest): string {
+  if (process.env.APP_URL) {
+    const base = process.env.APP_URL.replace(/\/+$/, "");
+    return `${base}/api/auth/callback/google`;
+  }
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+  const proto = request.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}/api/auth/callback/google`;
+}
+
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
 
@@ -12,10 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl);
   }
 
-  // Détermination de l'URL de base et de l'URI de redirection
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
-  const proto = request.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
-  const redirectUri = `${proto}://${host}/api/auth/callback/google`;
+  const redirectUri = getRedirectUri(request);
 
   // Génération d'un état CSRF aléatoire sécurisé
   const state = crypto.randomBytes(32).toString("hex");
