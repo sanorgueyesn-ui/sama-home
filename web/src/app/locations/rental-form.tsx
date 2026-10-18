@@ -162,7 +162,7 @@ export function RentalForm({
   return (
     <form action={formAction} className="flex flex-col gap-5">
       {/* 1. Logement & Formule */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+      <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-white/10">
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
             1
@@ -236,7 +236,7 @@ export function RentalForm({
       </div>
 
       {/* 2. Horaires d'arrivée (Check-in) */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+      <div className="relative z-30 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
@@ -337,7 +337,7 @@ export function RentalForm({
       </div>
 
       {/* 3. Locataire & Règlement */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+      <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
