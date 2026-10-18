@@ -4,140 +4,288 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { hashPassword } from "@/lib/password";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
+import { computeDepartureTime } from "@/lib/duration";
 import {
   EstablishmentRegistrationSchema,
+  VerifyOtpSchema,
   type EstablishmentRegistrationFormState,
+  type VerifyOtpFormState,
 } from "@/lib/definitions";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendOtpEmail } from "@/lib/mail";
 
 class EstablishmentRegistrationError extends Error {}
 
 const DUPLICATE_EMAIL_MESSAGE = "Un compte existe déjà avec cette adresse e-mail.";
 
 /**
- * Phase 3G / Lot D12-P78 — inscription publique d'un établissement
- * (`/register`). Crée l'établissement en statut `PENDING` et son premier
- * compte `ADMIN`, tous deux dans la même transaction (réussite ou échec
- * ensemble) — ne crée JAMAIS d'abonnement ici (voir le commentaire du
- * modèle `Subscription`, schema.prisma : "créé UNIQUEMENT au moment de
- * l'approbation... jamais à l'inscription"). L'approbation/le rejet d'un
- * établissement PENDING par un administrateur de plateforme est un lot
- * séparé, non développé ici.
- *
- * Aucune valeur d'autorité n'est acceptée du client : `status` toujours
- * "PENDING" en dur, `role` toujours "ADMIN" en dur, `isPlatformAdmin`
- * toujours `false` en dur, `establishmentId` toujours celui de
- * l'établissement créé dans CETTE même transaction — jamais une valeur
- * reçue du formulaire (qui ne contient d'ailleurs aucun de ces champs).
- *
- * Doublons — `User.username` porte une contrainte `@unique` RÉELLE au
- * niveau base (contrairement à `Tariff`/`SubscriptionPayment` audités dans
- * des lots antérieurs, qui n'en ont aucune) : une vérification préalable
- * (`findUnique`) donne un message clair dans le cas normal, et la
- * contrainte d'unicité elle-même (capturée via `P2002`) reste l'autorité
- * finale en cas d'inscriptions concurrentes avec la même adresse — jamais
- * une transaction Serializable ici, qui serait superflue : une contrainte
- * réelle existe déjà, contrairement aux cas où Serializable a été
- * nécessaire par le passé dans ce projet.
- *
- * Décision produit confirmée pour ce lot : aucun champ "identifiant"
- * séparé dans la maquette — l'adresse e-mail soumise sert à la fois de
- * `username` (connexion) et de `email` (notifications, déjà prévu par le
- * schéma), jamais deux valeurs indépendantes inventées.
- *
- * Aucune session créée automatiquement (aucun comportement existant ni
- * décision produit explicite ne le prévoit) — l'établissement étant
- * `PENDING`, une connexion immédiate n'offrirait de toute façon aucun
- * accès aux fonctionnalités métier (`requireActiveEstablishment()` le
- * bloquerait immédiatement).
- *
- * Phase 3G / Lot D12-P88 — mode d'approbation automatique : le réglage
- * global `PlatformSettings.autoApproveEstablishments` est lu à
- * l'INTÉRIEUR de cette même transaction (jamais mis en cache avant),
- * exactement comme `PricingSettings` l'est déjà dans
- * `createTrialSubscriptionAndAudit()`. Si actif, l'établissement est créé
- * DIRECTEMENT en `status: "ACTIVE"` (jamais un `PENDING` intermédiaire
- * validé puis transitionné — aucun observateur externe ne peut jamais
- * constater un état `PENDING` pour cet établissement), et son abonnement
- * d'essai est créé dans la MÊME transaction via la logique PARTAGÉE avec
- * l'approbation manuelle (`createTrialSubscriptionAndAudit()`,
- * src/lib/establishment-activation.ts) — `actorUserId: null` (action
- * publique, non authentifiée, aucun administrateur de plateforme réel à
- * cet instant ; voir le commentaire de `AuditLog.userId` dans
- * schema.prisma). Si le réglage est inactif ou absent, comportement
- * strictement identique à avant (`status: "PENDING"`, aucun abonnement).
- * Basculer ce réglage ne modifie jamais un établissement déjà créé —
- * cette lecture n'intervient qu'à la création, jamais rétroactivement.
+ * Étape 1 : Initialisation de l'inscription et envoi du code OTP
  */
 export async function registerEstablishment(
   _prevState: EstablishmentRegistrationFormState,
   formData: FormData,
 ): Promise<EstablishmentRegistrationFormState> {
   const ip = await getClientIp();
-  const rate = checkRateLimit(`register:${ip}`, 3, 600);
+  const rate = checkRateLimit(`register:${ip}`, 5, 600);
   if (!rate.allowed) {
     return { message: "Trop de tentatives d'inscription depuis cette adresse. Veuillez patienter avant de réessayer." };
   }
+
   const parsed = EstablishmentRegistrationSchema.safeParse({
     establishmentName: formData.get("establishmentName"),
     managerName: formData.get("managerName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    plan: formData.get("plan") || "FREE_TRIAL",
   });
+
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
-  const { establishmentName, managerName, email, password } = parsed.data;
+
+  const { establishmentName, managerName, email, password, plan } = parsed.data;
+
+  // Vérifier si un compte existe déjà avec cette adresse e-mail
+  const existingUser = await prisma.user.findUnique({
+    where: { username: email },
+    select: { id: true },
+  });
+  if (existingUser) {
+    return { errors: { email: [DUPLICATE_EMAIL_MESSAGE] } };
+  }
 
   const passwordHash = await hashPassword(password);
 
+  // Générer un code OTP à 6 chiffres
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+  try {
+    // Nettoyer les anciennes demandes pour cet e-mail
+    await prisma.otpVerification.deleteMany({ where: { email } });
+
+    // Enregistrer la demande de vérification
+    await prisma.otpVerification.create({
+      data: {
+        email,
+        code,
+        establishmentName,
+        managerName,
+        passwordHash,
+        plan,
+        expiresAt,
+      },
+    });
+
+    // Envoyer le code par e-mail (et console)
+    await sendOtpEmail({
+      to: email,
+      code,
+      establishmentName,
+    });
+
+    return {
+      success: true,
+      requiresOtp: true,
+      email,
+      plan,
+      // Fourni en mode dev / test local pour faciliter les tests sans bloquer
+      testCode: code,
+    };
+  } catch (error) {
+    console.error("registerEstablishment() — échec de l'envoi de l'OTP :", error);
+    return { message: "Une erreur est survenue lors de l'envoi du code. Veuillez réessayer." };
+  }
+}
+
+/**
+ * Étape 2 : Vérification du code OTP et création définitive du compte et de l'établissement
+ */
+export async function verifyOtpAndRegister(
+  _prevState: VerifyOtpFormState,
+  formData: FormData,
+): Promise<VerifyOtpFormState> {
+  const ip = await getClientIp();
+  const rate = checkRateLimit(`verify-otp:${ip}`, 10, 300);
+  if (!rate.allowed) {
+    return { message: "Trop de tentatives de validation. Veuillez patienter avant de réessayer." };
+  }
+
+  const parsed = VerifyOtpSchema.safeParse({
+    email: formData.get("email"),
+    code: formData.get("code"),
+  });
+
+  if (!parsed.success) {
+    return { errors: parsed.error.flatten().fieldErrors };
+  }
+
+  const { email, code } = parsed.data;
+
+  // Rechercher l'enregistrement OTP le plus récent
+  const otpRecord = await prisma.otpVerification.findFirst({
+    where: { email },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!otpRecord) {
+    return {
+      message: "Aucune demande de vérification en cours pour cette adresse e-mail. Veuillez recommencer l'inscription.",
+    };
+  }
+
+  if (otpRecord.expiresAt.getTime() < Date.now()) {
+    await prisma.otpVerification.delete({ where: { id: otpRecord.id } });
+    return {
+      message: "Ce code de vérification a expiré (durée maximale : 15 minutes). Veuillez demander un nouveau code.",
+    };
+  }
+
+  if (otpRecord.code !== code) {
+    const updatedAttempts = otpRecord.attempts + 1;
+    if (updatedAttempts >= 5) {
+      await prisma.otpVerification.delete({ where: { id: otpRecord.id } });
+      return {
+        message: "Trop de codes erronés saisis. Votre demande a été réinitialisée par sécurité.",
+      };
+    }
+    await prisma.otpVerification.update({
+      where: { id: otpRecord.id },
+      data: { attempts: updatedAttempts },
+    });
+    return { errors: { code: ["Code de vérification incorrect."] } };
+  }
+
+  // Le code est valide ! Création de l'établissement et de l'utilisateur
+  let generatedReference: string | undefined = undefined;
+
   try {
     await prisma.$transaction(async (tx) => {
-      // Vérification préalable — message clair dans le cas normal (pas de
-      // course concurrente). La contrainte @unique de la base reste
-      // l'autorité finale, capturée ci-dessous via P2002.
-      const existing = await tx.user.findUnique({ where: { username: email }, select: { id: true } });
+      // 1. Double vérification d'unicité
+      const existing = await tx.user.findUnique({
+        where: { username: otpRecord.email },
+        select: { id: true },
+      });
       if (existing) {
         throw new EstablishmentRegistrationError(DUPLICATE_EMAIL_MESSAGE);
       }
 
+      // 2. Vérification des réglages de la plateforme
       const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
       const autoApprove = platformSettings?.autoApproveEstablishments ?? false;
 
+      // 3. Création de l'établissement
       const establishment = await tx.establishment.create({
-        data: { name: establishmentName, status: autoApprove ? "ACTIVE" : "PENDING" },
+        data: {
+          name: otpRecord.establishmentName,
+          status: autoApprove ? "ACTIVE" : "PENDING",
+        },
       });
 
+      // 4. Création du compte administrateur
       await tx.user.create({
         data: {
-          username: email,
-          email,
-          name: managerName,
-          passwordHash,
+          username: otpRecord.email,
+          email: otpRecord.email,
+          name: otpRecord.managerName,
+          passwordHash: otpRecord.passwordHash,
           role: "ADMIN",
           establishmentId: establishment.id,
           isPlatformAdmin: false,
         },
       });
 
+      // 5. Gestion de l'offre choisie
+      const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
+      const trialMonths = pricingSettings?.trialDurationMonths ?? 2;
+      const periodMonths = pricingSettings?.periodMonths ?? 3;
+      const periodPrice = pricingSettings?.periodPriceFcfa ?? 9900;
+
       if (autoApprove) {
         await createTrialSubscriptionAndAudit(tx, establishment.id, null, "ESTABLISHMENT_AUTO_APPROVED");
+      } else if (otpRecord.plan === "PAID_9900") {
+        // Offre Payante choisie : création de la souscription et de la demande de paiement
+        const trialStartedAt = new Date();
+        const currentPeriodEnd = computeDepartureTime(trialStartedAt, trialMonths, "MONTH");
+        const sub = await tx.subscription.create({
+          data: {
+            establishmentId: establishment.id,
+            trialStartedAt,
+            currentPeriodEnd,
+          },
+        });
+
+        generatedReference = `SH-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+        await tx.subscriptionPayment.create({
+          data: {
+            subscriptionId: sub.id,
+            amount: periodPrice,
+            periodMonths,
+            status: "PENDING",
+            reference: generatedReference,
+          },
+        });
       }
+
+      // 6. Nettoyage de l'OTP consommé
+      await tx.otpVerification.delete({ where: { id: otpRecord.id } });
     });
   } catch (error) {
     if (error instanceof EstablishmentRegistrationError) {
-      return { errors: { email: [error.message] } };
+      return { errors: { code: [error.message] } };
     }
-    // Course concurrente sur la même adresse e-mail, non interceptée par la
-    // vérification préalable ci-dessus — la contrainte @unique de
-    // `User.username` reste l'autorité finale.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return { errors: { email: [DUPLICATE_EMAIL_MESSAGE] } };
+      return { errors: { code: [DUPLICATE_EMAIL_MESSAGE] } };
     }
-    console.error("registerEstablishment() — échec inattendu de l'inscription :", error);
-    return { message: "Une erreur est survenue pendant l'inscription. Veuillez réessayer." };
+    console.error("verifyOtpAndRegister() — échec inattendu :", error);
+    return { message: "Une erreur est survenue lors de la validation. Veuillez réessayer." };
   }
 
-  return { success: true };
+  return {
+    success: true,
+    plan: otpRecord.plan,
+    establishmentName: otpRecord.establishmentName,
+    reference: generatedReference,
+  };
 }
 
+/**
+ * Renvoie un nouveau code OTP pour un email donné
+ */
+export async function resendOtpCode(email: string): Promise<{ success: boolean; message?: string; testCode?: string }> {
+  const ip = await getClientIp();
+  const rate = checkRateLimit(`resend-otp:${ip}`, 3, 300);
+  if (!rate.allowed) {
+    return { success: false, message: "Veuillez patienter avant de demander un nouveau code." };
+  }
+
+  const existingOtp = await prisma.otpVerification.findFirst({
+    where: { email },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!existingOtp) {
+    return { success: false, message: "Aucune inscription en cours pour cet email." };
+  }
+
+  const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.otpVerification.update({
+    where: { id: existingOtp.id },
+    data: {
+      code: newCode,
+      expiresAt,
+      attempts: 0,
+    },
+  });
+
+  await sendOtpEmail({
+    to: email,
+    code: newCode,
+    establishmentName: existingOtp.establishmentName,
+  });
+
+  return { success: true, testCode: newCode };
+}

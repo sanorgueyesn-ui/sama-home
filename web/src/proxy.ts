@@ -14,12 +14,15 @@ import { getSessionCookiePayload } from "@/lib/session-token";
 // (aucune action serveur, aucune création de compte). Sans cette entrée,
 // un visiteur non authentifié ne pourrait jamais l'atteindre : la logique
 // ci-dessous (déjà générique, non modifiée) s'applique à l'identique à
-// "/login" et "/register".
-const PUBLIC_ROUTES = ["/login", "/register"];
+const isPublicRoutePath = (pathname: string) =>
+  pathname === "/login" ||
+  pathname === "/register" ||
+  pathname.startsWith("/register/") ||
+  pathname === "/verify-otp";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isPublicRoute = isPublicRoutePath(pathname);
 
   const session = await getSessionCookiePayload();
   const isAuthenticated = Boolean(session?.sessionId);

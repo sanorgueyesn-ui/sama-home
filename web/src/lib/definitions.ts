@@ -495,6 +495,7 @@ export const EstablishmentRegistrationSchema = z.object({
     .max(180, "Email : 180 caractères maximum.")
     .pipe(z.email("Adresse e-mail invalide.")),
   password: newPasswordField(),
+  plan: z.enum(["FREE_TRIAL", "PAID_9900"]).default("FREE_TRIAL"),
 });
 
 export type EstablishmentRegistrationFormState =
@@ -502,6 +503,26 @@ export type EstablishmentRegistrationFormState =
       errors?: Partial<Record<keyof z.infer<typeof EstablishmentRegistrationSchema>, string[]>>;
       message?: string;
       success?: boolean;
+      requiresOtp?: boolean;
+      email?: string;
+      plan?: string;
+      testCode?: string;
+    }
+  | undefined;
+
+export const VerifyOtpSchema = z.object({
+  email: z.string().trim().email("Adresse e-mail invalide."),
+  code: z.string().trim().length(6, "Le code doit comporter exactement 6 chiffres."),
+});
+
+export type VerifyOtpFormState =
+  | {
+      errors?: Partial<Record<keyof z.infer<typeof VerifyOtpSchema>, string[]>>;
+      message?: string;
+      success?: boolean;
+      plan?: string;
+      establishmentName?: string;
+      reference?: string;
     }
   | undefined;
 

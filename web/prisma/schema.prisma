@@ -1335,3 +1335,19 @@ model PlatformSettings {
 
   updatedAt DateTime @updatedAt
 }
+
+/// Vérification d'adresse e-mail par code OTP à 6 chiffres pour les nouveaux utilisateurs
+model OtpVerification {
+  id                String   @id @default(cuid())
+  email             String
+  code              String
+  establishmentName String
+  managerName       String
+  passwordHash      String
+  plan              String   @default("FREE_TRIAL")
+  expiresAt         DateTime
+  attempts          Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  @@index([email])
+}
