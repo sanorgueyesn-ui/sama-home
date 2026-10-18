@@ -87,64 +87,78 @@ export default async function PlatformSubscriptionPaymentsPage() {
       ) : overview ? (
         <>
           {/* Métriques & KPIs Clés */}
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">Total Abonnés</span>
-              <span className="mt-1.5 text-2xl font-black text-white">{overview.kpis.totalSubscriptions}</span>
-              <span className="mt-1 text-[11px] text-white/40">Établissements avec licence</span>
+          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-[#0e1a22] p-3.5 sm:p-4">
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/50">Total Abonnés</span>
+              <span className="my-1 text-2xl font-black text-white">{overview.kpis.totalSubscriptions}</span>
+              <span className="text-[11px] font-semibold text-white/60">Licences créées</span>
             </div>
 
-            <div className="flex flex-col rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Actifs Valides</span>
-              <span className="mt-1.5 text-2xl font-black text-emerald-300">{overview.kpis.activeCount}</span>
-              <span className="mt-1 text-[11px] text-white/40">Accès en cours</span>
+            <div className="flex flex-col justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 sm:p-4">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Actifs Valides</span>
+              <span className="my-1 text-2xl font-black text-emerald-300">{overview.kpis.activeCount}</span>
+              <span className="text-[11px] font-semibold text-emerald-200/70">Accès en cours</span>
             </div>
 
-            <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400">Période d&apos;essai</span>
-              <span className="mt-1.5 text-2xl font-black text-sky-300">{overview.kpis.trialCount}</span>
-              <span className="mt-1 text-[11px] text-white/40">Essai gratuit actif</span>
+            <div className="flex flex-col justify-between rounded-2xl border border-sky-500/30 bg-sky-500/10 p-3.5 sm:p-4">
+              <span className="text-[10px] font-black uppercase tracking-wider text-sky-400">Période d&apos;essai</span>
+              <span className="my-1 text-2xl font-black text-sky-300">{overview.kpis.trialCount}</span>
+              <span className="text-[11px] font-semibold text-sky-200/70">Essai gratuit actif</span>
             </div>
 
-            <div className="flex flex-col rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Demandes en attente</span>
-              <span className="mt-1.5 text-2xl font-black text-amber-300">{overview.kpis.pendingRequestsCount}</span>
-              <span className="mt-1 text-[11px] text-white/40">À confirmer</span>
+            <div className={`flex flex-col justify-between rounded-2xl border p-3.5 sm:p-4 ${
+              overview.kpis.pendingRequestsCount > 0
+                ? "border-amber-500/50 bg-amber-500/15"
+                : "border-white/10 bg-[#0e1a22]"
+            }`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${
+                overview.kpis.pendingRequestsCount > 0 ? "text-amber-300" : "text-white/60"
+              }`}>
+                En attente
+              </span>
+              <span className="my-1 text-2xl font-black text-white">{overview.kpis.pendingRequestsCount}</span>
+              <span className="text-[11px] font-semibold text-white/60">
+                {overview.kpis.pendingRequestsCount > 0 ? "À confirmer d'urgence" : "Aucune demande"}
+              </span>
             </div>
 
-            <div className="flex flex-col rounded-2xl border border-danger/20 bg-danger/5 p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-danger">Expirés</span>
-              <span className="mt-1.5 text-2xl font-black text-danger">{overview.kpis.expiredCount}</span>
-              <span className="mt-1 text-[11px] text-white/40">À renouveler</span>
+            <div className="flex flex-col justify-between rounded-2xl border border-danger/30 bg-danger/10 p-3.5 sm:p-4">
+              <span className="text-[10px] font-black uppercase tracking-wider text-danger">Expirés</span>
+              <span className="my-1 text-2xl font-black text-danger">{overview.kpis.expiredCount}</span>
+              <span className="text-[11px] font-semibold text-danger/80">À renouveler</span>
             </div>
 
-            <div className="flex flex-col rounded-2xl border border-brand-orange/20 bg-brand-orange/5 p-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-orange">Total Encaissé</span>
-              <span className="mt-1.5 text-xl font-black text-white">{fmtFcfa(overview.kpis.totalRevenueFcfa)}</span>
-              <span className="mt-1 text-[11px] text-white/40">Abonnements confirmés</span>
+            <div className="flex flex-col justify-between rounded-2xl border border-brand-orange/30 bg-brand-orange/10 p-3.5 sm:p-4">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-orange">Total Encaissé</span>
+              <span className="my-1 text-xl font-black text-brand-orange sm:text-2xl">{fmtFcfa(overview.kpis.totalRevenueFcfa)}</span>
+              <span className="text-[11px] font-semibold text-white/60">Confirmés</span>
             </div>
           </div>
 
           {/* Section 1 : Demandes de renouvellement en attente */}
           <div className="mt-8">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="flex flex-col gap-2 border-b border-white/10 pb-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-base font-extrabold text-white sm:text-lg">
-                  Demandes de renouvellement reçues
-                </h2>
-                <p className="text-xs text-white/50">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h2 className="text-base font-black text-white sm:text-lg">
+                    Demandes de renouvellement reçues
+                  </h2>
+                  <span
+                    className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-3 py-0.5 text-xs font-black shadow-sm ${
+                      overview.pendingPayments.length > 0
+                        ? "border border-amber-500/50 bg-amber-500/20 text-amber-300"
+                        : "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                    }`}
+                  >
+                    {overview.pendingPayments.length > 0
+                      ? `⚠️ ${overview.pendingPayments.length} en attente`
+                      : `✓ 0 en attente`}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-white/60">
                   Paiements envoyés par les gérants en attente de vérification et d&apos;activation
                 </p>
               </div>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                  overview.pendingPayments.length > 0
-                    ? "bg-amber-500/20 text-amber-300"
-                    : "bg-white/10 text-white/50"
-                }`}
-              >
-                {overview.pendingPayments.length} en attente
-              </span>
             </div>
 
             <div className="mt-4">
