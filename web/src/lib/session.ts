@@ -39,6 +39,8 @@ export async function createSession(userId: string, remember: boolean) {
     // après 24h comme filet de sécurité.
     ...(remember ? { expires: expiresAt } : {}),
   });
+
+  return { token, expiresAt, sessionId: session.id };
 }
 
 /** Deletes the session both in the database and on the client (true logout). */

@@ -2,27 +2,28 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 
-function getRedirectUri(request: NextRequest): string {
+function getBaseUrl(request: NextRequest): string {
   if (process.env.APP_URL) {
-    const base = process.env.APP_URL.replace(/\/+$/, "");
-    return `${base}/api/auth/callback/google`;
+    return process.env.APP_URL.replace(/\/+$/, "");
   }
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
   const proto = request.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}/api/auth/callback/google`;
+  return `${proto}://${host}`;
 }
 
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
+  const baseUrl = getBaseUrl(request);
+  const isSecure = baseUrl.startsWith("https");
 
   // Si les clés Google OAuth ne sont pas encore configurées dans .env / Railway
   if (!clientId) {
-    const errorUrl = new URL("/login", request.url);
+    const errorUrl = new URL("/login", baseUrl);
     errorUrl.searchParams.set("error", "google_not_configured");
     return NextResponse.redirect(errorUrl);
   }
 
-  const redirectUri = getRedirectUri(request);
+  const redirectUri = `${baseUrl}/api/auth/callback/google`;
 
   // Génération d'un état CSRF aléatoire sécurisé
   const state = crypto.randomBytes(32).toString("hex");
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
   // Sauvegarde de l'état dans un cookie HTTP-only pour vérification au retour
   response.cookies.set("oauth_state", state, {
     httpOnly: true,
-    secure: proto === "https",
+    secure: isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 600, // 10 minutes

@@ -3,17 +3,17 @@ import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/session";
+import { SESSION_COOKIE_NAME } from "@/lib/session-token";
 import { hashPassword } from "@/lib/password";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
 
-function getRedirectUri(request: NextRequest): string {
+function getBaseUrl(request: NextRequest): string {
   if (process.env.APP_URL) {
-    const base = process.env.APP_URL.replace(/\/+$/, "");
-    return `${base}/api/auth/callback/google`;
+    return process.env.APP_URL.replace(/\/+$/, "");
   }
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
   const proto = request.headers.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}/api/auth/callback/google`;
+  return `${proto}://${host}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
-  const loginUrl = new URL("/login", request.url);
+  const baseUrl = getBaseUrl(request);
+  const isSecure = baseUrl.startsWith("https");
+  const loginUrl = new URL(`${baseUrl}/login`);
 
   // 1. Gestion des annulations ou erreurs renvoyées par Google
   if (error || !code) {
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const redirectUri = getRedirectUri(request);
+  const redirectUri = `${baseUrl}/api/auth/callback/google`;
 
   try {
     // 3. Échange du code d'autorisation contre les jetons
@@ -167,11 +169,20 @@ export async function GET(request: NextRequest) {
     }
 
     // 7. Création de la session sécurisée
-    await createSession(targetUserId, true);
+    const sessionInfo = await createSession(targetUserId, true);
 
-    // 8. Redirection vers la destination appropriée
+    // 8. Redirection vers la destination appropriée (garantit le domaine public de production)
     const destination = isPlatformAdmin ? "/plateforme" : "/";
-    const redirectResponse = NextResponse.redirect(new URL(destination, request.url));
+    const redirectResponse = NextResponse.redirect(new URL(destination, baseUrl));
+
+    // Attachement explicite du cookie de session à la réponse
+    redirectResponse.cookies.set(SESSION_COOKIE_NAME, sessionInfo.token, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+      path: "/",
+      expires: sessionInfo.expiresAt,
+    });
 
     // Nettoyage du cookie temporaire d'état
     redirectResponse.cookies.delete("oauth_state");
