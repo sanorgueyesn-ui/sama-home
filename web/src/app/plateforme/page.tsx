@@ -74,229 +74,215 @@ export default async function PlatformDashboardPage() {
         <p className="mt-6 rounded-2xl bg-danger-bg p-4 text-sm font-bold text-danger">{loadError}</p>
       ) : summary ? (
         <>
-          {/* 2. Barre des Raccourcis Rapides (Optimisée Mobile & Tablette) */}
+          {/* 2. Indicateurs de performance clés (KPIs en haut pour vision directe sur mobile) */}
+          <div className="mt-5 sm:mt-8">
+            <p className="text-[11px] font-black uppercase tracking-wider text-white/50">
+              📊 Vue d&apos;ensemble plateforme
+            </p>
+
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+              <Link
+                href="/plateforme/etablissements?status=ACTIVE"
+                className="flex min-h-[105px] flex-col justify-between rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/10 active:scale-[0.98] sm:p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-400">
+                    Actifs
+                  </span>
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                </div>
+                <p className="my-1 text-2xl font-black text-white sm:text-3xl">{summary.activeEstablishments}</p>
+                <p className="truncate text-[10.5px] font-semibold text-white/60">Établissements en ligne</p>
+              </Link>
+
+              <Link
+                href="/plateforme/etablissements?status=PENDING"
+                className={`flex min-h-[105px] flex-col justify-between rounded-2xl border p-3.5 transition-all active:scale-[0.98] sm:p-4 ${
+                  summary.pendingEstablishments > 0
+                    ? "border-amber-500/40 bg-amber-500/10 hover:border-amber-500/60"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate rounded-md bg-amber-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-amber-300">
+                    En attente
+                  </span>
+                  {summary.pendingEstablishments > 0 && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400 animate-ping" />
+                  )}
+                </div>
+                <p className="my-1 text-2xl font-black text-white sm:text-3xl">{summary.pendingEstablishments}</p>
+                <p className="truncate text-[10.5px] font-semibold text-white/60">Demandes d&apos;inscription</p>
+              </Link>
+
+              <Link
+                href="/plateforme/abonnements"
+                className={`flex min-h-[105px] flex-col justify-between rounded-2xl border p-3.5 transition-all active:scale-[0.98] sm:p-4 ${
+                  summary.pendingPayments > 0
+                    ? "border-brand-orange/40 bg-brand-orange/10 hover:border-brand-orange/60"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate rounded-md bg-brand-orange/20 px-2 py-0.5 text-[10px] font-black uppercase text-brand-orange">
+                    Paiements
+                  </span>
+                  {summary.pendingPayments > 0 && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-brand-orange animate-pulse" />
+                  )}
+                </div>
+                <p className="my-1 text-2xl font-black text-brand-orange sm:text-3xl">{summary.pendingPayments}</p>
+                <p className="truncate text-[10.5px] font-semibold text-white/60">À valider</p>
+              </Link>
+
+              <Link
+                href="/plateforme/abonnements"
+                className="flex min-h-[105px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-white/20 active:scale-[0.98] sm:p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-black uppercase text-white/60">
+                    Expirations (7j)
+                  </span>
+                  <span className="text-[11px] text-white/30">⏳</span>
+                </div>
+                <p className="my-1 text-2xl font-black text-white sm:text-3xl">{summary.expiringSoonSubscriptions}</p>
+                <p className="truncate text-[10.5px] font-semibold text-white/60">Fin d&apos;essai imminente</p>
+              </Link>
+
+              <Link
+                href="/plateforme/etablissements?status=SUSPENDED"
+                className="col-span-2 flex min-h-[105px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-white/20 active:scale-[0.98] sm:col-span-1 sm:p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate rounded-md bg-danger/20 px-2 py-0.5 text-[10px] font-black uppercase text-danger">
+                    Suspendus
+                  </span>
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-danger" />
+                </div>
+                <p className="my-1 text-2xl font-black text-white sm:text-3xl">{summary.rejectedOrSuspendedEstablishments}</p>
+                <p className="truncate text-[10.5px] font-semibold text-white/60">Accès restreints</p>
+              </Link>
+            </div>
+          </div>
+
+          {/* 3. Barre des Raccourcis Rapides (Optimisée 2 colonnes Mobile & tactile) */}
           <div className="mt-6 sm:mt-8">
             <p className="text-[11px] font-black uppercase tracking-wider text-white/50">
               ⚡ Raccourcis d&apos;actions rapides
             </p>
 
-            <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
               {/* Établissements */}
               <Link
                 href="/plateforme/etablissements"
-                className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-brand-orange/50 hover:bg-white/10 sm:flex-col sm:items-stretch sm:justify-between"
+                className="group flex flex-col justify-between gap-2.5 rounded-2xl border border-white/10 bg-[#0e1a22] p-3.5 transition-all hover:border-brand-orange/50 hover:bg-white/10 active:scale-[0.98]"
               >
-                <div className="flex items-center gap-3 sm:justify-between">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange/15 text-brand-orange sm:h-9 sm:w-9">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-orange/15 text-brand-orange">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
                       <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
                     </svg>
                   </span>
-                  <div className="min-w-0 sm:hidden">
-                    <p className="text-xs font-black text-white group-hover:text-brand-orange">Établissements</p>
-                    <p className="text-[10px] text-white/50">Gérer, approuver, suspendre</p>
-                  </div>
-                  <span className="hidden text-xs font-extrabold text-white/40 group-hover:text-brand-orange sm:inline">→</span>
+                  <span className="text-xs font-black text-white/40 group-hover:text-brand-orange">→</span>
                 </div>
-                <div className="hidden sm:mt-3 sm:block">
-                  <p className="text-xs font-black text-white group-hover:text-brand-orange">Établissements</p>
-                  <p className="text-[10px] text-white/50">Gérer, approuver, suspendre</p>
+                <div>
+                  <p className="truncate text-xs font-black text-white group-hover:text-brand-orange">Établissements</p>
+                  <p className="truncate text-[10px] text-white/50">Gérer & valider</p>
                 </div>
-                <span className="text-sm font-extrabold text-white/40 group-hover:text-brand-orange sm:hidden">→</span>
               </Link>
 
               {/* Abonnements */}
               <Link
                 href="/plateforme/abonnements"
-                className="group relative flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-brand-orange/50 hover:bg-white/10 sm:flex-col sm:items-stretch sm:justify-between"
+                className="group relative flex flex-col justify-between gap-2.5 rounded-2xl border border-white/10 bg-[#0e1a22] p-3.5 transition-all hover:border-emerald-500/50 hover:bg-white/10 active:scale-[0.98]"
               >
                 {summary.pendingPayments > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand-orange text-[10px] font-black text-ink shadow-sm">
                     {summary.pendingPayments}
                   </span>
                 )}
-                <div className="flex items-center gap-3 sm:justify-between">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 sm:h-9 sm:w-9">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="5" width="20" height="14" rx="2" />
                       <line x1="2" y1="10" x2="22" y2="10" />
                     </svg>
                   </span>
-                  <div className="min-w-0 sm:hidden">
-                    <p className="text-xs font-black text-white group-hover:text-emerald-400">Abonnements</p>
-                    <p className="text-[10px] text-white/50">Paiements & renouvellements</p>
-                  </div>
-                  <span className="hidden text-xs font-extrabold text-white/40 group-hover:text-emerald-400 sm:inline">→</span>
+                  <span className="text-xs font-black text-white/40 group-hover:text-emerald-400">→</span>
                 </div>
-                <div className="hidden sm:mt-3 sm:block">
-                  <p className="text-xs font-black text-white group-hover:text-emerald-400">Abonnements</p>
-                  <p className="text-[10px] text-white/50">Paiements & renouvellements</p>
+                <div>
+                  <p className="truncate text-xs font-black text-white group-hover:text-emerald-400">Abonnements</p>
+                  <p className="truncate text-[10px] text-white/50">Paiements & licences</p>
                 </div>
-                <span className="text-sm font-extrabold text-white/40 group-hover:text-emerald-400 sm:hidden">→</span>
               </Link>
 
               {/* Utilisateurs */}
               <Link
                 href="/plateforme/utilisateurs"
-                className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-brand-orange/50 hover:bg-white/10 sm:flex-col sm:items-stretch sm:justify-between"
+                className="group flex flex-col justify-between gap-2.5 rounded-2xl border border-white/10 bg-[#0e1a22] p-3.5 transition-all hover:border-sky-500/50 hover:bg-white/10 active:scale-[0.98]"
               >
-                <div className="flex items-center gap-3 sm:justify-between">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400 sm:h-9 sm:w-9">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                       <circle cx="9" cy="7" r="4" />
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                   </span>
-                  <div className="min-w-0 sm:hidden">
-                    <p className="text-xs font-black text-white group-hover:text-sky-400">Utilisateurs</p>
-                    <p className="text-[10px] text-white/50">{summary.totalUsers} comptes enregistrés</p>
-                  </div>
-                  <span className="hidden text-xs font-extrabold text-white/40 group-hover:text-sky-400 sm:inline">→</span>
+                  <span className="text-xs font-black text-white/40 group-hover:text-sky-400">→</span>
                 </div>
-                <div className="hidden sm:mt-3 sm:block">
-                  <p className="text-xs font-black text-white group-hover:text-sky-400">Utilisateurs</p>
-                  <p className="text-[10px] text-white/50">{summary.totalUsers} comptes enregistrés</p>
+                <div>
+                  <p className="truncate text-xs font-black text-white group-hover:text-sky-400">Utilisateurs</p>
+                  <p className="truncate text-[10px] text-white/50">{summary.totalUsers} comptes créés</p>
                 </div>
-                <span className="text-sm font-extrabold text-white/40 group-hover:text-sky-400 sm:hidden">→</span>
               </Link>
 
               {/* Paramètres */}
               <Link
                 href="/plateforme/parametres"
-                className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-brand-orange/50 hover:bg-white/10 sm:flex-col sm:items-stretch sm:justify-between"
+                className="group flex flex-col justify-between gap-2.5 rounded-2xl border border-white/10 bg-[#0e1a22] p-3.5 transition-all hover:border-purple-500/50 hover:bg-white/10 active:scale-[0.98]"
               >
-                <div className="flex items-center gap-3 sm:justify-between">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400 sm:h-9 sm:w-9">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3" />
                       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
                   </span>
-                  <div className="min-w-0 sm:hidden">
-                    <p className="text-xs font-black text-white group-hover:text-purple-400">Paramètres</p>
-                    <p className="text-[10px] text-white/50">Tarifs & configuration</p>
-                  </div>
-                  <span className="hidden text-xs font-extrabold text-white/40 group-hover:text-purple-400 sm:inline">→</span>
+                  <span className="text-xs font-black text-white/40 group-hover:text-purple-400">→</span>
                 </div>
-                <div className="hidden sm:mt-3 sm:block">
-                  <p className="text-xs font-black text-white group-hover:text-purple-400">Paramètres</p>
-                  <p className="text-[10px] text-white/50">Tarifs & configuration</p>
+                <div>
+                  <p className="truncate text-xs font-black text-white group-hover:text-purple-400">Paramètres</p>
+                  <p className="truncate text-[10px] text-white/50">Tarifs & réglages</p>
                 </div>
-                <span className="text-sm font-extrabold text-white/40 group-hover:text-purple-400 sm:hidden">→</span>
               </Link>
 
-              {/* Historique */}
+              {/* Historique : col-span-2 sur mobile pour équilibrer, sm:col-span-1 */}
               <Link
                 href="/plateforme/historique"
-                className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-brand-orange/50 hover:bg-white/10 sm:flex-col sm:items-stretch sm:justify-between"
+                className="group col-span-2 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0e1a22] p-3.5 transition-all hover:border-amber-500/50 hover:bg-white/10 active:scale-[0.98] sm:col-span-1 sm:flex-col sm:items-stretch sm:justify-between"
               >
                 <div className="flex items-center gap-3 sm:justify-between">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400 sm:h-9 sm:w-9">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 14 14" />
                     </svg>
                   </span>
                   <div className="min-w-0 sm:hidden">
-                    <p className="text-xs font-black text-white group-hover:text-amber-400">Historique</p>
-                    <p className="text-[10px] text-white/50">Journal des décisions</p>
+                    <p className="text-xs font-black text-white group-hover:text-amber-400">Historique & Journal</p>
+                    <p className="text-[10px] text-white/50">Traçabilité des décisions administratives</p>
                   </div>
-                  <span className="hidden text-xs font-extrabold text-white/40 group-hover:text-amber-400 sm:inline">→</span>
+                  <span className="hidden text-xs font-black text-white/40 group-hover:text-amber-400 sm:inline">→</span>
                 </div>
-                <div className="hidden sm:mt-3 sm:block">
-                  <p className="text-xs font-black text-white group-hover:text-amber-400">Historique</p>
-                  <p className="text-[10px] text-white/50">Journal des décisions</p>
+                <div className="hidden sm:block">
+                  <p className="truncate text-xs font-black text-white group-hover:text-amber-400">Historique</p>
+                  <p className="truncate text-[10px] text-white/50">Journal des décisions</p>
                 </div>
-                <span className="text-sm font-extrabold text-white/40 group-hover:text-amber-400 sm:hidden">→</span>
+                <span className="text-sm font-black text-white/40 group-hover:text-amber-400 sm:hidden">→</span>
               </Link>
             </div>
-          </div>
-
-          {/* 3. Indicateurs de performance clés (KPIs) */}
-          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-            <Link
-              href="/plateforme/etablissements?status=ACTIVE"
-              className="flex min-h-[105px] flex-col justify-between rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/10 sm:p-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-400">
-                  Actifs
-                </span>
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-              </div>
-              <p className="my-1.5 text-2xl font-black text-white sm:text-3xl">{summary.activeEstablishments}</p>
-              <p className="truncate text-[10.5px] font-semibold text-white/60">Établissements en ligne</p>
-            </Link>
-
-            <Link
-              href="/plateforme/etablissements?status=PENDING"
-              className={`flex min-h-[105px] flex-col justify-between rounded-2xl border p-3.5 transition-all sm:p-4 ${
-                summary.pendingEstablishments > 0
-                  ? "border-amber-500/40 bg-amber-500/10 hover:border-amber-500/60"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate rounded-md bg-amber-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-amber-300">
-                  En attente
-                </span>
-                {summary.pendingEstablishments > 0 && (
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400 animate-ping" />
-                )}
-              </div>
-              <p className="my-1.5 text-2xl font-black text-white sm:text-3xl">{summary.pendingEstablishments}</p>
-              <p className="truncate text-[10.5px] font-semibold text-white/60">Demandes d&apos;inscription</p>
-            </Link>
-
-            <Link
-              href="/plateforme/abonnements"
-              className={`flex min-h-[105px] flex-col justify-between rounded-2xl border p-3.5 transition-all sm:p-4 ${
-                summary.pendingPayments > 0
-                  ? "border-brand-orange/40 bg-brand-orange/10 hover:border-brand-orange/60"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate rounded-md bg-brand-orange/20 px-2 py-0.5 text-[10px] font-black uppercase text-brand-orange">
-                  Paiements
-                </span>
-                {summary.pendingPayments > 0 && (
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-brand-orange animate-pulse" />
-                )}
-              </div>
-              <p className="my-1.5 text-2xl font-black text-brand-orange sm:text-3xl">{summary.pendingPayments}</p>
-              <p className="truncate text-[10.5px] font-semibold text-white/60">À valider</p>
-            </Link>
-
-            <Link
-              href="/plateforme/abonnements"
-              className="flex min-h-[105px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-white/20 sm:p-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-black uppercase text-white/60">
-                  Expirations (7j)
-                </span>
-                <span className="text-[11px] text-white/30">⏳</span>
-              </div>
-              <p className="my-1.5 text-2xl font-black text-white sm:text-3xl">{summary.expiringSoonSubscriptions}</p>
-              <p className="truncate text-[10.5px] font-semibold text-white/60">Fin d&apos;essai imminente</p>
-            </Link>
-
-            <Link
-              href="/plateforme/etablissements?status=SUSPENDED"
-              className="col-span-2 flex min-h-[105px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-white/20 sm:col-span-1 sm:p-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate rounded-md bg-danger/20 px-2 py-0.5 text-[10px] font-black uppercase text-danger">
-                  Suspendus
-                </span>
-                <span className="h-2 w-2 shrink-0 rounded-full bg-danger" />
-              </div>
-              <p className="my-1.5 text-2xl font-black text-white sm:text-3xl">{summary.rejectedOrSuspendedEstablishments}</p>
-              <p className="truncate text-[10.5px] font-semibold text-white/60">Accès restreints</p>
-            </Link>
           </div>
 
           {/* 4. Flux opérationnel en 2 colonnes */}

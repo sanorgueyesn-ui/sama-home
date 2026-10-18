@@ -203,48 +203,91 @@ export default async function PlatformSubscriptionPaymentsPage() {
                   Aucun paiement d&apos;abonnement n&apos;a encore été enregistré.
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-white/10 bg-white/5 text-[11px] font-bold text-white/60">
-                        <th className="p-3.5">Date</th>
-                        <th className="p-3.5">Établissement</th>
-                        <th className="p-3.5">Montant</th>
-                        <th className="p-3.5">Période</th>
-                        <th className="p-3.5">Statut</th>
-                        <th className="p-3.5">Référence / Mode</th>
-                        <th className="p-3.5">Confirmé par</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {overview.recentPayments.map((p) => (
-                        <tr key={p.id} className="transition-colors hover:bg-white/5">
-                          <td className="p-3.5 font-medium text-white/70">{fmtDate(p.createdAt)}</td>
-                          <td className="p-3.5 font-bold text-white">{p.establishmentName}</td>
-                          <td className="p-3.5 font-black text-brand-orange">{fmtFcfa(p.amount)}</td>
-                          <td className="p-3.5 font-medium text-white/80">{p.periodMonths} mois</td>
-                          <td className="p-3.5">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                p.status === "CONFIRMED"
-                                  ? "bg-emerald-500/15 text-emerald-300"
-                                  : p.status === "PENDING"
-                                  ? "bg-amber-500/15 text-amber-300"
-                                  : "bg-danger/15 text-danger"
-                              }`}
-                            >
-                              {p.status === "CONFIRMED" ? "Confirmé" : p.status === "PENDING" ? "En attente" : p.status}
-                            </span>
-                          </td>
-                          <td className="p-3.5 font-mono text-[11px] text-white/60">
-                            {p.reference ?? "—"}
-                          </td>
-                          <td className="p-3.5 text-white/50">{p.confirmedByName ?? "Système"}</td>
+                <>
+                  {/* Vue Mobile (Cartes ordonnées & lisibles) */}
+                  <div className="flex flex-col divide-y divide-white/5 sm:hidden">
+                    {overview.recentPayments.map((p) => (
+                      <div key={p.id} className="flex flex-col gap-2 p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-sm font-black text-white">{p.establishmentName}</span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              p.status === "CONFIRMED"
+                                ? "bg-emerald-500/15 text-emerald-300"
+                                : p.status === "PENDING"
+                                ? "bg-amber-500/15 text-amber-300"
+                                : "bg-danger/15 text-danger"
+                            }`}
+                          >
+                            {p.status === "CONFIRMED" ? "Confirmé" : p.status === "PENDING" ? "En attente" : p.status}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-base font-black text-brand-orange">{fmtFcfa(p.amount)}</span>
+                          <span className="rounded-lg bg-white/5 px-2 py-0.5 text-[11px] font-medium text-white/70">
+                            Durée : {p.periodMonths} mois
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] text-white/50">
+                          <span>📅 {fmtDate(p.createdAt)}</span>
+                          <span>Par : <strong className="text-white/70">{p.confirmedByName ?? "Système"}</strong></span>
+                        </div>
+
+                        {p.reference && (
+                          <div className="mt-0.5 rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-[11px] text-white/60">
+                            Réf : <span className="font-mono text-white/80">{p.reference}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Vue Tablette / Desktop (Tableau) */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-white/10 bg-white/5 text-[11px] font-bold text-white/60">
+                          <th className="p-3.5">Date</th>
+                          <th className="p-3.5">Établissement</th>
+                          <th className="p-3.5">Montant</th>
+                          <th className="p-3.5">Période</th>
+                          <th className="p-3.5">Statut</th>
+                          <th className="p-3.5">Référence / Mode</th>
+                          <th className="p-3.5">Confirmé par</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {overview.recentPayments.map((p) => (
+                          <tr key={p.id} className="transition-colors hover:bg-white/5">
+                            <td className="p-3.5 font-medium text-white/70">{fmtDate(p.createdAt)}</td>
+                            <td className="p-3.5 font-bold text-white">{p.establishmentName}</td>
+                            <td className="p-3.5 font-black text-brand-orange">{fmtFcfa(p.amount)}</td>
+                            <td className="p-3.5 font-medium text-white/80">{p.periodMonths} mois</td>
+                            <td className="p-3.5">
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                  p.status === "CONFIRMED"
+                                    ? "bg-emerald-500/15 text-emerald-300"
+                                    : p.status === "PENDING"
+                                    ? "bg-amber-500/15 text-amber-300"
+                                    : "bg-danger/15 text-danger"
+                                }`}
+                              >
+                                {p.status === "CONFIRMED" ? "Confirmé" : p.status === "PENDING" ? "En attente" : p.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-mono text-[11px] text-white/60">
+                              {p.reference ?? "—"}
+                            </td>
+                            <td className="p-3.5 text-white/50">{p.confirmedByName ?? "Système"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>

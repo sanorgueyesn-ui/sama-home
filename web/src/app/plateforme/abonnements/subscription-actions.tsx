@@ -79,28 +79,34 @@ export function SubscriptionActions({
   }
 
   return (
-    <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:items-end">
-      <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:items-center">
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => handleQuickProlong(30)}
-          title="Offrir ou ajouter 30 jours de validité"
-          className="flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-white/80 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-40"
-        >
-          {pending ? "..." : "+30 j"}
-        </button>
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        {/* Duo des prolongations rapides */}
+        <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:items-center">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => handleQuickProlong(30)}
+            title="Offrir ou ajouter 30 jours de validité"
+            className="flex h-10 sm:h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/90 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-emerald-300 active:scale-95 disabled:opacity-40"
+          >
+            <span>⏱️</span>
+            <span>{pending ? "..." : "+30 jours"}</span>
+          </button>
 
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => handleQuickProlong(90)}
-          title="Ajouter 90 jours (3 mois)"
-          className="flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-white/80 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-40"
-        >
-          {pending ? "..." : "+3 mois"}
-        </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => handleQuickProlong(90)}
+            title="Ajouter 90 jours (3 mois)"
+            className="flex h-10 sm:h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/90 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-emerald-300 active:scale-95 disabled:opacity-40"
+          >
+            <span>🚀</span>
+            <span>{pending ? "..." : "+3 mois"}</span>
+          </button>
+        </div>
 
+        {/* Bouton Encaisser principal */}
         <button
           type="button"
           disabled={pending}
@@ -108,18 +114,19 @@ export function SubscriptionActions({
             setError(null);
             setShowPaymentModal(true);
           }}
-          className="flex h-9 items-center justify-center rounded-xl bg-brand-orange/15 px-2.5 py-1 text-xs font-bold text-brand-orange transition-colors hover:bg-brand-orange hover:text-ink disabled:opacity-40"
+          className="flex h-10 sm:h-9 w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-brand-orange px-3.5 py-1.5 text-xs font-black text-[#0e171d] shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:opacity-40"
         >
-          Encaisser
+          <span>💳</span>
+          <span>Encaisser un règlement</span>
         </button>
       </div>
 
       {successMsg ? (
-        <span className="text-center text-[10.5px] font-semibold text-emerald-400 animate-pulse sm:text-right">{successMsg}</span>
+        <span className="text-center text-xs font-bold text-emerald-400 animate-pulse sm:text-right">{successMsg}</span>
       ) : null}
 
       {error ? (
-        <span className="text-center text-[10.5px] font-medium text-danger sm:text-right">{error}</span>
+        <span className="text-center text-xs font-semibold text-danger sm:text-right">{error}</span>
       ) : null}
 
       {/* Modal / Dialog d'enregistrement de règlement manuel */}

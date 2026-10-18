@@ -58,7 +58,7 @@ export function SubscriptionsTable({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none [&::-webkit-scrollbar]:hidden">
           {(
             [
               { id: "ALL", label: "Tous" },
@@ -123,42 +123,44 @@ export function SubscriptionsTable({
             return (
               <div
                 key={est.id}
-                className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-white/20 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3.5 rounded-2xl border border-white/10 bg-[#0e1a22] p-4 shadow-sm transition-colors hover:border-white/20 sm:flex-row sm:items-center sm:justify-between"
               >
                 {/* Infos établissement */}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="truncate text-sm font-extrabold text-white">{est.name}</h4>
+                    <h4 className="text-base font-black text-white">{est.name}</h4>
                     {validityBadge}
                     {sub && (
-                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                      <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold text-white/70">
                         {sub.isTrial ? "Essai gratuit" : `Payant (${sub.confirmedPaymentsCount} règlement${sub.confirmedPaymentsCount > 1 ? "s" : ""})`}
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-1 truncate text-xs text-white/50">
-                    Admin : <span className="text-white/80">{est.adminName ?? "—"}</span> •{" "}
-                    <span className="text-white/60">{est.adminEmail ?? "Sans email"}</span>
+                  <p className="mt-1 text-xs text-white/60">
+                    <span className="font-semibold text-white/40">Gérant :</span>{" "}
+                    <strong className="text-white">{est.adminName ?? "—"}</strong>
+                    {est.adminEmail ? <span className="ml-1 text-white/50">({est.adminEmail})</span> : null}
                   </p>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-white/40">
-                    <span>Inscrit le {fmtDate(est.createdAt)}</span>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px]">
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-white/60">
+                      📅 Inscrit le <strong className="text-white/85">{fmtDate(est.createdAt)}</strong>
+                    </span>
                     {sub && (
-                      <>
-                        <span>•</span>
-                        <span>Essai démarré le {fmtDate(sub.trialStartedAt)}</span>
-                        <span>•</span>
-                        <span className={sub.isExpired ? "font-bold text-danger" : "font-bold text-emerald-400"}>
-                          Échéance : {fmtDate(sub.currentPeriodEnd)}
-                        </span>
-                      </>
+                      <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-bold ${
+                        sub.isExpired
+                          ? "border border-danger/30 bg-danger/10 text-danger"
+                          : "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                      }`}>
+                        ⏳ Échéance : {fmtDate(sub.currentPeriodEnd)}
+                      </span>
                     )}
                   </div>
                 </div>
 
                 {/* Actions administratives */}
-                <div className="shrink-0 pt-2 sm:pt-0">
+                <div className="w-full shrink-0 border-t border-white/5 pt-3 sm:w-auto sm:border-t-0 sm:pt-0">
                   <SubscriptionActions establishmentId={est.id} establishmentName={est.name} />
                 </div>
               </div>
