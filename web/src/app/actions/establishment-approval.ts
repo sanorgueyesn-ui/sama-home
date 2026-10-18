@@ -288,3 +288,74 @@ export async function reactivateEstablishment(establishmentId: string): Promise<
 
   return {};
 }
+
+/**
+ * Suppression d'un établissement par un administrateur de PLATEFORME.
+ */
+export async function deleteEstablishment(establishmentId: string): Promise<{ error?: string }> {
+  const user = await requirePlatformAdmin();
+
+  if (!establishmentId) {
+    return { error: "Identifiant d'établissement manquant." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const establishment = await tx.establishment.findUnique({
+        where: { id: establishmentId },
+        select: { id: true, name: true },
+      });
+      if (!establishment) {
+        throw new EstablishmentApprovalError("Établissement introuvable.");
+      }
+
+      // Supprimer les dépendances associées
+      await tx.session.deleteMany({
+        where: { user: { establishmentId } },
+      });
+      await tx.subscriptionPayment.deleteMany({
+        where: { subscription: { establishmentId } },
+      });
+      await tx.subscription.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.notification.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.settings.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.auditLog.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.user.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.establishment.delete({
+        where: { id: establishmentId },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "ESTABLISHMENT_DELETED",
+          entityType: "Establishment",
+          entityId: establishmentId,
+          reason: `Suppression définitive de l'établissement « ${establishment.name} »`,
+          oldValue: { name: establishment.name },
+          newValue: null,
+          establishmentId: null,
+        },
+      });
+    });
+  } catch (error) {
+    if (error instanceof EstablishmentApprovalError) {
+      return { error: error.message };
+    }
+    console.error(`deleteEstablishment(${establishmentId}) — échec inattendu de la suppression :`, error);
+    return { error: "Une erreur est survenue pendant la suppression. Veuillez réessayer." };
+  }
+
+  return {};
+}
+

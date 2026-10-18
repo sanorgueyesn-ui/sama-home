@@ -9,11 +9,25 @@ import { DecorativeBlobs } from "@/components/auth/decorative-blobs";
 import { getPublicPricingSettings } from "@/lib/platform-settings-data";
 import { RegisterForm } from "./register-form";
 
-export default async function RegisterPage() {
-  const [theme, pricing] = await Promise.all([
+export default async function RegisterPage(props: {
+  searchParams?: Promise<{
+    google?: string;
+    email?: string;
+    name?: string;
+    token?: string;
+  }>;
+}) {
+  const [theme, pricing, searchParams] = await Promise.all([
     getTheme(),
     getPublicPricingSettings(),
+    props.searchParams,
   ]);
+
+  const isGoogle = searchParams?.google === "1";
+  const initialEmail = searchParams?.email ?? "";
+  const initialName = searchParams?.name ?? "";
+  const googleToken = searchParams?.token ?? "";
+
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
@@ -72,11 +86,19 @@ export default async function RegisterPage() {
               Gérez vos logements, réservations et revenus au même endroit.
             </p>
 
-            <RegisterForm pricing={pricing} />
+            <RegisterForm
+              pricing={pricing}
+              isGoogle={isGoogle}
+              initialEmail={initialEmail}
+              initialName={initialName}
+              googleToken={googleToken}
+            />
 
-            <div className="mt-6">
-              <OAuthButtons />
-            </div>
+            {!isGoogle && (
+              <div className="mt-6">
+                <OAuthButtons />
+              </div>
+            )}
 
             <p className="mt-6 text-center text-sm font-medium text-fg/60">
               Déjà un compte ?{" "}

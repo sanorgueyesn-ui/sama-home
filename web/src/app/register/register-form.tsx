@@ -11,7 +11,19 @@ import { AuthField } from "@/components/auth/auth-field";
 import type { VerifyOtpFormState } from "@/lib/definitions";
 import type { PricingSettingsView } from "@/lib/platform-settings-data";
 
-export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
+export function RegisterForm({
+  pricing,
+  isGoogle = false,
+  initialEmail = "",
+  initialName = "",
+  googleToken = "",
+}: {
+  pricing?: PricingSettingsView;
+  isGoogle?: boolean;
+  initialEmail?: string;
+  initialName?: string;
+  googleToken?: string;
+}) {
   const trialMonths = pricing?.trialDurationMonths ?? 2;
   const periodMonths = pricing?.periodMonths ?? 3;
   const periodPrice = pricing?.periodPriceFcfa ?? 9900;
@@ -33,14 +45,98 @@ export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
 
   const errors = registerState?.errors;
   const isOtpStep = registerState?.requiresOtp && !otpState?.success;
-  const targetEmail = registerState?.email || "";
+  const targetEmail = registerState?.email || initialEmail || "";
   const currentTestCode = localTestCode || registerState?.testCode;
+
+  // -------------------------------------------------------------
+  // Étape 3bis : Inscription Google validée directement
+  // -------------------------------------------------------------
+  if (registerState?.googleRegistered) {
+    const isPaid = registerState.plan === "PAID_9900";
+
+    return (
+      <div className="flex flex-col items-center gap-4 py-2 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-extrabold text-fg">Établissement créé avec succès !</h3>
+          <p className="mt-1 text-xs font-medium text-fg/60">
+            Votre établissement <strong className="text-fg">« {registerState.establishmentName} »</strong> a été configuré avec succès.
+          </p>
+        </div>
+
+        {isPaid ? (
+          <div className="w-full rounded-2xl border border-brand-orange/40 bg-brand-orange/5 p-4 text-left">
+            <div className="flex items-center justify-between">
+              <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
+                Forfait Choisi
+              </span>
+              <span className="text-xs font-extrabold text-fg">{formattedPrice} FCFA / {periodMonths} mois</span>
+            </div>
+
+            <p className="mt-2 text-xs font-bold text-fg">Instructions de règlement :</p>
+            <div className="mt-2 space-y-1 rounded-xl bg-surface p-3 text-[12px] text-fg/80">
+              <p>
+                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au numéro SAMA HOME.
+              </p>
+              <p>
+                <strong>Référence de dossier :</strong>{" "}
+                <span className="font-mono font-bold text-brand-orange">{registerState.reference ?? "SH-PAID"}</span>
+              </p>
+            </div>
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
+              <span className="mt-0.5">🚀</span>
+              <div>
+                <strong>Accès immédiat :</strong> Vos {trialMonths} mois d&apos;essai gratuit sont activés dès maintenant !
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full rounded-2xl border border-brand-orange/30 bg-brand-orange/5 p-4 text-left">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
+                Offre Gratuite
+              </span>
+              <span className="text-xs font-extrabold text-fg">Période Découverte</span>
+            </div>
+
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-brand-orange">{trialMonths} MOIS OFFERTS</span>
+              <span className="text-xs font-bold text-fg/60">(0 FCFA)</span>
+            </div>
+            <p className="mt-1 text-[12px] text-fg/75">
+              Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant {trialMonths} mois complets.
+            </p>
+
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
+              <span className="mt-0.5">🚀</span>
+              <div>
+                <strong>Accès immédiat :</strong> Votre compte est activé avec {trialMonths} mois gratuits.
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Link
+          href={`/login?google_verified=1&username=${encodeURIComponent(registerState.email || "")}&establishment=${encodeURIComponent(registerState.establishmentName || "")}`}
+          className="mt-2 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
+        >
+          Se connecter avec mon mot de passe
+        </Link>
+      </div>
+    );
+  }
 
   // -------------------------------------------------------------
   // Étape 3 : Confirmation finale après validation du code OTP
   // -------------------------------------------------------------
   if (otpState?.success) {
     const isPaid = otpState.plan === "PAID_9900";
+
 
     return (
       <div className="flex flex-col items-center gap-4 py-2 text-center">
@@ -299,8 +395,24 @@ export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
         </div>
       </div>
 
+      {/* Google verified banner */}
+      {isGoogle && (
+        <div className="flex items-start gap-3 rounded-2xl border border-brand-orange/40 bg-brand-orange/10 p-3.5 text-left text-xs">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white font-bold text-xs">
+            ✓
+          </span>
+          <div>
+            <p className="font-extrabold text-fg">Compte Google vérifié ({initialEmail})</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-fg/70">
+              Votre identité a été validée. Choisissez le nom de votre établissement et définissez votre mot de passe pour finaliser votre inscription.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Champ caché pour le plan */}
       <input type="hidden" name="plan" value={selectedPlan} />
+      {isGoogle && <input type="hidden" name="googleToken" value={googleToken} />}
 
       <AuthField
         id="establishmentName"
@@ -308,6 +420,7 @@ export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
         icon="building"
         hint="Ex. Résidence Atlantique"
         required
+        autoFocus
         errors={errors?.establishmentName}
       />
       <AuthField
@@ -315,19 +428,43 @@ export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
         label="Votre nom"
         icon="person"
         hint="Ex. Sanor Gueye"
+        defaultValue={initialName}
         required
         errors={errors?.managerName}
       />
-      <AuthField
-        id="email"
-        label="Adresse e-mail (reçoit le code OTP)"
-        icon="mail"
-        type="email"
-        hint="Ex. votre@email.com"
-        autoComplete="email"
-        required
-        errors={errors?.email}
-      />
+
+      {isGoogle ? (
+        <div>
+          <label htmlFor="email" className="block text-left text-xs font-bold text-fg/80">
+            Adresse e-mail <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">✓ Vérifiée via Google</span>
+          </label>
+          <input type="hidden" name="email" value={initialEmail} />
+          <div className="relative mt-1.5 flex h-12 w-full items-center rounded-xl border border-border/15 bg-surface/60 pl-10 pr-4 text-sm font-semibold text-fg/80">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fg/40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="m3.5 6 8.5 7 8.5-7" />
+              </svg>
+            </span>
+            {initialEmail}
+          </div>
+          {errors?.email && (
+            <p className="mt-1 pl-1 text-xs font-medium text-danger">{errors.email[0]}</p>
+          )}
+        </div>
+      ) : (
+        <AuthField
+          id="email"
+          label="Adresse e-mail (reçoit le code OTP)"
+          icon="mail"
+          type="email"
+          hint="Ex. votre@email.com"
+          autoComplete="email"
+          required
+          errors={errors?.email}
+        />
+      )}
+
       <AuthField
         id="password"
         label="Mot de passe"
@@ -364,8 +501,10 @@ export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
         className="flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {isRegisterPending
-          ? "Envoi du code en cours..."
-          : "Continuer et recevoir mon code de validation"}
+          ? "Création de votre établissement..."
+          : isGoogle
+            ? "CRÉER MON ÉTABLISSEMENT"
+            : "Continuer et recevoir mon code de validation"}
       </button>
     </form>
   );

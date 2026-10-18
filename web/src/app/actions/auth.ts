@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/password";
+import { verifyPassword, hashPassword } from "@/lib/password";
 import { createSession, deleteSession } from "@/lib/session";
 import { LoginSchema, type LoginFormState } from "@/lib/definitions";
 import { checkRateLimit, resetRateLimit, getClientIp } from "@/lib/rate-limit";
+import { verifyGoogleAuthToken } from "@/lib/session-token";
 
 const GENERIC_ERROR = "Identifiant ou mot de passe incorrect.";
 
@@ -34,7 +35,11 @@ export async function login(
 
   const { username, password, remember } = parsed.data;
 
-  const user = await prisma.user.findUnique({ where: { username } });
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ username }, { email: username }],
+    },
+  });
 
   // verifyPassword always runs, even when `user` is null (falls back to a
   // dummy hash), so a non-existent username takes the same time as a wrong
@@ -74,10 +79,51 @@ export async function login(
 
   resetRateLimit(rateLimitKey);
   await createSession(user.id, remember);
-  redirect("/");
+  redirect(user.isPlatformAdmin ? "/plateforme" : "/");
+}
+
+export async function setPasswordWithGoogleToken(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const token = formData.get("token")?.toString();
+  const password = formData.get("password")?.toString();
+  const confirmPassword = formData.get("confirmPassword")?.toString();
+
+  if (!token) {
+    return { error: "Session Google expirée. Veuillez vous reconnecter avec Google." };
+  }
+  if (!password || password.length < 8) {
+    return { error: "Le mot de passe doit comporter au moins 8 caractères." };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Les deux mots de passe ne correspondent pas." };
+  }
+
+  const payload = await verifyGoogleAuthToken(token);
+  if (!payload || !payload.email) {
+    return { error: "Session Google invalide ou expirée. Veuillez vous reconnecter avec Google." };
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ username: payload.email }, { email: payload.email }] },
+  });
+  if (!user) {
+    return { error: "Utilisateur introuvable." };
+  }
+
+  const passwordHash = await hashPassword(password);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash },
+  });
+
+  await createSession(user.id, true);
+  redirect(user.isPlatformAdmin ? "/plateforme" : "/");
 }
 
 export async function logout() {
   await deleteSession();
   redirect("/login");
 }
+

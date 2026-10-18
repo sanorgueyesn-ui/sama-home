@@ -1,27 +1,101 @@
 "use client";
 
-import { useActionState } from "react";
-import { login } from "@/app/actions/auth";
+import { useActionState, useState } from "react";
+import { login, setPasswordWithGoogleToken } from "@/app/actions/auth";
 import { AuthField } from "@/components/auth/auth-field";
 
-/**
- * Logique de connexion INCHANGÉE — même useActionState(login, ...), mêmes
- * noms de champs (username/password/remember), même message d'erreur, même
- * état de chargement. Seule la présentation (AuthField à icônes) diffère de
- * l'ancienne version.
- */
-export function LoginForm() {
+export function LoginForm({
+  defaultUsername = "",
+  isGoogleVerified = false,
+  googleToken = "",
+}: {
+  defaultUsername?: string;
+  isGoogleVerified?: boolean;
+  googleToken?: string;
+}) {
   const [state, formAction, pending] = useActionState(login, undefined);
+  const [showSetPassword, setShowSetPassword] = useState(false);
+  const [setPasswordState, setPasswordAction, isSettingPassword] = useActionState(
+    setPasswordWithGoogleToken,
+    undefined,
+  );
+
+  if (showSetPassword && isGoogleVerified && googleToken) {
+    return (
+      <form action={setPasswordAction} className="flex flex-col gap-4">
+        <input type="hidden" name="token" value={googleToken} />
+
+        <div className="rounded-2xl border border-brand-orange/30 bg-brand-orange/5 p-3.5 text-left text-xs text-fg/80">
+          <p className="font-extrabold text-fg">Définition de votre mot de passe</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-fg/70">
+            Votre compte Google (<strong className="text-fg">{defaultUsername}</strong>) est vérifié. Choisissez un mot de passe sécurisé pour vous connecter.
+          </p>
+        </div>
+
+        <AuthField
+          id="password"
+          label="Nouveau mot de passe"
+          icon="lock"
+          passwordToggle
+          autoComplete="new-password"
+          hint="8 caractères minimum."
+          required
+          autoFocus
+        />
+
+        <AuthField
+          id="confirmPassword"
+          label="Confirmer le mot de passe"
+          icon="lock"
+          passwordToggle
+          autoComplete="new-password"
+          required
+        />
+
+        {setPasswordState?.error && (
+          <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
+            {setPasswordState.error}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-2 pt-1">
+          <button
+            type="submit"
+            disabled={isSettingPassword}
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {isSettingPassword ? "Enregistrement..." : "Enregistrer et me connecter"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowSetPassword(false)}
+            className="py-1 text-center text-xs font-bold text-fg/60 hover:text-fg hover:underline"
+          >
+            ← Retour à la saisie du mot de passe
+          </button>
+        </div>
+      </form>
+    );
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <AuthField id="username" label="Identifiant" icon="person" autoComplete="username" required />
+      <AuthField
+        id="username"
+        label="Identifiant ou e-mail"
+        icon="person"
+        autoComplete="username"
+        defaultValue={defaultUsername}
+        required
+      />
       <AuthField
         id="password"
         label="Mot de passe"
         icon="lock"
         passwordToggle
         autoComplete="current-password"
+        autoFocus={!!defaultUsername}
         required
       />
 
@@ -30,9 +104,20 @@ export function LoginForm() {
           <input type="checkbox" name="remember" defaultChecked className="h-4 w-4 accent-navy" />
           Se souvenir de moi
         </label>
-        <p className="text-xs font-medium text-fg/50">
-          Mot de passe oublié ? Contactez un administrateur.
-        </p>
+
+        {isGoogleVerified && googleToken ? (
+          <button
+            type="button"
+            onClick={() => setShowSetPassword(true)}
+            className="text-left text-xs font-bold text-navy hover:underline"
+          >
+            Première connexion ou mot de passe non défini ? Définir mon mot de passe
+          </button>
+        ) : (
+          <p className="text-xs font-medium text-fg/50">
+            Mot de passe oublié ? Contactez un administrateur.
+          </p>
+        )}
       </div>
 
       {state?.error && (
@@ -56,3 +141,4 @@ export function LoginForm() {
     </form>
   );
 }
+

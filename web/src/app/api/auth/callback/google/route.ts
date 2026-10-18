@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { createSession } from "@/lib/session";
-import { SESSION_COOKIE_NAME } from "@/lib/session-token";
-import { hashPassword } from "@/lib/password";
-import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
+import { signGoogleAuthToken } from "@/lib/session-token";
 
 function getBaseUrl(request: NextRequest): string {
   if (process.env.APP_URL) {
@@ -104,9 +100,6 @@ export async function GET(request: NextRequest) {
       include: { establishment: true },
     });
 
-    let targetUserId: string;
-    let isPlatformAdmin = false;
-
     if (user) {
       // Vérification du statut de l'établissement
       if (user.establishmentId && user.establishment) {
@@ -124,73 +117,61 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      targetUserId = user.id;
-      isPlatformAdmin = user.isPlatformAdmin;
-    } else {
-      // 6. Nouvel utilisateur : Inscription rapide automatique 1-clic
-      const randomPassword = crypto.randomBytes(24).toString("hex");
-      const passwordHash = await hashPassword(randomPassword);
-      const establishmentName = `Résidence ${name}`;
-
-      const created = await prisma.$transaction(async (tx) => {
-        // Création de l'établissement actif immédiatement
-        const establishment = await tx.establishment.create({
-          data: {
-            name: establishmentName,
-            status: "ACTIVE",
-          },
-        });
-
-        // Création de l'administrateur
-        const newUser = await tx.user.create({
-          data: {
-            username: email,
-            email,
-            name,
-            passwordHash,
-            role: "ADMIN",
-            establishmentId: establishment.id,
-          },
-        });
-
-        // Activation de l'essai gratuit
-        await createTrialSubscriptionAndAudit(
-          tx,
-          establishment.id,
-          null,
-          "ESTABLISHMENT_AUTO_APPROVED",
-        );
-
-        return newUser;
+      // Utilisateur existant : Redirection vers /login pour demander le mot de passe
+      // Sécurité renforcée : Google a validé l'identité de l'e-mail, l'utilisateur n'a plus qu'à taper son mot de passe
+      const token = await signGoogleAuthToken({
+        email,
+        name: user.name || name,
+        purpose: "login",
       });
 
-      targetUserId = created.id;
-      isPlatformAdmin = false;
+      loginUrl.searchParams.set("google_verified", "1");
+      loginUrl.searchParams.set("username", user.username);
+      if (user.establishment?.name) {
+        loginUrl.searchParams.set("establishment", user.establishment.name);
+      }
+      loginUrl.searchParams.set("token", token);
+
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.cookies.set("google_auth_token", token, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 15 * 60,
+      });
+      redirectResponse.cookies.delete("oauth_state");
+      return redirectResponse;
+    } else {
+      // Nouvel utilisateur : Redirection vers /register avec pré-remplissage email & nom
+      // L'utilisateur renseigne le nom de son établissement et son mot de passe
+      const token = await signGoogleAuthToken({
+        email,
+        name,
+        purpose: "register",
+      });
+
+      const registerUrl = new URL(`${baseUrl}/register`);
+      registerUrl.searchParams.set("google", "1");
+      registerUrl.searchParams.set("email", email);
+      registerUrl.searchParams.set("name", name);
+      registerUrl.searchParams.set("token", token);
+
+      const redirectResponse = NextResponse.redirect(registerUrl);
+      redirectResponse.cookies.set("google_auth_token", token, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 15 * 60,
+      });
+      redirectResponse.cookies.delete("oauth_state");
+      return redirectResponse;
     }
-
-    // 7. Création de la session sécurisée
-    const sessionInfo = await createSession(targetUserId, true);
-
-    // 8. Redirection vers la destination appropriée (garantit le domaine public de production)
-    const destination = isPlatformAdmin ? "/plateforme" : "/";
-    const redirectResponse = NextResponse.redirect(new URL(destination, baseUrl));
-
-    // Attachement explicite du cookie de session à la réponse
-    redirectResponse.cookies.set(SESSION_COOKIE_NAME, sessionInfo.token, {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: "lax",
-      path: "/",
-      expires: sessionInfo.expiresAt,
-    });
-
-    // Nettoyage du cookie temporaire d'état
-    redirectResponse.cookies.delete("oauth_state");
-
-    return redirectResponse;
   } catch (err) {
     console.error("Unexpected error in Google OAuth callback:", err);
     loginUrl.searchParams.set("error", "google_error");
     return NextResponse.redirect(loginUrl);
   }
 }
+

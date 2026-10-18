@@ -12,6 +12,7 @@ import {
 } from "@/lib/definitions";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendOtpEmail } from "@/lib/mail";
+import { verifyGoogleAuthToken } from "@/lib/session-token";
 
 class EstablishmentRegistrationError extends Error {}
 
@@ -45,8 +46,8 @@ export async function registerEstablishment(
   const { establishmentName, managerName, email, password, plan } = parsed.data;
 
   // Vérifier si un compte existe déjà avec cette adresse e-mail
-  const existingUser = await prisma.user.findUnique({
-    where: { username: email },
+  const existingUser = await prisma.user.findFirst({
+    where: { OR: [{ username: email }, { email: email }] },
     select: { id: true },
   });
   if (existingUser) {
@@ -54,6 +55,90 @@ export async function registerEstablishment(
   }
 
   const passwordHash = await hashPassword(password);
+
+  // Vérification si l'inscription est validée par Google OAuth
+  const googleToken = formData.get("googleToken")?.toString();
+  if (googleToken) {
+    const verifiedGoogle = await verifyGoogleAuthToken(googleToken);
+    if (verifiedGoogle && verifiedGoogle.email.toLowerCase() === email.toLowerCase()) {
+      let generatedReference: string | undefined = undefined;
+
+      try {
+        await prisma.$transaction(async (tx) => {
+          const existing = await tx.user.findFirst({
+            where: { OR: [{ username: email }, { email: email }] },
+            select: { id: true },
+          });
+          if (existing) {
+            throw new EstablishmentRegistrationError(DUPLICATE_EMAIL_MESSAGE);
+          }
+
+          const establishment = await tx.establishment.create({
+            data: {
+              name: establishmentName,
+              status: "ACTIVE",
+            },
+          });
+
+          await tx.user.create({
+            data: {
+              username: email,
+              email,
+              name: managerName,
+              passwordHash,
+              role: "ADMIN",
+              establishmentId: establishment.id,
+              isPlatformAdmin: false,
+            },
+          });
+
+          await createTrialSubscriptionAndAudit(
+            tx,
+            establishment.id,
+            null,
+            "ESTABLISHMENT_AUTO_APPROVED",
+          );
+
+          if (plan === "PAID_9900") {
+            const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
+            const periodMonths = pricingSettings?.periodMonths ?? 3;
+            const periodPrice = pricingSettings?.periodPriceFcfa ?? 9900;
+
+            const sub = await tx.subscription.findUnique({ where: { establishmentId: establishment.id } });
+            if (sub) {
+              generatedReference = `SH-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+              await tx.subscriptionPayment.create({
+                data: {
+                  subscriptionId: sub.id,
+                  amount: periodPrice,
+                  periodMonths,
+                  status: "PENDING",
+                  reference: generatedReference,
+                },
+              });
+            }
+          }
+        });
+
+        return {
+          success: true,
+          googleRegistered: true,
+          plan,
+          establishmentName,
+          email,
+          reference: generatedReference,
+        };
+      } catch (error) {
+        if (error instanceof EstablishmentRegistrationError) {
+          return { errors: { email: [error.message] } };
+        }
+        console.error("registerEstablishment(google) — échec :", error);
+        return { message: "Une erreur est survenue lors de la création de l'établissement." };
+      }
+    }
+  }
+
 
   // Générer un code OTP à 6 chiffres
   const code = Math.floor(100000 + Math.random() * 900000).toString();

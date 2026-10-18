@@ -504,9 +504,12 @@ export type EstablishmentRegistrationFormState =
       message?: string;
       success?: boolean;
       requiresOtp?: boolean;
+      googleRegistered?: boolean;
+      establishmentName?: string;
       email?: string;
       plan?: string;
       testCode?: string;
+      reference?: string;
     }
   | undefined;
 

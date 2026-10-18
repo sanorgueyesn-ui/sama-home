@@ -55,3 +55,38 @@ export async function getSessionCookiePayload(): Promise<SessionCookiePayload | 
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   return decryptSessionCookie(token);
 }
+
+export type GoogleAuthPayload = {
+  email: string;
+  name?: string;
+  purpose: "register" | "login" | "reset_password";
+};
+
+export async function signGoogleAuthToken(
+  payload: GoogleAuthPayload,
+  expiresInSeconds: number = 15 * 60,
+): Promise<string> {
+  const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(expiresAt)
+    .sign(encodedKey);
+}
+
+export async function verifyGoogleAuthToken(
+  token: string | undefined,
+): Promise<GoogleAuthPayload | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify<GoogleAuthPayload>(
+      token,
+      encodedKey,
+      { algorithms: ["HS256"] },
+    );
+    return payload;
+  } catch {
+    return null;
+  }
+}
+

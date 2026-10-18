@@ -23,7 +23,13 @@ const OAUTH_ERRORS: Record<string, string> = {
 };
 
 export default async function LoginPage(props: {
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{
+    error?: string;
+    google_verified?: string;
+    username?: string;
+    establishment?: string;
+    token?: string;
+  }>;
 }) {
   const [theme, searchParams] = await Promise.all([
     getTheme(),
@@ -31,6 +37,11 @@ export default async function LoginPage(props: {
   ]);
   const errorCode = searchParams?.error;
   const errorMessage = errorCode ? OAUTH_ERRORS[errorCode] ?? "Erreur de connexion." : null;
+  const isGoogleVerified = searchParams?.google_verified === "1";
+  const googleUsername = searchParams?.username ?? "";
+  const googleEstablishment = searchParams?.establishment ?? "";
+  const googleToken = searchParams?.token ?? "";
+
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
@@ -100,11 +111,33 @@ export default async function LoginPage(props: {
               </div>
             )}
 
-            <LoginForm />
+            {isGoogleVerified && (
+              <div className="mb-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-800 dark:text-emerald-300">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
+                    ✓
+                  </span>
+                  <p className="font-extrabold">Compte Google validé : {googleUsername}</p>
+                </div>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-700/80 dark:text-emerald-300/80">
+                  {googleEstablishment ? <>Établissement <strong>« {googleEstablishment} »</strong>. </> : null}
+                  Pour votre sécurité, veuillez saisir votre mot de passe pour accéder à votre espace.
+                </p>
+              </div>
+            )}
 
-            <div className="mt-6">
-              <OAuthButtons />
-            </div>
+            <LoginForm
+              defaultUsername={googleUsername}
+              isGoogleVerified={isGoogleVerified}
+              googleToken={googleToken}
+            />
+
+            {!isGoogleVerified && (
+              <div className="mt-6">
+                <OAuthButtons />
+              </div>
+            )}
+
 
             <p className="mt-6 text-center text-sm font-medium text-fg/60">
               Pas encore de compte ?{" "}

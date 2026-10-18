@@ -44,6 +44,9 @@ export function AuthField({
   disabled,
   errors,
   passwordToggle,
+  defaultValue,
+  autoFocus,
+  readOnly,
 }: {
   id: string;
   name?: string;
@@ -56,6 +59,9 @@ export function AuthField({
   disabled?: boolean;
   errors?: string[];
   passwordToggle?: boolean;
+  defaultValue?: string;
+  autoFocus?: boolean;
+  readOnly?: boolean;
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const resolvedType = passwordToggle ? (showPassword ? "text" : "password") : type;
@@ -77,6 +83,9 @@ export function AuthField({
           autoComplete={autoComplete}
           required={required}
           disabled={disabled}
+          defaultValue={defaultValue}
+          autoFocus={autoFocus}
+          readOnly={readOnly}
           className={`h-12 w-full rounded-xl border border-border/15 bg-surface pl-10 text-sm font-medium text-fg outline-none placeholder:text-fg/50 focus:border-navy focus-visible:ring-2 focus-visible:ring-navy disabled:opacity-60 ${
             passwordToggle ? "pr-11" : "pr-4"
           }`}
