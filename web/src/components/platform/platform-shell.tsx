@@ -67,7 +67,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#0b141a] text-white lg:flex-row">
+    <div className="flex min-h-dvh w-full max-w-full overflow-x-hidden flex-col bg-[#0b141a] text-white lg:flex-row">
       <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-white/10 lg:bg-[#0e1a22] lg:px-3 lg:py-6">
         <div className="mb-1 px-3">
           <p className="text-lg font-extrabold tracking-tight text-white">SAMA HOME</p>
@@ -126,7 +126,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <div className="min-w-0 flex-1 bg-[#0b141a]">{children}</div>
+      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-hidden bg-[#0b141a]">{children}</div>
     </div>
   );
 }

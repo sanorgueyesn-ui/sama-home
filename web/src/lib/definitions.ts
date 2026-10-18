@@ -505,6 +505,7 @@ export type EstablishmentRegistrationFormState =
       success?: boolean;
       requiresOtp?: boolean;
       googleRegistered?: boolean;
+      pendingApproval?: boolean;
       establishmentName?: string;
       email?: string;
       plan?: string;
@@ -523,6 +524,7 @@ export type VerifyOtpFormState =
       errors?: Partial<Record<keyof z.infer<typeof VerifyOtpSchema>, string[]>>;
       message?: string;
       success?: boolean;
+      pendingApproval?: boolean;
       plan?: string;
       establishmentName?: string;
       reference?: string;

@@ -66,18 +66,18 @@ export default async function PlatformSubscriptionPaymentsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Link
             href="/plateforme/parametres"
-            className="rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-white/10"
+            className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-center text-xs font-bold text-white transition-colors hover:bg-white/10 sm:flex-initial"
           >
-            ⚙️ Modifier les tarifs
+            ⚙️ Modifier tarifs
           </Link>
           <Link
             href="/plateforme/etablissements"
-            className="rounded-2xl bg-brand-orange px-3.5 py-2 text-xs font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="flex flex-1 items-center justify-center rounded-2xl bg-brand-orange px-3.5 py-2.5 text-center text-xs font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98] sm:flex-initial"
           >
-            🏢 Voir établissements
+            🏢 Établissements
           </Link>
         </div>
       </div>

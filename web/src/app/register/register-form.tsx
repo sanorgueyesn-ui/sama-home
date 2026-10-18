@@ -54,6 +54,51 @@ export function RegisterForm({
   if (registerState?.googleRegistered) {
     const isPaid = registerState.plan === "PAID_9900";
 
+    if (registerState.pendingApproval) {
+      return (
+        <div className="flex flex-col items-center gap-4 py-2 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-extrabold text-fg">Inscription enregistrée !</h3>
+            <p className="mt-1 text-xs font-medium text-fg/60">
+              Votre établissement <strong className="text-fg">« {registerState.establishmentName} »</strong> a été enregistré.
+            </p>
+          </div>
+
+          <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-left">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 items-center rounded-md bg-amber-500/20 px-2 text-[11px] font-black tracking-wide text-amber-400 uppercase">
+                Modération SAMA HOME
+              </span>
+            </div>
+
+            <p className="mt-2 text-[12px] font-medium text-fg/80 leading-relaxed">
+              Pour des raisons de sécurité, chaque inscription fait l&apos;objet d&apos;une vérification par notre administrateur avant l&apos;activation des accès.
+            </p>
+
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-amber-300">
+              <span className="mt-0.5">🛡️</span>
+              <div>
+                <strong>Validation requise :</strong> Votre compte sera activé dès la confirmation administrative avec vos {trialMonths} mois d&apos;essai gratuit.
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/login"
+            className="mt-1 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
+          >
+            Retour à la page de connexion
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center gap-4 py-2 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -137,6 +182,51 @@ export function RegisterForm({
   if (otpState?.success) {
     const isPaid = otpState.plan === "PAID_9900";
 
+
+    if (otpState?.pendingApproval) {
+      return (
+        <div className="flex flex-col items-center gap-4 py-2 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-extrabold text-fg">Inscription enregistrée !</h3>
+            <p className="mt-1 text-xs font-medium text-fg/60">
+              Votre demande a été reçue et est en cours de validation.
+            </p>
+          </div>
+
+          <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-left">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 items-center rounded-md bg-amber-500/20 px-2 text-[11px] font-black tracking-wide text-amber-400 uppercase">
+                Modération SAMA HOME
+              </span>
+            </div>
+
+            <p className="mt-2 text-[12px] font-medium text-fg/80 leading-relaxed">
+              Pour des raisons de sécurité et de conformité, chaque nouvel établissement fait l&apos;objet d&apos;une vérification par notre équipe administrative avant l&apos;activation des accès.
+            </p>
+
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-amber-300">
+              <span className="mt-0.5">🛡️</span>
+              <div>
+                <strong>Validation requise :</strong> Vous aurez accès dès l&apos;approbation par l&apos;administrateur de SAMA HOME avec vos {trialMonths} mois d&apos;essai offerts.
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/login"
+            className="mt-1 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
+          >
+            Retour à la page de connexion
+          </Link>
+        </div>
+      );
+    }
 
     return (
       <div className="flex flex-col items-center gap-4 py-2 text-center">

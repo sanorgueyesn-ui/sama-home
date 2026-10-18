@@ -64,6 +64,8 @@ export async function registerEstablishment(
       let generatedReference: string | undefined = undefined;
 
       try {
+        let isPendingApproval = false;
+
         await prisma.$transaction(async (tx) => {
           const existing = await tx.user.findFirst({
             where: { OR: [{ username: email }, { email: email }] },
@@ -73,10 +75,16 @@ export async function registerEstablishment(
             throw new EstablishmentRegistrationError(DUPLICATE_EMAIL_MESSAGE);
           }
 
+          // Vérifier les réglages de modération de la plateforme
+          const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
+          const shouldAutoApprove = platformSettings?.autoApproveEstablishments ?? false;
+          const status = shouldAutoApprove ? "ACTIVE" : "PENDING";
+          isPendingApproval = !shouldAutoApprove;
+
           const establishment = await tx.establishment.create({
             data: {
               name: establishmentName,
-              status: "ACTIVE",
+              status,
             },
           });
 
@@ -92,12 +100,28 @@ export async function registerEstablishment(
             },
           });
 
-          await createTrialSubscriptionAndAudit(
-            tx,
-            establishment.id,
-            null,
-            "ESTABLISHMENT_AUTO_APPROVED",
-          );
+          if (shouldAutoApprove) {
+            await createTrialSubscriptionAndAudit(
+              tx,
+              establishment.id,
+              null,
+              "ESTABLISHMENT_AUTO_APPROVED",
+            );
+          } else {
+            await tx.auditLog.create({
+              data: {
+                establishmentId: establishment.id,
+                action: "ESTABLISHMENT_REGISTERED",
+                actorId: null,
+                details: {
+                  name: establishmentName,
+                  status: "PENDING",
+                  adminEmail: email,
+                  plan,
+                },
+              },
+            });
+          }
 
           if (plan === "PAID_9900") {
             const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
@@ -124,6 +148,7 @@ export async function registerEstablishment(
         return {
           success: true,
           googleRegistered: true,
+          pendingApproval: isPendingApproval,
           plan,
           establishmentName,
           email,
@@ -243,6 +268,8 @@ export async function verifyOtpAndRegister(
   // Le code est valide ! Création de l'établissement et de l'utilisateur
   let generatedReference: string | undefined = undefined;
 
+  let isPendingApproval = false;
+
   try {
     await prisma.$transaction(async (tx) => {
       // 1. Double vérification d'unicité
@@ -254,11 +281,16 @@ export async function verifyOtpAndRegister(
         throw new EstablishmentRegistrationError(DUPLICATE_EMAIL_MESSAGE);
       }
 
-      // 2. Création de l'établissement (Immédiatement ACTIVE dès validation du code OTP)
+      // 2. Vérifier les réglages de modération de la plateforme
+      const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
+      const shouldAutoApprove = platformSettings?.autoApproveEstablishments ?? false;
+      const status = shouldAutoApprove ? "ACTIVE" : "PENDING";
+      isPendingApproval = !shouldAutoApprove;
+
       const establishment = await tx.establishment.create({
         data: {
           name: otpRecord.establishmentName,
-          status: "ACTIVE",
+          status,
         },
       });
 
@@ -275,13 +307,29 @@ export async function verifyOtpAndRegister(
         },
       });
 
-      // 4. Activation immédiate des 2 mois d'essai gratuit pour tous les nouveaux inscrits
-      await createTrialSubscriptionAndAudit(
-        tx,
-        establishment.id,
-        null,
-        "ESTABLISHMENT_AUTO_APPROVED",
-      );
+      // 4. Activation d'essai si auto-approuvé, ou journal d'enregistrement si modération manuelle
+      if (shouldAutoApprove) {
+        await createTrialSubscriptionAndAudit(
+          tx,
+          establishment.id,
+          null,
+          "ESTABLISHMENT_AUTO_APPROVED",
+        );
+      } else {
+        await tx.auditLog.create({
+          data: {
+            establishmentId: establishment.id,
+            action: "ESTABLISHMENT_REGISTERED",
+            actorId: null,
+            details: {
+              name: otpRecord.establishmentName,
+              status: "PENDING",
+              adminEmail: otpRecord.email,
+              plan: otpRecord.plan,
+            },
+          },
+        });
+      }
 
       // Si l'utilisateur a choisi l'Offre Payante (9 900 FCFA / 3 mois), enregistrer la demande de paiement
       if (otpRecord.plan === "PAID_9900") {
@@ -321,6 +369,7 @@ export async function verifyOtpAndRegister(
 
   return {
     success: true,
+    pendingApproval: isPendingApproval,
     plan: otpRecord.plan,
     establishmentName: otpRecord.establishmentName,
     reference: generatedReference,

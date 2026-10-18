@@ -117,8 +117,8 @@ export function EstablishmentDecisionButtons({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex gap-2">
+    <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end">
+      <div className="flex w-full gap-2 sm:w-auto">
         <button
           type="button"
           disabled={pending}
@@ -126,7 +126,7 @@ export function EstablishmentDecisionButtons({
             setRejecting(true);
             setApproving(false);
           }}
-          className="h-9 rounded-xl border border-white/15 px-3 text-xs font-extrabold text-white hover:bg-white/5 disabled:opacity-60"
+          className="h-9 flex-1 rounded-xl border border-white/15 px-3.5 text-xs font-extrabold text-white hover:bg-white/5 disabled:opacity-60 sm:flex-initial"
         >
           Refuser
         </button>
@@ -137,12 +137,12 @@ export function EstablishmentDecisionButtons({
             setApproving(true);
             setRejecting(false);
           }}
-          className="h-9 rounded-xl bg-brand-orange px-3 text-xs font-extrabold text-ink transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="h-9 flex-1 rounded-xl bg-brand-orange px-3.5 text-xs font-extrabold text-ink transition-opacity hover:opacity-90 disabled:opacity-60 sm:flex-initial"
         >
           {pending ? "..." : "Approuver"}
         </button>
       </div>
-      {error ? <p className="max-w-56 text-right text-[10.5px] font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-left text-[10.5px] font-medium text-danger sm:text-right">{error}</p> : null}
     </div>
   );
 }

@@ -38,13 +38,13 @@ export default async function PlatformDashboardPage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-6 pb-16 sm:px-6 md:px-8 lg:px-10">
       {/* 1. En-tête exécutif */}
-      <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-black tracking-tight text-white sm:text-3xl">
               Tableau de bord plateforme
             </h1>
-            <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Système Opérationnel
             </span>
@@ -55,7 +55,7 @@ export default async function PlatformDashboardPage() {
         </div>
 
         {summary && (
-          <div className="flex items-center justify-between rounded-2xl border border-brand-orange/30 bg-brand-orange/10 px-4 py-2 sm:justify-end sm:px-3.5 sm:py-1.5">
+          <div className="flex w-full items-center justify-between rounded-2xl border border-brand-orange/30 bg-brand-orange/10 px-4 py-2 sm:w-auto sm:justify-end sm:px-3.5 sm:py-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-white/60 sm:mr-3">
               Revenus cumulés :
             </span>
@@ -282,7 +282,7 @@ export default async function PlatformDashboardPage() {
 
             <Link
               href="/plateforme/etablissements?status=SUSPENDED"
-              className="flex min-h-[105px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-white/20 sm:p-4"
+              className="col-span-2 flex min-h-[105px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5 transition-all hover:border-white/20 sm:col-span-1 sm:p-4"
             >
               <div className="flex items-center justify-between">
                 <span className="truncate rounded-md bg-danger/20 px-2 py-0.5 text-[10px] font-black uppercase text-danger">

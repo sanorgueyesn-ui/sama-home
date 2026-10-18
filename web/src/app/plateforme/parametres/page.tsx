@@ -215,43 +215,162 @@ export default async function PlatformSettingsPage() {
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {/* Wave */}
-              <div className="flex flex-col rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-sky-400">🌊 Compte Wave</span>
-                <span className="mt-2 font-mono text-base font-extrabold text-white">+221 77 000 00 00</span>
-                <p className="mt-1 text-[11px] text-white/50">Compte officiel SAMA HOME</p>
-                <span className="mt-3 inline-block rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-semibold text-sky-300 text-center">
-                  Instantané • 0% frais
-                </span>
+              <div className="flex flex-col justify-between rounded-2xl border border-sky-500/25 bg-gradient-to-b from-sky-500/10 to-sky-500/5 p-4 sm:p-5">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-sky-500/15 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#00D2FF]/20 shadow-sm">
+                        <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                          <rect width="48" height="48" rx="12" fill="#00D2FF" />
+                          <path d="M24 10C17.37 10 12 15.37 12 22C12 26.5 14.5 30.4 18.2 32.4C18.2 32.4 19.5 30.5 19.5 28C19.5 24 22 22 24 22C26 22 28.5 24 28.5 28C28.5 30.5 29.8 32.4 29.8 32.4C33.5 30.4 36 26.5 36 22C36 15.37 30.63 10 24 10Z" fill="#0E1A22" />
+                          <circle cx="21" cy="18" r="2" fill="white" />
+                          <circle cx="27" cy="18" r="2" fill="white" />
+                          <path d="M21 21C22 22.5 26 22.5 27 21" stroke="#FFD200" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M16 35C20 38 28 38 32 35" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-sky-400">Wave Sénégal</span>
+                        <p className="text-[10px] font-medium text-white/50">Mobile Money</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[9px] font-bold text-sky-300">
+                      Officiel
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <span className="font-mono text-base font-black tracking-wide text-white sm:text-lg">
+                      +221 77 000 00 00
+                    </span>
+                    <p className="mt-1 text-[11px] font-medium text-white/60">
+                      Compte marchand SAMA HOME
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-sky-500/15 pt-3">
+                  <span className="flex h-8 w-full items-center justify-center rounded-xl bg-sky-500/15 text-[10.5px] font-bold text-sky-300">
+                    ⚡ Instantané • 0% de frais
+                  </span>
+                </div>
               </div>
 
               {/* Orange Money */}
-              <div className="flex flex-col rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">🍊 Orange Money</span>
-                <span className="mt-2 font-mono text-base font-extrabold text-white">+221 78 000 00 00</span>
-                <p className="mt-1 text-[11px] text-white/50">Compte marchand ou transfert direct</p>
-                <span className="mt-3 inline-block rounded-lg bg-amber-500/20 px-2 py-1 text-[10px] font-semibold text-amber-300 text-center">
-                  Transfert avec code
-                </span>
+              <div className="flex flex-col justify-between rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-500/10 to-amber-500/5 p-4 sm:p-5">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-amber-500/15 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FF7900]/20 shadow-sm">
+                        <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                          <rect width="48" height="48" rx="12" fill="#FF7900" />
+                          <rect x="10" y="10" width="28" height="28" rx="6" fill="#000000" />
+                          <circle cx="24" cy="24" r="7" fill="#FF7900" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-400">Orange Money</span>
+                        <p className="text-[10px] font-medium text-white/50">Mobile Money</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[9px] font-bold text-amber-300">
+                      Officiel
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <span className="font-mono text-base font-black tracking-wide text-white sm:text-lg">
+                      +221 78 000 00 00
+                    </span>
+                    <p className="mt-1 text-[11px] font-medium text-white/60">
+                      Transfert direct & compte marchand
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-amber-500/15 pt-3">
+                  <span className="flex h-8 w-full items-center justify-center rounded-xl bg-amber-500/15 text-[10.5px] font-bold text-amber-300">
+                    🍊 Transfert direct avec code
+                  </span>
+                </div>
               </div>
 
               {/* Assistance WhatsApp */}
-              <div className="flex flex-col rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">💬 Support WhatsApp</span>
-                <span className="mt-2 font-mono text-base font-extrabold text-white">+221 77 000 00 00</span>
-                <p className="mt-1 text-[11px] text-white/50">Envoi de capture ou justificatif</p>
-                <span className="mt-3 inline-block rounded-lg bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-300 text-center">
-                  Réponse &lt; 2h
-                </span>
+              <div className="flex flex-col justify-between rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-500/10 to-emerald-500/5 p-4 sm:p-5">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-emerald-500/15 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/20 shadow-sm">
+                        <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                          <rect width="48" height="48" rx="12" fill="#25D366" />
+                          <path d="M24 12C17.37 12 12 17.37 12 24C12 26.3 12.65 28.45 13.78 30.29L12.5 35L17.35 33.73C19.12 34.8 21.48 35.43 24 35.43C30.63 35.43 36 30.06 36 23.43C36 16.8 30.63 12 24 12Z" fill="white" />
+                          <path d="M21 19.8C20.85 19.8 20.63 20.1 20.4 20.35C20.17 20.6 19.6 21.2 19.6 22.37C19.6 23.55 20.45 24.67 20.58 24.82C20.7 25 22.3 27.5 24.75 28.52C26.67 29.32 27.25 29.3 27.7 29.25C28.35 29.2 29.35 28.6 29.6 27.9L28.2 26.3C27.97 26.62 27.4 27.3 27.23 27.5C27.05 27.7 26.88 27.72 26.58 27.6C26.27 27.47 25.35 27.15 24.22 26.15C23.35 25.37 22.75 24.4 22.58 24.1C22.4 23.8 22.57 23.62 22.73 23.45C22.88 23.27 23.02 23.15 23.17 22.97C23.32 22.8 23.4 22.7 23.5 22.5C23.6 22.3 23.58 22.1 23.52 21.95C23.45 21.8 22.92 20.5 22.7 19.95C22.52 19.5 22.37 19.47 22.08 19.45L21 19.8Z" fill="#25D366" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-emerald-400">WhatsApp</span>
+                        <p className="text-[10px] font-medium text-white/50">Support Client</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300">
+                      Direct
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <span className="font-mono text-base font-black tracking-wide text-white sm:text-lg">
+                      +221 77 000 00 00
+                    </span>
+                    <p className="mt-1 text-[11px] font-medium text-white/60">
+                      Justificatifs & validation express
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-emerald-500/15 pt-3">
+                  <span className="flex h-8 w-full items-center justify-center rounded-xl bg-emerald-500/15 text-[10.5px] font-bold text-emerald-300">
+                    💬 Réponse en moins de 2h
+                  </span>
+                </div>
               </div>
 
               {/* Email Support */}
-              <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 p-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-white/60">✉️ Email d&apos;assistance</span>
-                <span className="mt-2 truncate font-mono text-xs font-extrabold text-white">support@samahome.sn</span>
-                <p className="mt-1 text-[11px] text-white/50">Facturation & contrats</p>
-                <span className="mt-3 inline-block rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white/70 text-center">
-                  Support officiel
-                </span>
+              <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 shadow-sm">
+                        <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                          <rect width="48" height="48" rx="12" fill="#3B82F6" />
+                          <path d="M14 16H34C35.1 16 36 16.9 36 18V30C36 31.1 35.1 32 34 32H14C12.9 32 12 31.1 12 30V18C12 16.9 12.9 16 14 16Z" fill="#1E40AF" />
+                          <path d="M36 18L24 26L12 18" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-white/70">Assistance</span>
+                        <p className="text-[10px] font-medium text-white/50">Email officiel</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold text-white/60">
+                      24/7
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5">
+                    <span className="truncate font-mono text-xs font-black tracking-wide text-white sm:text-sm">
+                      support@samahome.sn
+                    </span>
+                    <p className="mt-1 text-[11px] font-medium text-white/60">
+                      Contrats & factures officielles
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-white/10 pt-3">
+                  <span className="flex h-8 w-full items-center justify-center rounded-xl bg-white/10 text-[10.5px] font-bold text-white/70">
+                    ✉️ Support officiel SAMA HOME
+                  </span>
+                </div>
               </div>
             </div>
           </div>
