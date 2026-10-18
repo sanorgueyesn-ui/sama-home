@@ -45,6 +45,33 @@ export async function login(
     return { error: GENERIC_ERROR };
   }
 
+  // Vérifier le statut de l'établissement si l'utilisateur est rattaché à un établissement
+  if (user.establishmentId) {
+    const establishment = await prisma.establishment.findUnique({
+      where: { id: user.establishmentId },
+      select: { status: true },
+    });
+
+    if (establishment?.status === "PENDING") {
+      return {
+        error:
+          "Votre établissement est en attente d'approbation par l'administrateur de SAMA HOME. Vous aurez accès dès sa validation.",
+      };
+    }
+
+    if (establishment?.status === "REJECTED") {
+      return {
+        error: "La demande d'inscription pour cet établissement a été refusée par l'administrateur.",
+      };
+    }
+
+    if (establishment?.status === "SUSPENDED") {
+      return {
+        error: "L'accès pour cet établissement est actuellement suspendu. Veuillez contacter le support.",
+      };
+    }
+  }
+
   resetRateLimit(rateLimitKey);
   await createSession(user.id, remember);
   redirect("/");
