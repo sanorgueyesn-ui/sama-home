@@ -122,6 +122,19 @@ export type PendingSubscriptionPaymentView = {
  * aucun autre statut ne peut jamais apparaître dans le résultat, aucun
  * paramètre d'appel ne permet de l'élargir.
  */
+type PendingPaymentDbRow = {
+  id: string;
+  amount: number;
+  periodMonths: number;
+  reference: string | null;
+  createdAt: Date;
+  subscription: {
+    establishment: {
+      name: string;
+    };
+  };
+};
+
 export async function listPendingSubscriptionPayments(): Promise<PendingSubscriptionPaymentView[]> {
   await requirePlatformAdmin();
 
@@ -138,7 +151,7 @@ export async function listPendingSubscriptionPayments(): Promise<PendingSubscrip
     orderBy: { createdAt: "asc" },
   });
 
-  return payments.map((payment: any) => ({
+  return (payments as PendingPaymentDbRow[]).map((payment) => ({
     id: payment.id,
     establishmentName: payment.subscription.establishment.name,
     createdAt: payment.createdAt,
@@ -269,7 +282,48 @@ export async function getPlatformSubscriptionsOverview(): Promise<PlatformSubscr
   let expiredCount = 0;
   let totalSubscriptions = 0;
 
-  const establishments: PlatformSubscriptionEstablishmentView[] = allEstablishments.map((est: any) => {
+  type EstablishmentWithSubscriptionRow = {
+    id: string;
+    name: string;
+    status: EstablishmentStatus;
+    createdAt: Date;
+    users: { name: string; email: string | null; username: string }[];
+    subscription: {
+      id: string;
+      trialStartedAt: Date;
+      currentPeriodEnd: Date;
+      payments: { id: string; amount: number }[];
+    } | null;
+  };
+
+  type PendingOverviewPaymentRow = {
+    id: string;
+    amount: number;
+    periodMonths: number;
+    reference: string | null;
+    createdAt: Date;
+    subscription: {
+      establishment: { id: string; name: string };
+    };
+  };
+
+  type RecentPaymentDbRow = {
+    id: string;
+    amount: number;
+    periodMonths: number;
+    status: string;
+    reference: string | null;
+    createdAt: Date;
+    confirmedAt: Date | null;
+    confirmedBy: { name: string; username: string } | null;
+    subscription: {
+      establishment: { name: string };
+    };
+  };
+
+  const establishments: PlatformSubscriptionEstablishmentView[] = (
+    allEstablishments as EstablishmentWithSubscriptionRow[]
+  ).map((est) => {
     let subView = null;
     if (est.subscription) {
       totalSubscriptions++;
@@ -312,7 +366,9 @@ export async function getPlatformSubscriptionsOverview(): Promise<PlatformSubscr
     };
   });
 
-  const pendingPayments: PendingSubscriptionPaymentView[] = pendingPaymentsRaw.map((p: any) => ({
+  const pendingPayments: PendingSubscriptionPaymentView[] = (
+    pendingPaymentsRaw as PendingOverviewPaymentRow[]
+  ).map((p) => ({
     id: p.id,
     establishmentName: p.subscription.establishment.name,
     createdAt: p.createdAt,
@@ -321,7 +377,9 @@ export async function getPlatformSubscriptionsOverview(): Promise<PlatformSubscr
     reference: p.reference,
   }));
 
-  const recentPayments: PlatformSubscriptionPaymentHistoryItem[] = recentPaymentsRaw.map((p: any) => ({
+  const recentPayments: PlatformSubscriptionPaymentHistoryItem[] = (
+    recentPaymentsRaw as RecentPaymentDbRow[]
+  ).map((p) => ({
     id: p.id,
     establishmentName: p.subscription.establishment.name,
     amount: p.amount,

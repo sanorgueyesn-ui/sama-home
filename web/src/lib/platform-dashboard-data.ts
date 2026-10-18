@@ -62,9 +62,6 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
     totalEstablishments,
     totalUsers,
     totalProperties,
-    confirmedPayments,
-    recentEstablishmentsRaw,
-    recentAuditsRaw,
   ] = await Promise.all([
     prisma.establishment.count({ where: { status: "PENDING" } }),
     prisma.establishment.count({ where: { status: "ACTIVE" } }),
@@ -74,6 +71,9 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
     prisma.establishment.count(),
     prisma.user.count(),
     prisma.property.count(),
+  ]);
+
+  const [confirmedPayments, recentEstablishmentsRaw, recentAuditsRaw] = await Promise.all([
     prisma.subscriptionPayment.findMany({
       where: { status: "CONFIRMED" },
       select: { amount: true },
@@ -101,7 +101,16 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
 
   const totalRevenueFcfa = confirmedPayments.reduce((acc: number, p: { amount: number }) => acc + p.amount, 0);
 
-  const establishmentIds = recentAuditsRaw.map((a: { establishmentId: string | null }) => a.establishmentId).filter(Boolean) as string[];
+  type RecentAuditItem = {
+    id: string;
+    action: string;
+    createdAt: Date;
+    establishmentId: string | null;
+    user: { name: string; username: string } | null;
+  };
+
+  const typedAudits = recentAuditsRaw as RecentAuditItem[];
+  const establishmentIds = typedAudits.map((a) => a.establishmentId).filter(Boolean) as string[];
   const establishmentsMap = new Map<string, string>();
   if (establishmentIds.length > 0) {
     const ests = await prisma.establishment.findMany({
@@ -111,7 +120,17 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
     ests.forEach((e: { id: string; name: string }) => establishmentsMap.set(e.id, e.name));
   }
 
-  const recentEstablishments = recentEstablishmentsRaw.map((e: any) => ({
+  type RecentEstablishmentItem = {
+    id: string;
+    name: string;
+    status: string;
+    createdAt: Date;
+    users: { name: string; email: string | null; username: string }[];
+    subscription: { currentPeriodEnd: Date } | null;
+  };
+
+  const typedEstablishments = recentEstablishmentsRaw as RecentEstablishmentItem[];
+  const recentEstablishments = typedEstablishments.map((e) => ({
     id: e.id,
     name: e.name,
     status: e.status,
@@ -121,7 +140,7 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
     currentPeriodEnd: e.subscription?.currentPeriodEnd ?? null,
   }));
 
-  const recentDecisions = recentAuditsRaw.map((a: any) => ({
+  const recentDecisions = typedAudits.map((a) => ({
     id: a.id,
     action: a.action,
     createdAt: a.createdAt,
