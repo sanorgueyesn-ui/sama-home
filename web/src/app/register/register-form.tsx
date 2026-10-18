@@ -126,7 +126,7 @@ export function RegisterForm({
             <p className="mt-2 text-xs font-bold text-fg">Instructions de règlement :</p>
             <div className="mt-2 space-y-1 rounded-xl bg-surface p-3 text-[12px] text-fg/80">
               <p>
-                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au numéro SAMA HOME.
+                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au <strong className="text-brand-orange">+221 77 338 66 60</strong>.
               </p>
               <p>
                 <strong>Référence de dossier :</strong>{" "}
@@ -256,7 +256,7 @@ export function RegisterForm({
             <p className="mt-2 text-xs font-bold text-fg">Instructions de règlement pour l&apos;activation :</p>
             <div className="mt-2 space-y-1 rounded-xl bg-surface p-3 text-[12px] text-fg/80">
               <p>
-                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au numéro SAMA HOME.
+                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au <strong className="text-brand-orange">+221 77 338 66 60</strong>.
               </p>
               <p>
                 <strong>Référence de dossier :</strong>{" "}

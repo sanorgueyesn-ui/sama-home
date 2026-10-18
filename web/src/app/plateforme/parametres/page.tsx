@@ -241,7 +241,7 @@ export default async function PlatformSettingsPage() {
 
                   <div className="mt-3.5">
                     <span className="font-mono text-base font-black tracking-wide text-white sm:text-lg">
-                      +221 77 000 00 00
+                      +221 77 338 66 60
                     </span>
                     <p className="mt-1 text-[11px] font-medium text-white/60">
                       Compte marchand SAMA HOME
@@ -280,7 +280,7 @@ export default async function PlatformSettingsPage() {
 
                   <div className="mt-3.5">
                     <span className="font-mono text-base font-black tracking-wide text-white sm:text-lg">
-                      +221 78 000 00 00
+                      +221 77 338 66 60
                     </span>
                     <p className="mt-1 text-[11px] font-medium text-white/60">
                       Transfert direct & compte marchand
@@ -319,7 +319,7 @@ export default async function PlatformSettingsPage() {
 
                   <div className="mt-3.5">
                     <span className="font-mono text-base font-black tracking-wide text-white sm:text-lg">
-                      +221 77 000 00 00
+                      +221 77 338 66 60
                     </span>
                     <p className="mt-1 text-[11px] font-medium text-white/60">
                       Justificatifs & validation express
