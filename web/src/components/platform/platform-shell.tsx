@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
@@ -36,17 +37,26 @@ export function PlatformShell({ children }: { children: ReactNode }) {
           {/* Logo & Identité Plateforme */}
           <div className="flex items-center gap-3">
             <Link href="/plateforme" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-orange text-sm font-black text-ink shadow-sm">
-                SH
-              </span>
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5 p-1 shadow-sm">
+                <Image
+                  src="/brand/Sama-Home-icone-Orange.png"
+                  alt="SAMA HOME"
+                  width={40}
+                  height={40}
+                  priority
+                  className="h-full w-full object-contain"
+                />
+              </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-black tracking-tight text-white">SAMA HOME</span>
+                  <span className="text-base font-black tracking-tight text-white">
+                    <span className="text-brand-orange">SAMA</span> HOME
+                  </span>
                   <span className="rounded-full border border-brand-orange/30 bg-brand-orange/15 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
                     Plateforme
                   </span>
                 </div>
-                <span className="hidden text-[10px] font-mono font-medium text-white/40 md:block">
+                <span className="text-[10px] font-mono font-medium text-white/50">
                   COMPAGNIE GUEYE TAWFEKH
                 </span>
               </div>

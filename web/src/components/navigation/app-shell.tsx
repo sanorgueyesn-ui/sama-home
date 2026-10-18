@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
@@ -340,7 +341,21 @@ export function AppShell({
         inert={menuOpen}
         className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-border/10 lg:bg-surface-raised lg:px-3 lg:py-6"
       >
-        <div className="mb-6 px-3 text-lg font-extrabold tracking-tight text-fg">SAMA HOME</div>
+        <Link href="/" className="mb-6 flex items-center gap-2.5 px-3">
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-orange/10 p-0.5 shadow-sm">
+            <Image
+              src="/brand/Sama-Home-icone-Orange.png"
+              alt="SAMA HOME"
+              width={32}
+              height={32}
+              priority
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <span className="text-lg font-black tracking-tight text-fg">
+            <span className="text-brand-orange">SAMA</span> HOME
+          </span>
+        </Link>
         <nav className="flex flex-1 flex-col gap-1">
           {PRIMARY_ITEMS.map((item) => (
             <NavRow key={item.label} item={item} active={isActive(pathname, item.href!)} />
@@ -397,7 +412,21 @@ export function AppShell({
         >
           <GearIcon active={isActive(pathname, "/settings")} />
         </Link>
-        <span className="text-sm font-extrabold tracking-tight text-fg">SAMA HOME</span>
+        <Link href="/" className="flex items-center gap-2">
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-orange/10 p-0.5 shadow-sm">
+            <Image
+              src="/brand/Sama-Home-icone-Orange.png"
+              alt="SAMA HOME"
+              width={32}
+              height={32}
+              priority
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <span className="text-sm font-black tracking-tight text-fg">
+            <span className="text-brand-orange">SAMA</span> HOME
+          </span>
+        </Link>
         <button
           ref={menuButtonRef}
           type="button"
@@ -462,6 +491,18 @@ export function AppShell({
           />
           <div className="relative w-full rounded-t-2xl bg-surface-raised px-4 pt-4 [padding-bottom:calc(env(safe-area-inset-bottom)+1.5rem)]">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-fg/15" />
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <Image
+                src="/brand/Sama-Home-icone-Orange.png"
+                alt="SAMA HOME"
+                width={24}
+                height={24}
+                className="h-6 w-6 object-contain"
+              />
+              <span className="text-xs font-black tracking-tight text-fg">
+                <span className="text-brand-orange">SAMA</span> HOME
+              </span>
+            </div>
             <nav className="flex flex-col gap-1">
               {MENU_ITEMS.map((item) => (
                 <NavRow
