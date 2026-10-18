@@ -74,6 +74,8 @@ export default async function PlatformEstablishmentsPage(props: PageProps<"/plat
   const { status, q } = await props.searchParams;
   const statusParam = typeof status === "string" ? status : "ALL";
   const query = typeof q === "string" ? q : "";
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
 
   let items: EstablishmentListView[] = [];
   let truncated = false;
