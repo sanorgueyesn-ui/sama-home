@@ -6,20 +6,14 @@ import { FeatureList } from "@/components/auth/feature-list";
 import { ThemeToggleButton } from "@/components/auth/theme-toggle-button";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { DecorativeBlobs } from "@/components/auth/decorative-blobs";
+import { getPublicPricingSettings } from "@/lib/platform-settings-data";
 import { RegisterForm } from "./register-form";
 
-/**
- * Phase 3G / Lot D12-P78 — l'inscription crée réellement un établissement
- * (statut `PENDING`) et son premier compte `ADMIN`
- * (`registerEstablishment()`, src/app/actions/establishment-registration.ts).
- * L'approbation/le rejet par un administrateur de plateforme reste un lot
- * séparé, non développé ici — un établissement `PENDING` n'a aujourd'hui
- * accès à aucune fonctionnalité métier (`requireActiveEstablishment()`,
- * déjà en place, inchangé). OAuthButtons reste volontairement désactivé
- * (aucun fournisseur configuré) — hors périmètre de ce lot.
- */
 export default async function RegisterPage() {
-  const theme = await getTheme();
+  const [theme, pricing] = await Promise.all([
+    getTheme(),
+    getPublicPricingSettings(),
+  ]);
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
@@ -78,7 +72,7 @@ export default async function RegisterPage() {
               Gérez vos logements, réservations et revenus au même endroit.
             </p>
 
-            <RegisterForm />
+            <RegisterForm pricing={pricing} />
 
             <div className="mt-6">
               <OAuthButtons />

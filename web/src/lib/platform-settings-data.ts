@@ -42,7 +42,15 @@ export type PricingSettingsView = {
  */
 export async function getPricingSettings(): Promise<PricingSettingsView> {
   await requirePlatformAdmin();
+  return getPublicPricingSettings();
+}
 
+/**
+ * Lecture publique des réglages tarifaires globaux (`PricingSettings`) pour
+ * la page d'inscription et l'affichage des offres — ne nécessite pas de
+ * session administrateur de plateforme.
+ */
+export async function getPublicPricingSettings(): Promise<PricingSettingsView> {
   const settings = await prisma.pricingSettings.findUnique({ where: { id: "singleton" } });
   return {
     trialDurationMonths: settings?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS,

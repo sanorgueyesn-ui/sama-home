@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
 import { PricingSettingsSchema, type PricingSettingsFormState } from "@/lib/definitions";
@@ -151,6 +152,9 @@ export async function setPricingSettings(
     console.error("setPricingSettings() — échec inattendu de la mise à jour des réglages tarifaires :", error);
     return { message: "Une erreur est survenue pendant la mise à jour des réglages. Veuillez réessayer." };
   }
+
+  revalidatePath("/register");
+  revalidatePath("/plateforme/parametres");
 
   return { success: true };
 }

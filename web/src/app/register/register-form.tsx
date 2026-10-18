@@ -9,8 +9,14 @@ import {
 } from "@/app/actions/establishment-registration";
 import { AuthField } from "@/components/auth/auth-field";
 import type { VerifyOtpFormState } from "@/lib/definitions";
+import type { PricingSettingsView } from "@/lib/platform-settings-data";
 
-export function RegisterForm() {
+export function RegisterForm({ pricing }: { pricing?: PricingSettingsView }) {
+  const trialMonths = pricing?.trialDurationMonths ?? 2;
+  const periodMonths = pricing?.periodMonths ?? 3;
+  const periodPrice = pricing?.periodPriceFcfa ?? 9900;
+  const formattedPrice = periodPrice.toLocaleString("fr-FR");
+
   const [registerState, registerAction, isRegisterPending] = useActionState(
     registerEstablishment,
     undefined,
@@ -52,13 +58,13 @@ export function RegisterForm() {
         </div>
 
         {isPaid ? (
-          /* Offre Payante 9 900 FCFA */
+          /* Offre Payante */
           <div className="w-full rounded-2xl border border-brand-orange/40 bg-brand-orange/5 p-4 text-left">
             <div className="flex items-center justify-between">
               <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
                 Forfait Choisi
               </span>
-              <span className="text-xs font-extrabold text-fg">9 900 FCFA / 3 mois</span>
+              <span className="text-xs font-extrabold text-fg">{formattedPrice} FCFA / {periodMonths} mois</span>
             </div>
 
             <p className="mt-2 text-xs font-bold text-fg">Instructions de règlement pour l&apos;activation :</p>
@@ -74,12 +80,12 @@ export function RegisterForm() {
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
               <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Accès immédiat :</strong> Vos 2 mois d&apos;essai gratuit sont activés dès maintenant. Vous pouvez vous connecter et explorer votre espace immédiatement !
+                <strong>Accès immédiat :</strong> Vos {trialMonths} mois d&apos;essai gratuit sont activés dès maintenant. Vous pouvez vous connecter et explorer votre espace immédiatement !
               </div>
             </div>
           </div>
         ) : (
-          /* Offre Découverte 2 Mois Gratuits */
+          /* Offre Découverte Gratuite */
           <div className="w-full rounded-2xl border border-brand-orange/30 bg-brand-orange/5 p-4 text-left">
             <div className="flex items-center gap-2">
               <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
@@ -89,17 +95,17 @@ export function RegisterForm() {
             </div>
 
             <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-brand-orange">2 MOIS OFFERTS</span>
+              <span className="text-2xl font-black text-brand-orange">{trialMonths} MOIS OFFERTS</span>
               <span className="text-xs font-bold text-fg/60">(0 FCFA)</span>
             </div>
             <p className="mt-1 text-[12px] text-fg/75">
-              Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant 2 mois complets.
+              Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant {trialMonths} mois complets.
             </p>
 
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
               <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Accès immédiat :</strong> Votre compte est activé avec 2 mois gratuits. Vous pouvez vous connecter dès maintenant sans attendre !
+                <strong>Accès immédiat :</strong> Votre compte est activé avec {trialMonths} mois gratuits. Vous pouvez vous connecter dès maintenant sans attendre !
               </div>
             </div>
           </div>
@@ -233,7 +239,7 @@ export function RegisterForm() {
         <label className="text-xs font-extrabold text-fg">Choisissez votre offre de démarrage :</label>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          {/* Offre 1 : Gratuite 2 Mois */}
+          {/* Offre 1 : Gratuite */}
           <button
             type="button"
             onClick={() => setSelectedPlan("FREE_TRIAL")}
@@ -255,14 +261,14 @@ export function RegisterForm() {
                 className="accent-navy"
               />
             </div>
-            <p className="mt-2 text-base font-black text-fg">2 MOIS OFFERTS</p>
+            <p className="mt-2 text-base font-black text-fg">{trialMonths} MOIS OFFERTS</p>
             <p className="text-[11px] font-semibold text-fg/60">0 FCFA — Sans engagement</p>
             <p className="mt-1 text-[11px] leading-tight text-fg/70">
               Idéal pour découvrir toutes les fonctionnalités librement.
             </p>
           </button>
 
-          {/* Offre 2 : Payante 9 900 FCFA / 3 Mois */}
+          {/* Offre 2 : Payante */}
           <button
             type="button"
             onClick={() => setSelectedPlan("PAID_9900")}
@@ -284,8 +290,8 @@ export function RegisterForm() {
                 className="accent-brand-orange"
               />
             </div>
-            <p className="mt-2 text-base font-black text-brand-orange">9 900 FCFA</p>
-            <p className="text-[11px] font-semibold text-fg/60">Pour 3 mois de gestion</p>
+            <p className="mt-2 text-base font-black text-brand-orange">{formattedPrice} FCFA</p>
+            <p className="text-[11px] font-semibold text-fg/60">Pour {periodMonths} mois de gestion</p>
             <p className="mt-1 text-[11px] leading-tight text-fg/70">
               Activation prioritaire et assistance dédiée pour votre hôtel.
             </p>

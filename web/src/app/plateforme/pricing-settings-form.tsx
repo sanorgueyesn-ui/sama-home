@@ -34,13 +34,6 @@ export function PricingSettingsForm({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (
-      !confirm(
-        "Enregistrer ces réglages tarifaires ? Cela n'affectera aucun abonnement ou demande de paiement déjà créé — seules les prochaines approbations/demandes utiliseront ces nouvelles valeurs.",
-      )
-    ) {
-      return;
-    }
     setSuccess(false);
     setState({});
     const formData = new FormData();
