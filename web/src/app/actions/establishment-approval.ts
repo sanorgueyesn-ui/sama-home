@@ -319,9 +319,6 @@ export async function deleteEstablishment(establishmentId: string): Promise<{ er
       await tx.subscription.deleteMany({
         where: { establishmentId },
       });
-      await tx.notification.deleteMany({
-        where: { establishmentId },
-      });
       await tx.settings.deleteMany({
         where: { establishmentId },
       });
@@ -343,7 +340,7 @@ export async function deleteEstablishment(establishmentId: string): Promise<{ er
           entityId: establishmentId,
           reason: `Suppression définitive de l'établissement « ${establishment.name} »`,
           oldValue: { name: establishment.name },
-          newValue: null,
+          newValue: { deleted: true },
           establishmentId: null,
         },
       });
