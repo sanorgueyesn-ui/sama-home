@@ -86,6 +86,14 @@ export function PlatformShell({ children }: { children: ReactNode }) {
             Déconnexion
           </button>
         </form>
+        <div className="mt-3 border-t border-white/10 px-3 pt-3">
+          <p className="text-[10px] font-black uppercase tracking-wider text-white/50">
+            COMPAGNIE GUEYE TAWFEKH
+          </p>
+          <p className="mt-0.5 text-[9px] font-mono text-white/35">
+            NINEA 012521599 2R1 • RCCM SN.DKR.2025.A.38803
+          </p>
+        </div>
       </aside>
 
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-[#0e1a22] px-4 lg:hidden">
@@ -122,6 +130,14 @@ export function PlatformShell({ children }: { children: ReactNode }) {
                 Déconnexion
               </button>
             </form>
+            <div className="mt-2 border-t border-white/10 pt-2.5 text-center">
+              <p className="text-[10px] font-black uppercase tracking-wider text-white/50">
+                COMPAGNIE GUEYE TAWFEKH
+              </p>
+              <p className="text-[9px] font-mono text-white/35">
+                NINEA 012521599 2R1 • RCCM SN.DKR.2025.A.38803
+              </p>
+            </div>
           </nav>
         </div>
       ) : null}

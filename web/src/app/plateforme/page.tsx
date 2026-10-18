@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPlatformDashboardSummary } from "@/lib/platform-dashboard-data";
 import { ACTION_LABELS } from "./historique/action-labels";
 import type { PlatformDecisionAction } from "@/lib/audit-log-data";
+import { COMPANY_LEGAL_INFO } from "@/lib/company-info";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -47,6 +48,9 @@ export default async function PlatformDashboardPage() {
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Système Opérationnel
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-bold text-white/70">
+              COMPAGNIE GUEYE TAWFEKH • NINEA {COMPANY_LEGAL_INFO.ninea}
             </span>
           </div>
           <p className="mt-1 text-xs font-medium text-white/50 sm:text-sm">

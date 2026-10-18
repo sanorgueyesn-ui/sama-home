@@ -210,13 +210,17 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
         </Link>
       </section>
 
-      {/* Informations système — jamais de secret (Bloc 13). */}
+      {/* Informations système & Éditeur légal — certification officielle */}
       <section className="mt-6 mb-2">
-        <h2 className="mb-2.5 text-sm font-extrabold text-fg">Informations système</h2>
+        <h2 className="mb-2.5 text-sm font-extrabold text-fg">Informations système & Éditeur officiel</h2>
         <Card className="px-4">
           <Row label="APPLICATION" value="SAMA HOME" />
           <Row label="VERSION" value="0.1.0" />
-          <Row label="ENVIRONNEMENT" value={process.env.NODE_ENV ?? "development"} />
+          <Row label="ÉDITEUR" value="COMPAGNIE GUEYE TAWFEKH (C.G.T)" />
+          <Row label="N.I.N.E.A" value="012521599 2R1" />
+          <Row label="R.C.C.M" value="SN.DKR.2025.A.38803" />
+          <Row label="SIÈGE" value="Dakar, Grand Yoff CICES Foire" />
+          <Row label="SUPPORT OFFICIEL" value="+221 77 338 66 60" />
         </Card>
       </section>
     </div>

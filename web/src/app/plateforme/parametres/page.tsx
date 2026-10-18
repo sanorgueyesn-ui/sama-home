@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPlatformSettings, getPricingSettings } from "@/lib/platform-settings-data";
 import { AutoApprovalToggle } from "../auto-approval-toggle";
 import { PricingSettingsForm } from "../pricing-settings-form";
+import { COMPANY_LEGAL_INFO } from "@/lib/company-info";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -415,6 +416,114 @@ export default async function PlatformSettingsPage() {
                 <p className="mt-1 text-[11px] leading-relaxed text-white/60">
                   Toute modification de tarification, validation de paiement ou changement de statut est enregistrée de manière immuable dans l&apos;AuditLog.
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5 : Mentions Légales & Immatriculation Juridique */}
+          <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-black text-white">5. Mentions Légales & Entité Juridique Sénégalaise</h2>
+                <p className="mt-1 text-xs text-white/50">
+                  Immatriculation officielle de l&apos;entreprise éditrice et exploitante de la plateforme SAMA HOME.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  Entreprise Enregistrée
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold text-white/70">
+                  OHADA / République du Sénégal
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Carte 1 : Identité & Gérance */}
+              <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-orange">
+                    Raison Sociale & Gérance
+                  </span>
+                  <h3 className="mt-1 text-base font-black text-white">{COMPANY_LEGAL_INFO.commercialName}</h3>
+                  <p className="mt-0.5 text-xs text-white/60">Sigle officiel : <strong>{COMPANY_LEGAL_INFO.sigle}</strong></p>
+
+                  <div className="mt-4 space-y-2 border-t border-white/10 pt-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/50">Forme juridique :</span>
+                      <span className="font-semibold text-white">{COMPANY_LEGAL_INFO.legalForm}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/50">Gérant statutaire :</span>
+                      <span className="font-bold text-white">{COMPANY_LEGAL_INFO.manager}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/50">Dénomination :</span>
+                      <span className="font-semibold text-white">{COMPANY_LEGAL_INFO.denomination}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 2 : Registres & Immatriculations */}
+              <div className="flex flex-col justify-between rounded-2xl border border-brand-orange/20 bg-brand-orange/5 p-4 sm:p-5">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-orange">
+                    Immatriculations Officielles
+                  </span>
+                  <div className="mt-2 space-y-3">
+                    <div className="rounded-xl bg-black/30 p-2.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">N.I.N.E.A</span>
+                      <p className="font-mono text-base font-black tracking-wider text-brand-orange">
+                        {COMPANY_LEGAL_INFO.ninea}
+                      </p>
+                      <p className="text-[10px] text-white/50">{COMPANY_LEGAL_INFO.taxAgency}</p>
+                    </div>
+
+                    <div className="rounded-xl bg-black/30 p-2.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">R.C.C.M</span>
+                      <p className="font-mono text-sm font-black tracking-wider text-white">
+                        {COMPANY_LEGAL_INFO.rccm}
+                      </p>
+                      <p className="text-[10px] text-white/50">{COMPANY_LEGAL_INFO.court}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte 3 : Siège Social & Contact */}
+              <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">
+                    Siège Social & Contact
+                  </span>
+                  <div className="mt-3 space-y-2.5 text-xs">
+                    <div>
+                      <span className="text-[11px] font-bold text-white/50">Adresse géographique :</span>
+                      <p className="mt-0.5 font-semibold text-white">
+                        {COMPANY_LEGAL_INFO.address}
+                      </p>
+                      <p className="text-[11px] text-white/60">{COMPANY_LEGAL_INFO.city}, {COMPANY_LEGAL_INFO.country}</p>
+                    </div>
+
+                    <div className="border-t border-white/10 pt-2">
+                      <span className="text-[11px] font-bold text-white/50">Téléphone officiel :</span>
+                      <p className="font-mono text-sm font-black text-brand-orange">
+                        {COMPANY_LEGAL_INFO.formattedPhone}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-[11px] font-bold text-white/50">Formalité greffe :</span>
+                      <p className="font-mono text-xs text-white/70">
+                        {COMPANY_LEGAL_INFO.rccmFormalite}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

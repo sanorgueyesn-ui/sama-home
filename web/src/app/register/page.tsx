@@ -106,6 +106,15 @@ export default async function RegisterPage(props: {
                 Se connecter
               </Link>
             </p>
+
+            <div className="mt-8 border-t border-border/15 pt-4 text-center">
+              <p className="text-[11px] font-bold text-fg/50">
+                SAMA HOME • Édité par <span className="font-extrabold text-fg/80">COMPAGNIE GUEYE TAWFEKH</span>
+              </p>
+              <p className="mt-0.5 font-mono text-[10px] text-fg/40">
+                NINEA : 012521599 2R1 • RCCM : SN.DKR.2025.A.38803 • Dakar, Sénégal
+              </p>
+            </div>
           </div>
         </div>
       </div>
