@@ -8,8 +8,29 @@ import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { DecorativeBlobs } from "@/components/auth/decorative-blobs";
 import { LoginForm } from "./login-form";
 
-export default async function LoginPage() {
-  const theme = await getTheme();
+const OAUTH_ERRORS: Record<string, string> = {
+  google_not_configured:
+    "La connexion Google nécessite la configuration de GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans votre console ou votre fichier .env.",
+  google_cancelled: "La connexion avec Google a été annulée.",
+  invalid_state: "Session de connexion expirée. Veuillez réessayer.",
+  google_token_failed: "Échec de validation auprès de Google. Veuillez réessayer.",
+  google_userinfo_failed: "Impossible de récupérer votre profil Google.",
+  google_no_email: "Aucune adresse e-mail reçue de Google.",
+  establishment_pending: "Votre établissement est en attente d'approbation par l'administrateur de SAMA HOME.",
+  establishment_rejected: "La demande d'inscription pour cet établissement a été refusée.",
+  establishment_suspended: "L'accès pour cet établissement est suspendu. Veuillez contacter le support.",
+  google_error: "Une erreur inattendue est survenue lors de la connexion avec Google.",
+};
+
+export default async function LoginPage(props: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
+  const [theme, searchParams] = await Promise.all([
+    getTheme(),
+    props.searchParams,
+  ]);
+  const errorCode = searchParams?.error;
+  const errorMessage = errorCode ? OAUTH_ERRORS[errorCode] ?? "Erreur de connexion." : null;
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
@@ -72,6 +93,12 @@ export default async function LoginPage() {
             <p className="mt-1 mb-6 text-sm font-medium text-fg/60">
               Accédez à votre espace de gestion.
             </p>
+
+            {errorMessage && (
+              <div role="alert" className="mb-5 rounded-2xl border border-danger/30 bg-danger-bg p-3 text-xs font-semibold text-danger">
+                {errorMessage}
+              </div>
+            )}
 
             <LoginForm />
 
