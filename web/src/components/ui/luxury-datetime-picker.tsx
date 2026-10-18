@@ -296,10 +296,10 @@ export function LuxuryDatePicker({
       className={`relative ${open ? "z-50" : "z-20"} ${className}`}
     >
       {label && (
-        <div className="mb-1.5 flex items-center justify-between">
+        <div className="mb-1.5 flex h-4 items-center justify-between">
           <label className="text-xs font-bold text-fg">{label}</label>
           {friendlyFormatted && !isPast ? (
-            <span className="text-[11px] font-extrabold text-brand-orange">
+            <span className="text-[11px] font-extrabold text-brand-orange truncate max-w-[55%] text-right">
               {friendlyFormatted}
             </span>
           ) : null}
@@ -309,37 +309,55 @@ export function LuxuryDatePicker({
       {/* Input hidden pour l'envoi de formulaire natif au format ISO */}
       <input type="hidden" name={name} value={value} />
 
-      {/* Zone de saisie combinée : Input texte direct + Bouton Calendrier */}
+      {/* Zone de saisie combinée : Input texte direct + Bouton Calendrier parfaitement aligné */}
       <div
-        className={`flex h-12 w-full items-center rounded-xl border bg-[#141d24] transition-all ${
+        className={`flex h-12 w-full items-stretch rounded-xl border bg-[#141d24] overflow-hidden transition-all ${
           open
             ? "border-brand-orange ring-2 ring-brand-orange/20 shadow-lg shadow-brand-orange/10"
             : "border-white/10 hover:border-white/20 focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange/20"
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        <span className="pl-3.5 text-base text-fg/60 select-none">📅</span>
+        <div className="flex flex-1 items-center min-w-0 pl-3.5 pr-2">
+          <span className="text-base text-fg/60 select-none shrink-0 mr-2">📅</span>
+          <input
+            type="text"
+            disabled={disabled}
+            value={inputText}
+            onChange={(e) => handleManualInput(e.target.value)}
+            onBlur={handleBlur}
+            placeholder="JJ/MM/AAAA"
+            className="h-full w-full bg-transparent text-sm font-bold text-white placeholder:text-fg/30 outline-none"
+          />
+        </div>
 
-        {/* Champ de saisie manuelle */}
-        <input
-          type="text"
-          disabled={disabled}
-          value={inputText}
-          onChange={(e) => handleManualInput(e.target.value)}
-          onBlur={handleBlur}
-          placeholder="JJ/MM/AAAA (ex: 19/10/2026)"
-          className="h-full flex-1 bg-transparent px-2.5 text-sm font-bold text-white placeholder:text-fg/30 outline-none"
-        />
-
-        {/* Bouton d'ouverture du calendrier visuel */}
+        {/* Bouton d'ouverture du calendrier visuel (carré 48x48px aligné) */}
         <button
           type="button"
           disabled={disabled}
           onClick={toggleOpen}
+          aria-label={open ? "Fermer le calendrier" : "Ouvrir le calendrier"}
           title={open ? "Fermer le calendrier" : "Ouvrir le calendrier"}
-          className="flex h-8 items-center gap-1 rounded-lg bg-surface-sunken px-2.5 mr-2 text-xs font-bold text-fg/80 hover:bg-white/10 hover:text-white transition-colors"
+          className={`flex h-full w-12 shrink-0 items-center justify-center border-l border-white/10 transition-colors ${
+            open
+              ? "bg-brand-orange/20 text-brand-orange"
+              : "bg-white/[0.03] text-fg/70 hover:bg-white/[0.08] hover:text-brand-orange"
+          }`}
         >
-          <span className="text-[11px] text-brand-orange">Calendrier</span>
-          <span className="text-[9px] text-fg/50">{open ? "▲" : "▼"}</span>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
         </button>
       </div>
 
@@ -534,10 +552,10 @@ export function LuxuryTimePicker({
       className={`relative ${open ? "z-50" : "z-20"} ${className}`}
     >
       {label && (
-        <div className="mb-1.5 flex items-center justify-between">
+        <div className="mb-1.5 flex h-4 items-center justify-between">
           <label className="text-xs font-bold text-fg">{label}</label>
           {value ? (
-            <span className="font-mono text-[11px] font-extrabold text-brand-orange">
+            <span className="font-mono text-[11px] font-extrabold text-brand-orange truncate max-w-[55%] text-right">
               {value.replace(":", "h")}
             </span>
           ) : null}
@@ -547,37 +565,53 @@ export function LuxuryTimePicker({
       {/* Input hidden pour envoi de formulaire natif */}
       <input type="hidden" name={name} value={value} />
 
-      {/* Zone de saisie combinée : Input direct + Bouton Sélecteur d'heures */}
+      {/* Zone de saisie combinée : Input direct + Bouton Sélecteur d'heures parfaitement aligné */}
       <div
-        className={`flex h-12 w-full items-center rounded-xl border bg-[#141d24] transition-all ${
+        className={`flex h-12 w-full items-stretch rounded-xl border bg-[#141d24] overflow-hidden transition-all ${
           open
             ? "border-brand-orange ring-2 ring-brand-orange/20 shadow-lg shadow-brand-orange/10"
             : "border-white/10 hover:border-white/20 focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange/20"
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        <span className="pl-3.5 text-base text-fg/60 select-none">🕒</span>
+        <div className="flex flex-1 items-center min-w-0 pl-3.5 pr-2">
+          <span className="text-base text-fg/60 select-none shrink-0 mr-2">🕒</span>
+          <input
+            type="text"
+            disabled={disabled}
+            value={inputText}
+            onChange={(e) => handleManualTime(e.target.value)}
+            onBlur={handleBlur}
+            placeholder="HH:MM"
+            className="h-full w-full bg-transparent font-mono text-sm font-bold text-white placeholder:text-fg/30 outline-none"
+          />
+        </div>
 
-        {/* Champ de saisie manuelle */}
-        <input
-          type="text"
-          disabled={disabled}
-          value={inputText}
-          onChange={(e) => handleManualTime(e.target.value)}
-          onBlur={handleBlur}
-          placeholder="HH:MM (ex: 15:30)"
-          className="h-full flex-1 bg-transparent px-2.5 font-mono text-sm font-bold text-white placeholder:text-fg/30 outline-none"
-        />
-
-        {/* Bouton d'ouverture du sélecteur d'heures */}
+        {/* Bouton d'ouverture du sélecteur d'heures (carré 48x48px aligné) */}
         <button
           type="button"
           disabled={disabled}
           onClick={() => setOpen((prev) => !prev)}
+          aria-label={open ? "Fermer les horaires" : "Choisir l'heure"}
           title={open ? "Fermer les horaires" : "Choisir l'heure"}
-          className="flex h-8 items-center gap-1 rounded-lg bg-surface-sunken px-2.5 mr-2 text-xs font-bold text-fg/80 hover:bg-white/10 hover:text-white transition-colors"
+          className={`flex h-full w-12 shrink-0 items-center justify-center border-l border-white/10 transition-colors ${
+            open
+              ? "bg-brand-orange/20 text-brand-orange"
+              : "bg-white/[0.03] text-fg/70 hover:bg-white/[0.08] hover:text-brand-orange"
+          }`}
         >
-          <span className="text-[11px] text-brand-orange">Horaires</span>
-          <span className="text-[9px] text-fg/50">{open ? "▲" : "▼"}</span>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
         </button>
       </div>
 

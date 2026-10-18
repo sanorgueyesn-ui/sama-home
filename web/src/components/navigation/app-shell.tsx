@@ -244,6 +244,11 @@ function TopNavDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    }
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -251,7 +256,11 @@ function TopNavDropdown({
     }
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleKeyDown);
+      };
     }
   }, [open]);
 
@@ -259,14 +268,12 @@ function TopNavDropdown({
     <div
       ref={dropdownRef}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
     >
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-          active
+          active || open
             ? "bg-navy text-white shadow-sm"
             : "text-fg/80 hover:bg-surface-sunken hover:text-white"
         }`}
@@ -379,7 +386,7 @@ export function AppShell({
       {/* ===================== TOP NAVIGATION BAR (DESKTOP LG+) ===================== */}
       <header
         inert={menuOpen}
-        className="sticky top-0 z-40 hidden h-16 w-full items-center justify-between border-b border-white/10 bg-surface-raised/95 px-6 backdrop-blur-xl shadow-sm lg:flex"
+        className="fixed top-0 inset-x-0 z-40 hidden h-16 w-full items-center justify-between border-b border-white/10 bg-surface-raised/95 px-6 backdrop-blur-xl shadow-sm lg:flex"
       >
         {/* Brand Logo */}
         <div className="flex items-center gap-6">
@@ -478,7 +485,7 @@ export function AppShell({
       {/* ===================== HEADER (MOBILE & TABLETTE) ===================== */}
       <header
         inert={menuOpen}
-        className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/10 bg-surface-raised px-4 lg:hidden"
+        className="fixed top-0 inset-x-0 z-40 flex h-14 items-center justify-between border-b border-border/10 bg-surface-raised px-4 lg:hidden"
       >
         <Link
           href="/settings"
@@ -516,7 +523,7 @@ export function AppShell({
       </header>
 
       {/* Main Page Content */}
-      <div inert={menuOpen} className="min-w-0 flex-1 pb-28 lg:pb-12">
+      <div inert={menuOpen} className="min-w-0 flex-1 pt-14 lg:pt-16 pb-28 lg:pb-12">
         {children}
       </div>
 
