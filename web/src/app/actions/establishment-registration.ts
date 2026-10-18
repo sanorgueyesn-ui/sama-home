@@ -110,15 +110,19 @@ export async function registerEstablishment(
           } else {
             await tx.auditLog.create({
               data: {
-                establishmentId: establishment.id,
+                userId: null,
                 action: "ESTABLISHMENT_REGISTERED",
-                actorId: null,
-                details: {
+                entityType: "Establishment",
+                entityId: establishment.id,
+                reason: null,
+                oldValue: null,
+                newValue: {
                   name: establishmentName,
                   status: "PENDING",
                   adminEmail: email,
                   plan,
                 },
+                establishmentId: establishment.id,
               },
             });
           }
@@ -318,15 +322,19 @@ export async function verifyOtpAndRegister(
       } else {
         await tx.auditLog.create({
           data: {
-            establishmentId: establishment.id,
+            userId: null,
             action: "ESTABLISHMENT_REGISTERED",
-            actorId: null,
-            details: {
+            entityType: "Establishment",
+            entityId: establishment.id,
+            reason: null,
+            oldValue: null,
+            newValue: {
               name: otpRecord.establishmentName,
               status: "PENDING",
               adminEmail: otpRecord.email,
               plan: otpRecord.plan,
             },
+            establishmentId: establishment.id,
           },
         });
       }
