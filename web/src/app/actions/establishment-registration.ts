@@ -114,8 +114,6 @@ export async function registerEstablishment(
                 action: "ESTABLISHMENT_REGISTERED",
                 entityType: "Establishment",
                 entityId: establishment.id,
-                reason: null,
-                oldValue: null,
                 newValue: {
                   name: establishmentName,
                   status: "PENDING",
@@ -326,8 +324,6 @@ export async function verifyOtpAndRegister(
             action: "ESTABLISHMENT_REGISTERED",
             entityType: "Establishment",
             entityId: establishment.id,
-            reason: null,
-            oldValue: null,
             newValue: {
               name: otpRecord.establishmentName,
               status: "PENDING",
