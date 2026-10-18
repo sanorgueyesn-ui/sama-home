@@ -89,17 +89,74 @@ export async function getRentalById(id: string) {
   });
 }
 
+export type ActiveRentalDetail = {
+  id: string;
+  arrivalAt: Date;
+  plannedDepartureAt: Date;
+  durationValue: number;
+  durationUnit: string;
+  amount: number;
+  client: { id: string; name: string; phone: string | null } | null;
+};
+
+export type ActiveRentalSummary = {
+  id: string;
+  propertyId: string;
+  propertyName: string;
+  arrivalAt: Date;
+  plannedDepartureAt: Date;
+  clientName: string | null;
+  clientPhone: string | null;
+};
+
 /**
  * For the property detail page: link straight to the occupying rental when
- * OCCUPIED. Phase 3C / Lot C2 — `establishmentId` filtré explicitement :
- * `propertyId` seul ne suffit pas tant que la lecture par identifiant du
- * logement lui-même n'est pas vérifiée au point d'appel de cette fonction.
+ * OCCUPIED with full stay and departure info.
  */
-export async function getActiveRentalForProperty(propertyId: string) {
+export async function getActiveRentalForProperty(propertyId: string): Promise<ActiveRentalDetail | null> {
   const user = await getCurrentUser();
   if (!user.establishmentId) return null;
   return prisma.rental.findFirst({
     where: { propertyId, status: "ACTIVE", establishmentId: user.establishmentId },
-    select: { id: true },
+    select: {
+      id: true,
+      arrivalAt: true,
+      plannedDepartureAt: true,
+      durationValue: true,
+      durationUnit: true,
+      amount: true,
+      client: { select: { id: true, name: true, phone: true } },
+    },
   });
 }
+
+/**
+ * For the dashboard: returns all active rentals in the establishment,
+ * ordered by planned departure ascending (departures coming soonest first).
+ */
+export async function getActiveRentalsForDashboard(): Promise<ActiveRentalSummary[]> {
+  const user = await getCurrentUser();
+  if (!user.establishmentId) return [];
+  const rentals = await prisma.rental.findMany({
+    where: { status: "ACTIVE", establishmentId: user.establishmentId },
+    select: {
+      id: true,
+      propertyId: true,
+      arrivalAt: true,
+      plannedDepartureAt: true,
+      property: { select: { name: true } },
+      client: { select: { name: true, phone: true } },
+    },
+    orderBy: { plannedDepartureAt: "asc" },
+  });
+  return rentals.map((r) => ({
+    id: r.id,
+    propertyId: r.propertyId,
+    propertyName: r.property?.name ?? "Logement",
+    arrivalAt: r.arrivalAt,
+    plannedDepartureAt: r.plannedDepartureAt,
+    clientName: r.client?.name ?? null,
+    clientPhone: r.client?.phone ?? null,
+  }));
+}
+

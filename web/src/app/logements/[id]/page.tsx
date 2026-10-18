@@ -11,6 +11,7 @@ import { listTariffsForProperty } from "@/lib/tariffs-data";
 import { getPropertyStatus } from "@/lib/property-status";
 import { getActiveRentalForProperty } from "@/lib/rentals-data";
 import { listReservations } from "@/lib/reservations-data";
+import { StayCountdown } from "@/components/dashboard/stay-countdown";
 
 function formatFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/ |,/g, " ")} FCFA`;
@@ -53,13 +54,18 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         <Link
           href="/logements"
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg hover:bg-surface-sunken transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="flex-1 truncate text-xl font-extrabold text-fg">{property.name}</h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-xl font-extrabold text-fg">{property.name}</h1>
+          <p className="text-xs font-medium text-fg/60">
+            {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"} · {property.capacity} pers.
+          </p>
+        </div>
       </div>
 
       {created ? (
@@ -83,6 +89,21 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         </p>
       ) : null}
 
+      {/* Live Stay Countdown & Progress Bar Banner if currently occupied */}
+      {status === "OCCUPIED" && activeRental ? (
+        <div className="mb-6">
+          <StayCountdown
+            arrivalAt={activeRental.arrivalAt.toISOString()}
+            plannedDepartureAt={activeRental.plannedDepartureAt.toISOString()}
+            clientName={activeRental.client?.name}
+            clientPhone={activeRental.client?.phone}
+            rentalId={activeRental.id}
+            propertyName={property.name}
+            variant="banner"
+          />
+        </div>
+      ) : null}
+
       {/* Desktop (lg+) : photo/infos/tarifs en colonne principale,
           prochaines réservations + actions en colonne latérale (même motif
           que /reservations/[id] et /caisse) — via grid-template-areas
@@ -92,7 +113,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           réorganisation en dessous de lg. */}
       <div className="lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-x-6 lg:[grid-template-areas:'photo_reservations'_'info_reservations'_'tariffs_actions']">
         <div className="lg:[grid-area:photo]">
-          <PropertyPhoto photo={property.photo} type={property.type} className="h-44 w-full rounded-2xl" />
+          <PropertyPhoto photo={property.photo} type={property.type} className="h-48 w-full rounded-2xl shadow-md" />
 
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm font-bold text-fg/70">
@@ -193,24 +214,24 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           {status === "OCCUPIED" && activeRental ? (
             <Link
               href={`/locations/${activeRental.id}`}
-              className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+              className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-500/20 via-surface-raised to-navy px-4 text-sm font-extrabold text-rose-200 shadow-sm transition-all hover:bg-rose-500/30"
             >
-              Voir la location en cours
+              <span>🚪</span> Gérer la sortie (Check-out) &amp; Décompte
             </Link>
           ) : null}
           {property.active && tariffs.some((t) => t.active) && status !== "OCCUPIED" ? (
             <>
               <Link
                 href={`/locations/new?propertyId=${property.id}`}
-                className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
+                className="flex h-13 items-center justify-center gap-2 rounded-2xl bg-brand-orange text-sm font-black text-ink shadow-md transition-all hover:brightness-110 active:scale-98"
               >
-                Louer maintenant
+                <span>🔑</span> Louer maintenant (Check-in)
               </Link>
               <Link
                 href={`/reservations/new?propertyId=${property.id}`}
-                className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg"
+                className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-border/15 bg-surface-raised text-sm font-extrabold text-fg shadow-sm transition-all hover:bg-surface-sunken active:scale-98"
               >
-                Réserver
+                <span>📅</span> Enregistrer une réservation
               </Link>
             </>
           ) : null}
