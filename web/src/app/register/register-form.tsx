@@ -71,9 +71,12 @@ export function RegisterForm() {
                 <span className="font-mono font-bold text-brand-orange">{otpState.reference ?? "SH-PAID"}</span>
               </p>
             </div>
-            <p className="mt-2 text-[11px] text-fg/60">
-              Dès confirmation de votre règlement, votre espace sera immédiatement débloqué pour 3 mois complets.
-            </p>
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
+              <span className="mt-0.5">🚀</span>
+              <div>
+                <strong>Accès immédiat :</strong> Vos 2 mois d&apos;essai gratuit sont activés dès maintenant. Vous pouvez vous connecter et explorer votre espace immédiatement !
+              </div>
+            </div>
           </div>
         ) : (
           /* Offre Découverte 2 Mois Gratuits */
@@ -93,10 +96,10 @@ export function RegisterForm() {
               Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant 2 mois complets.
             </p>
 
-            <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-fg/80">
-              <span className="mt-0.5">⏳</span>
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
+              <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Validation en cours :</strong> L&apos;administrateur de SAMA HOME confirme votre accès sous peu.
+                <strong>Accès immédiat :</strong> Votre compte est activé avec 2 mois gratuits. Vous pouvez vous connecter dès maintenant sans attendre !
               </div>
             </div>
           </div>

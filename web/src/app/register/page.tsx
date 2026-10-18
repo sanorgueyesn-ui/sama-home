@@ -59,16 +59,16 @@ export default async function RegisterPage() {
         </div>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center bg-surface px-6 py-10 lg:w-1/2 lg:px-16">
+      <div className="relative flex flex-1 items-center justify-center bg-surface px-4 py-8 sm:px-6 lg:w-1/2 lg:px-12">
         <DecorativeBlobs />
 
-        <div className="relative w-full max-w-sm sm:max-w-md">
+        <div className="relative w-full max-w-md sm:max-w-lg lg:max-w-xl">
           <div className="mb-6 flex items-center justify-between lg:hidden">
             <AuthLogo variant="light" />
             <ThemeToggleButton current={theme} />
           </div>
 
-          <div className="rounded-3xl bg-surface-raised p-7 shadow-card sm:p-9">
+          <div className="rounded-3xl bg-surface-raised p-5 shadow-card sm:p-8">
             <h2 className="text-xl font-extrabold text-fg">
               Créez votre espace
               <br />

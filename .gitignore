@@ -16,3 +16,4 @@ desktop.ini
 *.sql
 !web/prisma/migrations/**/*.sql
 *.zip
+web-playwright-test/

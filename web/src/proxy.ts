@@ -32,7 +32,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isPublicRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/", request.url));
+    if (request.method === "GET") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
   }
 
   // D12-P206 — la sélection entre navigation métier (AppShell) et console

@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { hashPassword } from "@/lib/password";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
-import { computeDepartureTime } from "@/lib/duration";
 import {
   EstablishmentRegistrationSchema,
   VerifyOtpSchema,
@@ -170,19 +169,15 @@ export async function verifyOtpAndRegister(
         throw new EstablishmentRegistrationError(DUPLICATE_EMAIL_MESSAGE);
       }
 
-      // 2. Vérification des réglages de la plateforme
-      const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
-      const autoApprove = platformSettings?.autoApproveEstablishments ?? false;
-
-      // 3. Création de l'établissement
+      // 2. Création de l'établissement (Immédiatement ACTIVE dès validation du code OTP)
       const establishment = await tx.establishment.create({
         data: {
           name: otpRecord.establishmentName,
-          status: autoApprove ? "ACTIVE" : "PENDING",
+          status: "ACTIVE",
         },
       });
 
-      // 4. Création du compte administrateur
+      // 3. Création du compte administrateur
       await tx.user.create({
         data: {
           username: otpRecord.email,
@@ -195,37 +190,34 @@ export async function verifyOtpAndRegister(
         },
       });
 
-      // 5. Gestion de l'offre choisie
-      const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
-      const trialMonths = pricingSettings?.trialDurationMonths ?? 2;
-      const periodMonths = pricingSettings?.periodMonths ?? 3;
-      const periodPrice = pricingSettings?.periodPriceFcfa ?? 9900;
+      // 4. Activation immédiate des 2 mois d'essai gratuit pour tous les nouveaux inscrits
+      await createTrialSubscriptionAndAudit(
+        tx,
+        establishment.id,
+        null,
+        "ESTABLISHMENT_AUTO_APPROVED",
+      );
 
-      if (autoApprove) {
-        await createTrialSubscriptionAndAudit(tx, establishment.id, null, "ESTABLISHMENT_AUTO_APPROVED");
-      } else if (otpRecord.plan === "PAID_9900") {
-        // Offre Payante choisie : création de la souscription et de la demande de paiement
-        const trialStartedAt = new Date();
-        const currentPeriodEnd = computeDepartureTime(trialStartedAt, trialMonths, "MONTH");
-        const sub = await tx.subscription.create({
-          data: {
-            establishmentId: establishment.id,
-            trialStartedAt,
-            currentPeriodEnd,
-          },
-        });
+      // Si l'utilisateur a choisi l'Offre Payante (9 900 FCFA / 3 mois), enregistrer la demande de paiement
+      if (otpRecord.plan === "PAID_9900") {
+        const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
+        const periodMonths = pricingSettings?.periodMonths ?? 3;
+        const periodPrice = pricingSettings?.periodPriceFcfa ?? 9900;
 
-        generatedReference = `SH-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+        const sub = await tx.subscription.findUnique({ where: { establishmentId: establishment.id } });
+        if (sub) {
+          generatedReference = `SH-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
 
-        await tx.subscriptionPayment.create({
-          data: {
-            subscriptionId: sub.id,
-            amount: periodPrice,
-            periodMonths,
-            status: "PENDING",
-            reference: generatedReference,
-          },
-        });
+          await tx.subscriptionPayment.create({
+            data: {
+              subscriptionId: sub.id,
+              amount: periodPrice,
+              periodMonths,
+              status: "PENDING",
+              reference: generatedReference,
+            },
+          });
+        }
       }
 
       // 6. Nettoyage de l'OTP consommé

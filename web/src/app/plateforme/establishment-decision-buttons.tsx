@@ -4,16 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approveEstablishment, rejectEstablishment } from "@/app/actions/establishment-approval";
 
-/**
- * Phase 3G / Lot D12-P82 — même schéma que ConfirmPaymentButton
- * (confirm() natif avant approbation, useTransition, erreur affichée).
- * Le refus exige un motif non vide : le bouton "Confirmer le refus" reste
- * désactivé tant que le champ est vide côté client, ET l'action serveur
- * revalide indépendamment (jamais une validation uniquement côté client).
- * N'appelle que approveEstablishment(id)/rejectEstablishment(id, reason) —
- * aucune date, aucun statut, aucune identité d'approbateur transmis par ce
- * composant.
- */
 export function EstablishmentDecisionButtons({
   establishmentId,
   establishmentName,
@@ -24,21 +14,19 @@ export function EstablishmentDecisionButtons({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
 
   function handleApprove() {
-    if (
-      !confirm(
-        `Approuver « ${establishmentName} » ? Un abonnement d'essai sera immédiatement activé pour cet établissement.`,
-      )
-    ) {
-      return;
-    }
     setError(null);
     startTransition(async () => {
       const result = await approveEstablishment(establishmentId);
-      if (result.error) setError(result.error);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setApproving(false);
+      }
       router.refresh();
     });
   }
@@ -46,20 +34,53 @@ export function EstablishmentDecisionButtons({
   function handleReject() {
     const trimmed = reason.trim();
     if (!trimmed) return;
-    if (!confirm(`Refuser « ${establishmentName} » ? Cette action ne peut pas être annulée depuis cette interface.`)) {
-      return;
-    }
     setError(null);
     startTransition(async () => {
       const result = await rejectEstablishment(establishmentId, trimmed);
-      if (result.error) setError(result.error);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setRejecting(false);
+      }
       router.refresh();
     });
   }
 
+  if (approving) {
+    return (
+      <div className="flex w-full flex-col gap-2 rounded-2xl border border-brand-orange/40 bg-white/5 p-3 sm:w-64">
+        <p className="text-xs font-bold text-white">
+          Approuver <span className="text-brand-orange">« {establishmentName} »</span> ?
+        </p>
+        <p className="text-[11px] leading-relaxed text-white/60">
+          Un abonnement d&apos;essai de 2 mois sera activé pour cet établissement.
+        </p>
+        <div className="flex gap-2 pt-1">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setApproving(false)}
+            className="h-8 flex-1 rounded-lg border border-white/20 text-xs font-semibold text-white/80 hover:bg-white/10"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={handleApprove}
+            className="h-8 flex-1 rounded-lg bg-brand-orange text-xs font-bold text-ink hover:opacity-90 disabled:opacity-50"
+          >
+            {pending ? "..." : "Oui, Approuver"}
+          </button>
+        </div>
+        {error ? <p className="text-[10.5px] font-medium text-danger">{error}</p> : null}
+      </div>
+    );
+  }
+
   if (rejecting) {
     return (
-      <div className="flex w-full flex-col gap-2 sm:w-56">
+      <div className="flex w-full flex-col gap-2 sm:w-64">
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -101,16 +122,22 @@ export function EstablishmentDecisionButtons({
         <button
           type="button"
           disabled={pending}
-          onClick={() => setRejecting(true)}
-          className="h-9 rounded-xl border border-white/15 px-3 text-xs font-extrabold text-white disabled:opacity-60"
+          onClick={() => {
+            setRejecting(true);
+            setApproving(false);
+          }}
+          className="h-9 rounded-xl border border-white/15 px-3 text-xs font-extrabold text-white hover:bg-white/5 disabled:opacity-60"
         >
           Refuser
         </button>
         <button
           type="button"
           disabled={pending}
-          onClick={handleApprove}
-          className="h-9 rounded-xl bg-brand-orange px-3 text-xs font-extrabold text-ink disabled:opacity-60"
+          onClick={() => {
+            setApproving(true);
+            setRejecting(false);
+          }}
+          className="h-9 rounded-xl bg-brand-orange px-3 text-xs font-extrabold text-ink transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {pending ? "..." : "Approuver"}
         </button>

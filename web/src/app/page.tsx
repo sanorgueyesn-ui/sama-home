@@ -98,14 +98,14 @@ export default async function Dashboard() {
       href: `/reservations/${r.id}`,
       time: r.arrivalTime,
       clientName: r.client?.name ?? "Sans client",
-      propertyName: r.property.name,
+      propertyName: r.property?.name ?? "Logement",
     })),
     ...departures.map((r) => ({
       id: `dep-${r.id}`,
       href: `/locations/${r.id}`,
       time: r.plannedDepartureAt,
-      clientName: r.client.name,
-      propertyName: r.property.name,
+      clientName: r.client?.name ?? "Client",
+      propertyName: r.property?.name ?? "Logement",
     })),
   ].sort((a, b) => a.time.getTime() - b.time.getTime());
 
