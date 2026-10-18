@@ -57,45 +57,46 @@ export function PricingSettingsForm({
     >
       <p className="text-sm font-extrabold text-white">Tarification des abonnements</p>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-white/70">Durée d&apos;essai (1 à 12 mois)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-bold text-white/70">Durée d&apos;essai gratuit (1 à 12 mois)</span>
         <input
           type="number"
           min={1}
           max={12}
           value={trialDurationMonths}
           onChange={(e) => setTrialDurationMonths(e.target.value)}
-          className="h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white outline-none focus:border-brand-orange"
+          className="h-11 w-full rounded-xl border border-white/15 bg-white/5 px-3.5 text-sm font-semibold text-white outline-none focus:border-brand-orange"
         />
         {errors?.trialDurationMonths ? (
           <span className="text-[10.5px] font-medium text-danger">{errors.trialDurationMonths[0]}</span>
         ) : null}
       </label>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-white/70">Durée d&apos;une période payante (1 à 12 mois)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-bold text-white/70">Durée d&apos;une période payante (1 à 12 mois)</span>
         <input
           type="number"
           min={1}
           max={12}
           value={periodMonths}
           onChange={(e) => setPeriodMonths(e.target.value)}
-          className="h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white outline-none focus:border-brand-orange"
+          className="h-11 w-full rounded-xl border border-white/15 bg-white/5 px-3.5 text-sm font-semibold text-white outline-none focus:border-brand-orange"
         />
         {errors?.periodMonths ? (
           <span className="text-[10.5px] font-medium text-danger">{errors.periodMonths[0]}</span>
         ) : null}
       </label>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-white/70">Prix de la période (500 à 1 000 000 FCFA)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-bold text-white/70">Tarif du forfait (500 à 1 000 000 FCFA)</span>
         <input
           type="number"
           min={500}
           max={1000000}
+          step={100}
           value={periodPriceFcfa}
           onChange={(e) => setPeriodPriceFcfa(e.target.value)}
-          className="h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white outline-none focus:border-brand-orange"
+          className="h-11 w-full rounded-xl border border-white/15 bg-white/5 px-3.5 text-sm font-semibold text-white outline-none focus:border-brand-orange"
         />
         {errors?.periodPriceFcfa ? (
           <span className="text-[10.5px] font-medium text-danger">{errors.periodPriceFcfa[0]}</span>
@@ -105,9 +106,9 @@ export function PricingSettingsForm({
       <button
         type="submit"
         disabled={pending}
-        className="h-10 rounded-xl bg-brand-orange px-4 text-xs font-extrabold text-ink disabled:opacity-60"
+        className="mt-1 flex h-11 w-full items-center justify-center rounded-xl bg-brand-orange px-4 text-xs font-extrabold text-ink transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
       >
-        {pending ? "Enregistrement..." : "Enregistrer"}
+        {pending ? "Enregistrement en cours..." : "Enregistrer les tarifs"}
       </button>
 
       {state.message ? <p className="text-[10.5px] font-medium text-danger">{state.message}</p> : null}

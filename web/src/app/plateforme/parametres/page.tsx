@@ -60,16 +60,16 @@ export default async function PlatformSettingsPage() {
         <div className="mt-8 flex flex-col gap-8">
           {/* Section 1 : Tarification des abonnements & Modèle Économique */}
           <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-1 border-b border-white/10 pb-4">
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
                 <h2 className="text-lg font-black text-white">1. Tarification globale & Modèle d&apos;abonnement</h2>
-                <span className="rounded-full bg-brand-orange/15 px-2.5 py-0.5 text-xs font-bold text-brand-orange">
-                  Offre SAMA HOME
-                </span>
+                <p className="mt-1 text-xs text-white/50">
+                  Définit la durée de l&apos;essai gratuit initial et le montant des renouvellements périodiques pour toutes les résidences.
+                </p>
               </div>
-              <p className="text-xs text-white/50">
-                Définit la durée de l&apos;essai gratuit initial et le montant des renouvellements périodiques pour toutes les résidences.
-              </p>
+              <span className="self-start rounded-full bg-brand-orange/15 px-2.5 py-0.5 text-xs font-bold text-brand-orange whitespace-nowrap sm:self-auto">
+                Offre SAMA HOME
+              </span>
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -135,18 +135,18 @@ export default async function PlatformSettingsPage() {
 
           {/* Section 2 : Flux d'admission des résidences & Inscriptions */}
           <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-1 border-b border-white/10 pb-4">
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
                 <h2 className="text-lg font-black text-white">2. Flux d&apos;admission & Modération des inscriptions</h2>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                  autoApproveEstablishments ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"
-                }`}>
-                  {autoApproveEstablishments ? "Mode Automatique" : "Modération Manuelle (Recommandée)"}
-                </span>
+                <p className="mt-1 text-xs text-white/50">
+                  Contrôle la façon dont les nouveaux comptes et établissements sont validés après soumission du formulaire ou vérification OTP.
+                </p>
               </div>
-              <p className="text-xs text-white/50">
-                Contrôle la façon dont les nouveaux comptes et établissements sont validés après soumission du formulaire ou vérification OTP.
-              </p>
+              <span className={`self-start rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap sm:self-auto ${
+                autoApproveEstablishments ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"
+              }`}>
+                {autoApproveEstablishments ? "Mode Automatique" : "Modération Manuelle (Recommandée)"}
+              </span>
             </div>
 
             <div className="mt-6">
@@ -201,16 +201,16 @@ export default async function PlatformSettingsPage() {
 
           {/* Section 3 : Coordonnées Officielles de Réception des Règlements */}
           <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-1 border-b border-white/10 pb-4">
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
                 <h2 className="text-lg font-black text-white">3. Coordonnées de Paiement & Contact Support</h2>
-                <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/70">
-                  Sénégal (Mobile Money)
-                </span>
+                <p className="mt-1 text-xs text-white/50">
+                  Instructions et coordonnées officielles communiquées aux établissements pour le règlement de leurs abonnements.
+                </p>
               </div>
-              <p className="text-xs text-white/50">
-                Instructions et coordonnées officielles communiquées aux établissements pour le règlement de leurs abonnements.
-              </p>
+              <span className="self-start rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/70 whitespace-nowrap sm:self-auto">
+                Sénégal (Mobile Money)
+              </span>
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -219,7 +219,7 @@ export default async function PlatformSettingsPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-sky-400">🌊 Compte Wave</span>
                 <span className="mt-2 font-mono text-base font-extrabold text-white">+221 77 000 00 00</span>
                 <p className="mt-1 text-[11px] text-white/50">Compte officiel SAMA HOME</p>
-                <span className="mt-3 inline-block rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] font-semibold text-sky-300 text-center">
+                <span className="mt-3 inline-block rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-semibold text-sky-300 text-center">
                   Instantané • 0% frais
                 </span>
               </div>
@@ -229,7 +229,7 @@ export default async function PlatformSettingsPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-amber-400">🍊 Orange Money</span>
                 <span className="mt-2 font-mono text-base font-extrabold text-white">+221 78 000 00 00</span>
                 <p className="mt-1 text-[11px] text-white/50">Compte marchand ou transfert direct</p>
-                <span className="mt-3 inline-block rounded-lg bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-300 text-center">
+                <span className="mt-3 inline-block rounded-lg bg-amber-500/20 px-2 py-1 text-[10px] font-semibold text-amber-300 text-center">
                   Transfert avec code
                 </span>
               </div>
@@ -239,7 +239,7 @@ export default async function PlatformSettingsPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">💬 Support WhatsApp</span>
                 <span className="mt-2 font-mono text-base font-extrabold text-white">+221 77 000 00 00</span>
                 <p className="mt-1 text-[11px] text-white/50">Envoi de capture ou justificatif</p>
-                <span className="mt-3 inline-block rounded-lg bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 text-center">
+                <span className="mt-3 inline-block rounded-lg bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-300 text-center">
                   Réponse &lt; 2h
                 </span>
               </div>
@@ -249,7 +249,7 @@ export default async function PlatformSettingsPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-white/60">✉️ Email d&apos;assistance</span>
                 <span className="mt-2 truncate font-mono text-xs font-extrabold text-white">support@samahome.sn</span>
                 <p className="mt-1 text-[11px] text-white/50">Facturation & contrats</p>
-                <span className="mt-3 inline-block rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/70 text-center">
+                <span className="mt-3 inline-block rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white/70 text-center">
                   Support officiel
                 </span>
               </div>
@@ -258,18 +258,18 @@ export default async function PlatformSettingsPage() {
 
           {/* Section 4 : Sécurité & Traçabilité */}
           <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-1 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-black text-white">4. Sécurité & Gouvernance Plateforme</h2>
-                <p className="text-xs text-white/50">
+                <p className="mt-1 text-xs text-white/50">
                   Traçabilité des décisions administratives, isolation multi-tenant et intégrité système.
                 </p>
               </div>
 
-              <div className="mt-2 sm:mt-0">
+              <div className="w-full sm:w-auto">
                 <Link
                   href="/plateforme/historique"
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-brand-orange hover:bg-white/10"
+                  className="flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-brand-orange hover:bg-white/10 sm:w-auto"
                 >
                   📜 Consulter le journal d&apos;audit complet
                 </Link>

@@ -114,7 +114,7 @@ export function PlatformUserFilterBar({
           disabled={platformOnly}
           onChange={(e) => handleRoleChange(e.target.value as RoleFilter)}
           aria-label="Filtrer par rôle"
-          className="h-11 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white outline-none focus:border-brand-orange disabled:opacity-40 sm:w-56"
+          className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white outline-none focus:border-brand-orange disabled:opacity-40 sm:w-56"
         >
           {ROLE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value} className="bg-[#0e1a22] text-white">
@@ -127,7 +127,7 @@ export function PlatformUserFilterBar({
           disabled={platformOnly}
           onChange={(e) => handleStatusChange(e.target.value as StatusFilter)}
           aria-label="Filtrer par statut d'établissement"
-          className="h-11 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white outline-none focus:border-brand-orange disabled:opacity-40 sm:w-64"
+          className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white outline-none focus:border-brand-orange disabled:opacity-40 sm:w-64"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value} className="bg-[#0e1a22] text-white">

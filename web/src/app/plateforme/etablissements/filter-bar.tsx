@@ -84,7 +84,7 @@ export function EstablishmentFilterBar({
         value={status}
         onChange={(e) => handleStatusChange(e.target.value as EstablishmentStatusFilter)}
         aria-label="Filtrer par statut"
-        className="h-11 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white outline-none focus:border-brand-orange sm:w-48"
+        className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white outline-none focus:border-brand-orange sm:w-48"
       >
         {STATUS_OPTIONS.map((option) => (
           <option key={option.value} value={option.value} className="bg-[#0e1a22] text-white">

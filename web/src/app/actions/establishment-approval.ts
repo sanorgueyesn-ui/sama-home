@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
+import { verifyPassword } from "@/lib/password";
 
 class EstablishmentApprovalError extends Error {}
 
@@ -290,13 +291,29 @@ export async function reactivateEstablishment(establishmentId: string): Promise<
 }
 
 /**
- * Suppression d'un établissement par un administrateur de PLATEFORME.
+ * Suppression définitive d'un établissement et de TOUTES ses données associées
+ * par un administrateur de PLATEFORME, sécurisée par mot de passe administrateur.
  */
-export async function deleteEstablishment(establishmentId: string): Promise<{ error?: string }> {
+export async function deleteEstablishment(
+  establishmentId: string,
+  adminPassword?: string
+): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
 
   if (!establishmentId) {
     return { error: "Identifiant d'établissement manquant." };
+  }
+  if (!adminPassword || typeof adminPassword !== "string" || !adminPassword.trim()) {
+    return { error: "Veuillez saisir votre mot de passe administrateur pour confirmer la suppression." };
+  }
+
+  const currentAdmin = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { passwordHash: true },
+  });
+  const isPasswordValid = await verifyPassword(adminPassword.trim(), currentAdmin?.passwordHash ?? null);
+  if (!isPasswordValid) {
+    return { error: "Mot de passe administrateur incorrect. Suppression refusée." };
   }
 
   try {
@@ -309,25 +326,99 @@ export async function deleteEstablishment(establishmentId: string): Promise<{ er
         throw new EstablishmentApprovalError("Établissement introuvable.");
       }
 
-      // Supprimer les dépendances associées
-      await tx.session.deleteMany({
+      // 1. Notifications & lectures
+      await tx.notificationRead.deleteMany({
         where: { user: { establishmentId } },
       });
+      await tx.notification.deleteMany({
+        where: { relatedEstablishmentId: establishmentId },
+      });
+
+      // 2. Opérations de caisse et banque
+      await tx.cashCorrection.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.cashSession.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.cashRegister.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.bankTransfer.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.transferSchedule.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.bankAccount.deleteMany({
+        where: { establishmentId },
+      });
+
+      // 3. Dépenses et catégories
+      await tx.expense.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.expenseCategory.deleteMany({
+        where: { establishmentId },
+      });
+
+      // 4. Paiements, locations et réservations
+      await tx.payment.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.rentalExtension.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.rental.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.reservation.deleteMany({
+        where: { establishmentId },
+      });
+
+      // 5. Tarifs, logements et clients
+      await tx.tariff.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.property.deleteMany({
+        where: { establishmentId },
+      });
+      await tx.client.deleteMany({
+        where: { establishmentId },
+      });
+
+      // 6. Abonnements et paiements d'abonnement
       await tx.subscriptionPayment.deleteMany({
         where: { subscription: { establishmentId } },
       });
       await tx.subscription.deleteMany({
         where: { establishmentId },
       });
+
+      // 7. Paramètres et sessions
       await tx.settings.deleteMany({
         where: { establishmentId },
       });
-      await tx.auditLog.deleteMany({
-        where: { establishmentId },
+      await tx.session.deleteMany({
+        where: { user: { establishmentId } },
       });
+
+      // 8. Journaux d'audit liés à l'établissement ou à ses utilisateurs
+      await tx.auditLog.deleteMany({
+        where: {
+          OR: [
+            { establishmentId },
+            { user: { establishmentId } },
+          ],
+        },
+      });
+
+      // 9. Utilisateurs de l'établissement
       await tx.user.deleteMany({
         where: { establishmentId },
       });
+
+      // 10. Enfin, suppression de l'établissement
       await tx.establishment.delete({
         where: { id: establishmentId },
       });
@@ -349,10 +440,85 @@ export async function deleteEstablishment(establishmentId: string): Promise<{ er
     if (error instanceof EstablishmentApprovalError) {
       return { error: error.message };
     }
-    console.error(`deleteEstablishment(${establishmentId}) — échec inattendu de la suppression :`, error);
+    console.error(`deleteEstablishment(${establishmentId}) — échec de la suppression :`, error);
     return { error: "Une erreur est survenue pendant la suppression. Veuillez réessayer." };
   }
 
   return {};
 }
+
+/**
+ * Suppression d'un compte utilisateur individuel par un administrateur de PLATEFORME,
+ * sécurisée par mot de passe administrateur.
+ */
+export async function deletePlatformUser(
+  targetUserId: string,
+  adminPassword?: string
+): Promise<{ error?: string }> {
+  const currentAdminUser = await requirePlatformAdmin();
+
+  if (!targetUserId) {
+    return { error: "Identifiant utilisateur manquant." };
+  }
+  if (targetUserId === currentAdminUser.id) {
+    return { error: "Impossible de supprimer votre propre compte administrateur connecté." };
+  }
+  if (!adminPassword || typeof adminPassword !== "string" || !adminPassword.trim()) {
+    return { error: "Veuillez saisir votre mot de passe administrateur pour confirmer la suppression." };
+  }
+
+  const currentAdmin = await prisma.user.findUnique({
+    where: { id: currentAdminUser.id },
+    select: { passwordHash: true },
+  });
+  const isPasswordValid = await verifyPassword(adminPassword.trim(), currentAdmin?.passwordHash ?? null);
+  if (!isPasswordValid) {
+    return { error: "Mot de passe administrateur incorrect. Suppression refusée." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const target = await tx.user.findUnique({
+        where: { id: targetUserId },
+        select: { id: true, name: true, username: true, isPlatformAdmin: true, establishmentId: true },
+      });
+      if (!target) {
+        throw new EstablishmentApprovalError("Utilisateur introuvable.");
+      }
+      if (target.isPlatformAdmin) {
+        throw new EstablishmentApprovalError("Impossible de supprimer un compte administrateur de plateforme.");
+      }
+
+      // Supprimer sessions et notifications de lecture de cet utilisateur
+      await tx.session.deleteMany({ where: { userId: targetUserId } });
+      await tx.notificationRead.deleteMany({ where: { userId: targetUserId } });
+      await tx.auditLog.deleteMany({ where: { userId: targetUserId } });
+
+      // Suppression de l'utilisateur
+      await tx.user.delete({ where: { id: targetUserId } });
+
+      await tx.auditLog.create({
+        data: {
+          userId: currentAdminUser.id,
+          action: "USER_DELETED",
+          entityType: "User",
+          entityId: targetUserId,
+          reason: `Suppression définitive du compte utilisateur « ${target.name} » (${target.username})`,
+          oldValue: { name: target.name, username: target.username },
+          newValue: { deleted: true },
+          establishmentId: target.establishmentId,
+        },
+      });
+    });
+  } catch (error) {
+    if (error instanceof EstablishmentApprovalError) {
+      return { error: error.message };
+    }
+    console.error(`deletePlatformUser(${targetUserId}) — échec :`, error);
+    return { error: "Une erreur est survenue pendant la suppression du compte. Veuillez réessayer." };
+  }
+
+  return {};
+}
+
 

@@ -79,14 +79,14 @@ export function SubscriptionActions({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <div className="flex items-center gap-1.5">
+    <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:items-end">
+      <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:items-center">
         <button
           type="button"
           disabled={pending}
           onClick={() => handleQuickProlong(30)}
           title="Offrir ou ajouter 30 jours de validité"
-          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-white/80 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-40"
+          className="flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-white/80 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-40"
         >
           {pending ? "..." : "+30 j"}
         </button>
@@ -96,7 +96,7 @@ export function SubscriptionActions({
           disabled={pending}
           onClick={() => handleQuickProlong(90)}
           title="Ajouter 90 jours (3 mois)"
-          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-white/80 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-40"
+          className="flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-bold text-white/80 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-40"
         >
           {pending ? "..." : "+3 mois"}
         </button>
@@ -108,18 +108,18 @@ export function SubscriptionActions({
             setError(null);
             setShowPaymentModal(true);
           }}
-          className="rounded-lg bg-brand-orange/15 px-2.5 py-1 text-[11px] font-bold text-brand-orange transition-colors hover:bg-brand-orange hover:text-ink disabled:opacity-40"
+          className="flex h-9 items-center justify-center rounded-xl bg-brand-orange/15 px-2.5 py-1 text-xs font-bold text-brand-orange transition-colors hover:bg-brand-orange hover:text-ink disabled:opacity-40"
         >
           Encaisser
         </button>
       </div>
 
       {successMsg ? (
-        <span className="text-[10px] font-semibold text-emerald-400 animate-pulse">{successMsg}</span>
+        <span className="text-center text-[10.5px] font-semibold text-emerald-400 animate-pulse sm:text-right">{successMsg}</span>
       ) : null}
 
       {error ? (
-        <span className="text-[10px] font-medium text-danger">{error}</span>
+        <span className="text-center text-[10.5px] font-medium text-danger sm:text-right">{error}</span>
       ) : null}
 
       {/* Modal / Dialog d'enregistrement de règlement manuel */}

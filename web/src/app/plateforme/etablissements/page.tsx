@@ -38,8 +38,8 @@ function SubscriptionState({ currentPeriodEnd, now }: { currentPeriodEnd: Date |
 function EstablishmentRow({ establishment, now }: { establishment: EstablishmentListView; now: number }) {
   const badge = STATUS_BADGE[establishment.status];
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div className="min-w-0">
+    <div className="flex flex-col gap-3.5 rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-white/20 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-extrabold text-white">{establishment.name}</p>
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>{badge.label}</span>
@@ -57,15 +57,17 @@ function EstablishmentRow({ establishment, now }: { establishment: Establishment
         </p>
       </div>
 
-      {establishment.status === "PENDING" ? (
-        <EstablishmentDecisionButtons establishmentId={establishment.id} establishmentName={establishment.name} />
-      ) : establishment.status === "ACTIVE" || establishment.status === "SUSPENDED" ? (
-        <EstablishmentLifecycleButtons
-          establishmentId={establishment.id}
-          establishmentName={establishment.name}
-          status={establishment.status}
-        />
-      ) : null}
+      <div className="shrink-0 w-full sm:w-auto pt-2 sm:pt-0">
+        {establishment.status === "PENDING" ? (
+          <EstablishmentDecisionButtons establishmentId={establishment.id} establishmentName={establishment.name} />
+        ) : establishment.status === "ACTIVE" || establishment.status === "SUSPENDED" ? (
+          <EstablishmentLifecycleButtons
+            establishmentId={establishment.id}
+            establishmentName={establishment.name}
+            status={establishment.status}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -85,8 +87,6 @@ export default async function PlatformEstablishmentsPage(props: PageProps<"/plat
     items = result.items;
     truncated = result.truncated;
   } catch (error) {
-    // D12-P172 — même correction que PlatformDashboardPage() : ne jamais
-    // avaler le signal interne redirect() de Next.js (digest "NEXT_REDIRECT").
     if (error && typeof error === "object" && "digest" in error && typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
       throw error;
     }
@@ -95,18 +95,18 @@ export default async function PlatformEstablishmentsPage(props: PageProps<"/plat
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
-      <h1 className="text-2xl font-extrabold text-white">Établissements</h1>
-      <p className="mt-1 text-xs font-medium text-white/50">
-        Gestion globale de tous les établissements de la plateforme.
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-6 pb-16 sm:px-6 md:px-8 lg:px-10">
+      <h1 className="text-2xl font-black text-white sm:text-3xl">Établissements</h1>
+      <p className="mt-1 text-xs font-medium text-white/50 sm:text-sm">
+        Gestion globale, suspension et suppression définitive des établissements partenaires.
       </p>
 
-      <div className="mt-4">
+      <div className="mt-5">
         <EstablishmentFilterBar defaultStatus={statusParam as EstablishmentStatusFilter} defaultQuery={query} />
       </div>
 
       {loadError ? (
-        <p className="mt-5 rounded-xl bg-danger-bg px-4 py-3 text-sm font-bold text-danger">{loadError}</p>
+        <p className="mt-5 rounded-2xl bg-danger-bg px-4 py-3 text-sm font-bold text-danger">{loadError}</p>
       ) : items.length === 0 ? (
         <p className="mt-5 text-sm font-semibold text-white/70">
           {query || statusParam !== "ALL" ? "Aucun établissement ne correspond à ces critères." : "Aucun établissement."}
