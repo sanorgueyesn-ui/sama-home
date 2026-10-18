@@ -30,8 +30,8 @@ export function PlatformShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh w-full max-w-full overflow-x-hidden flex-col bg-[#0b141a] text-white">
-      {/* Barre supérieure flottante / sticky pour l'administration */}
-      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#0e1a22]/95 backdrop-blur-md shadow-md">
+      {/* Barre supérieure FIXE permanente sur tous les appareils */}
+      <header className="fixed top-0 inset-x-0 z-50 w-full border-b border-white/10 bg-[#0e1a22]/95 backdrop-blur-md shadow-md">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo & Identité Plateforme */}
           <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
 
         {/* Menu déroulant Mobile & Tablette */}
         {menuOpen ? (
-          <div className="border-t border-white/10 bg-[#0e1a22] px-4 py-3 lg:hidden">
+          <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-white/10 bg-[#0e1a22] px-4 py-3 shadow-2xl lg:hidden">
             <nav className="flex flex-col gap-1.5">
               {PLATFORM_NAV_ITEMS.map((item) => {
                 if (item.disabled || !item.href) {
@@ -172,8 +172,8 @@ export function PlatformShell({ children }: { children: ReactNode }) {
         ) : null}
       </header>
 
-      {/* Contenu principal en pleine largeur et centré */}
-      <main className="w-full max-w-full flex-1 overflow-x-hidden bg-[#0b141a]">
+      {/* Contenu principal en pleine largeur et centré avec décalage sous la barre fixe */}
+      <main className="w-full max-w-full flex-1 overflow-x-hidden pt-16 bg-[#0b141a]">
         {children}
       </main>
 
