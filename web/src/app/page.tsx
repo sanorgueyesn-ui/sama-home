@@ -125,7 +125,7 @@ export default async function Dashboard() {
   ].sort((a, b) => a.time.getTime() - b.time.getTime());
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 pt-6 pb-28 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-5 pt-6 pb-28 md:px-8 md:pb-10 lg:px-10">
       {/* Background d'ambiance GLOBAL (maquette Stitch) — fixed, derrière
           tout le contenu, jamais lié à Property.photo (règle absolue de ce
           lot : aucune `heroProperty`/recherche du premier logement avec

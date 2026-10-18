@@ -82,8 +82,18 @@ export async function checkAvailability(input: {
 
   const arrivalDateTime = new Date(`${input.date}T${input.arrivalTime}:00`);
   if (Number.isNaN(arrivalDateTime.getTime())) {
-    return { available: false };
+    return { available: false, message: "Date ou heure invalide." };
   }
+
+  // Interdiction formelle de réserver à une date ou une heure passée
+  const now = new Date();
+  if (!input.excludeReservationId && arrivalDateTime.getTime() < now.getTime() - 2 * 60 * 1000) {
+    return {
+      available: false,
+      message: "Impossible de réserver à une date ou heure déjà passée. Veuillez choisir un horaire futur.",
+    };
+  }
+
   const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
 
   const conflict = await findAvailabilityConflict(prisma, {
@@ -159,6 +169,13 @@ export async function createReservation(
   if (Number.isNaN(arrivalDateTime.getTime())) {
     return { message: "Date ou heure invalide." };
   }
+
+  // Refus formel de réservation dans le passé
+  const now = new Date();
+  if (arrivalDateTime.getTime() < now.getTime() - 2 * 60 * 1000) {
+    return { message: "La date et l'heure d'arrivée d'une réservation doivent être dans le futur." };
+  }
+
   const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
 
   // The amount is ALWAYS the tariff's current amount — never a client-

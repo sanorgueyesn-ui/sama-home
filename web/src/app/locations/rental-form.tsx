@@ -6,6 +6,12 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { checkRentalAvailability } from "@/app/actions/rentals";
 import { requiresIdentity } from "@/lib/identity";
 import { checkRetroactiveArrival, RETROACTIVE_TOLERANCE_MINUTES } from "@/lib/retroactive-checkin";
+import {
+  LuxuryDatePicker,
+  LuxuryTimePicker,
+  todayIso,
+  nowTimeIso,
+} from "@/components/ui/luxury-datetime-picker";
 import type { ReservationFormState } from "@/lib/definitions";
 
 const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire", "Carte consulaire"];
@@ -38,15 +44,6 @@ function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 
-function nowDateIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-function nowTimeIso() {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
 export function RentalForm({
   action,
   clients,
@@ -63,16 +60,15 @@ export function RentalForm({
   const [state, formAction, pending] = useActionState(action, undefined);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // Phase 12, Bloc 6/8 — same "+ Nouveau client" round trip as reservation-form.tsx.
   const newClientHref = `/clients/new?returnTo=${encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`;
 
   const [clientId, setClientId] = useState(defaultClientId ?? "");
   const [propertyId, setPropertyId] = useState(defaultPropertyId ?? "");
   const [tariffId, setTariffId] = useState("");
-  const [date, setDate] = useState(nowDateIso());
+  const [date, setDate] = useState(todayIso());
   const [arrivalTime, setArrivalTime] = useState(nowTimeIso());
   const [deposit, setDeposit] = useState(0);
-  const [depositMethod, setDepositMethod] = useState("");
+  const [depositMethod, setDepositMethod] = useState("CASH");
   const [note, setNote] = useState("");
   const [idDocumentType, setIdDocumentType] = useState("");
   const [idDocumentNumber, setIdDocumentNumber] = useState("");
@@ -92,6 +88,7 @@ export function RentalForm({
   const effectiveTariffId = activeTariffs.some((t) => t.id === tariffId) ? tariffId : "";
   const selectedTariff = activeTariffs.find((t) => t.id === effectiveTariffId);
 
+  // Live availability checking
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -113,7 +110,7 @@ export function RentalForm({
         message: result.message,
         departureTime: result.departureTime,
       });
-    }, 350);
+    }, 300);
     return () => clearTimeout(debounceRef.current);
   }, [propertyId, effectiveTariffId, date, arrivalTime]);
 
@@ -127,10 +124,6 @@ export function RentalForm({
     });
   }, [availability.departureTime]);
 
-  // Audit Client/Réservation, Bloc 3/5 — même règle que reservation-form.tsx :
-  // identité obligatoire à partir de la durée RÉELLE (48h), aussi pour une
-  // location directe. On réutilise departureTime déjà calculé par
-  // checkRentalAvailability plutôt que de recalculer un départ côté client.
   const needsIdentity = useMemo(() => {
     if (!availability.departureTime || !date || !arrivalTime) return false;
     const arrival = new Date(`${date}T${arrivalTime}:00`);
@@ -139,27 +132,11 @@ export function RentalForm({
     return requiresIdentity(arrival, departure);
   }, [availability.departureTime, date, arrivalTime]);
 
-  // Si le client possède déjà une identité valide en fiche, ne jamais la
-  // redemander (règle validée explicitement).
   const clientAlreadyHasIdentity = Boolean(
     selectedClient?.idDocumentType && selectedClient?.idDocumentNumber,
   );
   const showIdentitySection = needsIdentity && !clientAlreadyHasIdentity;
 
-  // Bloc 21 — arrivée rétroactive : ce formulaire acceptait déjà n'importe
-  // quelle heure d'arrivée sans aucune validation passé/futur. Même règle
-  // que le check-in, retour visuel immédiat côté client — le serveur
-  // revalide intégralement (createRentalDirect) et reste la seule source de
-  // vérité.
-  //
-  // IMPORTANT : `isRetroactive` (affiche le champ) est dérivé INDÉPENDAMMENT
-  // de `retroCheck.ok` (bloque la soumission). checkRetroactiveArrival
-  // renvoie `ok:false` tant que la justification est vide ET que l'arrivée
-  // est rétroactive — si on avait gardé "isRetroactive = retroCheck.ok &&
-  // retroCheck.isRetroactive", le champ ne serait JAMAIS apparu (il faudrait
-  // déjà avoir rempli la justification pour que le check passe et révèle le
-  // champ qui sert justement à la saisir). Corrigé : le champ apparaît dès
-  // que l'écart dépasse la tolérance, quelle que soit la justification.
   const isRetroactive = useMemo(() => {
     if (!date || !arrivalTime) return false;
     const arrival = new Date(`${date}T${arrivalTime}:00`);
@@ -179,312 +156,331 @@ export function RentalForm({
     availability.available === true &&
     !availability.checking &&
     !retroBlockedMessage &&
+    clientId !== "" &&
     (!showIdentitySection || (idDocumentType.trim() !== "" && idDocumentNumber.trim() !== ""));
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label htmlFor="clientId" className="block text-xs font-bold text-fg">
-            Client
-          </label>
-          <Link href={newClientHref} className="text-xs font-bold text-fg underline">
-            + Nouveau client
-          </Link>
-        </div>
-        <select
-          id="clientId"
-          name="clientId"
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-        >
-          <option value="">Sélectionner un client...</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        {selectedClient ? (
-          <p className="mt-1.5 text-xs font-semibold text-fg/60">Téléphone : {selectedClient.phone}</p>
-        ) : null}
-        {errors?.clientId?.map((error) => (
-          <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
-          </p>
-        ))}
-      </div>
-
-      <div>
-        <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
-          Logement
-        </label>
-        <select
-          id="propertyId"
-          name="propertyId"
-          value={propertyId}
-          onChange={(e) => setPropertyId(e.target.value)}
-          className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-        >
-          <option value="">Sélectionner un logement...</option>
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        {errors?.propertyId?.map((error) => (
-          <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
-          </p>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="date" className="mb-1.5 block text-xs font-bold text-fg">
-            Date
-          </label>
-          <input
-            id="date"
-            name="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-          />
-          {errors?.date?.map((error) => (
-            <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
-            </p>
-          ))}
-        </div>
-        <div>
-          <label htmlFor="arrivalTime" className="mb-1.5 block text-xs font-bold text-fg">
-            Heure d&apos;arrivée
-          </label>
-          <input
-            id="arrivalTime"
-            name="arrivalTime"
-            type="time"
-            value={arrivalTime}
-            onChange={(e) => setArrivalTime(e.target.value)}
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-          />
-          {errors?.arrivalTime?.map((error) => (
-            <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
-            </p>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
-          Tarif
-        </label>
-        {propertyId && activeTariffs.length === 0 ? (
-          <p className="rounded-xl bg-warning-bg px-3 py-2.5 text-sm font-semibold text-warning">
-            Aucun tarif actif pour ce logement.
-          </p>
-        ) : (
-          <select
-            id="tariffId"
-            name="tariffId"
-            value={effectiveTariffId}
-            onChange={(e) => setTariffId(e.target.value)}
-            disabled={!propertyId}
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange disabled:opacity-50"
-          >
-            <option value="">{propertyId ? "Sélectionner un tarif..." : "Choisissez d'abord un logement"}</option>
-            {activeTariffs.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label} — {fmtFcfa(t.amount)}
-              </option>
-            ))}
-          </select>
-        )}
-        {errors?.tariffId?.map((error) => (
-          <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
-          </p>
-        ))}
-      </div>
-
-      <div className="rounded-xl bg-surface-sunken px-4 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-fg/60">Départ prévu</span>
-          <span className="text-sm font-extrabold text-fg">{departurePreview ?? "—"}</span>
-        </div>
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="text-xs font-bold text-fg/60">Montant</span>
-          <span className="text-sm font-extrabold text-fg">
-            {selectedTariff ? fmtFcfa(selectedTariff.amount) : "—"}
+    <form action={formAction} className="flex flex-col gap-5">
+      {/* 1. Logement & Formule */}
+      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-white/10">
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
+            1
           </span>
+          <h2 className="text-sm font-black uppercase tracking-wider text-fg">Chambre &amp; Formule de séjour</h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Logement */}
+          <div>
+            <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
+              Chambre / Logement
+            </label>
+            <select
+              id="propertyId"
+              name="propertyId"
+              value={propertyId}
+              onChange={(e) => {
+                setPropertyId(e.target.value);
+                setTariffId("");
+              }}
+              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+            >
+              <option value="">Sélectionner une chambre...</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.type === "ROOM" ? "Chambre" : "Appartement"})
+                </option>
+              ))}
+            </select>
+            {errors?.propertyId?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
+
+          {/* Tarif */}
+          <div>
+            <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
+              Formule / Tarif
+            </label>
+            {propertyId && activeTariffs.length === 0 ? (
+              <div className="flex h-12 items-center rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 text-xs font-semibold text-amber-300">
+                Aucun tarif configuré pour ce logement.
+              </div>
+            ) : (
+              <select
+                id="tariffId"
+                name="tariffId"
+                value={effectiveTariffId}
+                onChange={(e) => setTariffId(e.target.value)}
+                disabled={!propertyId}
+                className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
+              >
+                <option value="">{propertyId ? "Sélectionner un tarif..." : "Choisissez d'abord une chambre"}</option>
+                {activeTariffs.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label} — {fmtFcfa(t.amount)}
+                  </option>
+                ))}
+              </select>
+            )}
+            {errors?.tariffId?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
         </div>
       </div>
 
-      {availability.checking ? (
-        <p className="text-xs font-semibold text-fg/50">Vérification de la disponibilité...</p>
-      ) : availability.available === true ? (
-        <div className="flex items-center gap-2.5 rounded-xl bg-success-bg px-4 py-3 text-success">
-          <span className="h-2 w-2 rounded-full bg-success" />
-          <span className="text-sm font-extrabold">DISPONIBLE</span>
-        </div>
-      ) : availability.available === false ? (
-        <div className="flex flex-col gap-1 rounded-xl bg-danger-bg px-4 py-3 text-danger">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2 w-2 rounded-full bg-danger" />
-            <span className="text-sm font-extrabold">INDISPONIBLE</span>
+      {/* 2. Horaires d'arrivée (Check-in) */}
+      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
+              2
+            </span>
+            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Horaires de Check-in</h2>
           </div>
-          {availability.message ? <p className="text-xs font-medium">{availability.message}</p> : null}
+          <button
+            type="button"
+            onClick={() => {
+              setDate(todayIso());
+              setArrivalTime(nowTimeIso());
+            }}
+            className="rounded-full bg-brand-orange/15 border border-brand-orange/30 px-3 py-1 text-xs font-bold text-brand-orange hover:bg-brand-orange/25"
+          >
+            ⚡ Arrivée maintenant
+          </button>
         </div>
-      ) : null}
 
-      {isRetroactive ? (
-        <div className="flex flex-col gap-3 rounded-xl bg-warning-bg px-4 py-3">
-          <div>
-            <p className="text-sm font-bold text-warning">Arrivée rétroactive</p>
-            <p className="mt-0.5 text-xs font-medium text-warning">
-              Cette arrivée sera enregistrée avec l&apos;heure réelle saisie. Maximum autorisé : 24 heures en
-              arrière.
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <LuxuryDatePicker
+            name="date"
+            value={date}
+            onChange={(newDate) => setDate(newDate)}
+            label="Date d'entrée"
+            error={errors?.date?.[0]}
+          />
+
+          <LuxuryTimePicker
+            name="arrivalTime"
+            value={arrivalTime}
+            onChange={(newTime) => setArrivalTime(newTime)}
+            label="Heure d'entrée"
+            selectedDate={date}
+            error={errors?.arrivalTime?.[0]}
+          />
+        </div>
+
+        {/* Justification rétroactive si arrivée dans le passé */}
+        {isRetroactive ? (
+          <div className="mt-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5">
+            <p className="text-xs font-bold text-amber-300">
+              ⚠️ Arrivée rétroactive constatée (dans le passé).
             </p>
-          </div>
-          <div>
-            <label htmlFor="retroactiveReason" className="mb-1.5 block text-xs font-bold text-fg">
-              Justification
-            </label>
-            <textarea
-              id="retroactiveReason"
+            <p className="mt-0.5 text-[11px] text-amber-300/80">
+              Indiquez la raison pour laquelle cette entrée est enregistrée après coup.
+            </p>
+            <input
               name="retroactiveReason"
+              type="text"
               value={retroactiveReason}
               onChange={(e) => setRetroactiveReason(e.target.value)}
-              placeholder="Ex. Client arrivé avant l'enregistrement."
-              className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface-raised px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+              placeholder="Ex : Problème de connexion, saisie différée..."
+              className="mt-2 h-11 w-full rounded-xl border border-amber-500/30 bg-surface px-3 text-xs text-fg outline-none focus:border-brand-orange"
             />
+            {retroBlockedMessage ? (
+              <p className="mt-1 text-xs font-medium text-danger">{retroBlockedMessage}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* Live Stay Calculations & Availability Card */}
+        <div className="mt-4 rounded-xl border border-white/5 bg-surface-sunken p-3.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-fg/60">Sortie prévue :</span>
+            <span className="font-extrabold text-white text-sm">{departurePreview ?? "—"}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 text-xs">
+            <span className="font-bold text-fg/60">Montant total :</span>
+            <span className="font-black text-brand-orange text-base">
+              {selectedTariff ? fmtFcfa(selectedTariff.amount) : "—"}
+            </span>
           </div>
         </div>
-      ) : (
-        <input type="hidden" name="retroactiveReason" value={retroactiveReason} />
-      )}
-      {retroBlockedMessage ? <p className="text-xs font-medium text-danger">{retroBlockedMessage}</p> : null}
 
-      <div className="grid grid-cols-2 gap-3">
+        {/* Availability Badge */}
+        <div className="mt-3">
+          {availability.checking ? (
+            <div className="flex items-center gap-2 rounded-xl bg-surface-sunken px-4 py-2 text-xs font-semibold text-fg/60">
+              <span className="h-2 w-2 rounded-full bg-brand-orange animate-ping" />
+              Vérification de la disponibilité...
+            </div>
+          ) : availability.available === true ? (
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-emerald-300">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="text-xs font-extrabold uppercase">Logement disponible pour entrée immédiate</span>
+            </div>
+          ) : availability.available === false ? (
+            <div className="flex flex-col gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-rose-300">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-xs font-extrabold uppercase">Logement non disponible</span>
+              </div>
+              {availability.message ? <p className="text-xs font-medium text-rose-300/80">{availability.message}</p> : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* 3. Locataire & Règlement */}
+      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
+              3
+            </span>
+            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Locataire &amp; Paiement</h2>
+          </div>
+          <Link href={newClientHref} className="text-xs font-bold text-brand-orange hover:underline">
+            + Nouveau locataire
+          </Link>
+        </div>
+
+        {/* Client Selection */}
         <div>
-          <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-fg">
-            Acompte (FCFA)
+          <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
+            Locataire entrant <span className="text-rose-400">*</span>
           </label>
-          <input
-            id="deposit"
-            name="deposit"
-            type="number"
-            min={0}
-            value={deposit}
-            onChange={(e) => setDeposit(Number(e.target.value))}
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-          />
-          {errors?.deposit?.map((error) => (
+          <select
+            id="clientId"
+            name="clientId"
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+          >
+            <option value="">Sélectionner le locataire...</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} {c.phone ? `(${c.phone})` : ""}
+              </option>
+            ))}
+          </select>
+          {errors?.clientId?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
               {error}
             </p>
           ))}
         </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-bold text-fg">Mode de paiement</label>
-          <input type="hidden" name="depositMethod" value={depositMethod} />
-          <select
-            value={depositMethod}
-            onChange={(e) => setDepositMethod(e.target.value)}
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-          >
-            <option value="">—</option>
-            {PAYMENT_MODES.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
 
-      <div>
-        <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-fg">
-          Note <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
-        </label>
-        <textarea
-          id="note"
-          name="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Informations complémentaires"
-          className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface-raised px-4 py-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
-        />
-      </div>
-
-      {showIdentitySection ? (
-        <div className="flex flex-col gap-3 rounded-xl bg-warning-bg px-4 py-3">
-          <p className="text-sm font-bold text-warning">Pièce d&apos;identité requise pour ce séjour.</p>
+        {/* Règlement immédiat / Acompte */}
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-fg">Type de pièce</label>
-            <input type="hidden" name="idDocumentType" value={idDocumentType} />
-            <div className="flex flex-wrap gap-2">
-              {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => setIdDocumentType(suggestion)}
-                  aria-pressed={idDocumentType === suggestion}
-                  className={`h-10 rounded-full border px-3.5 text-xs font-bold transition-colors ${
-                    idDocumentType === suggestion
-                      ? "border-navy bg-navy text-white"
-                      : "border-border/15 bg-surface-raised text-fg"
-                  }`}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-            {errors?.idDocumentType?.map((error) => (
-              <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
-              </p>
-            ))}
-          </div>
-          <div>
-            <label htmlFor="idDocumentNumber" className="mb-1.5 block text-xs font-bold text-fg">
-              Numéro de pièce
+            <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-fg">
+              Montant réglé immédiatement (FCFA)
             </label>
             <input
-              id="idDocumentNumber"
-              name="idDocumentNumber"
-              type="text"
-              value={idDocumentNumber}
-              onChange={(e) => setIdDocumentNumber(e.target.value)}
-              placeholder="Numéro"
-              className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+              id="deposit"
+              name="deposit"
+              type="number"
+              min={0}
+              value={deposit}
+              onChange={(e) => setDeposit(Number(e.target.value))}
+              placeholder="0"
+              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange font-mono font-bold"
             />
-            {errors?.idDocumentNumber?.map((error) => (
+            {errors?.deposit?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
                 {error}
               </p>
             ))}
           </div>
-        </div>
-      ) : null}
 
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-fg">Mode de paiement</label>
+            <select
+              name="depositMethod"
+              value={depositMethod}
+              onChange={(e) => setDepositMethod(e.target.value)}
+              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange"
+            >
+              {PAYMENT_MODES.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Identity Document Section */}
+        {showIdentitySection ? (
+          <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5">
+            <p className="text-xs font-bold text-amber-300">Pièce d&apos;identité requise pour ce séjour (&gt; 48h).</p>
+            <div className="mt-2.5">
+              <input type="hidden" name="idDocumentType" value={idDocumentType} />
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {ID_DOCUMENT_SUGGESTIONS.map((sug) => (
+                  <button
+                    key={sug}
+                    type="button"
+                    onClick={() => setIdDocumentType(sug)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                      idDocumentType === sug
+                        ? "bg-brand-orange text-ink font-black"
+                        : "bg-surface text-fg/80 hover:bg-white/10"
+                    }`}
+                  >
+                    {sug}
+                  </button>
+                ))}
+              </div>
+              <input
+                name="idDocumentNumber"
+                type="text"
+                value={idDocumentNumber}
+                onChange={(e) => setIdDocumentNumber(e.target.value)}
+                placeholder="Numéro de pièce d'identité"
+                className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange"
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {/* Note */}
+        <div className="mt-3.5">
+          <label htmlFor="note" className="mb-1 block text-xs font-bold text-fg">
+            Note <span className="font-normal text-fg/40">(optionnel)</span>
+          </label>
+          <input
+            id="note"
+            name="note"
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Informations utiles sur le séjour..."
+            className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange"
+          />
+        </div>
+      </div>
+
+      {/* Message d'erreur serveur éventuel */}
       {state?.message && (
-        <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
-        </p>
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs font-bold text-rose-300">
+          ⚠️ {state.message}
+        </div>
       )}
 
+      {/* Bouton de confirmation unique */}
       <button
         type="submit"
         disabled={pending || !canSubmit}
-        className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
+        className="h-14 w-full rounded-2xl bg-brand-orange text-base font-black tracking-wide text-ink shadow-lg shadow-brand-orange/20 transition-all hover:brightness-110 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {pending ? "Enregistrement..." : "CONFIRMER LA LOCATION"}
+        {pending ? "Enregistrement en cours..." : "🔑 ENREGISTRER LA LOCATION (CHECK-IN)"}
       </button>
     </form>
   );

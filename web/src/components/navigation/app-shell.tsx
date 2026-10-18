@@ -6,39 +6,17 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 
-// Navigation persistante présente sur TOUTE page authentifiée, pour
-// qu'aucun écran ne soit un cul-de-sac : barre d'onglets fixe en mobile ET
-// tablette, barre latérale fixe à partir du breakpoint desktop (lg,
-// 1024px) uniquement — en dessous, réserver 240px à une sidebar en flux
-// décentrait visuellement le contenu par rapport au viewport.
-//
-// Reconstruction UI (maquettes Stitch validées, design system Nocturne
-// Opulence) — barre principale réduite à Accueil/Séjour/Dépenses (règle
-// stricte des 3 éléments, PRD section 2.3). "Séjour" pointe vers /sejour
-// (Lot 2) — hub Louer/Réserver, voir app/sejour/page.tsx ; /reservations et
-// /locations restent des routes métier à part entière, jamais supprimées.
-// "Locataires" n'est plus un item principal (absent
-// de la bottom nav des maquettes) mais reste joignable depuis Menu/sidebar,
-// jamais retiré de l'app. « Finances » et « Sécurité » restent `disabled:
-// true` : aucune route réelle derrière (vérifié).
-//
-// Le logo/texte "SAMA HOME" remplace le placeholder "Résidence Atlantique"
-// visible sur l'ancienne maquette (nom de marque incohérent, signalé dans
-// le rapport d'audit — non repris ici).
-
 type NavItem = {
   href?: string;
   label: string;
   icon: (active: boolean) => ReactNode;
-  /** Élément de la MAQUETTE AT sans page fonctionnelle réelle derrière —
-   * affiché mais non cliquable, jamais une fausse destination. */
   disabled?: boolean;
 };
 
 function iconProps(active: boolean) {
   return {
-    width: 22,
-    height: 22,
+    width: 18,
+    height: 18,
     viewBox: "0 0 24 24",
     fill: "none" as const,
     stroke: active ? "currentColor" : "currentColor",
@@ -169,64 +147,48 @@ function PlatformIcon({ active }: { active: boolean }) {
   );
 }
 
-// Phase 3G / Lot D12-P61 — jamais ajouté à MENU_ITEMS/PRIMARY_ITEMS
-// ci-dessus : ces tableaux sont statiques et leur longueur/ordre conditionne
-// le découpage PC_GROUP_OPERATIONS/PC_GROUP_ADMIN (slice(0,6)/slice(6)) et la
-// règle stricte des 3 éléments de la barre principale — y insérer un élément
-// conditionnel aurait décalé ces index. Rendu séparément, conditionné par
-// `isPlatformAdmin`, après les groupes existants.
-const PLATFORM_NAV_ITEM: NavItem = {
-  href: "/plateforme",
-  label: "Espace plateforme",
-  icon: (a) => <PlatformIcon active={a} />,
-};
-
-// Toujours visibles : barre principale mobile ET premier groupe de la
-// sidebar PC. Exactement 3 éléments (PRD section 2.3) — jamais
-// Locataires/Réservations/Locations/Paramètres ici.
 const PRIMARY_ITEMS: NavItem[] = [
   { href: "/", label: "Accueil", icon: (a) => <HomeIcon active={a} /> },
   { href: "/sejour", label: "Séjour", icon: (a) => <KeyIcon active={a} /> },
   { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
 ];
 
-// Fonctions secondaires/admin : Menu mobile/tablette ET reste de la sidebar
-// PC. Ordre demandé : Logements, Réservations, Locations, Locataires,
-// Finances, Caisse, Paramètres, Utilisateurs, Sécurité. Finances et
-// Sécurité désactivées — voir le commentaire d'en-tête.
-const MENU_ITEMS: NavItem[] = [
+const GROUP_RENTAL: NavItem[] = [
   { href: "/logements", label: "Logements", icon: (a) => <BuildingIcon active={a} /> },
   { href: "/reservations", label: "Réservations", icon: (a) => <CalendarIcon active={a} /> },
   { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} /> },
   { href: "/clients", label: "Locataires", icon: (a) => <PeopleIcon active={a} /> },
-  { label: "Finances", icon: (a) => <FinanceIcon active={a} />, disabled: true },
+];
+
+const GROUP_FINANCES: NavItem[] = [
+  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
   { href: "/caisse", label: "Caisse", icon: (a) => <CashIcon active={a} /> },
+  { label: "Finances", icon: (a) => <FinanceIcon active={a} />, disabled: true },
+];
+
+const GROUP_ADMIN: NavItem[] = [
   { href: "/settings", label: "Paramètres", icon: (a) => <GearIcon active={a} /> },
   { href: "/settings/users", label: "Utilisateurs", icon: (a) => <UserIcon active={a} /> },
   { label: "Sécurité", icon: (a) => <SecurityIcon active={a} />, disabled: true },
 ];
-// La sidebar PC groupe Logements→Caisse puis Paramètres→Sécurité ; dérivé
-// de MENU_ITEMS plutôt que dupliqué.
-const PC_GROUP_OPERATIONS = MENU_ITEMS.slice(0, 6);
-const PC_GROUP_ADMIN = MENU_ITEMS.slice(6);
+
+const PLATFORM_NAV_ITEM: NavItem = {
+  href: "/plateforme",
+  label: "Espace plateforme",
+  icon: (a) => <PlatformIcon active={a} />,
+};
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Audit 11A — éléments réellement focalisables à l'intérieur du dialogue
- * (menu mobile/tablette), recalculés à chaque pression de touche plutôt que
- * mis en cache, pour rester corrects même si la liste change (ex. items
- * `disabled`, déjà exclus car rendus en `<span>` non focalisable). */
 function getFocusable(container: HTMLElement) {
   return Array.from(
     container.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
   );
 }
 
-/** Une entrée de nav (sidebar PC ou feuille Menu) — gère le cas `disabled`
- * en rendu non interactif, jamais un lien mort. */
 function NavRow({
   item,
   active,
@@ -240,11 +202,11 @@ function NavRow({
     return (
       <span
         aria-disabled="true"
-        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-fg/30"
+        className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold text-fg/30"
       >
         {item.icon(false)}
         {item.label}
-        <span className="ml-auto rounded-full bg-fg/10 px-2 py-0.5 text-[10px] font-bold text-fg/45">
+        <span className="ml-auto rounded-full bg-fg/10 px-2 py-0.5 text-[9px] font-bold text-fg/45">
           Bientôt
         </span>
       </span>
@@ -254,8 +216,8 @@ function NavRow({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${
-        active ? "bg-navy text-white" : "text-fg/70 hover:bg-surface-sunken"
+      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+        active ? "bg-navy text-white" : "text-fg/70 hover:bg-surface-sunken hover:text-white"
       }`}
     >
       {item.icon(active)}
@@ -264,19 +226,100 @@ function NavRow({
   );
 }
 
+/**
+ * Composant de sous-menu déroulant pour la barre supérieure desktop
+ */
+function TopNavDropdown({
+  label,
+  icon,
+  active,
+  items,
+}: {
+  label: string;
+  icon: ReactNode;
+  active: boolean;
+  items: NavItem[];
+}) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [open]);
+
+  return (
+    <div
+      ref={dropdownRef}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+          active
+            ? "bg-navy text-white shadow-sm"
+            : "text-fg/80 hover:bg-surface-sunken hover:text-white"
+        }`}
+      >
+        <span>{icon}</span>
+        <span>{label}</span>
+        <span className={`text-[9px] text-fg/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          ▼
+        </span>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-60 rounded-2xl border border-white/15 bg-surface-raised/98 p-1.5 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+          {items.map((item) => {
+            if (item.disabled || !item.href) {
+              return (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-fg/30"
+                >
+                  <span className="flex items-center gap-2">
+                    {item.icon(false)}
+                    {item.label}
+                  </span>
+                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-bold text-fg/40">
+                    Bientôt
+                  </span>
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-fg/80 transition-colors hover:bg-surface-sunken hover:text-brand-orange"
+              >
+                {item.icon(false)}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AppShell({
   children,
   isPlatformAdmin = false,
 }: {
   children: ReactNode;
-  /**
-   * Phase 3G / Lot D12-P61 — reçu depuis layout.tsx, déjà résolu via
-   * getCurrentUserOrNull() (jamais recalculé ici, jamais une nouvelle
-   * requête). Contrôle UNIQUEMENT l'affichage du lien "Espace plateforme" —
-   * ne constitue jamais une protection : `requirePlatformAdmin()` (dal.ts)
-   * reste le seul contrôle d'autorisation réel sur /plateforme. Jamais
-   * déduit de `role === "ADMIN"`/`"GESTIONNAIRE"`.
-   */
   isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
@@ -284,24 +327,20 @@ export function AppShell({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Audit 11A — tant que le dialogue est ouvert : focus déplacé vers son
-  // premier élément, Échap le ferme, Tab/Maj+Tab restent bornés à son
-  // contenu (le reste de la page est déjà rendu `inert`, donc inatteignable
-  // au clavier — cette boucle ne fait que rendre la navigation cyclique
-  // plutôt que de sortir vers le chrome du navigateur), et le focus revient
-  // au bouton « Menu » à la fermeture, quelle que soit la façon dont elle a
-  // été déclenchée (Fermer, overlay, Échap, clic sur un lien du menu).
+  // Groupes enrichis
+  const adminGroup = isPlatformAdmin ? [...GROUP_ADMIN, PLATFORM_NAV_ITEM] : GROUP_ADMIN;
+
+  // Détection d'état actif pour les sous-menus
+  const isRentalActive = GROUP_RENTAL.some((i) => i.href && isActive(pathname, i.href));
+  const isFinancesActive = GROUP_FINANCES.some((i) => i.href && isActive(pathname, i.href));
+  const isAdminActive = adminGroup.some((i) => i.href && isActive(pathname, i.href));
+
   useEffect(() => {
     if (!menuOpen) return;
     const dialog = dialogRef.current;
     const menuButton = menuButtonRef.current;
     if (!dialog) return;
 
-    // Le focus initial cible le premier lien du menu plutôt que le bouton
-    // "Fermer" (lui aussi focalisable, en première position dans le DOM) :
-    // "Fermer" est un calque plein écran invisible — un anneau de focus
-    // dessus serait imperceptible (confirmé visuellement). Il reste
-    // atteignable normalement via Maj+Tab depuis le premier lien.
     const firstNavItem = dialog.querySelector<HTMLElement>("nav a[href], nav button:not([disabled])");
     const focusable = getFocusable(dialog);
     (firstNavItem ?? focusable[0] ?? dialog).focus();
@@ -336,71 +375,107 @@ export function AppShell({
   }, [menuOpen]);
 
   return (
-    <div className="flex min-h-dvh flex-col lg:flex-row">
-      <aside
+    <div className="flex min-h-dvh flex-col">
+      {/* ===================== TOP NAVIGATION BAR (DESKTOP LG+) ===================== */}
+      <header
         inert={menuOpen}
-        className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-border/10 lg:bg-surface-raised lg:px-3 lg:py-6"
+        className="sticky top-0 z-40 hidden h-16 w-full items-center justify-between border-b border-white/10 bg-surface-raised/95 px-6 backdrop-blur-xl shadow-sm lg:flex"
       >
-        <Link href="/" className="mb-6 flex items-center gap-2.5 px-3">
-          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-orange/10 p-0.5 shadow-sm">
-            <Image
-              src="/brand/Sama-Home-icone-Orange.png"
-              alt="SAMA HOME"
-              width={32}
-              height={32}
-              priority
-              className="h-full w-full object-contain"
+        {/* Brand Logo */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-orange/10 p-0.5 shadow-sm">
+              <Image
+                src="/brand/Sama-Home-icone-Orange.png"
+                alt="SAMA HOME"
+                width={32}
+                height={32}
+                priority
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <span className="text-base font-black tracking-tight text-fg">
+              <span className="text-brand-orange">SAMA</span> HOME
+            </span>
+          </Link>
+
+          {/* Navigation Links and Dropdowns */}
+          <nav className="flex items-center gap-1.5">
+            {/* Direct Links */}
+            <Link
+              href="/"
+              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                pathname === "/"
+                  ? "bg-navy text-white shadow-sm"
+                  : "text-fg/80 hover:bg-surface-sunken hover:text-white"
+              }`}
+            >
+              <HomeIcon active={pathname === "/"} />
+              Accueil
+            </Link>
+
+            <Link
+              href="/sejour"
+              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                isActive(pathname, "/sejour")
+                  ? "bg-navy text-white shadow-sm"
+                  : "text-fg/80 hover:bg-surface-sunken hover:text-white"
+              }`}
+            >
+              <KeyIcon active={isActive(pathname, "/sejour")} />
+              Séjour
+            </Link>
+
+            {/* Dropdown 1: Gestion Locative */}
+            <TopNavDropdown
+              label="Gestion Locative"
+              icon={<BuildingIcon active={isRentalActive} />}
+              active={isRentalActive}
+              items={GROUP_RENTAL}
             />
-          </div>
-          <span className="text-lg font-black tracking-tight text-fg">
-            <span className="text-brand-orange">SAMA</span> HOME
-          </span>
-        </Link>
-        <nav className="flex flex-1 flex-col gap-1">
-          {PRIMARY_ITEMS.map((item) => (
-            <NavRow key={item.label} item={item} active={isActive(pathname, item.href!)} />
-          ))}
 
-          <div className="my-3 border-t border-border/10" />
-
-          {PC_GROUP_OPERATIONS.map((item) => (
-            <NavRow
-              key={item.label}
-              item={item}
-              active={!item.disabled && isActive(pathname, item.href!)}
+            {/* Dropdown 2: Finances & Caisse */}
+            <TopNavDropdown
+              label="Finances"
+              icon={<CashIcon active={isFinancesActive} />}
+              active={isFinancesActive}
+              items={GROUP_FINANCES}
             />
-          ))}
 
-          <div className="my-3 border-t border-border/10" />
-
-          {PC_GROUP_ADMIN.map((item) => (
-            <NavRow
-              key={item.label}
-              item={item}
-              active={!item.disabled && isActive(pathname, item.href!)}
+            {/* Dropdown 3: Administration */}
+            <TopNavDropdown
+              label="Administration"
+              icon={<GearIcon active={isAdminActive} />}
+              active={isAdminActive}
+              items={adminGroup}
             />
-          ))}
+          </nav>
+        </div>
 
-          {isPlatformAdmin ? (
-            <>
-              <div className="my-3 border-t border-border/10" />
-              <NavRow item={PLATFORM_NAV_ITEM} active={isActive(pathname, PLATFORM_NAV_ITEM.href!)} />
-            </>
-          ) : null}
-        </nav>
-        <form action={logout}>
-          <button
-            type="submit"
-            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-fg/70 hover:bg-surface-sunken"
+        {/* Right Actions: Quick button + Logout */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/locations/new"
+            className="flex h-9 items-center gap-1.5 rounded-xl bg-brand-orange px-3.5 text-xs font-black text-ink shadow-sm hover:brightness-110 transition-all"
           >
-            <LogoutIcon />
-            Déconnexion
-          </button>
-        </form>
-      </aside>
+            <span>+</span> Louer / Réserver
+          </Link>
 
-      {/* Header mobile/tablette — PRD section 5.1 : Paramètres | SAMA HOME |
-          Menu. Absent en desktop (lg), où la sidebar porte déjà ces accès. */}
+          <form action={logout}>
+            <button
+              type="submit"
+              aria-label="Déconnexion"
+              title="Déconnexion"
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-white/10 bg-surface-sunken px-3 text-xs font-bold text-fg/70 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-300 transition-colors"
+            >
+              <LogoutIcon />
+              <span className="hidden xl:inline">Déconnexion</span>
+            </button>
+          </form>
+        </div>
+      </header>
+
+      {/* ===================== HEADER (MOBILE & TABLETTE) ===================== */}
       <header
         inert={menuOpen}
         className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/10 bg-surface-raised px-4 lg:hidden"
@@ -440,14 +515,12 @@ export function AppShell({
         </button>
       </header>
 
-      <div inert={menuOpen} className="min-w-0 flex-1 pb-28 lg:pb-0">
+      {/* Main Page Content */}
+      <div inert={menuOpen} className="min-w-0 flex-1 pb-28 lg:pb-12">
         {children}
       </div>
 
-      {/* Barre flottante — maquette Stitch (Séjour responsive) : EXACTEMENT 3
-          items (Accueil/Séjour/Dépenses), plus de 4e item "Menu" ici — le
-          Menu reste accessible uniquement depuis le header (bouton ☰ à
-          droite), jamais retiré de l'app. */}
+      {/* Barre flottante mobile — 3 items principaux */}
       <nav
         inert={menuOpen}
         className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex h-16 items-stretch gap-1 rounded-[28px] border border-border/10 bg-surface-raised px-2 shadow-card lg:hidden"
@@ -474,6 +547,7 @@ export function AppShell({
         })}
       </nav>
 
+      {/* Mobile Drawer (Menu) */}
       {menuOpen ? (
         <div
           ref={dialogRef}
@@ -487,42 +561,79 @@ export function AppShell({
             type="button"
             aria-label="Fermer"
             onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 bg-navy/40"
+            className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
           />
-          <div className="relative w-full rounded-t-2xl bg-surface-raised px-4 pt-4 [padding-bottom:calc(env(safe-area-inset-bottom)+1.5rem)]">
+          <div className="relative w-full max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-surface-raised px-5 pt-4 pb-8 shadow-2xl">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-fg/15" />
-            <div className="mb-3 flex items-center justify-center gap-2">
+            <div className="mb-4 flex items-center justify-center gap-2">
               <Image
                 src="/brand/Sama-Home-icone-Orange.png"
                 alt="SAMA HOME"
-                width={24}
-                height={24}
+                width={26}
+                height={26}
                 className="h-6 w-6 object-contain"
               />
-              <span className="text-xs font-black tracking-tight text-fg">
+              <span className="text-sm font-black tracking-tight text-fg">
                 <span className="text-brand-orange">SAMA</span> HOME
               </span>
             </div>
-            <nav className="flex flex-col gap-1">
-              {MENU_ITEMS.map((item) => (
-                <NavRow
-                  key={item.label}
-                  item={item}
-                  active={!item.disabled && isActive(pathname, item.href!)}
-                  onNavigate={() => setMenuOpen(false)}
-                />
-              ))}
-              {isPlatformAdmin ? (
-                <NavRow
-                  item={PLATFORM_NAV_ITEM}
-                  active={isActive(pathname, PLATFORM_NAV_ITEM.href!)}
-                  onNavigate={() => setMenuOpen(false)}
-                />
-              ) : null}
-              <form action={logout}>
+
+            <nav className="flex flex-col gap-4">
+              {/* Groupe Gestion */}
+              <div>
+                <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
+                  Gestion Locative
+                </p>
+                <div className="flex flex-col gap-1">
+                  {GROUP_RENTAL.map((item) => (
+                    <NavRow
+                      key={item.label}
+                      item={item}
+                      active={!item.disabled && isActive(pathname, item.href!)}
+                      onNavigate={() => setMenuOpen(false)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Groupe Finances */}
+              <div>
+                <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
+                  Finances &amp; Caisse
+                </p>
+                <div className="flex flex-col gap-1">
+                  {GROUP_FINANCES.map((item) => (
+                    <NavRow
+                      key={item.label}
+                      item={item}
+                      active={!item.disabled && isActive(pathname, item.href!)}
+                      onNavigate={() => setMenuOpen(false)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Groupe Administration */}
+              <div>
+                <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
+                  Administration
+                </p>
+                <div className="flex flex-col gap-1">
+                  {adminGroup.map((item) => (
+                    <NavRow
+                      key={item.label}
+                      item={item}
+                      active={!item.disabled && isActive(pathname, item.href!)}
+                      onNavigate={() => setMenuOpen(false)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <form action={logout} className="pt-2 border-t border-white/10">
                 <button
                   type="submit"
-                  className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-danger"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-danger hover:bg-rose-500/10 transition-colors"
                 >
                   <LogoutIcon />
                   Déconnexion
