@@ -18,6 +18,27 @@ export type PlatformDashboardSummary = {
   rejectedOrSuspendedEstablishments: number;
   pendingPayments: number;
   expiringSoonSubscriptions: number;
+  totalEstablishments: number;
+  totalUsers: number;
+  totalProperties: number;
+  totalRevenueFcfa: number;
+  recentEstablishments: {
+    id: string;
+    name: string;
+    status: string;
+    createdAt: Date;
+    adminName: string | null;
+    adminEmail: string | null;
+    currentPeriodEnd: Date | null;
+  }[];
+  recentDecisions: {
+    id: string;
+    action: string;
+    createdAt: Date;
+    establishmentName: string | null;
+    actorName: string | null;
+    isSystemAction: boolean;
+  }[];
 };
 
 /**
@@ -38,13 +59,76 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
     rejectedOrSuspendedEstablishments,
     pendingPayments,
     expiringSoonSubscriptions,
+    totalEstablishments,
+    totalUsers,
+    totalProperties,
+    confirmedPayments,
+    recentEstablishmentsRaw,
+    recentAuditsRaw,
   ] = await Promise.all([
     prisma.establishment.count({ where: { status: "PENDING" } }),
     prisma.establishment.count({ where: { status: "ACTIVE" } }),
     prisma.establishment.count({ where: { status: { in: ["REJECTED", "SUSPENDED"] } } }),
     prisma.subscriptionPayment.count({ where: { status: "PENDING" } }),
     prisma.subscription.count({ where: { currentPeriodEnd: { gte: now, lte: soon } } }),
+    prisma.establishment.count(),
+    prisma.user.count(),
+    prisma.property.count(),
+    prisma.subscriptionPayment.findMany({
+      where: { status: "CONFIRMED" },
+      select: { amount: true },
+    }),
+    prisma.establishment.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        users: { where: { role: "ADMIN" }, take: 1, select: { name: true, email: true, username: true } },
+        subscription: { select: { currentPeriodEnd: true } },
+      },
+    }),
+    prisma.auditLog.findMany({
+      take: 6,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        action: true,
+        createdAt: true,
+        establishmentId: true,
+        user: { select: { name: true, username: true } },
+      },
+    }),
   ]);
+
+  const totalRevenueFcfa = confirmedPayments.reduce((acc: number, p: { amount: number }) => acc + p.amount, 0);
+
+  const establishmentIds = recentAuditsRaw.map((a: { establishmentId: string | null }) => a.establishmentId).filter(Boolean) as string[];
+  const establishmentsMap = new Map<string, string>();
+  if (establishmentIds.length > 0) {
+    const ests = await prisma.establishment.findMany({
+      where: { id: { in: establishmentIds } },
+      select: { id: true, name: true },
+    });
+    ests.forEach((e: { id: string; name: string }) => establishmentsMap.set(e.id, e.name));
+  }
+
+  const recentEstablishments = recentEstablishmentsRaw.map((e: any) => ({
+    id: e.id,
+    name: e.name,
+    status: e.status,
+    createdAt: e.createdAt,
+    adminName: e.users[0]?.name ?? null,
+    adminEmail: e.users[0]?.email ?? e.users[0]?.username ?? null,
+    currentPeriodEnd: e.subscription?.currentPeriodEnd ?? null,
+  }));
+
+  const recentDecisions = recentAuditsRaw.map((a: any) => ({
+    id: a.id,
+    action: a.action,
+    createdAt: a.createdAt,
+    establishmentName: a.establishmentId ? establishmentsMap.get(a.establishmentId) ?? null : null,
+    actorName: a.user?.name ?? a.user?.username ?? null,
+    isSystemAction: !a.user,
+  }));
 
   return {
     pendingEstablishments,
@@ -52,5 +136,12 @@ export async function getPlatformDashboardSummary(): Promise<PlatformDashboardSu
     rejectedOrSuspendedEstablishments,
     pendingPayments,
     expiringSoonSubscriptions,
+    totalEstablishments,
+    totalUsers,
+    totalProperties,
+    totalRevenueFcfa,
+    recentEstablishments,
+    recentDecisions,
   };
 }
+

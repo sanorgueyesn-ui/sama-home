@@ -326,3 +326,172 @@ export async function confirmSubscriptionPayment(paymentId: string): Promise<{ e
 
   return {};
 }
+
+/**
+ * Prolongation manuelle d'un abonnement par un administrateur de plateforme.
+ * Permet d'ajouter des jours directement (ex: geste commercial, régularisation, etc.).
+ */
+export async function prolongSubscriptionAction(
+  establishmentId: string,
+  days: number,
+  reason?: string
+): Promise<{ error?: string }> {
+  const user = await getCurrentUser();
+  if (!user.isPlatformAdmin) {
+    return { error: "Seul un administrateur de plateforme peut prolonger un abonnement." };
+  }
+
+  if (!days || days <= 0) {
+    return { error: "La durée de prolongation doit être supérieure à zéro jour." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const now = new Date();
+      let subscription = await tx.subscription.findUnique({
+        where: { establishmentId },
+      });
+
+      if (!subscription) {
+        const anchor = now;
+        const newPeriodEnd = new Date(anchor.getTime() + days * 24 * 60 * 60 * 1000);
+        subscription = await tx.subscription.create({
+          data: {
+            establishmentId,
+            trialStartedAt: now,
+            currentPeriodEnd: newPeriodEnd,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId: user.id,
+            action: "SUBSCRIPTION_PROLONGED",
+            entityType: "Subscription",
+            entityId: subscription.id,
+            reason: reason || `Création et activation manuelle (+${days} jours)`,
+            oldValue: Prisma.JsonNull,
+            newValue: { currentPeriodEnd: newPeriodEnd, daysAdded: days },
+            establishmentId,
+          },
+        });
+        return;
+      }
+
+      const anchor = subscription.currentPeriodEnd.getTime() > now.getTime() ? subscription.currentPeriodEnd : now;
+      const newPeriodEnd = new Date(anchor.getTime() + days * 24 * 60 * 60 * 1000);
+
+      await tx.subscription.update({
+        where: { id: subscription.id },
+        data: { currentPeriodEnd: newPeriodEnd },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "SUBSCRIPTION_PROLONGED",
+          entityType: "Subscription",
+          entityId: subscription.id,
+          reason: reason || `Prolongation manuelle de ${days} jours par l'administrateur`,
+          oldValue: { currentPeriodEnd: subscription.currentPeriodEnd },
+          newValue: { currentPeriodEnd: newPeriodEnd, daysAdded: days },
+          establishmentId,
+        },
+      });
+    });
+  } catch (error) {
+    console.error(`prolongSubscriptionAction(${establishmentId}, ${days}) error:`, error);
+    return { error: "Une erreur est survenue lors de la prolongation de l'abonnement." };
+  }
+
+  return {};
+}
+
+/**
+ * Enregistrement manuel d'un règlement d'abonnement (Wave, Orange Money, Espèces, Virement)
+ * par un administrateur de plateforme.
+ */
+export async function recordManualSubscriptionPaymentAction(
+  establishmentId: string,
+  amount: number,
+  periodMonths: number,
+  reference?: string
+): Promise<{ error?: string }> {
+  const user = await getCurrentUser();
+  if (!user.isPlatformAdmin) {
+    return { error: "Seul un administrateur de plateforme peut enregistrer un paiement." };
+  }
+
+  if (!amount || amount <= 0) {
+    return { error: "Le montant du paiement doit être supérieur à zéro FCFA." };
+  }
+  if (!periodMonths || periodMonths <= 0) {
+    return { error: "La durée en mois doit être d'au moins 1 mois." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const now = new Date();
+      let subscription = await tx.subscription.findUnique({
+        where: { establishmentId },
+      });
+
+      if (!subscription) {
+        subscription = await tx.subscription.create({
+          data: {
+            establishmentId,
+            trialStartedAt: now,
+            currentPeriodEnd: now,
+          },
+        });
+      }
+
+      const anchor = subscription.currentPeriodEnd.getTime() > now.getTime() ? subscription.currentPeriodEnd : now;
+      const newPeriodEnd = computeDepartureTime(anchor, periodMonths, "MONTH");
+
+      const payment = await tx.subscriptionPayment.create({
+        data: {
+          subscriptionId: subscription.id,
+          amount,
+          periodMonths,
+          reference: reference?.trim() || "Paiement direct (Saisie Admin)",
+          status: "CONFIRMED",
+          confirmedByUserId: user.id,
+          confirmedAt: now,
+          periodStartedAt: anchor,
+          periodEndedAt: newPeriodEnd,
+        },
+      });
+
+      await tx.subscription.update({
+        where: { id: subscription.id },
+        data: { currentPeriodEnd: newPeriodEnd },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "SUBSCRIPTION_PAYMENT_MANUAL_RECORDED",
+          entityType: "SubscriptionPayment",
+          entityId: payment.id,
+          reason: `Règlement manuel confirmé de ${amount} FCFA (${periodMonths} mois)`,
+          oldValue: { currentPeriodEnd: subscription.currentPeriodEnd },
+          newValue: {
+            status: "CONFIRMED",
+            amount,
+            periodMonths,
+            currentPeriodEnd: newPeriodEnd,
+            reference: reference || null,
+          },
+          establishmentId,
+        },
+      });
+    });
+  } catch (error) {
+    console.error(`recordManualSubscriptionPaymentAction(${establishmentId}) error:`, error);
+    return { error: "Une erreur est survenue lors de l'enregistrement du paiement." };
+  }
+
+  return {};
+}
+

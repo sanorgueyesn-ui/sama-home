@@ -138,7 +138,7 @@ export async function listPendingSubscriptionPayments(): Promise<PendingSubscrip
     orderBy: { createdAt: "asc" },
   });
 
-  return payments.map((payment) => ({
+  return payments.map((payment: any) => ({
     id: payment.id,
     establishmentName: payment.subscription.establishment.name,
     createdAt: payment.createdAt,
@@ -147,3 +147,204 @@ export async function listPendingSubscriptionPayments(): Promise<PendingSubscrip
     reference: payment.reference,
   }));
 }
+
+export type PlatformSubscriptionEstablishmentView = {
+  id: string;
+  name: string;
+  status: EstablishmentStatus;
+  createdAt: Date;
+  adminName: string | null;
+  adminEmail: string | null;
+  subscription: {
+    id: string;
+    trialStartedAt: Date;
+    currentPeriodEnd: Date;
+    daysRemaining: number;
+    isExpired: boolean;
+    isTrial: boolean;
+    confirmedPaymentsCount: number;
+  } | null;
+};
+
+export type PlatformSubscriptionPaymentHistoryItem = {
+  id: string;
+  establishmentName: string;
+  amount: number;
+  periodMonths: number;
+  status: string;
+  reference: string | null;
+  createdAt: Date;
+  confirmedAt: Date | null;
+  confirmedByName: string | null;
+};
+
+export type PlatformSubscriptionsOverview = {
+  kpis: {
+    totalSubscriptions: number;
+    activeCount: number;
+    trialCount: number;
+    expiredCount: number;
+    pendingRequestsCount: number;
+    totalRevenueFcfa: number;
+  };
+  pendingPayments: PendingSubscriptionPaymentView[];
+  establishments: PlatformSubscriptionEstablishmentView[];
+  recentPayments: PlatformSubscriptionPaymentHistoryItem[];
+};
+
+/**
+ * Vue complète et professionnelle des abonnements pour l'administrateur de plateforme.
+ * Regroupe tous les établissements avec leur état d'abonnement, les demandes en attente,
+ * les KPIs et l'historique de tous les paiements.
+ */
+export async function getPlatformSubscriptionsOverview(): Promise<PlatformSubscriptionsOverview> {
+  await requirePlatformAdmin();
+  const now = new Date();
+
+  const [
+    allEstablishments,
+    pendingPaymentsRaw,
+    allConfirmedPayments,
+    recentPaymentsRaw,
+  ] = await Promise.all([
+    prisma.establishment.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        users: { where: { role: "ADMIN" }, take: 1, select: { name: true, email: true, username: true } },
+        subscription: {
+          include: {
+            payments: {
+              where: { status: "CONFIRMED" },
+              select: { id: true, amount: true },
+            },
+          },
+        },
+      },
+    }),
+    prisma.subscriptionPayment.findMany({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        amount: true,
+        periodMonths: true,
+        reference: true,
+        createdAt: true,
+        subscription: {
+          select: {
+            establishment: { select: { id: true, name: true } },
+          },
+        },
+      },
+    }),
+    prisma.subscriptionPayment.findMany({
+      where: { status: "CONFIRMED" },
+      select: { amount: true },
+    }),
+    prisma.subscriptionPayment.findMany({
+      take: 20,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        amount: true,
+        periodMonths: true,
+        status: true,
+        reference: true,
+        createdAt: true,
+        confirmedAt: true,
+        confirmedBy: { select: { name: true, username: true } },
+        subscription: {
+          select: {
+            establishment: { select: { name: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const totalRevenueFcfa = allConfirmedPayments.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0);
+
+  let activeCount = 0;
+  let trialCount = 0;
+  let expiredCount = 0;
+  let totalSubscriptions = 0;
+
+  const establishments: PlatformSubscriptionEstablishmentView[] = allEstablishments.map((est: any) => {
+    let subView = null;
+    if (est.subscription) {
+      totalSubscriptions++;
+      const endMs = est.subscription.currentPeriodEnd.getTime();
+      const diffMs = endMs - now.getTime();
+      const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const isExpired = endMs <= now.getTime();
+      const confirmedCount = est.subscription.payments.length;
+      const isTrial = confirmedCount === 0;
+
+      if (isExpired) {
+        expiredCount++;
+      } else {
+        activeCount++;
+        if (isTrial) {
+          trialCount++;
+        }
+      }
+
+      subView = {
+        id: est.subscription.id,
+        trialStartedAt: est.subscription.trialStartedAt,
+        currentPeriodEnd: est.subscription.currentPeriodEnd,
+        daysRemaining,
+        isExpired,
+        isTrial,
+        confirmedPaymentsCount: confirmedCount,
+      };
+    }
+
+    const admin = est.users[0];
+    return {
+      id: est.id,
+      name: est.name,
+      status: est.status,
+      createdAt: est.createdAt,
+      adminName: admin?.name ?? null,
+      adminEmail: admin?.email ?? admin?.username ?? null,
+      subscription: subView,
+    };
+  });
+
+  const pendingPayments: PendingSubscriptionPaymentView[] = pendingPaymentsRaw.map((p: any) => ({
+    id: p.id,
+    establishmentName: p.subscription.establishment.name,
+    createdAt: p.createdAt,
+    amount: p.amount,
+    periodMonths: p.periodMonths,
+    reference: p.reference,
+  }));
+
+  const recentPayments: PlatformSubscriptionPaymentHistoryItem[] = recentPaymentsRaw.map((p: any) => ({
+    id: p.id,
+    establishmentName: p.subscription.establishment.name,
+    amount: p.amount,
+    periodMonths: p.periodMonths,
+    status: p.status,
+    reference: p.reference,
+    createdAt: p.createdAt,
+    confirmedAt: p.confirmedAt,
+    confirmedByName: p.confirmedBy?.name ?? p.confirmedBy?.username ?? null,
+  }));
+
+  return {
+    kpis: {
+      totalSubscriptions,
+      activeCount,
+      trialCount,
+      expiredCount,
+      pendingRequestsCount: pendingPayments.length,
+      totalRevenueFcfa,
+    },
+    pendingPayments,
+    establishments,
+    recentPayments,
+  };
+}
+

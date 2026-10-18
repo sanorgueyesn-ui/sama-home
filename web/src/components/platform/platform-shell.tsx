@@ -32,9 +32,8 @@ const PLATFORM_NAV_ITEMS: PlatformNavItem[] = [
   { href: "/plateforme/etablissements", label: "Établissements" },
   { href: "/plateforme/abonnements", label: "Abonnements et paiements" },
   { href: "/plateforme/utilisateurs", label: "Utilisateurs" },
-  { href: "/plateforme/parametres", label: "Tarification et paramètres globaux" },
+  { href: "/plateforme/parametres", label: "Paramètres de la plateforme" },
   { href: "/plateforme/historique", label: "Historique des décisions" },
-  { label: "Paramètres de la plateforme", disabled: true },
 ];
 
 function isActive(pathname: string, href: string) {
