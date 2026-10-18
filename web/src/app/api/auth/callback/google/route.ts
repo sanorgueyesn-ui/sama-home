@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 5. Recherche de l'utilisateur dans la base de données
-    let user = await prisma.user.findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         OR: [{ username: email }, { email: email }],
       },
