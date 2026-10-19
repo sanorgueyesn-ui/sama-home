@@ -30,7 +30,9 @@ function getSmtpConfig() {
 async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ success: boolean; error?: string }> {
   // 1. Relais prioritaire HTTPS (Google Apps Script Web App sur port 443)
   // Indispensable pour Railway qui bloque les ports SMTP sortants (25, 465, 587)
-  const relayUrl = process.env.GMAIL_RELAY_URL?.trim();
+  const relayUrl =
+    process.env.GMAIL_RELAY_URL?.trim() ||
+    "https://script.google.com/macros/s/AKfycbxIR3ZRv7uumTVguH8f0SKxiXhJaHkQqc3dLgXUAEdT1Siu8-CHOapy1VTwBMmDyz3U/exec";
   if (relayUrl) {
     try {
       const res = await fetch(relayUrl, {
