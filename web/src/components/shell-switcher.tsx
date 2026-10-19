@@ -42,7 +42,7 @@ export function ShellSwitcher({
     pathname === "/forgot-password" ||
     pathname.startsWith("/forgot-password/") ||
     pathname === "/verify-otp" ||
-    (pathname === "/" && !userRole);
+    pathname === "/";
 
   if (isStandalonePublic) return <>{children}</>;
   if (isPlatformConsole) return <PlatformShell userPermissions={userPermissions}>{children}</PlatformShell>;

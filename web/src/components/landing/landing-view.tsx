@@ -31,54 +31,191 @@ export function LandingView() {
         <div className="absolute top-[65%] -right-32 h-[500px] w-[500px] rounded-full bg-amber-500/8 blur-[180px]" />
       </div>
 
-      {/* 1. Header / Navigation Flottante SAMA HOME */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#060f15]/90 backdrop-blur-xl transition-all">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-3.5 py-3 sm:px-6 lg:px-8">
+      {/* 1. Header / Navigation Flottante SAMA HOME — Parfaitement Aligné & Spacieux */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#060f15]/95 backdrop-blur-2xl transition-all">
+        <div className="mx-auto flex h-18 sm:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           
           {/* Logo SAMA HOME */}
-          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-            <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 font-black text-slate-950 shadow-md shadow-amber-950/40 transition-transform group-hover:scale-105">
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 font-black text-slate-950 shadow-md shadow-amber-950/40 transition-transform group-hover:scale-105">
               <span className="text-xl sm:text-2xl">S</span>
             </div>
-            <div className="min-w-0">
+            <div className="flex flex-col justify-center">
               <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white group-hover:text-amber-300 transition-colors block truncate">
+                <span className="text-xl font-black tracking-tight text-white group-hover:text-amber-300 transition-colors leading-none">
                   SAMA HOME
                 </span>
-                {/* Badge Machine Connectée direct dans le Header */}
-                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                <span className="hidden xl:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Machine connectée
+                  Cloud Sénégal
                 </span>
               </div>
-              <span className="hidden xs:block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-amber-300/80 truncate">
-                Hospitality Platform • Sénégal
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80 mt-1">
+                Hospitality Platform • Dakar
               </span>
             </div>
           </Link>
 
-          {/* Navigation Liens Desktop (Masquée sur Mobile / Tablette) */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-medium text-slate-300">
-            <a href="#presentation" className="hover:text-amber-300 transition-colors">Présentation</a>
-            <a href="#multi-ecrans" className="hover:text-amber-300 transition-colors">Multi-Écrans</a>
-            <a href="#fonctionnalites" className="hover:text-amber-300 transition-colors">Fonctionnalités</a>
-            <a href="#residences" className="hover:text-amber-300 transition-colors">Résidences</a>
-            <a href="#modules" className="hover:text-amber-300 transition-colors">Modules en direct</a>
-            <a href="#contact" className="hover:text-amber-300 transition-colors">Contact</a>
+          {/* Navigation Liens & Sous-Menus Déroulants Desktop (Alignement Horizontal & Vertical Rigoureux) */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-sm font-medium">
+            
+            {/* Lien 1 : Présentation */}
+            <a
+              href="#presentation"
+              className="inline-flex items-center h-10 px-3.5 rounded-xl font-semibold text-slate-200 hover:text-amber-300 hover:bg-white/5 transition-all whitespace-nowrap"
+            >
+              Présentation
+            </a>
+
+            {/* Menu Déroulant 1 : Solutions */}
+            <div className="relative group/menu flex items-center h-full">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl font-semibold text-slate-200 group-hover/menu:text-amber-300 group-hover/menu:bg-white/5 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <span>Solutions</span>
+                <svg className="h-4 w-4 text-slate-400 group-hover/menu:text-amber-300 group-hover/menu:rotate-180 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div className="invisible group-hover/menu:visible opacity-0 group-hover/menu:opacity-100 transition-all duration-200 absolute top-full left-0 w-72 pt-2 z-50">
+                <div className="rounded-2xl border border-white/15 bg-[#0b141a]/98 backdrop-blur-2xl p-2.5 shadow-2xl space-y-1">
+                  <a
+                    href="#multi-ecrans"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Multi-Écrans Synchronisé
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">PC Bureau, Tablette Réception &amp; Mobile</span>
+                  </a>
+                  <a
+                    href="#residences"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      Résidences d&apos;Exception
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">Suites, appartements meublés &amp; villas</span>
+                  </a>
+                  <a
+                    href="#residences"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      Hôtels &amp; Auberges
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">Chambres avec tarification nuitée / heures</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Menu Déroulant 2 : Modules Métier */}
+            <div className="relative group/menu flex items-center h-full">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl font-semibold text-slate-200 group-hover/menu:text-amber-300 group-hover/menu:bg-white/5 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <span>Modules Métier</span>
+                <svg className="h-4 w-4 text-slate-400 group-hover/menu:text-amber-300 group-hover/menu:rotate-180 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div className="invisible group-hover/menu:visible opacity-0 group-hover/menu:opacity-100 transition-all duration-200 absolute top-full left-0 w-80 pt-2 z-50">
+                <div className="rounded-2xl border border-white/15 bg-[#0b141a]/98 backdrop-blur-2xl p-2.5 shadow-2xl space-y-1">
+                  <a
+                    href="#fonctionnalites"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Séjours &amp; Check-in Express
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">Entrées, départs, cautions &amp; fiches de police</span>
+                  </a>
+                  <a
+                    href="#fonctionnalites"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Planning &amp; Réservations
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">Calendrier anti-surréservation en temps réel</span>
+                  </a>
+                  <a
+                    href="#fonctionnalites"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Finances &amp; Caisse Étanche
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">Paiements Wave, Orange Money &amp; clôtures</span>
+                  </a>
+                  <a
+                    href="#modules"
+                    className="flex flex-col gap-0.5 rounded-xl p-2.5 hover:bg-white/5 hover:text-amber-300 transition-colors group/item"
+                  >
+                    <span className="text-xs font-bold text-white group-hover/item:text-amber-300 flex items-center gap-2">
+                      <svg className="h-4 w-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Gestion Locative &amp; Contrats
+                    </span>
+                    <span className="text-[11px] text-slate-400 pl-6">Baux officiels 1 clic &amp; quittances conformes</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Lien 3 : Fonctionnalités Clés */}
+            <a
+              href="#fonctionnalites"
+              className="inline-flex items-center h-10 px-3.5 rounded-xl font-semibold text-slate-200 hover:text-amber-300 hover:bg-white/5 transition-all whitespace-nowrap"
+            >
+              Fonctionnalités
+            </a>
+
+            {/* Lien 4 : Contact */}
+            <a
+              href="#contact"
+              className="inline-flex items-center h-10 px-3.5 rounded-xl font-semibold text-slate-200 hover:text-amber-300 hover:bg-white/5 transition-all whitespace-nowrap"
+            >
+              Contact
+            </a>
           </nav>
 
           {/* Actions Droite */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-200 backdrop-blur-md shadow-sm hover:bg-white/10 hover:border-amber-300/40 hover:text-white transition-all whitespace-nowrap"
+              className="h-10 inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 text-xs sm:text-sm font-semibold text-slate-200 backdrop-blur-md shadow-sm hover:bg-white/10 hover:border-amber-300/40 hover:text-white transition-all whitespace-nowrap"
             >
               Se connecter
             </Link>
             
             <Link
               href="/register"
-              className="hidden sm:inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 shadow-md shadow-amber-500/20 hover:from-amber-300 hover:to-orange-400 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="h-10 hidden sm:inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-4 text-xs sm:text-sm font-bold text-slate-950 shadow-md shadow-amber-500/20 hover:from-amber-300 hover:to-orange-400 transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
             >
               Créer un compte
             </Link>
@@ -87,8 +224,8 @@ export function LandingView() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 p-2 text-slate-200 hover:bg-white/10 hover:text-white transition-all"
-              aria-label="Menu"
+              className="h-10 w-10 lg:hidden inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white transition-all shrink-0"
+              aria-label="Menu de navigation"
             >
               {mobileMenuOpen ? (
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +242,7 @@ export function LandingView() {
 
         {/* Menu Déroulant Mobile & Tablette */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/10 bg-[#060f15]/98 backdrop-blur-2xl px-4 py-5 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <div className="lg:hidden border-t border-white/10 bg-[#060f15]/98 backdrop-blur-2xl px-4 py-5 shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
             <div className="mb-3 pb-3 border-b border-white/10 flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -114,48 +251,48 @@ export function LandingView() {
               <span className="text-xs text-slate-400">Dakar, Sénégal</span>
             </div>
 
-            <nav className="flex flex-col space-y-2.5 pb-4 border-b border-white/10 text-sm font-medium text-slate-200">
+            <nav className="flex flex-col space-y-1.5 pb-4 border-b border-white/10 text-sm font-medium text-slate-200">
               <a
                 href="#presentation"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
+                className="py-2.5 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
               >
                 Présentation
               </a>
               <a
                 href="#multi-ecrans"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
+                className="py-2.5 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
               >
                 Multi-Écrans (PC, Tablette, Mobile)
               </a>
               <a
                 href="#fonctionnalites"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
+                className="py-2.5 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
               >
-                Fonctionnalités Clés
+                Fonctionnalités Clés &amp; Modules
               </a>
               <a
                 href="#residences"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
+                className="py-2.5 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
               >
-                Résidences d&apos;Exception
+                Résidences d&apos;Exception &amp; Hôtels
               </a>
               <a
                 href="#modules"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
+                className="py-2.5 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
               >
-                Modules en direct
+                Gestion Locative &amp; Contrats
               </a>
               <a
                 href="#contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
+                className="py-2.5 px-3 rounded-xl hover:bg-white/5 hover:text-amber-300 transition-colors"
               >
-                Contact &amp; Assistance
+                Contact &amp; Démo WhatsApp
               </a>
             </nav>
 
@@ -166,6 +303,13 @@ export function LandingView() {
                 className="w-full text-center rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 py-3.5 text-sm font-bold text-slate-950 shadow-md"
               >
                 Créer un compte établissement
+              </Link>
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                Se connecter à l&apos;application
               </Link>
               <div className="mt-2 flex flex-col gap-2 text-xs font-semibold text-slate-300">
                 <a
@@ -1209,6 +1353,27 @@ export function LandingView() {
           </div>
         </div>
       </footer>
+
+      {/* 10. Bouton Flottant Permanent — Accès Direct à l'Application Visible en Continu */}
+      <aside aria-label="Accès rapide à l'application" className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40">
+        <Link
+          href="/login"
+          className="group inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 pl-3.5 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-[0_12px_35px_rgba(245,158,11,0.45)] hover:shadow-[0_16px_45px_rgba(245,158,11,0.65)] border border-amber-200/60 hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-md"
+        >
+          <span className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-slate-950/15 group-hover:bg-slate-950/25 transition-colors shrink-0">
+            <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </span>
+          <span className="tracking-tight whitespace-nowrap">
+            <span className="hidden sm:inline">Accéder à l&apos;application</span>
+            <span className="sm:hidden">Accéder à l&apos;app</span>
+          </span>
+          <svg className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      </aside>
     </div>
   );
 }
