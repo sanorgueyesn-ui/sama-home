@@ -192,13 +192,35 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
             </>
           ) : null}
 
-          {/* Lien direct PDF (contrat ou récapitulatif) */}
-          <a
-            href={`/locations/${rental.id}/contract`}
-            className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg hover:bg-surface-raised transition-colors"
-          >
-            Télécharger le contrat / reçu (PDF)
-          </a>
+          {/* Lien direct PDF (contrat ou récapitulatif) avec mise en valeur pour les séjours de plus de 10 jours */}
+          {rental.plannedDepartureAt.getTime() - rental.arrivalAt.getTime() >= 240 * 3600_000 ? (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <div className="flex items-center gap-2 text-amber-300">
+                <span className="text-lg">📜</span>
+                <span className="text-xs font-black uppercase tracking-wider">
+                  Contrat de location officiel (+ de 10 jours)
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-fg/70">
+                Généré automatiquement avec les coordonnées complètes du client ({rental.client.name}, {rental.client.phone}), sa pièce d&apos;identité ({rental.client.idDocumentType ?? "Pièce"} n° {rental.client.idDocumentNumber ?? "—"}), les dates et les conditions financières.
+              </p>
+              <a
+                href={`/locations/${rental.id}/contract`}
+                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange text-xs font-black uppercase text-ink shadow-md shadow-brand-orange/20 hover:brightness-110 active:scale-98 transition-all"
+              >
+                <span>📄</span>
+                <span>Télécharger le Contrat de Location (PDF)</span>
+              </a>
+            </div>
+          ) : (
+            <a
+              href={`/locations/${rental.id}/contract`}
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-border/15 text-sm font-extrabold text-fg hover:bg-surface-raised transition-colors"
+            >
+              <span>📄</span>
+              <span>Télécharger le contrat / reçu (PDF)</span>
+            </a>
+          )}
 
           {/* Bouton de partage WhatsApp officiel - Toujours accessible y compris après check-out */}
           {whatsapp.ok ? (

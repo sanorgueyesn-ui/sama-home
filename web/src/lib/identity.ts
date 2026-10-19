@@ -1,13 +1,12 @@
 /**
- * Audit Client/Réservation — Bloc 3/4 : une pièce d'identité devient
- * nécessaire à partir d'un séjour de 2 jours OU PLUS, calculé sur la durée
- * RÉELLE (l'instant de départ moins l'instant d'arrivée, via
- * computeDepartureTime — déjà le mécanisme validé en Phase 6), jamais sur le
- * libellé affiché à l'utilisateur ni sur l'unité du tarif (HOURS/NIGHT/DAY/
- * WEEK/MONTH) — un tarif "NUIT" de 48h ou une "SEMAINE" déclenchent la règle
- * exactement comme un tarif "HEURE" cumulant 48h.
+ * Audit Client/Réservation — Règle des séjours longs (10 jours ou plus) :
+ * Une pièce d'identité (CNI, Passeport, Permis de conduire) devient obligatoire
+ * à partir d'un séjour de 10 jours OU PLUS (240 heures réelles), calculé sur
+ * la durée RÉELLE entre l'arrivée et le départ prévu.
+ * Pour les séjours de moins de 10 jours, l'enregistrement reste ultra-rapide
+ * (seuls le nom et le téléphone sont requis).
  */
-export const IDENTITY_REQUIRED_THRESHOLD_HOURS = 48;
+export const IDENTITY_REQUIRED_THRESHOLD_HOURS = 240; // 10 jours * 24h = 240h
 
 export function requiresIdentity(arrivalTime: Date, departureTime: Date): boolean {
   return departureTime.getTime() - arrivalTime.getTime() >= IDENTITY_REQUIRED_THRESHOLD_HOURS * 3600_000;
@@ -22,17 +21,11 @@ export type IdentityCheckResult =
 
 /**
  * Règle exacte validée :
- * - Séjour < 48h → jamais requis (client lui-même facultatif, voir lot
- *   "Reservation — Client facultatif" — ni client ni identité exigés).
- * - Séjour ≥ 48h ET aucun client → refusé : un client est obligatoire avant
- *   même de pouvoir parler d'identité.
- * - Séjour ≥ 48h ET le client a déjà une identité en dossier → ne jamais la
- *   redemander, ne jamais l'écraser (même si des valeurs sont soumises).
- * - Séjour ≥ 48h ET le client n'a PAS d'identité en dossier → les valeurs
- *   soumises (type + numéro) deviennent obligatoires ; si présentes, elles
- *   seront enregistrées sur le client dans la MÊME transaction que la
- *   réservation/location (atomicité — voir actions/reservations.ts et
- *   actions/rentals.ts).
+ * - Séjour < 10 jours (240h) → identité facultative (nom + téléphone suffisent pour check-in rapide).
+ * - Séjour ≥ 10 jours ET aucun client → refusé : un client avec identité est obligatoire.
+ * - Séjour ≥ 10 jours ET le client a déjà une identité en dossier → ne jamais la redemander.
+ * - Séjour ≥ 10 jours ET le client n'a PAS d'identité en dossier → les valeurs
+ *   soumises (type + numéro) deviennent obligatoires pour la sécurité et la génération du contrat PDF.
  */
 export function checkIdentityRequirement(
   arrivalTime: Date,
@@ -44,7 +37,7 @@ export function checkIdentityRequirement(
     return { ok: true, updateClientWith: null };
   }
   if (!client) {
-    return { ok: false, message: "Le client est obligatoire pour un séjour de 48 h ou plus." };
+    return { ok: false, message: "Le client est obligatoire pour un séjour de plus de 10 jours." };
   }
   if (client.idDocumentType && client.idDocumentNumber) {
     return { ok: true, updateClientWith: null };
@@ -57,6 +50,6 @@ export function checkIdentityRequirement(
   }
   return {
     ok: false,
-    message: "Pièce d'identité requise pour ce séjour (2 jours ou plus) : indiquez le type et le numéro de pièce.",
+    message: "Pièce d'identité obligatoire pour ce long séjour (plus de 10 jours) : indiquez le type (CNI, passeport, permis de conduire) et le numéro de pièce.",
   };
 }

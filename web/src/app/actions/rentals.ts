@@ -9,6 +9,7 @@ import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
 import { checkRetroactiveArrival } from "@/lib/retroactive-checkin";
+import { PHONE_REGEX } from "@/lib/phone";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 
 class RentalActionError extends Error {}
@@ -33,11 +34,11 @@ function parseRentalForm(formData: FormData) {
     date: formData.get("date"),
     arrivalTime: formData.get("arrivalTime"),
     deposit: formData.get("deposit"),
-    depositMethod: formData.get("depositMethod"),
-    note: formData.get("note"),
-    idDocumentType: formData.get("idDocumentType") ?? undefined,
-    idDocumentNumber: formData.get("idDocumentNumber") ?? undefined,
-    retroactiveReason: formData.get("retroactiveReason"),
+    depositMethod: formData.get("depositMethod") || undefined,
+    note: formData.get("note") || undefined,
+    idDocumentType: formData.get("idDocumentType") || undefined,
+    idDocumentNumber: formData.get("idDocumentNumber") || undefined,
+    retroactiveReason: formData.get("retroactiveReason") || undefined,
   });
 }
 
@@ -116,6 +117,25 @@ export async function createRentalDirect(
   }
   const { user } = access;
 
+  // Support de la création rapide de client directement dans le formulaire
+  const isNewClient =
+    formData.get("isNewClient") === "true" ||
+    formData.get("clientId") === "NEW" ||
+    (!formData.get("clientId") && Boolean(formData.get("newClientName")));
+  const newClientName = String(formData.get("newClientName") ?? "").trim();
+  const rawNewPhone = String(formData.get("newClientPhone") ?? "").trim();
+  const newClientPhone = rawNewPhone.replace(/[\s.-]/g, "");
+
+  if (isNewClient && (!formData.get("clientId") || formData.get("clientId") === "NEW")) {
+    if (!newClientName) {
+      return { errors: { clientId: ["Le nom du locataire est obligatoire."] } };
+    }
+    if (!newClientPhone || !PHONE_REGEX.test(newClientPhone)) {
+      return { errors: { clientId: ["Numéro de téléphone invalide : 8 à 15 chiffres requis (ex: +221 77 000 00 00)."] } };
+    }
+    formData.set("clientId", "temp-inline-client");
+  }
+
   const parsed = parseRentalForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -144,11 +164,31 @@ export async function createRentalDirect(
   // un client/logement/tarif d'un autre établissement suit désormais
   // exactement le même message "introuvable"/"désactivé" déjà existant
   // ci-dessous, jamais une création référençant une ressource extérieure.
-  const [client, property, tariff] = await Promise.all([
-    prisma.client.findFirst({ where: { id: clientId, establishmentId: user.establishmentId } }),
+  const [existingClient, property, tariff] = await Promise.all([
+    clientId !== "temp-inline-client"
+      ? prisma.client.findFirst({ where: { id: clientId, establishmentId: user.establishmentId } })
+      : Promise.resolve(null),
     prisma.property.findFirst({ where: { id: propertyId, establishmentId: user.establishmentId } }),
     prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } }),
   ]);
+
+  let client = existingClient;
+  if (clientId === "temp-inline-client") {
+    client = {
+      id: "temp",
+      name: newClientName,
+      phone: newClientPhone,
+      email: null,
+      address: null,
+      idDocumentType: null,
+      idDocumentNumber: null,
+      notes: null,
+      establishmentId: user.establishmentId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
   if (!client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
   if (!property.active) return { message: "Ce logement est désactivé." };
@@ -184,7 +224,7 @@ export async function createRentalDirect(
   }
 
   // Audit Client/Réservation, Bloc 3/4 — même règle que createReservation :
-  // une location directe de 48h réelles ou plus exige une identité au
+  // une location directe de 10 jours ou plus exige une identité au
   // dossier du client, vérifié côté serveur, jamais seulement côté UI.
   const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
     idDocumentType,
@@ -206,12 +246,26 @@ export async function createRentalDirect(
         if (conflict) {
           throw new RentalActionError(formatConflictMessage(conflict));
         }
-        if (identityCheck.updateClientWith) {
+
+        let actualClientId = clientId;
+        if (clientId === "temp-inline-client") {
+          const createdClient = await tx.client.create({
+            data: {
+              name: newClientName,
+              phone: newClientPhone,
+              idDocumentType: identityCheck.updateClientWith?.idDocumentType ?? (idDocumentType?.trim() || null),
+              idDocumentNumber: identityCheck.updateClientWith?.idDocumentNumber ?? (idDocumentNumber?.trim() || null),
+              establishmentId: user.establishmentId,
+            },
+          });
+          actualClientId = createdClient.id;
+        } else if (identityCheck.updateClientWith) {
           await tx.client.update({ where: { id: clientId }, data: identityCheck.updateClientWith });
         }
+
         const rental = await tx.rental.create({
           data: {
-            clientId,
+            clientId: actualClientId,
             propertyId,
             tariffId,
             arrivalAt: arrivalDateTime,

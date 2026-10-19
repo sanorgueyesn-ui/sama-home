@@ -4,7 +4,7 @@ import { createProperty } from "@/app/actions/properties";
 
 export default function NewPropertyPage() {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-32 md:max-w-none md:px-8 md:pb-12 lg:px-10">
       <div className="mb-5 flex items-center gap-3 lg:mx-auto lg:w-full lg:max-w-2xl">
         <Link
           href="/logements"

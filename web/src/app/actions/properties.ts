@@ -95,6 +95,44 @@ export async function createProperty(
       data: { ...parsed.data, photo: upload ? upload.key : null, establishmentId: user.establishmentId },
     });
     propertyId = property.id;
+
+    // Création automatique du tarif initial si renseigné dans le formulaire simplifié
+    const initialAmountRaw = formData.get("initialTariffAmount");
+    const initialAmount = initialAmountRaw ? Number(initialAmountRaw) : 0;
+    if (initialAmount > 0) {
+      const initialType = (formData.get("initialTariffType") as string) || "JOUR";
+      const initialLabel =
+        (formData.get("initialTariffLabel") as string) ||
+        (initialType === "JOUR"
+          ? "Journée (24h)"
+          : initialType === "NUIT"
+            ? "Nuitée"
+            : initialType === "HEURE"
+              ? "2 heures"
+              : "Tarif standard");
+      const unitMap: Record<string, "DAY" | "NIGHT" | "HOURS" | "WEEK" | "MONTH"> = {
+        JOUR: "DAY",
+        NUIT: "NIGHT",
+        HEURE: "HOURS",
+        SEMAINE: "WEEK",
+        MOIS: "MONTH",
+      };
+      const durationUnit = unitMap[initialType] ?? "DAY";
+      const durationValue = Number(formData.get("initialTariffDurationValue")) || (initialType === "HEURE" ? 2 : 1);
+
+      await prisma.tariff.create({
+        data: {
+          propertyId: property.id,
+          label: initialLabel,
+          type: initialType as any,
+          durationValue,
+          durationUnit,
+          amount: initialAmount,
+          establishmentId: user.establishmentId,
+          active: true,
+        },
+      });
+    }
   } catch (error) {
     console.error("createProperty() — échec inattendu de la création du logement :", error);
     // La photo a été envoyée mais la ligne n'a pas pu être créée : objet

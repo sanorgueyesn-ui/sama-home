@@ -7,6 +7,7 @@ import { verifySession, getCurrentUser, requireActiveEstablishment } from "@/lib
 import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
+import { PHONE_REGEX } from "@/lib/phone";
 import { ReservationClientOptionalSchema, type ReservationFormState } from "@/lib/definitions";
 
 function parseReservationForm(formData: FormData) {
@@ -17,10 +18,11 @@ function parseReservationForm(formData: FormData) {
     date: formData.get("date"),
     arrivalTime: formData.get("arrivalTime"),
     deposit: formData.get("deposit"),
-    depositMethod: formData.get("depositMethod"),
-    note: formData.get("note"),
-    idDocumentType: formData.get("idDocumentType") ?? undefined,
-    idDocumentNumber: formData.get("idDocumentNumber") ?? undefined,
+    depositMethod: formData.get("depositMethod") || undefined,
+    note: formData.get("note") || undefined,
+    idDocumentType: formData.get("idDocumentType") || undefined,
+    idDocumentNumber: formData.get("idDocumentNumber") || undefined,
+    retroactiveReason: formData.get("retroactiveReason") || undefined,
   });
 }
 
@@ -138,6 +140,25 @@ export async function createReservation(
   }
   const { user } = access;
 
+  // Support de la création rapide de client directement dans le formulaire
+  const isNewClient =
+    formData.get("isNewClient") === "true" ||
+    formData.get("clientId") === "NEW" ||
+    (!formData.get("clientId") && Boolean(formData.get("newClientName")));
+  const newClientName = String(formData.get("newClientName") ?? "").trim();
+  const rawNewPhone = String(formData.get("newClientPhone") ?? "").trim();
+  const newClientPhone = rawNewPhone.replace(/[\s.-]/g, "");
+
+  if (isNewClient && (!formData.get("clientId") || formData.get("clientId") === "NEW")) {
+    if (!newClientName) {
+      return { errors: { clientId: ["Le nom du client est obligatoire."] } };
+    }
+    if (!newClientPhone || !PHONE_REGEX.test(newClientPhone)) {
+      return { errors: { clientId: ["Numéro de téléphone invalide : 8 à 15 chiffres requis (ex: +221 77 000 00 00)."] } };
+    }
+    formData.set("clientId", "temp-inline-client");
+  }
+
   const parsed = parseReservationForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -151,14 +172,32 @@ export async function createReservation(
   // un client/logement/tarif d'un autre établissement suit désormais
   // exactement le même message "introuvable"/"désactivé" déjà existant
   // ci-dessous, jamais une création référençant une ressource extérieure.
-  const [client, property, tariff] = await Promise.all([
-    clientId
+  const [existingClient, property, tariff] = await Promise.all([
+    clientId && clientId !== "temp-inline-client"
       ? prisma.client.findFirst({ where: { id: clientId, establishmentId: user.establishmentId } })
       : Promise.resolve(null),
     prisma.property.findFirst({ where: { id: propertyId, establishmentId: user.establishmentId } }),
     prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } }),
   ]);
-  if (clientId && !client) return { message: "Client introuvable." };
+
+  let client = existingClient;
+  if (clientId === "temp-inline-client") {
+    client = {
+      id: "temp",
+      name: newClientName,
+      phone: newClientPhone,
+      email: null,
+      address: null,
+      idDocumentType: null,
+      idDocumentNumber: null,
+      notes: null,
+      establishmentId: user.establishmentId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  if (clientId && clientId !== "temp-inline-client" && !client) return { message: "Client introuvable." };
   if (!property) return { message: "Logement introuvable." };
   if (!property.active) return { message: "Ce logement est désactivé." };
   if (!tariff) return { message: "Tarif introuvable." };
@@ -186,14 +225,10 @@ export async function createReservation(
   }
 
   // Audit Client/Réservation, Bloc 3/4 — identité obligatoire côté serveur
-  // à partir de 48h réelles, jamais uniquement côté interface. Calculé ici
+  // à partir de 10 jours réels, jamais uniquement côté interface. Calculé ici
   // (avant la transaction) pour pouvoir refuser immédiatement avec un
   // message clair ; la mise à jour du client, elle, reste dans la
   // transaction ci-dessous pour rester atomique avec la réservation.
-  // Lot "Reservation — client facultatif" : checkIdentityRequirement refuse
-  // désormais elle-même (même seuil de 48h) si client est null, avec le
-  // message "Le client est obligatoire pour un séjour de 48 h ou plus." —
-  // une seule fonction, un seul seuil, pour les deux règles liées.
   const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
     idDocumentType,
     idDocumentNumber,
@@ -214,12 +249,26 @@ export async function createReservation(
         if (conflict) {
           throw new AvailabilityConflictError(formatConflictMessage(conflict));
         }
-        if (identityCheck.updateClientWith && client) {
+
+        let actualClientId = client?.id !== "temp" ? (client?.id ?? null) : null;
+        if (clientId === "temp-inline-client") {
+          const createdClient = await tx.client.create({
+            data: {
+              name: newClientName,
+              phone: newClientPhone,
+              idDocumentType: identityCheck.updateClientWith?.idDocumentType ?? (idDocumentType?.trim() || null),
+              idDocumentNumber: identityCheck.updateClientWith?.idDocumentNumber ?? (idDocumentNumber?.trim() || null),
+              establishmentId: user.establishmentId,
+            },
+          });
+          actualClientId = createdClient.id;
+        } else if (identityCheck.updateClientWith && client) {
           await tx.client.update({ where: { id: client.id }, data: identityCheck.updateClientWith });
         }
+
         const reservation = await tx.reservation.create({
           data: {
-            clientId: client?.id ?? null,
+            clientId: actualClientId,
             propertyId,
             tariffId,
             date: new Date(`${date}T00:00:00`),

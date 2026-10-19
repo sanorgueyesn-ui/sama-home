@@ -7,14 +7,13 @@ import { checkRentalAvailability } from "@/app/actions/rentals";
 import { requiresIdentity } from "@/lib/identity";
 import { checkRetroactiveArrival, RETROACTIVE_TOLERANCE_MINUTES } from "@/lib/retroactive-checkin";
 import {
-  LuxuryDatePicker,
   LuxuryTimePicker,
   todayIso,
   nowTimeIso,
 } from "@/components/ui/luxury-datetime-picker";
 import type { ReservationFormState } from "@/lib/definitions";
 
-const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire", "Carte consulaire"];
+const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire"];
 
 type ClientOption = {
   id: string;
@@ -60,11 +59,23 @@ export function RentalForm({
   const [state, formAction, pending] = useActionState(action, undefined);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const newClientHref = `/clients/new?returnTo=${encodeURIComponent(`${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`;
 
-  const [clientId, setClientId] = useState(defaultClientId ?? "");
-  const [propertyId, setPropertyId] = useState(defaultPropertyId ?? "");
-  const [tariffId, setTariffId] = useState("");
+  // Initialisation intelligente : si une chambre est passée par URL ou unique, auto-sélectionner son 1er tarif
+  const initialPropId = defaultPropertyId ?? (properties.length === 1 ? properties[0].id : "");
+  const initialProp = properties.find((p) => p.id === initialPropId);
+  const initialTariffId = initialProp?.tariffs?.[0]?.id ?? "";
+
+  const [propertyId, setPropertyId] = useState(initialPropId);
+  const [tariffId, setTariffId] = useState(initialTariffId);
+
+  // Mode de saisie client : Nouveau client direct OU sélection d'un client existant
+  const [clientMode, setClientMode] = useState<"EXISTING" | "NEW">(
+    defaultClientId ? "EXISTING" : clients.length === 0 ? "NEW" : "EXISTING"
+  );
+  const [clientId, setClientId] = useState(defaultClientId ?? (clients.length === 1 ? clients[0].id : ""));
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientPhone, setNewClientPhone] = useState("");
+
   const [date, setDate] = useState(todayIso());
   const [arrivalTime, setArrivalTime] = useState(nowTimeIso());
   const [deposit, setDeposit] = useState(0);
@@ -73,6 +84,9 @@ export function RentalForm({
   const [idDocumentType, setIdDocumentType] = useState("");
   const [idDocumentNumber, setIdDocumentNumber] = useState("");
   const [retroactiveReason, setRetroactiveReason] = useState("");
+
+  // Suivi des tentatives de soumission pour feedback visuel clair sans vider le formulaire
+  const [missingAttempted, setMissingAttempted] = useState(false);
 
   const [availability, setAvailability] = useState<{
     checking: boolean;
@@ -85,8 +99,15 @@ export function RentalForm({
   const selectedClient = clients.find((c) => c.id === clientId);
   const selectedProperty = properties.find((p) => p.id === propertyId);
   const activeTariffs = selectedProperty?.tariffs ?? [];
-  const effectiveTariffId = activeTariffs.some((t) => t.id === tariffId) ? tariffId : "";
+  const effectiveTariffId = activeTariffs.some((t) => t.id === tariffId) ? tariffId : (activeTariffs[0]?.id ?? "");
   const selectedTariff = activeTariffs.find((t) => t.id === effectiveTariffId);
+
+  // Auto-sélection systématique du premier tarif si une chambre est choisie mais pas le tarif
+  useEffect(() => {
+    if (propertyId && (!tariffId || !activeTariffs.some((t) => t.id === tariffId)) && activeTariffs.length > 0) {
+      setTariffId(activeTariffs[0].id);
+    }
+  }, [propertyId, tariffId, activeTariffs]);
 
   // Live availability checking
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -124,6 +145,7 @@ export function RentalForm({
     });
   }, [availability.departureTime]);
 
+  // Règle des 10 jours (> 240 heures)
   const needsIdentity = useMemo(() => {
     if (!availability.departureTime || !date || !arrivalTime) return false;
     const arrival = new Date(`${date}T${arrivalTime}:00`);
@@ -133,7 +155,7 @@ export function RentalForm({
   }, [availability.departureTime, date, arrivalTime]);
 
   const clientAlreadyHasIdentity = Boolean(
-    selectedClient?.idDocumentType && selectedClient?.idDocumentNumber,
+    clientMode === "EXISTING" && selectedClient?.idDocumentType && selectedClient?.idDocumentNumber
   );
   const showIdentitySection = needsIdentity && !clientAlreadyHasIdentity;
 
@@ -144,16 +166,44 @@ export function RentalForm({
     return new Date().getTime() - arrival.getTime() > RETROACTIVE_TOLERANCE_MINUTES * 60_000;
   }, [date, arrivalTime]);
 
+  const hasValidClient =
+    clientMode === "EXISTING"
+      ? clientId !== ""
+      : newClientName.trim() !== "" && newClientPhone.trim().replace(/[\s.-]/g, "").length >= 8;
+
   const canSubmit =
     availability.available === true &&
     !availability.checking &&
-    clientId !== "" &&
     propertyId !== "" &&
     effectiveTariffId !== "" &&
+    hasValidClient &&
     (!showIdentitySection || (idDocumentType.trim() !== "" && idDocumentNumber.trim() !== ""));
 
+  function getMissingReason(): string | null {
+    if (!propertyId) return "Veuillez sélectionner une chambre / logement";
+    if (!effectiveTariffId) return "Veuillez choisir une formule / tarif";
+    if (clientMode === "EXISTING" && !clientId) return "Veuillez sélectionner un locataire ou basculer sur « Nouveau client »";
+    if (clientMode === "NEW" && !newClientName.trim()) return "Veuillez renseigner le nom complet du locataire";
+    if (clientMode === "NEW" && newClientPhone.trim().replace(/[\s.-]/g, "").length < 8) return "Veuillez indiquer un numéro de téléphone valide (8 chiffres min)";
+    if (availability.checking) return "Vérification de la disponibilité...";
+    if (availability.available === false) return availability.message ?? "Ce logement n'est pas disponible pour ce créneau";
+    if (showIdentitySection && (!idDocumentType.trim() || !idDocumentNumber.trim())) {
+      return "Pièce d'identité obligatoire pour ce séjour de plus de 10 jours";
+    }
+    return null;
+  }
+
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form
+      action={formAction}
+      className="flex flex-col gap-5"
+      onSubmit={(e) => {
+        if (!canSubmit) {
+          e.preventDefault();
+          setMissingAttempted(true);
+        }
+      }}
+    >
       {/* 1. Logement & Formule */}
       <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-white/10">
@@ -167,15 +217,17 @@ export function RentalForm({
           {/* Logement */}
           <div>
             <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
-              Chambre / Logement
+              Chambre / Logement <span className="text-rose-400">*</span>
             </label>
             <select
               id="propertyId"
               name="propertyId"
               value={propertyId}
               onChange={(e) => {
-                setPropertyId(e.target.value);
-                setTariffId("");
+                const newPropId = e.target.value;
+                setPropertyId(newPropId);
+                const newProp = properties.find((p) => p.id === newPropId);
+                setTariffId(newProp?.tariffs?.[0]?.id ?? "");
               }}
               className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
@@ -193,32 +245,32 @@ export function RentalForm({
             ))}
           </div>
 
-          {/* Tarif */}
+          {/* Tarif (auto-sélectionné dès qu'une chambre est choisie) */}
           <div>
             <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
-              Formule / Tarif
+              Formule / Tarif <span className="text-rose-400">*</span>
             </label>
-            {propertyId && activeTariffs.length === 0 ? (
-              <div className="flex h-12 items-center rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 text-xs font-semibold text-amber-300">
-                Aucun tarif configuré pour ce logement.
-              </div>
-            ) : (
-              <select
-                id="tariffId"
-                name="tariffId"
-                value={effectiveTariffId}
-                onChange={(e) => setTariffId(e.target.value)}
-                disabled={!propertyId}
-                className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
-              >
-                <option value="">{propertyId ? "Sélectionner un tarif..." : "Choisissez d'abord une chambre"}</option>
-                {activeTariffs.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label} — {fmtFcfa(t.amount)}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              id="tariffId"
+              name="tariffId"
+              value={effectiveTariffId}
+              onChange={(e) => setTariffId(e.target.value)}
+              disabled={!propertyId || activeTariffs.length === 0}
+              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
+            >
+              <option value="">
+                {!propertyId
+                  ? "Choisissez d'abord une chambre"
+                  : activeTariffs.length === 0
+                    ? "Aucun tarif configuré pour cette chambre"
+                    : "Sélectionner un tarif..."}
+              </option>
+              {activeTariffs.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label} — {fmtFcfa(t.amount)}
+                </option>
+              ))}
+            </select>
             {errors?.tariffId?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
                 {error}
@@ -228,7 +280,7 @@ export function RentalForm({
         </div>
       </div>
 
-      {/* 2. Horaires d'arrivée (Check-in immédiat) */}
+      {/* 2. Horaires de Check-in */}
       <div className="relative z-30 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -273,7 +325,7 @@ export function RentalForm({
             </div>
           </div>
 
-          {/* Sélecteur d'heure d'entrée : modifiable librement (ex : 14h30) */}
+          {/* Sélecteur d'heure d'entrée : modifiable librement */}
           <LuxuryTimePicker
             name="arrivalTime"
             value={arrivalTime}
@@ -285,7 +337,7 @@ export function RentalForm({
           />
         </div>
 
-        {/* Note informative si arrivée antérieure (ex : 14h30 saisi à 15h) */}
+        {/* Note si arrivée antérieure (ex : 14h30 saisi à 15h) */}
         {isRetroactive ? (
           <div className="mt-3.5 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-3.5">
             <div className="flex items-center gap-2 text-brand-orange text-xs font-bold">
@@ -293,7 +345,7 @@ export function RentalForm({
               <span>Arrivée antérieure enregistrée ({arrivalTime.replace(":", "h")})</span>
             </div>
             <p className="mt-1 text-[11px] text-fg/70">
-              Le client est arrivé à {arrivalTime.replace(":", "h")}. La libération de la chambre a été calculée automatiquement ci-dessous sur cette base.
+              Le client est arrivé à {arrivalTime.replace(":", "h")}. La libération de la chambre a été calculée sur cette base.
             </p>
             <input
               name="retroactiveReason"
@@ -302,7 +354,6 @@ export function RentalForm({
             />
           </div>
         ) : null}
-
 
         {/* Live Stay Calculations & Availability Card */}
         <div className="mt-4 rounded-xl border border-white/5 bg-surface-sunken p-3.5">
@@ -342,7 +393,7 @@ export function RentalForm({
         </div>
       </div>
 
-      {/* 3. Locataire & Règlement */}
+      {/* 3. Locataire & Règlement (Ultra-simplifié avec saisie rapide intégrée) */}
       <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -351,36 +402,107 @@ export function RentalForm({
             </span>
             <h2 className="text-sm font-black uppercase tracking-wider text-fg">Locataire &amp; Paiement</h2>
           </div>
-          <Link href={newClientHref} className="text-xs font-bold text-brand-orange hover:underline">
-            + Nouveau locataire
-          </Link>
+
+          {/* Onglets rapides : Nouveau client direct OU Client existant */}
+          <div className="flex rounded-lg bg-surface p-1 border border-white/10">
+            <button
+              type="button"
+              onClick={() => setClientMode("EXISTING")}
+              className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+                clientMode === "EXISTING"
+                  ? "bg-brand-orange text-ink font-black shadow-sm"
+                  : "text-fg/70 hover:text-fg"
+              }`}
+            >
+              👥 Existant
+            </button>
+            <button
+              type="button"
+              onClick={() => setClientMode("NEW")}
+              className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+                clientMode === "NEW"
+                  ? "bg-brand-orange text-ink font-black shadow-sm"
+                  : "text-fg/70 hover:text-fg"
+              }`}
+            >
+              ⚡ Nouveau
+            </button>
+          </div>
         </div>
 
-        {/* Client Selection */}
-        <div>
-          <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
-            Locataire entrant <span className="text-rose-400">*</span>
-          </label>
-          <select
-            id="clientId"
-            name="clientId"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
-          >
-            <option value="">Sélectionner le locataire...</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} {c.phone ? `(${c.phone})` : ""}
-              </option>
+        <input type="hidden" name="isNewClient" value={clientMode === "NEW" ? "true" : "false"} />
+
+        {/* Option A : Nouveau Client direct (sans quitter la page) */}
+        {clientMode === "NEW" ? (
+          <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-brand-orange uppercase">Enregistrement rapide du client</span>
+              <span className="text-[11px] font-medium text-fg/50">Sera enregistré automatiquement</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-fg">
+                  Nom complet du locataire <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  id="newClientName"
+                  name="newClientName"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  placeholder="Ex : Moussa Diop"
+                  className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="newClientPhone" className="mb-1 block text-xs font-bold text-fg">
+                  Téléphone (WhatsApp) <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  id="newClientPhone"
+                  name="newClientPhone"
+                  type="tel"
+                  value={newClientPhone}
+                  onChange={(e) => setNewClientPhone(e.target.value)}
+                  placeholder="Ex : +221 77 123 45 67"
+                  className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 font-mono"
+                />
+              </div>
+            </div>
+            {errors?.clientId?.map((error) => (
+              <p key={error} className="text-xs font-medium text-danger">
+                {error}
+              </p>
             ))}
-          </select>
-          {errors?.clientId?.map((error) => (
-            <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
-            </p>
-          ))}
-        </div>
+          </div>
+        ) : (
+          /* Option B : Sélection client existant */
+          <div>
+            <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
+              Sélectionner le locataire existant <span className="text-rose-400">*</span>
+            </label>
+            <select
+              id="clientId"
+              name="clientId"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+            >
+              <option value="">Sélectionner dans la liste...</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.phone ? `(${c.phone})` : ""}
+                </option>
+              ))}
+            </select>
+            {errors?.clientId?.map((error) => (
+              <p key={error} className="mt-1 text-xs font-medium text-danger">
+                {error}
+              </p>
+            ))}
+          </div>
+        )}
 
         {/* Règlement immédiat / Acompte */}
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -422,11 +544,19 @@ export function RentalForm({
           </div>
         </div>
 
-        {/* Identity Document Section */}
+        {/* Section Pièce d'identité : Strictement requise uniquement pour les séjours de plus de 10 jours (> 240h) */}
         {showIdentitySection ? (
-          <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5">
-            <p className="text-xs font-bold text-amber-300">Pièce d&apos;identité requise pour ce séjour (&gt; 48h).</p>
-            <div className="mt-2.5">
+          <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+            <div className="flex items-center gap-2 text-amber-300">
+              <span className="text-base">📋</span>
+              <p className="text-xs font-black uppercase tracking-wider">
+                Séjour de plus de 10 jours — Pièce d&apos;identité obligatoire
+              </p>
+            </div>
+            <p className="mt-1 text-xs text-amber-200/80">
+              Pour des raisons de sécurité et pour la génération automatique du contrat de bail PDF, veuillez renseigner la pièce d&apos;identité du client.
+            </p>
+            <div className="mt-3">
               <input type="hidden" name="idDocumentType" value={idDocumentType} />
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {ID_DOCUMENT_SUGGESTIONS.map((sug) => (
@@ -434,9 +564,9 @@ export function RentalForm({
                     key={sug}
                     type="button"
                     onClick={() => setIdDocumentType(sug)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                       idDocumentType === sug
-                        ? "bg-brand-orange text-ink font-black"
+                        ? "bg-brand-orange text-ink font-black shadow-sm"
                         : "bg-surface text-fg/80 hover:bg-white/10"
                     }`}
                   >
@@ -449,8 +579,8 @@ export function RentalForm({
                 type="text"
                 value={idDocumentNumber}
                 onChange={(e) => setIdDocumentNumber(e.target.value)}
-                placeholder="Numéro de pièce d'identité"
-                className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange"
+                placeholder="Numéro de la pièce (ex : 1 234 5678 90)"
+                className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange font-mono"
               />
             </div>
           </div>
@@ -480,34 +610,39 @@ export function RentalForm({
         </div>
       )}
 
-      {/* Aide visuelle si le formulaire n'est pas encore complet */}
-      {!canSubmit && !pending ? (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
+      {/* Aide visuelle / Alerte si des informations manquent */}
+      {(!canSubmit && (missingAttempted || !pending)) && getMissingReason() ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
           <span>👉</span>
-          {!propertyId
-            ? "Veuillez sélectionner une chambre / logement"
-            : !effectiveTariffId
-              ? "Veuillez choisir une formule / tarif"
-              : !clientId
-                ? "Veuillez sélectionner ou créer le client"
-                : availability.checking
-                  ? "Vérification de la disponibilité..."
-                  : availability.available === false
-                    ? "Ce logement n'est pas disponible pour ce créneau"
-                    : showIdentitySection && (!idDocumentType.trim() || !idDocumentNumber.trim())
-                      ? "Veuillez renseigner la pièce d'identité du client (séjour ≥ 48h)"
-                      : "Veuillez renseigner les champs requis"}
+          <span>{getMissingReason()}</span>
         </div>
       ) : null}
 
-      {/* Bouton de confirmation unique */}
-      <button
-        type="submit"
-        disabled={pending || !canSubmit}
-        className="h-14 w-full rounded-2xl bg-brand-orange text-base font-black tracking-wide text-ink shadow-lg shadow-brand-orange/20 transition-all hover:brightness-110 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {pending ? "Enregistrement en cours..." : "🔑 ENREGISTRER LA LOCATION (CHECK-IN)"}
-      </button>
+      {/* BOUTONS D'ACTION DIVISÉS ET DISTINCTS */}
+      <div className="flex items-center gap-3 pt-2">
+        <Link
+          href="/locations"
+          className="flex h-14 min-w-[120px] items-center justify-center rounded-2xl border border-white/15 bg-surface text-sm font-bold text-fg hover:bg-white/5 active:scale-98 transition-all"
+        >
+          Annuler
+        </Link>
+        <button
+          type={canSubmit ? "submit" : "button"}
+          onClick={() => {
+            if (!canSubmit) {
+              setMissingAttempted(true);
+            }
+          }}
+          disabled={pending}
+          className={`flex-1 h-14 rounded-2xl text-base font-black tracking-wide shadow-lg transition-all ${
+            canSubmit
+              ? "bg-brand-orange text-ink shadow-brand-orange/25 hover:brightness-110 active:scale-98 cursor-pointer"
+              : "bg-surface-raised border border-brand-orange/40 text-brand-orange hover:bg-brand-orange/10 cursor-pointer"
+          } disabled:opacity-50`}
+        >
+          {pending ? "Enregistrement en cours..." : "🔑 ENREGISTRER LA LOCATION (CHECK-IN)"}
+        </button>
+      </div>
     </form>
   );
 }

@@ -23,11 +23,13 @@ export type LoginFormState =
 
 const optionalText = (max: number, label: string) =>
   z
-    .string()
-    .trim()
-    .max(max, `${label} : ${max} caractères maximum.`)
-    .transform((v) => (v.length === 0 ? undefined : v))
-    .optional();
+    .union([z.string(), z.null(), z.undefined()])
+    .transform((v) => {
+      if (v == null) return undefined;
+      const trimmed = v.trim();
+      return trimmed.length === 0 ? undefined : trimmed;
+    })
+    .pipe(z.string().max(max, `${label} : ${max} caractères maximum.`).optional());
 
 export const ClientSchema = z.object({
   name: z

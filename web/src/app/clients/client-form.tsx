@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { ClientFormState } from "@/lib/definitions";
 
@@ -151,18 +152,27 @@ export function ClientForm({
       </div>
 
       {state?.message && (
-        <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+        <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300">
+          ⚠️ {state.message}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-60"
-      >
-        {pending ? "Enregistrement..." : submitLabel}
-      </button>
+      {/* Boutons d'action divisés */}
+      <div className="flex items-center gap-3 pt-2">
+        <Link
+          href={returnTo || "/clients"}
+          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-white/15 bg-surface text-sm font-bold text-fg hover:bg-white/5 active:scale-98 transition-all"
+        >
+          Annuler
+        </Link>
+        <button
+          type="submit"
+          disabled={pending}
+          className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink shadow-lg shadow-brand-orange/25 hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
+        >
+          {pending ? "Enregistrement..." : `👤 ${submitLabel}`}
+        </button>
+      </div>
     </form>
   );
 }
