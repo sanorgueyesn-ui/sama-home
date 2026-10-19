@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin, requireActiveEstablishment } from "@/lib/dal";
 import { hashPassword } from "@/lib/password";
 import { hasEstablishmentPermission } from "@/lib/permissions";
+import { purgeUserFromDatabase } from "@/lib/user-purge";
 import {
   CreateUserSchema,
   UpdateUserSchema,
@@ -294,3 +295,67 @@ export async function resetUserPassword(
   revalidatePath("/settings/users");
   redirect(`/settings/users?passwordReset=1`);
 }
+
+/**
+ * Suppression définitive d'un collaborateur par un administrateur d'établissement.
+ * Le compte est entièrement purgé de la base de données.
+ */
+export async function deleteEstablishmentUser(userId: string): Promise<{ error?: string }> {
+  const admin = await requireAdmin();
+  if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de supprimer des utilisateurs." };
+  }
+  if (!admin.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement." };
+  }
+  if (userId === admin.id) {
+    return { error: "Impossible de supprimer votre propre compte administrateur actuellement connecté." };
+  }
+
+  const target = await prisma.user.findFirst({
+    where: { id: userId, establishmentId: admin.establishmentId },
+  });
+  if (!target) {
+    return { error: "Utilisateur introuvable." };
+  }
+
+  // Vérifier qu'on ne supprime pas le dernier ADMIN de l'établissement
+  if (target.role === "ADMIN") {
+    const otherAdmins = await prisma.user.count({
+      where: {
+        role: "ADMIN",
+        establishmentId: admin.establishmentId,
+        id: { not: userId },
+      },
+    });
+    if (otherAdmins === 0) {
+      return { error: "Impossible de supprimer le dernier administrateur de cet établissement." };
+    }
+  }
+
+  try {
+    await prisma.$transaction(async (tx: any) => {
+      await purgeUserFromDatabase(tx, userId);
+
+      await tx.auditLog.create({
+        data: {
+          userId: admin.id,
+          action: "USER_DELETED",
+          entityType: "User",
+          entityId: userId,
+          reason: `Suppression définitive du collaborateur « ${target.name} » (${target.username})`,
+          oldValue: { name: target.name, username: target.username },
+          newValue: { deleted: true },
+          establishmentId: admin.establishmentId,
+        },
+      });
+    });
+  } catch (error) {
+    console.error(`deleteEstablishmentUser(${userId}) — échec :`, error);
+    return { error: "Une erreur est survenue lors de la suppression du compte." };
+  }
+
+  revalidatePath("/settings/users");
+  return {};
+}
+

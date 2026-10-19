@@ -5,6 +5,7 @@ import { requirePlatformAdmin } from "@/lib/dal";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
 import { verifyPassword } from "@/lib/password";
 import { hasPlatformPermission } from "@/lib/permissions";
+import { purgeUserFromDatabase } from "@/lib/user-purge";
 
 class EstablishmentApprovalError extends Error {}
 
@@ -429,7 +430,26 @@ export async function deleteEstablishment(
         },
       });
 
-      // 9. Utilisateurs de l'établissement
+      // 9. Utilisateurs de l'établissement et purge complète de leurs jetons & OTPs
+      const estUsers = await tx.user.findMany({
+        where: { establishmentId },
+        select: { id: true, email: true, username: true },
+      });
+      const emailsToPurge = Array.from(
+        new Set(
+          estUsers
+            .flatMap((u) => [u.email?.toLowerCase(), u.username?.toLowerCase()])
+            .filter(Boolean) as string[]
+        )
+      );
+      for (const email of emailsToPurge) {
+        await tx.passwordResetToken.deleteMany({
+          where: { email: { equals: email, mode: "insensitive" } },
+        });
+        await tx.otpVerification.deleteMany({
+          where: { email: { equals: email, mode: "insensitive" } },
+        });
+      }
       await tx.user.deleteMany({
         where: { establishmentId },
       });
@@ -505,13 +525,8 @@ export async function deletePlatformUser(
         throw new EstablishmentApprovalError("Impossible de supprimer un compte administrateur de plateforme.");
       }
 
-      // Supprimer sessions et notifications de lecture de cet utilisateur
-      await tx.session.deleteMany({ where: { userId: targetUserId } });
-      await tx.notificationRead.deleteMany({ where: { userId: targetUserId } });
-      await tx.auditLog.deleteMany({ where: { userId: targetUserId } });
-
-      // Suppression de l'utilisateur
-      await tx.user.delete({ where: { id: targetUserId } });
+      // Purge complète et irréversible de l'utilisateur, de ses sessions, clés étrangères et jetons de mot de passe / OTP
+      await purgeUserFromDatabase(tx, targetUserId);
 
       await tx.auditLog.create({
         data: {

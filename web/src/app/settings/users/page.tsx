@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/dal";
 import { listUsers } from "@/lib/users-data";
 import { parseUserPermissions } from "@/lib/permissions";
+import { DeleteEstablishmentUserButton } from "./delete-user-button";
 
 const ROLE_LABELS: Record<string, string> = { ADMIN: "Administrateur", GESTIONNAIRE: "Gestionnaire" };
 
@@ -13,7 +14,7 @@ function fmtDate(d: Date) {
 export default async function UsersPage(props: PageProps<"/settings/users">) {
   // Bloc 11 — page-level server check, independent of the "Administration"
   // section being hidden in the UI for non-ADMIN users.
-  await requireAdmin();
+  const admin = await requireAdmin();
   const { created, updated, passwordReset } = await props.searchParams;
 
   const users = await listUsers();
@@ -102,8 +103,14 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                 href={`/settings/users/${u.id}/reset-password`}
                 className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border/15 text-xs font-extrabold text-fg"
               >
-                Réinitialiser le mot de passe
+                Réinitialiser
               </Link>
+              <DeleteEstablishmentUserButton
+                userId={u.id}
+                userName={u.name}
+                userLogin={u.username}
+                isCurrentAdmin={u.id === admin.id}
+              />
             </div>
           </Card>
         ))}

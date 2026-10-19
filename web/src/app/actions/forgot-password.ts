@@ -70,6 +70,10 @@ export async function requestPasswordReset(
 
   // Si le compte n'existe pas dans la plateforme : REJET IMMÉDIAT
   if (!user) {
+    // Nettoyage de sécurité préventif de tout jeton orphelin pour cette adresse
+    await prisma.passwordResetToken.deleteMany({
+      where: { email: { equals: identifier, mode: "insensitive" } },
+    });
     return {
       step: "REQUEST",
       accountNotFound: true,
