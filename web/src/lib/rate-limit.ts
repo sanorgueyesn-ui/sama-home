@@ -13,14 +13,18 @@ const store = new Map<string, RateLimitRecord>();
  * Extrait l'adresse IP client depuis les en-têtes de la requête (reverse proxy, CDN ou fallback).
  */
 export async function getClientIp(): Promise<string> {
-  const headerStore = await headers();
-  const forwarded = headerStore.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
+  try {
+    const headerStore = await headers();
+    const forwarded = headerStore.get("x-forwarded-for");
+    if (forwarded) {
+      const first = forwarded.split(",")[0]?.trim();
+      if (first) return first;
+    }
+    const realIp = headerStore.get("x-real-ip");
+    if (realIp) return realIp.trim();
+  } catch {
+    // Fallback hors contexte de requête Next.js (tests, scripts)
   }
-  const realIp = headerStore.get("x-real-ip");
-  if (realIp) return realIp.trim();
   return "127.0.0.1";
 }
 

@@ -133,7 +133,7 @@ export async function sendPasswordResetEmail({
     console.warn(
       `[SAMA HOME MAIL] SMTP_PASS non configuré. Mode simulation actif (le code est affiché ci-dessus).`,
     );
-    return { success: true, simulated: true };
+    return { success: false, simulated: true, error: "SMTP_PASS_NOT_CONFIGURED" };
   }
 
   try {
@@ -205,6 +205,6 @@ export async function sendPasswordResetEmail({
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[SAMA HOME MAIL] Erreur lors de l'envoi SMTP :`, errorMsg);
-    return { success: true, simulated: true, error: errorMsg };
+    return { success: false, simulated: false, error: errorMsg };
   }
 }

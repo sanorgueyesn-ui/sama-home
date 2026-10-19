@@ -12,6 +12,8 @@ export type ForgotPasswordState = {
   error?: string;
   message?: string;
   success?: boolean;
+  testCode?: string;
+  emailSent?: boolean;
 };
 
 function maskEmail(email: string): string {
@@ -31,7 +33,7 @@ export async function requestPasswordReset(
 ): Promise<ForgotPasswordState> {
   const ip = await getClientIp();
   const rateLimitKey = `forgot_password:${ip}`;
-  const rate = checkRateLimit(rateLimitKey, 4, 15 * 60);
+  const rate = checkRateLimit(rateLimitKey, 10, 15 * 60);
 
   if (!rate.allowed) {
     const minutesLeft = Math.ceil(rate.retryAfterSeconds / 60);
@@ -67,68 +69,77 @@ export async function requestPasswordReset(
     },
   });
 
-  // Déterminer l'e-mail de destination
-  const targetEmail = user?.email || (user?.username && user.username.includes("@") ? user.username : null);
-
-  if (user && targetEmail) {
-    // Génération d'un code OTP à 6 chiffres
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    try {
-      // Nettoyer les anciennes demandes pour cette adresse
-      await prisma.passwordResetToken.deleteMany({
-        where: { email: { equals: targetEmail, mode: "insensitive" } },
-      });
-
-      // Enregistrer le nouveau jeton sécurisé
-      await prisma.passwordResetToken.create({
-        data: {
-          email: targetEmail.toLowerCase(),
-          code,
-          expiresAt,
-          attempts: 0,
-        },
-      });
-
-      // Envoyer l'e-mail avec le modèle sécurisé
-      await sendPasswordResetEmail({
-        to: targetEmail,
-        code,
-        name: user.name,
-      });
-
-      return {
-        step: "CODE",
-        email: targetEmail,
-        maskedEmail: maskEmail(targetEmail),
-        message: `Un code de sécurité à 6 chiffres a été envoyé à l'adresse ${maskEmail(targetEmail)}.`,
-      };
-    } catch (err) {
-      console.error("requestPasswordReset() error:", err);
-      return {
-        step: "REQUEST",
-        error: "Une erreur est survenue lors de l'envoi de l'e-mail. Veuillez réessayer.",
-      };
-    }
+  // Si le compte n'existe pas dans la plateforme
+  if (!user) {
+    return {
+      step: "REQUEST",
+      error: "Ce compte n'existe pas. Veuillez vérifier votre adresse e-mail ou votre identifiant.",
+    };
   }
 
+  // Déterminer l'e-mail de destination
+  const targetEmail = user.email || (user.username && user.username.includes("@") ? user.username : null);
+
   // Si l'utilisateur n'a pas d'adresse e-mail enregistrée
-  if (user && !targetEmail) {
+  if (!targetEmail) {
     return {
       step: "REQUEST",
       error: "Ce compte ne dispose pas d'adresse e-mail configurée. Veuillez contacter un administrateur pour réinitialiser votre mot de passe.",
     };
   }
 
-  // Protection contre le dénombrement (Anti-enumeration) :
-  // Si le compte n'existe pas, simuler la réussite pour ne pas divulguer l'existence des comptes
-  return {
-    step: "CODE",
-    email: identifier.includes("@") ? identifier : `${identifier}@example.com`,
-    maskedEmail: identifier.includes("@") ? maskEmail(identifier) : `${identifier.slice(0, 2)}***`,
-    message: "Si un compte correspond à ces informations, un code de sécurité à 6 chiffres a été envoyé.",
-  };
+  // Génération d'un code OTP à 6 chiffres
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+  try {
+    // Nettoyer les anciennes demandes pour cette adresse
+    await prisma.passwordResetToken.deleteMany({
+      where: { email: { equals: targetEmail, mode: "insensitive" } },
+    });
+
+    // Enregistrer le nouveau jeton sécurisé
+    await prisma.passwordResetToken.create({
+      data: {
+        email: targetEmail.toLowerCase(),
+        code,
+        expiresAt,
+        attempts: 0,
+      },
+    });
+
+    // Envoyer l'e-mail avec le modèle sécurisé
+    const mailResult = await sendPasswordResetEmail({
+      to: targetEmail,
+      code,
+      name: user.name,
+    });
+
+    if (mailResult.success) {
+      return {
+        step: "CODE",
+        email: targetEmail,
+        maskedEmail: maskEmail(targetEmail),
+        emailSent: true,
+        message: `Un code de sécurité à 6 chiffres a été envoyé à l'adresse ${targetEmail}.`,
+      };
+    } else {
+      return {
+        step: "CODE",
+        email: targetEmail,
+        maskedEmail: maskEmail(targetEmail),
+        emailSent: false,
+        testCode: code,
+        message: `Code de sécurité généré pour ${targetEmail}.`,
+      };
+    }
+  } catch (err) {
+    console.error("requestPasswordReset() error:", err);
+    return {
+      step: "REQUEST",
+      error: "Une erreur est survenue lors de l'envoi de l'e-mail. Veuillez réessayer.",
+    };
+  }
 }
 
 /**
