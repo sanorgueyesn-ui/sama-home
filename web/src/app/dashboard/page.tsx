@@ -13,6 +13,7 @@ import { getActiveRentalsForDashboard } from "@/lib/rentals-data";
 import { StayCountdown } from "@/components/dashboard/stay-countdown";
 import { getPropertyStatuses, PROPERTY_STATUS_META } from "@/lib/property-status";
 import { prisma } from "@/lib/prisma";
+import { KeyIcon, CalendarIcon, UserIcon, ExpenseIcon, CheckCircleIcon, MachineConnectedBadge } from "@/components/ui/icons";
 
 // Reconstruction stricte Stitch (Accueil) — background d'ambiance GLOBAL,
 // jamais dérivé de Property.photo (règle absolue de ce lot). Même asset de
@@ -141,7 +142,7 @@ export default async function DashboardPage() {
       {/* HEADER — commun aux 3 largeurs */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-extrabold text-fg sm:truncate sm:text-2xl">Bonjour {user.name.split(" ")[0]} 👋</h1>
+          <h1 className="text-xl font-extrabold text-fg sm:truncate sm:text-2xl">Bonjour {user.name.split(" ")[0]}</h1>
           <p className="mt-0.5 truncate text-sm font-medium capitalize text-fg/60">{fmtDateHeader(now)}</p>
         </div>
         {/* CTA desktop — maquette Stitch (couleurs exactes : orange plein +
@@ -149,21 +150,25 @@ export default async function DashboardPage() {
         <div className="hidden lg:flex lg:items-center lg:gap-2">
           <Link
             href="/locations/new"
-            className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink"
+            className="flex h-10 items-center gap-2 rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink shadow-sm hover:brightness-110 active:scale-95 transition-all"
           >
-            🔑 Nouveau séjour (Louer)
+            <KeyIcon className="h-4 w-4" />
+            <span>Nouveau séjour (Louer)</span>
           </Link>
           <Link
             href="/reservations/new"
-            className="flex h-10 items-center rounded-xl border border-border/15 bg-navy px-4 text-xs font-semibold text-white"
+            className="flex h-10 items-center gap-2 rounded-xl border border-border/15 bg-navy px-4 text-xs font-semibold text-white shadow-sm hover:brightness-110 active:scale-95 transition-all"
           >
-            📅 Enregistrer réservation
+            <CalendarIcon className="h-4 w-4" />
+            <span>Enregistrer réservation</span>
           </Link>
         </div>
       </div>
-      <p className="mt-1 text-xs font-medium text-fg/40">
-        Connecté en tant que {user.name} ({user.role}).
-      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-2.5 text-xs font-medium text-fg/60">
+        <MachineConnectedBadge />
+        <span className="text-fg/30">•</span>
+        <span>Connecté en tant que {user.name} ({user.role})</span>
+      </div>
 
       {/* CTA tablette — mêmes routes, libellés Stitch tablette. */}
       <div className="mt-3 hidden gap-2 md:flex lg:hidden">
@@ -347,7 +352,8 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-white/10 bg-surface-raised/90 p-4 shadow-sm backdrop-blur-md">
             <div className="flex items-center justify-between">
               <h3 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-fg">
-                <span>📅</span> Planning du jour
+                <CalendarIcon className="h-4 w-4 text-brand-orange" />
+                <span>Planning du jour</span>
               </h3>
               <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-bold text-fg/50 border border-white/5">
                 {planningRows.length} mouvement{planningRows.length > 1 ? "s" : ""}
@@ -357,7 +363,10 @@ export default async function DashboardPage() {
               {planningRows.length === 0 ? (
                 <div className="rounded-xl border border-white/5 bg-surface-sunken/60 p-3 text-center">
                   <p className="text-xs font-semibold text-fg/60">Aucune arrivée ni départ prévu aujourd&apos;hui.</p>
-                  <p className="mt-0.5 text-[10.5px] text-fg/40">Tout est sous contrôle ✨</p>
+                  <p className="mt-0.5 text-[10.5px] text-fg/40 flex items-center justify-center gap-1">
+                    <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-400 inline" />
+                    <span>Tout est sous contrôle</span>
+                  </p>
                 </div>
               ) : (
                 planningRows.map((row) => (
@@ -370,7 +379,10 @@ export default async function DashboardPage() {
                       <p className="truncate text-xs font-bold text-fg group-hover:text-brand-orange transition-colors">
                         {row.propertyName}
                       </p>
-                      <p className="truncate text-[10.5px] text-fg/50">👤 {row.clientName}</p>
+                      <p className="truncate text-[10.5px] text-fg/50 flex items-center gap-1">
+                        <UserIcon className="h-3 w-3 inline text-fg/40" />
+                        <span>{row.clientName}</span>
+                      </p>
                     </div>
                     <span className="shrink-0 rounded-lg bg-black/40 px-2 py-1 font-mono text-xs font-extrabold text-brand-orange border border-white/5">
                       {fmtTime(row.time)}
@@ -385,7 +397,8 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-white/10 bg-surface-raised/90 p-4 shadow-sm backdrop-blur-md">
             <div className="flex items-center justify-between">
               <h3 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-fg">
-                <span>💸</span> Dépenses du jour
+                <ExpenseIcon className="h-4 w-4 text-rose-400" />
+                <span>Dépenses du jour</span>
               </h3>
               <Link
                 href="/depenses/new"
@@ -421,8 +434,8 @@ export default async function DashboardPage() {
           <div className="relative overflow-hidden rounded-2xl border border-brand-orange/30 bg-gradient-to-br from-brand-orange/20 via-surface-raised to-navy/90 p-4.5 shadow-md backdrop-blur-md">
             <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-orange/15 blur-2xl" />
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-orange/20 text-sm">
-                🔑
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-orange/20 text-brand-orange">
+                <KeyIcon className="h-4 w-4" />
               </span>
               <p className="text-xs font-black text-white">Espace Séjour Unifié</p>
             </div>
@@ -431,9 +444,10 @@ export default async function DashboardPage() {
             </p>
             <Link
               href="/sejour"
-              className="mt-3.5 flex h-9.5 w-full items-center justify-center gap-1.5 rounded-xl bg-brand-orange py-2 text-center text-xs font-extrabold text-ink shadow-sm hover:brightness-110 active:scale-95 transition-all"
+              className="mt-3.5 flex h-9.5 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange py-2 text-center text-xs font-extrabold text-ink shadow-sm hover:brightness-110 active:scale-95 transition-all"
             >
-              <span>🔑</span> Ouvrir Séjour
+              <KeyIcon className="h-4 w-4" />
+              <span>Ouvrir Séjour</span>
             </Link>
           </div>
         </aside>
@@ -443,14 +457,18 @@ export default async function DashboardPage() {
       <div className="mt-5 md:hidden">
         <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-fg/40">Flux opérationnels rapides</p>
         <div className="mt-2 grid grid-cols-2 gap-2.5">
-          <Link href="/sejour" className="rounded-xl border border-border/10 bg-surface-raised p-3.5">
-            <span className="text-lg">🔑</span>
-            <p className="mt-1.5 text-sm font-bold text-fg">Gérer Séjour</p>
+          <Link href="/sejour" className="flex flex-col items-start rounded-xl border border-border/10 bg-surface-raised p-3.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-orange/20 text-brand-orange mb-1">
+              <KeyIcon className="h-4 w-4" />
+            </span>
+            <p className="mt-1 text-sm font-bold text-fg">Gérer Séjour</p>
             <p className="text-[11px] text-fg/50">Check-in / Check-out</p>
           </Link>
-          <Link href="/depenses/new" className="rounded-xl border border-border/10 bg-surface-raised p-3.5">
-            <span className="text-lg">💸</span>
-            <p className="mt-1.5 text-sm font-bold text-fg">Saisir Dépense</p>
+          <Link href="/depenses/new" className="flex flex-col items-start rounded-xl border border-border/10 bg-surface-raised p-3.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 mb-1">
+              <ExpenseIcon className="h-4 w-4" />
+            </span>
+            <p className="mt-1 text-sm font-bold text-fg">Saisir Dépense</p>
             <p className="text-[11px] text-fg/50">Factures &amp; Achats</p>
           </Link>
         </div>

@@ -75,11 +75,11 @@ export async function computeTheoreticalBalance(
 
   const [cashIn, cashOut, transfersOut, corrections] = await Promise.all([
     client.payment.aggregate({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      where: { paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
       _sum: { amount: true },
     }),
     client.expense.aggregate({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      where: { paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
       _sum: { amount: true },
     }),
     client.bankTransfer.aggregate({

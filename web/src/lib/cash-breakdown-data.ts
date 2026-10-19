@@ -3,39 +3,55 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import type { CashSession } from "@/generated/prisma/client";
 
+export interface CashSessionBreakdownResult {
+  openingBalance: number;
+  
+  // Totaux consolidés (ERP connecté dépenses & encaissements)
+  totalIn: number;
+  totalOut: number;
+  transfersOut: number;
+  corrections: number;
+  theoreticalBalance: number;
+
+  // Détail par méthode
+  cashIn: number;
+  cashOut: number;
+  cashNet: number;
+  physicalCashBalance: number; // Solde pour comptage physique tiroir
+
+  waveIn: number;
+  waveOut: number;
+  waveNet: number;
+
+  omIn: number;
+  omOut: number;
+  omNet: number;
+
+  otherIn: number;
+  otherOut: number;
+}
+
 /**
- * Bloc E (UI Caisse) — lecture uniquement, fichier NEUF, n'importe ni ne
- * modifie `src/lib/cash-data.ts` (gelé). Les 4 agrégations ci-dessous
- * reproduisent EXACTEMENT la même fenêtre et les mêmes 4 sources que
- * `computeTheoreticalBalance` (Bloc 17.2, Étape D) — juste exposées en
- * détail (entrée/sortie/versements/corrections) au lieu d'un seul total,
- * pour "Décomposition du solde" (section 7). Aucune règle de calcul
- * nouvelle : la somme des 4 composantes ci-dessous doit toujours égaler
- * exactement le `theoreticalBalance` déjà renvoyé par
- * `getCurrentCashSession()` — vérifié explicitement par test.
- *
- * Phase 3C / Lot C1 — même filtre `establishmentId` que
- * `computeTheoreticalBalance` (src/lib/cash-data.ts), pour la même raison :
- * `Payment`/`Expense` n'ont pas de FK vers `CashSession`, seulement bornés
- * par date — sans ce filtre, un autre établissement avec des mouvements
- * CASH dans la même fenêtre serait compté ici. `establishmentId` vient de
- * la session elle-même (déjà établissement-scopée), jamais recalculé.
+ * Calcul dynamique du solde de caisse et de sa décomposition.
+ * Relie directement TOUS les encaissements (Espèces, Wave, Orange Money)
+ * et TOUTES les dépenses (Espèces, Wave, Orange Money) de l'établissement
+ * pendant la session active.
  */
 export async function getCashSessionBreakdown(
   session: Pick<CashSession, "id" | "openingBalance" | "openedAt" | "closedAt" | "establishmentId">,
-) {
+): Promise<CashSessionBreakdownResult> {
   await verifySession();
   const windowEnd = session.closedAt ?? new Date();
   const establishmentFilter = session.establishmentId ? { establishmentId: session.establishmentId } : {};
 
-  const [cashInAgg, cashOutAgg, transfersOutAgg, correctionsAgg] = await Promise.all([
-    prisma.payment.aggregate({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
-      _sum: { amount: true },
+  const [payments, expenses, transfersOutAgg, correctionsAgg] = await Promise.all([
+    prisma.payment.findMany({
+      where: { paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      select: { amount: true, method: true },
     }),
-    prisma.expense.aggregate({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
-      _sum: { amount: true },
+    prisma.expense.findMany({
+      where: { paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      select: { amount: true, method: true },
     }),
     prisma.bankTransfer.aggregate({
       where: { status: "EFFECTED", cashSessionId: session.id },
@@ -47,37 +63,81 @@ export async function getCashSessionBreakdown(
     }),
   ]);
 
-  const cashIn = cashInAgg._sum.amount ?? 0;
-  const cashOut = cashOutAgg._sum.amount ?? 0;
+  let cashIn = 0;
+  let waveIn = 0;
+  let omIn = 0;
+  let otherIn = 0;
+  for (const p of payments) {
+    if (p.method === "CASH") cashIn += p.amount;
+    else if (p.method === "WAVE") waveIn += p.amount;
+    else if (p.method === "ORANGE_MONEY") omIn += p.amount;
+    else otherIn += p.amount;
+  }
+
+  let cashOut = 0;
+  let waveOut = 0;
+  let omOut = 0;
+  let otherOut = 0;
+  for (const e of expenses) {
+    if (e.method === "CASH") cashOut += e.amount;
+    else if (e.method === "WAVE") waveOut += e.amount;
+    else if (e.method === "ORANGE_MONEY") omOut += e.amount;
+    else otherOut += e.amount;
+  }
+
+  const totalIn = cashIn + waveIn + omIn + otherIn;
+  const totalOut = cashOut + waveOut + omOut + otherOut;
   const transfersOut = transfersOutAgg._sum.amount ?? 0;
   const corrections = correctionsAgg._sum.amount ?? 0;
 
+  // Solde théorique global consolidé
+  const theoreticalBalance = session.openingBalance + totalIn - totalOut - transfersOut + corrections;
+
+  // Solde physique spécifique espèces (pour tiroir caisse)
+  const physicalCashBalance = session.openingBalance + cashIn - cashOut - transfersOut + corrections;
+
   return {
     openingBalance: session.openingBalance,
-    cashIn,
-    cashOut,
+    totalIn,
+    totalOut,
     transfersOut,
     corrections,
-    theoreticalBalance: session.openingBalance + cashIn - cashOut - transfersOut + corrections,
+    theoreticalBalance,
+
+    cashIn,
+    cashOut,
+    cashNet: cashIn - cashOut,
+    physicalCashBalance,
+
+    waveIn,
+    waveOut,
+    waveNet: waveIn - waveOut,
+
+    omIn,
+    omOut,
+    omNet: omIn - omOut,
+
+    otherIn,
+    otherOut,
   };
 }
 
 export type CashActivityEntry = {
   id: string;
-  type: "PAYMENT_CASH" | "EXPENSE_CASH" | "BANK_TRANSFER" | "CORRECTION";
+  type: "PAYMENT" | "EXPENSE" | "BANK_TRANSFER" | "CORRECTION";
+  method?: "CASH" | "WAVE" | "ORANGE_MONEY" | "OTHER";
   date: Date;
   amount: number;
   label: string;
   reference: string | null;
+  note?: string | null;
 };
 
 /**
- * Flux chronologique "Activité récente" (section 9) — construit à partir
- * des données existantes (`Payment`, `Expense`, `BankTransfer`,
- * `CashCorrection`), jamais d'un `CashMovement`. `amount` est toujours
- * signé ici (positif = entrée, négatif = sortie) pour un affichage direct.
+ * Flux chronologique complet de la caisse :
+ * Enregistre et affiche en temps réel TOUS les encaissements,
+ * TOUTES les dépenses, les versements et les corrections.
  */
-/** Phase 3C / Lot C1 — même filtre `establishmentId` que getCashSessionBreakdown ci-dessus, même raison. */
 export async function getCashSessionActivity(
   session: Pick<CashSession, "id" | "openedAt" | "closedAt" | "establishmentId">,
   limit = 50,
@@ -88,12 +148,12 @@ export async function getCashSessionActivity(
 
   const [payments, expenses, transfers, corrections] = await Promise.all([
     prisma.payment.findMany({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
-      select: { id: true, amount: true, paidAt: true, reference: true },
+      where: { paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      select: { id: true, amount: true, paidAt: true, reference: true, method: true, note: true },
     }),
     prisma.expense.findMany({
-      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
-      select: { id: true, amount: true, paidAt: true, reference: true, categoryNameSnapshot: true },
+      where: { paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      select: { id: true, amount: true, paidAt: true, reference: true, categoryNameSnapshot: true, method: true, note: true },
     }),
     prisma.bankTransfer.findMany({
       where: { status: "EFFECTED", cashSessionId: session.id },
@@ -105,22 +165,39 @@ export async function getCashSessionActivity(
     }),
   ]);
 
+  const methodLabel = (m: string) => {
+    switch (m) {
+      case "CASH":
+        return "Espèces";
+      case "WAVE":
+        return "Wave";
+      case "ORANGE_MONEY":
+        return "Orange Money";
+      default:
+        return "Autre";
+    }
+  };
+
   const entries: CashActivityEntry[] = [
     ...payments.map((p) => ({
       id: p.id,
-      type: "PAYMENT_CASH" as const,
+      type: "PAYMENT" as const,
+      method: p.method as any,
       date: p.paidAt,
       amount: p.amount,
-      label: "Paiement reçu (CASH)",
+      label: `Encaissement reçu (${methodLabel(p.method)})`,
       reference: p.reference,
+      note: p.note,
     })),
     ...expenses.map((e) => ({
       id: e.id,
-      type: "EXPENSE_CASH" as const,
+      type: "EXPENSE" as const,
+      method: e.method as any,
       date: e.paidAt,
       amount: -e.amount,
-      label: `Dépense — ${e.categoryNameSnapshot}`,
+      label: `Dépense — ${e.categoryNameSnapshot} (${methodLabel(e.method)})`,
       reference: e.reference,
+      note: e.note,
     })),
     ...transfers.map((t) => ({
       id: t.id,
@@ -135,7 +212,7 @@ export async function getCashSessionActivity(
       type: "CORRECTION" as const,
       date: c.createdAt,
       amount: c.amount,
-      label: `Correction — ${c.reason}`,
+      label: `Ajustement caisse — ${c.reason}`,
       reference: null,
     })),
   ];

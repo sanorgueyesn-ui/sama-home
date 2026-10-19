@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { PropertyFormState } from "@/lib/definitions";
+import { BedIcon, BuildingIcon, CashIcon, AlertCircleIcon } from "@/components/ui/icons";
 
 type PropertyFormValues = {
   name?: string;
@@ -87,7 +88,7 @@ export function PropertyForm({
                 : "border-white/10 bg-surface text-fg/80 hover:bg-white/5"
             }`}
           >
-            <span className="text-xl">🛏️</span>
+            <BedIcon className="h-6 w-6" />
             <span className="text-sm font-extrabold">Chambre</span>
           </button>
           <button
@@ -100,7 +101,7 @@ export function PropertyForm({
                 : "border-white/10 bg-surface text-fg/80 hover:bg-white/5"
             }`}
           >
-            <span className="text-xl">🏢</span>
+            <BuildingIcon className="h-6 w-6" />
             <span className="text-sm font-extrabold">Appartement</span>
           </button>
         </div>
@@ -185,7 +186,7 @@ export function PropertyForm({
         <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
             <div className="flex items-center gap-2">
-              <span className="text-base">💰</span>
+              <CashIcon className="h-4 w-4 text-brand-orange" />
               <h3 className="text-xs font-black uppercase tracking-wider text-fg">Tarif de départ (Prêt à louer)</h3>
             </div>
             <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
@@ -328,8 +329,9 @@ export function PropertyForm({
       </div>
 
       {state?.message && (
-        <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300">
-          ⚠️ {state.message}
+        <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-rose-400" />
+          <span>{state.message}</span>
         </div>
       )}
 
@@ -346,7 +348,7 @@ export function PropertyForm({
           disabled={pending}
           className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink shadow-lg shadow-brand-orange/25 hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
         >
-          {pending ? "Enregistrement..." : `🏠 ${submitLabel}`}
+          {pending ? "Enregistrement..." : submitLabel}
         </button>
       </div>
     </form>

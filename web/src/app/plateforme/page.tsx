@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WalletIcon, BuildingIcon, ClockIcon } from "@/components/ui/icons";
 import { getPlatformDashboardSummary } from "@/lib/platform-dashboard-data";
 import { ACTION_LABELS } from "./historique/action-labels";
 import type { PlatformDecisionAction } from "@/lib/audit-log-data";
@@ -63,8 +64,8 @@ export default async function PlatformDashboardPage() {
         {summary && (
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-orange/30 bg-gradient-to-r from-brand-orange/15 via-[#0e1a22] to-[#0e1a22] p-3.5 shadow-sm sm:p-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange/20 text-xl text-brand-orange shadow-inner">
-                💰
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange/20 text-brand-orange shadow-inner">
+                <WalletIcon className="h-6 w-6" />
               </span>
               <div className="min-w-0">
                 <p className="text-[10.5px] font-black uppercase tracking-wider text-white/60">
@@ -93,7 +94,7 @@ export default async function PlatformDashboardPage() {
           {/* 2. Indicateurs de performance clés (Parfaitement équilibrés sur mobile) */}
           <div className="mt-6 sm:mt-8">
             <p className="text-[11px] font-black uppercase tracking-wider text-white/60">
-              📊 Vue d&apos;ensemble plateforme
+              Vue d&apos;ensemble plateforme
             </p>
 
             <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
@@ -104,7 +105,7 @@ export default async function PlatformDashboardPage() {
               >
                 <div className="flex items-center gap-3 sm:justify-between">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
-                    🏢
+                    <BuildingIcon className="h-5 w-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
@@ -188,7 +189,7 @@ export default async function PlatformDashboardPage() {
                   <span className="rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-sky-300">
                     Expirations
                   </span>
-                  <span className="text-[11px] text-white/40">⏳</span>
+                  <ClockIcon className="h-3.5 w-3.5 text-white/40" />
                 </div>
                 <div>
                   <p className="my-1 text-2xl font-black text-white sm:text-3xl">{summary.expiringSoonSubscriptions}</p>
@@ -218,7 +219,7 @@ export default async function PlatformDashboardPage() {
           {/* 3. Barre des Raccourcis Rapides (Parfaitement alignée et tactile) */}
           <div className="mt-6 sm:mt-8">
             <p className="text-[11px] font-black uppercase tracking-wider text-white/60">
-              ⚡ Raccourcis d&apos;actions rapides
+              Raccourcis d&apos;actions rapides
             </p>
 
             <div className="mt-2.5 overflow-hidden rounded-3xl border border-white/10 bg-[#0e1a22] divide-y divide-white/5 sm:divide-y-0 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-3 sm:bg-transparent sm:border-0 sm:overflow-visible">

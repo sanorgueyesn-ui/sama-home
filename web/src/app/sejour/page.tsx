@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { KeyIcon, CalendarIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/card";
 import { RentalStatusBadge } from "@/app/locations/status-badge";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
@@ -130,17 +131,17 @@ export default async function SejourPage() {
     <div className="grid grid-cols-2 gap-3">
       <Link
         href="/locations/new"
-        className="flex flex-col items-center justify-center gap-0.5 rounded-2xl bg-brand-orange px-4 py-4 text-ink shadow-card transition active:scale-[0.98]"
+        className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-brand-orange px-4 py-4 text-ink shadow-card transition active:scale-[0.98] hover:brightness-105"
       >
-        <span className="text-xl">🔑</span>
+        <KeyIcon className="h-6 w-6" />
         <span className="text-sm font-extrabold">Louer</span>
         <span className="text-[11px] font-medium text-ink/70">Entrée client direct</span>
       </Link>
       <Link
         href="/reservations/new"
-        className="flex flex-col items-center justify-center gap-0.5 rounded-2xl border border-brand-orange/40 bg-navy text-white shadow-card transition active:scale-[0.98]"
+        className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-brand-orange/40 bg-navy text-white shadow-card transition active:scale-[0.98] hover:bg-navy/80"
       >
-        <span className="text-xl">📅</span>
+        <CalendarIcon className="h-6 w-6 text-brand-orange" />
         <span className="text-sm font-extrabold">Réserver</span>
         <span className="text-[11px] font-medium text-white/70">Planifier un séjour</span>
       </Link>
@@ -264,16 +265,17 @@ export default async function SejourPage() {
               <div className="flex shrink-0 gap-1.5">
                 <Link
                   href={`/locations/new?propertyId=${p.id}`}
-                  className="flex h-7 items-center rounded-lg bg-brand-orange px-2.5 text-[11px] font-bold text-ink"
+                  className="inline-flex h-7 items-center gap-1 rounded-lg bg-brand-orange px-2.5 text-[11px] font-bold text-ink hover:brightness-105"
                 >
-                  🔑 Louer
+                  <KeyIcon className="h-3 w-3" />
+                  <span>Louer</span>
                 </Link>
                 <Link
                   href={`/reservations/new?propertyId=${p.id}`}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-sunken text-[11px] text-fg"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-sunken text-fg hover:bg-surface-raised"
                   aria-label={`Réserver ${p.name}`}
                 >
-                  📅
+                  <CalendarIcon className="h-3.5 w-3.5 text-brand-orange" />
                 </Link>
               </div>
             </div>

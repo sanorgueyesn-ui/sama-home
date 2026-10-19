@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CalendarIcon, SparklesIcon, AlertCircleIcon } from "@/components/ui/icons";
 
 const MONTH_NAMES = [
   "Janvier",
@@ -318,7 +319,7 @@ export function LuxuryDatePicker({
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <div className="flex flex-1 items-center min-w-0 pl-3.5 pr-2">
-          <span className="text-base text-fg/60 select-none shrink-0 mr-2">📅</span>
+          <CalendarIcon className="h-4 w-4 text-fg/60 select-none shrink-0 mr-2" />
           <input
             type="text"
             disabled={disabled}
@@ -364,7 +365,10 @@ export function LuxuryDatePicker({
       {error ? (
         <p className="mt-1 text-xs font-medium text-danger">{error}</p>
       ) : isPast ? (
-        <p className="mt-1 text-xs font-medium text-danger">⚠️ Date antérieure à aujourd&apos;hui non autorisée</p>
+        <p className="mt-1 text-xs font-medium text-danger flex items-center gap-1.5">
+          <AlertCircleIcon className="h-3.5 w-3.5 shrink-0" />
+          <span>Date antérieure à aujourd&apos;hui non autorisée</span>
+        </p>
       ) : null}
 
       {/* Popover Calendrier Sombre Haute Définition */}
@@ -632,9 +636,10 @@ export function LuxuryTimePicker({
                   const nowStr = `${pad(nowHour)}:${pad(nowMinute)}`;
                   handleSelectQuick(nowStr);
                 }}
-                className="rounded-full bg-brand-orange/15 px-2.5 py-0.5 text-[11px] font-bold text-brand-orange hover:bg-brand-orange/25"
+                className="inline-flex items-center gap-1 rounded-full bg-brand-orange/15 px-2.5 py-0.5 text-[11px] font-bold text-brand-orange hover:bg-brand-orange/25"
               >
-                ⚡ Maintenant
+                <SparklesIcon className="h-3 w-3" />
+                <span>Maintenant</span>
               </button>
             ) : null}
           </div>

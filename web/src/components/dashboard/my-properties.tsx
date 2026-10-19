@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PropertyPhoto } from "@/app/logements/property-photo";
 import { StayCountdown } from "@/components/dashboard/stay-countdown";
 import type { PropertyStatus } from "@/lib/property-status";
+import { KeyIcon, CalendarIcon, BuildingIcon, BedIcon, TagIcon, UsersIcon } from "@/components/ui/icons";
 
 export type MyPropertyItem = {
   id: string;
@@ -92,7 +93,8 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
           href={`/logements/${property.id}/tariffs/new`}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/15 text-xs font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-95"
         >
-          <span>🏷️</span> Configurer un tarif
+          <TagIcon className="h-3.5 w-3.5" />
+          <span>Configurer un tarif</span>
         </Link>
       );
     }
@@ -103,13 +105,15 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
           href={`/locations/new?propertyId=${property.id}`}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-orange text-xs font-black text-ink shadow-sm transition-all hover:brightness-110 active:scale-95"
         >
-          <span>🔑</span> Louer
+          <KeyIcon className="h-3.5 w-3.5" />
+          <span>Louer</span>
         </Link>
         <Link
           href={`/reservations/new?propertyId=${property.id}`}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 text-xs font-bold text-fg backdrop-blur-sm transition-all hover:bg-white/10 active:scale-95"
         >
-          <span>📅</span> Réserver
+          <CalendarIcon className="h-3.5 w-3.5" />
+          <span>Réserver</span>
         </Link>
       </>
     );
@@ -129,13 +133,13 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
           href={payHref}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-xs font-black text-emerald-300 transition-all hover:bg-emerald-500/30 active:scale-95"
         >
-          <span>💳</span> Encaisser
+          <span>Encaisser</span>
         </Link>
         <Link
           href={targetHref}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs font-bold text-rose-200 transition-all hover:bg-rose-500/20 active:scale-95"
         >
-          <span>📋</span> Séjour
+          <span>Séjour</span>
         </Link>
       </div>
     );
@@ -147,7 +151,8 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
         href={`/logements/${property.id}`}
         className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-xs font-bold text-sky-200 transition-all hover:bg-sky-500/20 active:scale-95"
       >
-        <span>📅</span> Voir la réservation
+        <CalendarIcon className="h-3.5 w-3.5" />
+        <span>Voir la réservation</span>
       </Link>
     );
   }
@@ -183,8 +188,18 @@ function PropertyCard({ property }: { property: MyPropertyItem }) {
 
         {/* Top Badges */}
         <div className="pointer-events-none absolute inset-x-2.5 top-2.5 flex items-center justify-between">
-          <span className="flex items-center gap-1 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[10.5px] font-bold text-white/90 backdrop-blur-md shadow-sm">
-            {property.type === "ROOM" ? "🛏️ Chambre" : "🏢 Appartement"}
+          <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[10.5px] font-bold text-white/90 backdrop-blur-md shadow-sm">
+            {property.type === "ROOM" ? (
+              <>
+                <BedIcon className="h-3.5 w-3.5 text-brand-orange" />
+                <span>Chambre</span>
+              </>
+            ) : (
+              <>
+                <BuildingIcon className="h-3.5 w-3.5 text-brand-orange" />
+                <span>Appartement</span>
+              </>
+            )}
           </span>
           <StatusPill status={property.status} />
         </div>
@@ -201,8 +216,9 @@ function PropertyCard({ property }: { property: MyPropertyItem }) {
               <span className="text-[10px] font-medium text-white/60">Tarif à définir</span>
             </div>
           )}
-          <span className="rounded-lg border border-white/10 bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white/80 backdrop-blur-md">
-            👥 {property.capacity} pers.
+          <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white/80 backdrop-blur-md">
+            <UsersIcon className="h-3 w-3 text-white/70" />
+            <span>{property.capacity} pers.</span>
           </span>
         </div>
       </div>

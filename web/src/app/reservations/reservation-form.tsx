@@ -11,6 +11,15 @@ import {
   todayIso,
 } from "@/components/ui/luxury-datetime-picker";
 import type { ReservationFormState } from "@/lib/definitions";
+import {
+  CalendarIcon,
+  ClockIcon,
+  UsersIcon,
+  SparklesIcon,
+  TagIcon,
+  CheckCircleIcon,
+  AlertCircleIcon,
+} from "@/components/ui/icons";
 
 const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire"];
 
@@ -241,7 +250,7 @@ export function ReservationForm({
                 : "bg-surface border border-white/10 text-fg/70 hover:text-white hover:bg-white/5"
             }`}
           >
-            <span className="text-base">📅</span>
+            <CalendarIcon className="h-4 w-4" />
             <span>Par Jour</span>
           </button>
 
@@ -259,7 +268,7 @@ export function ReservationForm({
                 : "bg-surface border border-white/10 text-fg/70 hover:text-white hover:bg-white/5"
             }`}
           >
-            <span className="text-base">⏱️</span>
+            <ClockIcon className="h-4 w-4" />
             <span>Par Heure</span>
           </button>
         </div>
@@ -485,7 +494,10 @@ export function ReservationForm({
                   : "text-fg/70 hover:text-fg"
               }`}
             >
-              👥 Existant
+              <span className="inline-flex items-center gap-1.5">
+                <UsersIcon className="h-3.5 w-3.5" />
+                <span>Existant</span>
+              </span>
             </button>
             <button
               type="button"
@@ -496,7 +508,10 @@ export function ReservationForm({
                   : "text-fg/70 hover:text-fg"
               }`}
             >
-              ⚡ Nouveau
+              <span className="inline-flex items-center gap-1.5">
+                <SparklesIcon className="h-3.5 w-3.5" />
+                <span>Nouveau</span>
+              </span>
             </button>
           </div>
         </div>
@@ -584,7 +599,7 @@ export function ReservationForm({
         {showIdentitySection ? (
           <div className="mt-4 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-4">
             <div className="flex items-center gap-2 text-brand-orange">
-              <span className="text-base">📋</span>
+              <TagIcon className="h-4 w-4 shrink-0" />
               <p className="text-xs font-black uppercase tracking-wider">
                 Séjour de {numberOfDays} jours — Pièce d&apos;identité obligatoire pour le contrat
               </p>
@@ -622,14 +637,14 @@ export function ReservationForm({
           </div>
         ) : clientAlreadyHasIdentity ? (
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
-            <span>✓</span>
+            <CheckCircleIcon className="h-4 w-4 shrink-0 text-emerald-400" />
             <span>
               Pièce d&apos;identité enregistrée : <strong>{selectedClient?.idDocumentType} n° {selectedClient?.idDocumentNumber}</strong> (pré-remplie sur le contrat).
             </span>
           </div>
         ) : (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-sunken p-2.5 text-xs text-fg/60">
-            <span>⏱️</span>
+            <ClockIcon className="h-3.5 w-3.5 shrink-0 text-fg/50" />
             <span>Réservation courte durée : aucune pièce d&apos;identité ni contrat exigé.</span>
           </div>
         )}
@@ -637,15 +652,16 @@ export function ReservationForm({
 
       {/* Message d'erreur serveur éventuel */}
       {state?.message && (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs font-bold text-rose-300">
-          ⚠️ {state.message}
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-rose-400" />
+          <span>{state.message}</span>
         </div>
       )}
 
       {/* Aide visuelle / Alerte si des informations manquent */}
       {(!canSubmit && (missingAttempted || !pending)) && getMissingReason() ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
-          <span>👉</span>
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-amber-400" />
           <span>{getMissingReason()}</span>
         </div>
       ) : null}
@@ -675,8 +691,8 @@ export function ReservationForm({
           {pending
             ? "Enregistrement en cours..."
             : isContractStay
-              ? "📄 ENREGISTRER LA RÉSERVATION & CONTRAT"
-              : `📅 ${submitLabel}`}
+              ? "ENREGISTRER LA RÉSERVATION & CONTRAT"
+              : submitLabel}
         </button>
       </div>
     </form>

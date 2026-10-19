@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
+import { UserIcon, PhoneIcon, ChatIcon, KeyIcon, ClockIcon } from "@/components/ui/icons";
 
 export type StayCountdownProps = {
   arrivalAt: string | number | Date;
@@ -205,7 +206,12 @@ export function StayCountdown({
             </span>
             <div className="min-w-0">
               <p className="truncate text-xs font-extrabold text-fg">{propertyName ?? "Chambre"}</p>
-              {clientName ? <p className="truncate text-[11px] text-fg/60">👤 {clientName}</p> : null}
+              {clientName ? (
+                <p className="truncate text-[11px] text-fg/60 flex items-center gap-1">
+                  <UserIcon className="h-3 w-3 text-fg/50 shrink-0" />
+                  <span>{clientName}</span>
+                </p>
+              ) : null}
             </div>
           </div>
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold border ${statusTheme.badgeBg}`}>
@@ -268,25 +274,28 @@ export function StayCountdown({
 
         {clientName ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-white/10 bg-surface-sunken px-3 py-1 text-xs font-bold text-fg">
-              👤 {clientName}
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-sunken px-3 py-1 text-xs font-bold text-fg">
+              <UserIcon className="h-3.5 w-3.5 text-brand-orange" />
+              <span>{clientName}</span>
             </span>
             {clientPhone ? (
               <div className="flex items-center gap-1.5">
                 <a
                   href={`tel:${clientPhone}`}
-                  className="rounded-full border border-brand-orange/30 bg-brand-orange/10 px-2.5 py-1 text-xs font-bold text-brand-orange hover:bg-brand-orange/20"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10 px-2.5 py-1 text-xs font-bold text-brand-orange hover:bg-brand-orange/20"
                 >
-                  📞 {clientPhone}
+                  <PhoneIcon className="h-3 w-3" />
+                  <span>{clientPhone}</span>
                 </a>
                 <a
                   href={`https://wa.me/${clientPhone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-emerald-500/40 bg-[#25D366]/15 px-2.5 py-1 text-xs font-bold text-[#25D366] hover:bg-[#25D366]/25 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-[#25D366]/15 px-2.5 py-1 text-xs font-bold text-[#25D366] hover:bg-[#25D366]/25 transition-colors"
                   title="Contacter sur WhatsApp"
                 >
-                  💬 WhatsApp
+                  <ChatIcon className="h-3 w-3" />
+                  <span>WhatsApp</span>
                 </a>
               </div>
             ) : null}
@@ -342,15 +351,17 @@ export function StayCountdown({
         <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-border/10 pt-4">
           <Link
             href={`/locations/${rentalId}`}
-            className="flex h-10 items-center gap-1.5 rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink shadow-sm hover:brightness-110"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink shadow-sm hover:brightness-110"
           >
-            🔑 Gérer la sortie (Check-out)
+            <KeyIcon className="h-3.5 w-3.5" />
+            <span>Gérer la sortie (Check-out)</span>
           </Link>
           <Link
             href={`/locations/${rentalId}/extend`}
-            className="flex h-10 items-center gap-1.5 rounded-xl border border-border/15 bg-surface-sunken px-4 text-xs font-bold text-fg hover:bg-surface-raised"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-border/15 bg-surface-sunken px-4 text-xs font-bold text-fg hover:bg-surface-raised"
           >
-            ⏳ Prolonger le séjour
+            <ClockIcon className="h-3.5 w-3.5 text-brand-orange" />
+            <span>Prolonger le séjour</span>
           </Link>
         </div>
       ) : null}

@@ -6,6 +6,7 @@ import {
   ESTABLISHMENT_ACTION_PERMISSIONS,
   parseUserPermissions,
 } from "@/lib/permissions";
+import { CrownIcon, ShieldIcon, KeyIcon, CashIcon } from "@/components/ui/icons";
 
 export function EstablishmentPermissionsSelector({
   defaultPermissions,
@@ -90,7 +91,10 @@ export function EstablishmentPermissionsSelector({
             className="accent-brand-orange h-4 w-4"
           />
           <div>
-            <span className="text-xs font-extrabold text-fg">👑 Pleins Pouvoirs (Patron / Administrateur)</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-fg">
+              <CrownIcon className="h-4 w-4 text-emerald-400" />
+              <span>Pleins Pouvoirs (Patron / Administrateur)</span>
+            </span>
             <p className="text-[11px] text-fg/50">Accès illimité à tous les modules, modification des tarifs et suppression.</p>
           </div>
         </label>
@@ -105,7 +109,10 @@ export function EstablishmentPermissionsSelector({
             className="accent-brand-orange h-4 w-4"
           />
           <div>
-            <span className="text-xs font-extrabold text-fg">🎯 Accès Limité &amp; Personnalisé (Caisse, Réception, Assistant)</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-fg">
+              <KeyIcon className="h-4 w-4 text-amber-400" />
+              <span>Accès Limité &amp; Personnalisé (Caisse, Réception, Assistant)</span>
+            </span>
             <p className="text-[11px] text-fg/50">Seules les pages et actions cochées ci-dessous seront accessibles.</p>
           </div>
         </label>
@@ -119,16 +126,18 @@ export function EstablishmentPermissionsSelector({
             <button
               type="button"
               onClick={() => applyPreset("RECEPTION")}
-              className="rounded-lg bg-surface border border-border/15 px-2.5 py-1 text-[11px] font-bold text-fg hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-surface border border-border/15 px-2.5 py-1 text-[11px] font-bold text-fg hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
             >
-              🛎️ Réceptionniste (Tarifs bloqués)
+              <ShieldIcon className="h-3 w-3" />
+              <span>Réceptionniste (Tarifs bloqués)</span>
             </button>
             <button
               type="button"
               onClick={() => applyPreset("CASHIER")}
-              className="rounded-lg bg-surface border border-border/15 px-2.5 py-1 text-[11px] font-bold text-fg hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-surface border border-border/15 px-2.5 py-1 text-[11px] font-bold text-fg hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
             >
-              💵 Caissier / Caisse
+              <CashIcon className="h-3 w-3" />
+              <span>Caissier / Caisse</span>
             </button>
           </div>
 

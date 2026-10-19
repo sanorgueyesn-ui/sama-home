@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Field, TextAreaField } from "@/components/ui/field";
 import { updateSettings } from "@/app/actions/settings";
+import { ChatIcon } from "@/components/ui/icons";
 
 export function SettingsForm({
   defaultValues,
@@ -150,7 +151,7 @@ export function SettingsForm({
       {/* Section Contrats & WhatsApp */}
       <div className="mt-2 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/10">
-          <span className="text-lg">💬</span>
+          <ChatIcon className="h-5 w-5 text-emerald-400" />
           <h2 className="text-sm font-black uppercase tracking-wider text-fg">
             Contrats de Location &amp; Partage WhatsApp
           </h2>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { DoorIcon, KeyIcon, CalendarIcon, TagIcon, EditIcon } from "@/components/ui/icons";
 import { StatusBadge } from "@/app/logements/status-badge";
 import { PropertyPhoto } from "@/app/logements/property-photo";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
@@ -240,7 +241,8 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
               href={`/locations/${activeRental.id}`}
               className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-500/20 via-surface-raised to-navy px-4 text-sm font-extrabold text-rose-200 shadow-sm transition-all hover:bg-rose-500/30"
             >
-              <span>🚪</span> Gérer la sortie (Check-out) &amp; Décompte
+              <DoorIcon className="h-4 w-4" />
+              <span>Gérer la sortie (Check-out) &amp; Décompte</span>
             </Link>
           ) : null}
           {property.active && tariffs.some((t) => t.active) && status !== "OCCUPIED" ? (
@@ -249,13 +251,15 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                 href={`/locations/new?propertyId=${property.id}`}
                 className="flex h-13 items-center justify-center gap-2 rounded-2xl bg-brand-orange text-sm font-black text-ink shadow-md transition-all hover:brightness-110 active:scale-98"
               >
-                <span>🔑</span> Louer maintenant (Check-in)
+                <KeyIcon className="h-4 w-4" />
+                <span>Louer maintenant (Check-in)</span>
               </Link>
               <Link
                 href={`/reservations/new?propertyId=${property.id}`}
                 className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-border/15 bg-surface-raised text-sm font-extrabold text-fg shadow-sm transition-all hover:bg-surface-sunken active:scale-98"
               >
-                <span>📅</span> Enregistrer une réservation
+                <CalendarIcon className="h-4 w-4 text-brand-orange" />
+                <span>Enregistrer une réservation</span>
               </Link>
             </>
           ) : null}
@@ -264,14 +268,16 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
               href={`/logements/${property.id}/tariffs/new`}
               className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 text-sm font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-98"
             >
-              <span>🏷️</span> Configurer un tarif pour louer cette chambre
+              <TagIcon className="h-4 w-4" />
+              <span>Configurer un tarif pour louer cette chambre</span>
             </Link>
           ) : null}
           <Link
             href={`/logements/${property.id}/edit`}
-            className="flex h-14 items-center justify-center rounded-2xl border border-border/15 bg-surface-raised text-sm font-extrabold text-fg hover:bg-surface-sunken transition-all"
+            className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-border/15 bg-surface-raised text-sm font-extrabold text-fg hover:bg-surface-sunken transition-all"
           >
-            ✏️ Modifier ce logement
+            <EditIcon className="h-4 w-4 text-fg/60" />
+            <span>Modifier ce logement</span>
           </Link>
           <ToggleActiveButton id={property.id} active={property.active} />
           {canDeleteProperty ? (

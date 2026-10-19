@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/dal";
 import { listUsers } from "@/lib/users-data";
 import { parseUserPermissions } from "@/lib/permissions";
+import { CrownIcon, ShieldIcon, KeyIcon } from "@/components/ui/icons";
 import { DeleteEstablishmentUserButton } from "./delete-user-button";
 
 const ROLE_LABELS: Record<string, string> = { ADMIN: "Administrateur", GESTIONNAIRE: "Gestionnaire" };
@@ -70,21 +71,24 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                     const perms = parseUserPermissions(u.permissions);
                     if (u.role === "ADMIN" && (perms.length === 0 || perms.includes("ESTABLISHMENT_ALL"))) {
                       return (
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                          👑 Pleins pouvoirs (Patron)
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                          <CrownIcon className="h-3 w-3" />
+                          <span>Pleins pouvoirs (Patron)</span>
                         </span>
                       );
                     }
                     if (perms.length === 0) {
                       return (
-                        <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-bold text-blue-400">
-                          🛎️ Gestionnaire standard
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+                          <ShieldIcon className="h-3 w-3" />
+                          <span>Gestionnaire standard</span>
                         </span>
                       );
                     }
                     return (
-                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-                        🎯 Accès personnalisé ({perms.length} droit{perms.length > 1 ? "s" : ""})
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                        <KeyIcon className="h-3 w-3" />
+                        <span>Accès personnalisé ({perms.length} droit{perms.length > 1 ? "s" : ""})</span>
                       </span>
                     );
                   })()}

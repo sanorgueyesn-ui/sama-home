@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 import { hasEstablishmentPermission } from "@/lib/permissions";
+import { MachineConnectedBadge } from "@/components/ui/icons";
 
 type NavItem = {
   href?: string;
@@ -484,6 +485,8 @@ export function AppShell({
 
         {/* Right Actions: Quick button + Logout */}
         <div className="flex items-center gap-3">
+          <MachineConnectedBadge className="hidden xl:inline-flex" />
+
           <Link
             href="/locations/new"
             className="flex h-9 items-center gap-1.5 rounded-xl bg-brand-orange px-3.5 text-xs font-black text-ink shadow-sm hover:brightness-110 transition-all"
@@ -606,6 +609,10 @@ export function AppShell({
               <span className="text-sm font-black tracking-tight text-fg">
                 <span className="text-brand-orange">SAMA</span> HOME
               </span>
+            </div>
+
+            <div className="flex justify-center mb-4">
+              <MachineConnectedBadge />
             </div>
 
             <nav className="flex flex-col gap-4">

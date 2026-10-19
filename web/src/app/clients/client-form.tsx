@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { ClientFormState } from "@/lib/definitions";
+import { AlertCircleIcon } from "@/components/ui/icons";
 
 const ID_DOCUMENT_SUGGESTIONS = [
   "CNI",
@@ -152,8 +153,9 @@ export function ClientForm({
       </div>
 
       {state?.message && (
-        <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300">
-          ⚠️ {state.message}
+        <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-1.5">
+          <AlertCircleIcon className="h-3.5 w-3.5 shrink-0" />
+          <span>{state.message}</span>
         </p>
       )}
 

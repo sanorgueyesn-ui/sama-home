@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toggleTariffActive, deleteTariff } from "@/app/actions/tariffs";
+import { EditIcon } from "@/components/ui/icons";
 
 export function TariffRowActions({
   id,
@@ -44,9 +45,9 @@ export function TariffRowActions({
         {/* Bouton Modifier clairement visible */}
         <Link
           href={`/logements/${propertyId}/tariffs/${id}/edit`}
-          className="flex h-8 items-center gap-1 rounded-lg border border-brand-orange/40 bg-brand-orange/15 px-2.5 text-xs font-bold text-brand-orange hover:bg-brand-orange/25 active:scale-95 transition-all"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand-orange/40 bg-brand-orange/15 px-2.5 text-xs font-bold text-brand-orange hover:bg-brand-orange/25 active:scale-95 transition-all"
         >
-          <span>✏️</span>
+          <EditIcon className="h-3 w-3" />
           <span>Modifier</span>
         </Link>
 

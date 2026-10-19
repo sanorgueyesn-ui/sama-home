@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteEstablishmentUser } from "@/app/actions/users";
+import { AlertCircleIcon } from "@/components/ui/icons";
 
 export function DeleteEstablishmentUserButton({
   userId,
@@ -73,7 +74,7 @@ export function DeleteEstablishmentUserButton({
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger/20 text-danger font-bold">
-                  ⚠️
+                  <AlertCircleIcon className="h-5 w-5" />
                 </span>
                 <div>
                   <h3 className="text-base font-extrabold text-white">Supprimer ce compte</h3>
