@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PropertyForm } from "@/app/logements/property-form";
 import { getPropertyById } from "@/lib/properties-data";
 import { updateProperty } from "@/app/actions/properties";
+import { DeletePropertyButton } from "../delete-property-button";
 
 export default async function EditPropertyPage(props: PageProps<"/logements/[id]/edit">) {
   const { id } = await props.params;
@@ -28,7 +29,7 @@ export default async function EditPropertyPage(props: PageProps<"/logements/[id]
         <h1 className="truncate text-xl font-extrabold text-fg">Modifier {property.name}</h1>
       </div>
 
-      <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
+      <div className="lg:mx-auto lg:w-full lg:max-w-2xl space-y-6">
         <PropertyForm
           action={action}
           submitLabel="ENREGISTRER LES MODIFICATIONS"
@@ -42,6 +43,17 @@ export default async function EditPropertyPage(props: PageProps<"/logements/[id]
             active: property.active,
           }}
         />
+
+        {/* Zone de suppression */}
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 sm:p-5">
+          <div className="mb-3">
+            <h2 className="text-sm font-black text-rose-400 uppercase tracking-wide">Supprimer ce logement</h2>
+            <p className="mt-1 text-xs text-fg/60">
+              Supprime définitivement ce logement ainsi que ses tarifs et historiques associés.
+            </p>
+          </div>
+          <DeletePropertyButton id={property.id} name={property.name} />
+        </div>
       </div>
     </div>
   );

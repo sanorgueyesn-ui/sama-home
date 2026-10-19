@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toggleTariffActive, deleteTariff } from "@/app/actions/tariffs";
 
-export function TariffRowActions({ id, active }: { id: string; active: boolean }) {
+export function TariffRowActions({
+  id,
+  propertyId,
+  active,
+  label,
+}: {
+  id: string;
+  propertyId: string;
+  active: boolean;
+  label?: string;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +27,10 @@ export function TariffRowActions({ id, active }: { id: string; active: boolean }
   }
 
   function handleDelete() {
-    if (!confirm("Supprimer définitivement ce tarif ? Cette action est irréversible.")) return;
+    const confirmed = window.confirm(
+      `Êtes-vous sûr de vouloir supprimer définitivement ce tarif${label ? ` « ${label} »` : ""} ?\n\nCette action est irréversible.`
+    );
+    if (!confirmed) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteTariff(id);
@@ -26,30 +40,45 @@ export function TariffRowActions({ id, active }: { id: string; active: boolean }
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="flex gap-1.5">
+      <div className="flex items-center gap-1.5">
+        {/* Bouton Modifier clairement visible */}
+        <Link
+          href={`/logements/${propertyId}/tariffs/${id}/edit`}
+          className="flex h-8 items-center gap-1 rounded-lg border border-brand-orange/40 bg-brand-orange/15 px-2.5 text-xs font-bold text-brand-orange hover:bg-brand-orange/25 active:scale-95 transition-all"
+        >
+          <span>✏️</span>
+          <span>Modifier</span>
+        </Link>
+
+        {/* Bouton Activer / Désactiver */}
         <button
           type="button"
           disabled={pending}
           onClick={handleToggle}
-          className={`h-8 rounded-lg px-2.5 text-[11px] font-bold disabled:opacity-60 ${
-            active ? "bg-surface-sunken text-fg/70" : "bg-success-bg text-success"
+          className={`h-8 rounded-lg px-2.5 text-xs font-bold disabled:opacity-60 transition-all ${
+            active
+              ? "bg-surface-sunken border border-white/10 text-fg/70 hover:bg-white/5"
+              : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
           }`}
         >
           {active ? "Désactiver" : "Activer"}
         </button>
+
+        {/* Bouton Supprimer */}
         <button
           type="button"
           disabled={pending}
           onClick={handleDelete}
-          aria-label="Supprimer"
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger-bg text-danger disabled:opacity-60"
+          aria-label="Supprimer ce tarif"
+          title="Supprimer ce tarif"
+          className="flex h-8 items-center justify-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2 text-xs font-bold text-rose-400 hover:bg-rose-500/20 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 6l12 12M18 6 6 18" />
-          </svg>
+          <span>🗑️</span>
+          <span className="hidden sm:inline">Supprimer</span>
         </button>
       </div>
-      {error ? <p className="max-w-40 text-right text-[10.5px] font-medium text-danger">{error}</p> : null}
+
+      {error ? <p className="max-w-64 text-right text-[11px] font-semibold text-rose-300">{error}</p> : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { StatusBadge } from "@/app/logements/status-badge";
 import { PropertyPhoto } from "@/app/logements/property-photo";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { ToggleActiveButton } from "./toggle-active-button";
+import { DeletePropertyButton } from "./delete-property-button";
 import { TariffRowActions } from "./tariffs/tariff-row-actions";
 import { getPropertyById } from "@/lib/properties-data";
 import { listTariffsForProperty } from "@/lib/tariffs-data";
@@ -152,13 +153,13 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
               {tariffs.map((tariff) => (
                 <div
                   key={tariff.id}
-                  className="flex items-center justify-between gap-3 border-b border-border/10 py-3 last:border-0"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-border/10 py-3.5 last:border-0"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/logements/${property.id}/tariffs/${tariff.id}/edit`}
-                        className="truncate text-sm font-bold text-fg underline-offset-2 hover:underline"
+                        className="truncate text-sm font-black text-white hover:text-brand-orange transition-colors"
                       >
                         {tariff.label}
                       </Link>
@@ -168,9 +169,14 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-0.5 text-xs font-semibold text-fg/60">{formatFcfa(tariff.amount)}</p>
+                    <p className="mt-0.5 text-xs font-black text-brand-orange font-mono">{formatFcfa(tariff.amount)}</p>
                   </div>
-                  <TariffRowActions id={tariff.id} active={tariff.active} />
+                  <TariffRowActions
+                    id={tariff.id}
+                    propertyId={property.id}
+                    active={tariff.active}
+                    label={tariff.label}
+                  />
                 </div>
               ))}
             </Card>
@@ -245,11 +251,12 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           ) : null}
           <Link
             href={`/logements/${property.id}/edit`}
-            className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg"
+            className="flex h-14 items-center justify-center rounded-2xl border border-border/15 bg-surface-raised text-sm font-extrabold text-fg hover:bg-surface-sunken transition-all"
           >
-            Modifier
+            ✏️ Modifier ce logement
           </Link>
           <ToggleActiveButton id={property.id} active={property.active} />
+          <DeletePropertyButton id={property.id} name={property.name} />
         </div>
       </div>
     </div>

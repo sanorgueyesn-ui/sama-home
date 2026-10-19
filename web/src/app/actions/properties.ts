@@ -340,3 +340,111 @@ export async function toggleActive(id: string, nextActive: boolean): Promise<{ e
   revalidatePath(`/logements/${id}`);
   return {};
 }
+
+export async function deleteProperty(id: string): Promise<{ error?: string }> {
+  const access = await requireActiveEstablishment();
+  if (!access.ok) {
+    switch (access.reason) {
+      case "NO_ESTABLISHMENT":
+        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement." };
+      case "INACTIVE":
+        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+      case "NO_SUBSCRIPTION":
+        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+      case "EXPIRED":
+        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+    }
+  }
+  const { user } = access;
+  if (!user.establishmentId) {
+    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement." };
+  }
+
+  const property = await prisma.property.findFirst({
+    where: { id, establishmentId: user.establishmentId },
+    include: {
+      rentals: { select: { id: true, status: true } },
+      reservations: { select: { id: true, status: true } },
+    },
+  });
+
+  if (!property) {
+    return { error: "Logement introuvable." };
+  }
+
+  // Empêcher la suppression si un séjour est actuellement en cours
+  const hasActiveRental = property.rentals.some((r) => r.status === "ACTIVE");
+  if (hasActiveRental) {
+    return {
+      error:
+        "Impossible de supprimer ce logement car un client y séjourne actuellement. Veuillez d'abord effectuer la sortie (check-out).",
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const rentalIds = property.rentals.map((r) => r.id);
+      const reservationIds = property.reservations.map((r) => r.id);
+
+      // 1. Supprimer les paiements associés aux locations et réservations de ce logement
+      if (rentalIds.length > 0 || reservationIds.length > 0) {
+        await tx.payment.deleteMany({
+          where: {
+            OR: [
+              ...(rentalIds.length > 0 ? [{ rentalId: { in: rentalIds } }] : []),
+              ...(reservationIds.length > 0 ? [{ reservationId: { in: reservationIds } }] : []),
+            ],
+          },
+        });
+      }
+
+      // 2. Supprimer les extensions de location
+      if (rentalIds.length > 0) {
+        await tx.rentalExtension.deleteMany({
+          where: { rentalId: { in: rentalIds } },
+        });
+      }
+
+      // 3. Supprimer les locations
+      if (rentalIds.length > 0) {
+        await tx.rental.deleteMany({
+          where: { id: { in: rentalIds } },
+        });
+      }
+
+      // 4. Supprimer les réservations
+      if (reservationIds.length > 0) {
+        await tx.reservation.deleteMany({
+          where: { id: { in: reservationIds } },
+        });
+      }
+
+      // 5. Supprimer les tarifs associés à ce logement
+      await tx.tariff.deleteMany({
+        where: { propertyId: id },
+      });
+
+      // 6. Supprimer le logement lui-même
+      await tx.property.deleteMany({
+        where: { id, establishmentId: user.establishmentId },
+      });
+    });
+
+    // Nettoyer la photo du logement sur S3/Object Storage si elle existait
+    if (property.photo) {
+      try {
+        await deleteImageObject(getS3Client(), getBucketName(), property.photo);
+      } catch (err) {
+        console.error("deleteProperty() — échec du nettoyage de la photo S3 :", err);
+      }
+    }
+  } catch (error) {
+    console.error(`deleteProperty(${id}) — échec inattendu de la suppression du logement :`, error);
+    return { error: "Une erreur est survenue pendant la suppression. Veuillez réessayer." };
+  }
+
+  revalidatePath("/logements");
+  revalidatePath("/");
+  return {};
+}
+

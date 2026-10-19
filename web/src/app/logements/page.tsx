@@ -8,7 +8,7 @@ import { listProperties } from "@/lib/properties-data";
 import { getPropertyStatuses } from "@/lib/property-status";
 
 export default async function PropertiesPage(props: PageProps<"/logements">) {
-  const { q, type } = await props.searchParams;
+  const { q, type, deleted } = await props.searchParams;
   const query = typeof q === "string" ? q : undefined;
   const typeFilter = type === "ROOM" || type === "APARTMENT" ? type : undefined;
 
@@ -27,6 +27,13 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
           + Ajouter
         </Link>
       </div>
+
+      {deleted ? (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-400">
+          <span>✓</span>
+          <span>Logement et ses données associées supprimés avec succès.</span>
+        </div>
+      ) : null}
 
       <PropertyFilters defaultQuery={query ?? ""} defaultType={typeFilter ?? ""} />
 
