@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 import { PropertySchema, type PropertyFormState } from "@/lib/definitions";
 import { readImageUploadFromFormData } from "@/lib/image-upload";
 import { uploadImageObject, deleteImageObject } from "@/lib/object-storage";
@@ -358,6 +359,10 @@ export async function deleteProperty(id: string): Promise<{ error?: string }> {
   const { user } = access;
   if (!user.establishmentId) {
     return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement." };
+  }
+
+  if (!hasEstablishmentPermission(user, "CAN_DELETE_PROPERTY")) {
+    return { error: "Action refusée : votre compte n'a pas l'autorisation de supprimer les logements." };
   }
 
   const property = await prisma.property.findFirst({

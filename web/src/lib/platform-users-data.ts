@@ -19,16 +19,10 @@ export type PlatformUserView = {
   email: string | null;
   isPlatformAdmin: boolean;
   role: UserRole | null;
+  permissions: string | null;
   establishmentName: string | null;
   establishmentStatus: EstablishmentStatus | null;
   createdAt: Date;
-  /**
-   * Indicateur de session, jamais une date de dernière connexion certaine
-   * (voir le commentaire de listPlatformUsers() ci-dessous) : `createdAt` de
-   * la session la plus récente de ce compte, ou `null` si aucune session
-   * n'existe (jamais connecté, ou toutes ses sessions ont expiré/été
-   * révoquées).
-   */
   mostRecentSessionCreatedAt: Date | null;
 };
 
@@ -114,6 +108,7 @@ export async function listPlatformUsers(options?: {
         email: true,
         isPlatformAdmin: true,
         role: true,
+        permissions: true,
         createdAt: true,
         establishment: { select: { name: true, status: true } },
       },
@@ -144,6 +139,7 @@ export async function listPlatformUsers(options?: {
       email: user.email,
       isPlatformAdmin: user.isPlatformAdmin,
       role: user.role,
+      permissions: user.permissions,
       establishmentName: user.establishment?.name ?? null,
       establishmentStatus: user.establishment?.status ?? null,
       createdAt: user.createdAt,

@@ -3,6 +3,9 @@ import { ROLE_LABELS, ESTABLISHMENT_STATUS_LABELS } from "./filter-labels";
 import { PlatformUserFilterBar } from "./filter-bar";
 import { UserLifecycleButtons } from "./user-lifecycle-buttons";
 import { NewPlatformAdminModal } from "./new-platform-admin-modal";
+import { EditPlatformUserPermissionsModal } from "./edit-platform-user-permissions-modal";
+import { parseUserPermissions } from "@/lib/permissions";
+import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
@@ -24,16 +27,33 @@ function UserRow({ user }: { user: PlatformUserView }) {
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-extrabold text-white">{user.name}</p>
           {user.isPlatformAdmin ? (
-            <span className="rounded-full bg-brand-orange/20 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
-              Compte de plateforme
-            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full bg-brand-orange/20 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
+                Compte Plateforme
+              </span>
+              {(() => {
+                const perms = parseUserPermissions(user.permissions);
+                if (perms.length === 0 || perms.includes("PLATFORM_ALL") || perms.includes("ALL")) {
+                  return (
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                      👑 Pleins pouvoirs
+                    </span>
+                  );
+                }
+                return (
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                    🎯 Accès limité ({perms.length} module{perms.length > 1 ? "s" : ""})
+                  </span>
+                );
+              })()}
+            </div>
           ) : user.role ? (
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/60">
               {ROLE_LABELS[user.role]}
             </span>
           ) : null}
         </div>
-        <p className="mt-0.5 text-[11px] font-medium text-white/50">Identifiant : {user.username}</p>
+        <p className="mt-0.5 text-[11px] font-medium text-white/50">Identifiant : @{user.username}</p>
         {user.email ? <p className="mt-0.5 text-[11px] font-medium text-white/50">{user.email}</p> : null}
 
         {user.isPlatformAdmin ? null : user.establishmentName ? (
@@ -60,7 +80,15 @@ function UserRow({ user }: { user: PlatformUserView }) {
         </div>
       </div>
 
-      <div className="shrink-0 pt-2 sm:pt-0">
+      <div className="shrink-0 flex items-center gap-2 pt-2 sm:pt-0">
+        {user.isPlatformAdmin ? (
+          <EditPlatformUserPermissionsModal
+            userId={user.id}
+            userName={user.name}
+            userLogin={user.username}
+            currentPermissions={user.permissions}
+          />
+        ) : null}
         <UserLifecycleButtons
           userId={user.id}
           userName={user.name}
@@ -73,6 +101,7 @@ function UserRow({ user }: { user: PlatformUserView }) {
 }
 
 export default async function PlatformUsersPage(props: PageProps<"/plateforme/utilisateurs">) {
+  await requirePlatformPermission("PLATFORM_USERS");
   const { role, status, platform, q } = await props.searchParams;
   const roleParam = typeof role === "string" ? role : "ALL";
   const statusParam = typeof status === "string" ? status : "ALL";

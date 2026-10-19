@@ -116,6 +116,9 @@ model User {
   /// plan de bootstrap (hors périmètre de cette Phase 1).
   isPlatformAdmin Boolean @default(false)
 
+  /// Permissions granulaires sous forme JSON (ex: modules plateforme ou d'établissement autorisés)
+  permissions String?
+
   /// Nullable : NULL pour un compte de plateforme (aucun établissement),
   /// renseigné pour tout compte d'établissement. `onDelete: Restrict` —
   /// cohérent avec la convention déjà en place sur chaque relation de ce

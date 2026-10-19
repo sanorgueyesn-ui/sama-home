@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getPlatformSettings, getPricingSettings } from "@/lib/platform-settings-data";
-import { getCurrentUser } from "@/lib/dal";
+import { getCurrentUser, requirePlatformPermission } from "@/lib/dal";
 import { AutoApprovalToggle } from "../auto-approval-toggle";
 import { PricingSettingsForm } from "../pricing-settings-form";
 import { AdminPasswordForm } from "./admin-password-form";
@@ -12,6 +12,7 @@ function fmtFcfa(amount: number) {
 }
 
 export default async function PlatformSettingsPage() {
+  await requirePlatformPermission("PLATFORM_SETTINGS");
   let autoApproveEstablishments = false;
   let pricing: { trialDurationMonths: number; periodMonths: number; periodPriceFcfa: number } | null = null;
   let loadError: string | null = null;

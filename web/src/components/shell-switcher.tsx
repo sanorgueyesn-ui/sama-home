@@ -22,15 +22,29 @@ export function ShellSwitcher({
   children,
   showChrome,
   isPlatformAdmin,
+  userPermissions,
+  userRole,
 }: {
   children: ReactNode;
   showChrome: boolean;
   isPlatformAdmin: boolean;
+  userPermissions?: string | null;
+  userRole?: string | null;
 }) {
   const pathname = usePathname();
   const isPlatformConsole = pathname === "/plateforme" || pathname.startsWith("/plateforme/");
 
-  if (isPlatformConsole) return <PlatformShell>{children}</PlatformShell>;
-  if (showChrome) return <AppShell isPlatformAdmin={isPlatformAdmin}>{children}</AppShell>;
+  if (isPlatformConsole) return <PlatformShell userPermissions={userPermissions}>{children}</PlatformShell>;
+  if (showChrome) {
+    return (
+      <AppShell
+        isPlatformAdmin={isPlatformAdmin}
+        userPermissions={userPermissions}
+        userRole={userRole}
+      >
+        {children}
+      </AppShell>
+    );
+  }
   return <>{children}</>;
 }

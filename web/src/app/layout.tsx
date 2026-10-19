@@ -84,7 +84,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             commentaire pour la raison (le calcul ne peut pas rester ici,
             ce layout racine n'étant pas ré-exécuté lors d'une navigation
             côté client entre les routes métier et /plateforme). */}
-        <ShellSwitcher showChrome={showChrome} isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}>
+        <ShellSwitcher
+          showChrome={showChrome}
+          isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}
+          userPermissions={currentUser?.permissions ?? null}
+          userRole={currentUser?.role ?? null}
+        >
           {children}
         </ShellSwitcher>
       </body>

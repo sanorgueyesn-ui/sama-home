@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Field } from "@/components/ui/field";
 import { updateUser } from "@/app/actions/users";
+import { EstablishmentPermissionsSelector } from "../../establishment-permissions-selector";
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
   { value: "GESTIONNAIRE", label: "Gestionnaire" },
@@ -13,10 +14,12 @@ export function EditUserForm({
   userId,
   defaultName,
   defaultRole,
+  defaultPermissions,
 }: {
   userId: string;
   defaultName: string;
   defaultRole: string;
+  defaultPermissions?: string | null;
 }) {
   const action = updateUser.bind(null, userId);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -49,6 +52,8 @@ export function EditUserForm({
           </p>
         ))}
       </div>
+
+      <EstablishmentPermissionsSelector role={role} defaultPermissions={defaultPermissions} />
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">

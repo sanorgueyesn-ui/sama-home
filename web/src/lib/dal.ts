@@ -71,12 +71,22 @@ export const getVerifiedSessionOrNull = cache(async () => {
  * autorisations différentes, voir le commentaire sur `model User` dans
  * schema.prisma) — ni fusionné ni déduit l'un de l'autre.
  */
+import { hasPlatformPermission, getFirstAuthorizedPlatformUrl, type PlatformPermissionId } from "@/lib/permissions";
+
 export const getCurrentUser = cache(async () => {
   const { userId } = await verifySession();
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, username: true, name: true, role: true, establishmentId: true, isPlatformAdmin: true },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      role: true,
+      establishmentId: true,
+      isPlatformAdmin: true,
+      permissions: true,
+    },
   });
 
   if (!user) {
@@ -123,6 +133,20 @@ export const requirePlatformAdmin = cache(async () => {
 });
 
 /**
+ * Contrôle d'accès granulaire pour les collaborateurs de plateforme
+ * (assistants, caisse, modérateurs). Redirige vers leur premier module
+ * autorisé s'ils n'ont pas la permission requise.
+ */
+export const requirePlatformPermission = cache(async (permission: PlatformPermissionId) => {
+  const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, permission)) {
+    const fallback = getFirstAuthorizedPlatformUrl(user.permissions);
+    redirect(fallback);
+  }
+  return user;
+});
+
+/**
  * Phase 3F / Lot D12-B — variante non redirigeante de getCurrentUser(), même
  * principe que getVerifiedSessionOrNull() ci-dessus par rapport à
  * verifySession() : réservée à src/app/layout.tsx (ou tout autre
@@ -151,7 +175,15 @@ export const getCurrentUserOrNull = cache(async () => {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, username: true, name: true, role: true, establishmentId: true, isPlatformAdmin: true },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      role: true,
+      establishmentId: true,
+      isPlatformAdmin: true,
+      permissions: true,
+    },
   });
 
   return user;

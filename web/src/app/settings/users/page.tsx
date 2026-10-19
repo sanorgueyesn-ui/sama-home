@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/dal";
 import { listUsers } from "@/lib/users-data";
+import { parseUserPermissions } from "@/lib/permissions";
 
 const ROLE_LABELS: Record<string, string> = { ADMIN: "Administrateur", GESTIONNAIRE: "Gestionnaire" };
 
@@ -63,6 +64,30 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                 <p className="mt-0.5 text-xs font-semibold text-fg/60">
                   @{u.username} · {u.role ? ROLE_LABELS[u.role] ?? u.role : "Sans rôle"}
                 </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                  {(() => {
+                    const perms = parseUserPermissions(u.permissions);
+                    if (u.role === "ADMIN" && (perms.length === 0 || perms.includes("ESTABLISHMENT_ALL"))) {
+                      return (
+                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                          👑 Pleins pouvoirs (Patron)
+                        </span>
+                      );
+                    }
+                    if (perms.length === 0) {
+                      return (
+                        <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+                          🛎️ Gestionnaire standard
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                        🎯 Accès personnalisé ({perms.length} droit{perms.length > 1 ? "s" : ""})
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
               <span className="text-[11px] font-medium text-fg/40">Depuis {fmtDate(u.createdAt)}</span>
             </div>

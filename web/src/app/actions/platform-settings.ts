@@ -194,6 +194,7 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
   const email = formData.get("email")?.toString()?.trim().toLowerCase();
   const password = formData.get("password")?.toString()?.trim();
   const confirmPassword = formData.get("confirmPassword")?.toString()?.trim();
+  const permissionsMode = formData.get("permissionsMode")?.toString(); // "ALL" ou "CUSTOM"
 
   if (!name || name.length < 2) {
     return { error: "Veuillez renseigner un nom complet valide (2 caractères min)." };
@@ -217,6 +218,15 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
     return { error: `Un compte existe déjà avec cet identifiant ou cet email (${username}).` };
   }
 
+  let permissionsJson: string | null = null;
+  if (permissionsMode === "CUSTOM") {
+    const selected = formData.getAll("permissions").map(String).filter(Boolean);
+    if (selected.length === 0) {
+      return { error: "Veuillez cocher au moins un module d'accès pour ce compte." };
+    }
+    permissionsJson = JSON.stringify(selected);
+  }
+
   try {
     const passwordHash = await hashPassword(password);
     await prisma.$transaction(async (tx) => {
@@ -228,6 +238,7 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
           passwordHash,
           isPlatformAdmin: true,
           role: "ADMIN",
+          permissions: permissionsJson,
         },
       });
 
@@ -237,7 +248,7 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
           action: "PLATFORM_ADMIN_CREATED",
           entityType: "User",
           entityId: newUser.id,
-          reason: `Création du compte administrateur plateforme ${username} par ${admin.name}`,
+          reason: `Création du compte administrateur plateforme ${username} par ${admin.name} (accès : ${permissionsJson ?? "Pleins pouvoirs"})`,
           establishmentId: null,
         },
       });
@@ -248,6 +259,60 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
   } catch (error) {
     console.error("createPlatformAdminUser() error:", error);
     return { error: "Une erreur est survenue lors de la création du compte administrateur." };
+  }
+}
+
+export async function updatePlatformUserPermissions(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+  const admin = await requirePlatformAdmin();
+  const userId = formData.get("userId")?.toString()?.trim();
+  const permissionsMode = formData.get("permissionsMode")?.toString(); // "ALL" ou "CUSTOM"
+
+  if (!userId) {
+    return { error: "Identifiant utilisateur manquant." };
+  }
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, username: true, isPlatformAdmin: true, permissions: true },
+  });
+
+  if (!targetUser || !targetUser.isPlatformAdmin) {
+    return { error: "Cet utilisateur n'est pas un compte de plateforme." };
+  }
+
+  let newPermissions: string | null = null;
+  if (permissionsMode === "CUSTOM") {
+    const selected = formData.getAll("permissions").map(String).filter(Boolean);
+    if (selected.length === 0) {
+      return { error: "Veuillez cocher au moins un module d'accès." };
+    }
+    newPermissions = JSON.stringify(selected);
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { permissions: newPermissions },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: admin.id,
+          action: "PLATFORM_PERMISSIONS_UPDATED",
+          entityType: "User",
+          entityId: userId,
+          reason: `Mise à jour des permissions de ${targetUser.username} par ${admin.name} (nouvel accès : ${newPermissions ?? "Pleins pouvoirs"})`,
+          establishmentId: null,
+        },
+      });
+    });
+
+    revalidatePath("/plateforme/utilisateurs");
+    return { success: true };
+  } catch (error) {
+    console.error("updatePlatformUserPermissions() error:", error);
+    return { error: "Une erreur est survenue lors de la mise à jour des accès." };
   }
 }
 

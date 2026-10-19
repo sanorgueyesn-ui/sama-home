@@ -1,6 +1,7 @@
 import { listPlatformDecisions, type PlatformDecisionView, type PlatformDecisionAction } from "@/lib/audit-log-data";
 import { ACTION_LABELS } from "./action-labels";
 import { HistoryFilterBar } from "./filter-bar";
+import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtDateTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -79,6 +80,7 @@ function DecisionRow({ decision }: { decision: PlatformDecisionView }) {
 }
 
 export default async function PlatformHistoryPage(props: PageProps<"/plateforme/historique">) {
+  await requirePlatformPermission("PLATFORM_AUDIT");
   const { action, q } = await props.searchParams;
   const actionParam = typeof action === "string" ? action : "ALL";
   const query = typeof q === "string" ? q : "";

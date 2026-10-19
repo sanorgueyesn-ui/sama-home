@@ -1,14 +1,22 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { TariffForm } from "@/app/logements/[id]/tariffs/tariff-form";
 import { getPropertyById } from "@/lib/properties-data";
 import { createTariff } from "@/app/actions/tariffs";
+import { getCurrentUser } from "@/lib/dal";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 
 export default async function NewTariffPage(props: PageProps<"/logements/[id]/tariffs/new">) {
   const { id } = await props.params;
-  const property = await getPropertyById(id);
+  const [currentUser, property] = await Promise.all([
+    getCurrentUser(),
+    getPropertyById(id),
+  ]);
   if (!property) {
     notFound();
+  }
+  if (!hasEstablishmentPermission(currentUser, "CAN_EDIT_TARIFFS")) {
+    redirect(`/logements/${property.id}`);
   }
 
   const action = createTariff.bind(null, property.id);

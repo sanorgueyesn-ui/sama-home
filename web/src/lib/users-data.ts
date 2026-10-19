@@ -20,7 +20,7 @@ export async function listUsers() {
   }
   return prisma.user.findMany({
     where: { establishmentId: admin.establishmentId },
-    select: { id: true, username: true, name: true, role: true, createdAt: true },
+    select: { id: true, username: true, name: true, role: true, permissions: true, createdAt: true },
     orderBy: { createdAt: "asc" },
   });
 }
@@ -30,7 +30,7 @@ export async function getUserById(id: string) {
   const admin = await requireAdmin();
   if (!admin.establishmentId) return null;
   return prisma.user.findFirst({
-    select: { id: true, username: true, name: true, role: true, createdAt: true },
+    select: { id: true, username: true, name: true, role: true, permissions: true, createdAt: true },
     where: { id, establishmentId: admin.establishmentId },
   });
 }

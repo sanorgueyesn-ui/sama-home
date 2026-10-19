@@ -13,6 +13,8 @@ import { getPropertyStatus } from "@/lib/property-status";
 import { getActiveRentalForProperty } from "@/lib/rentals-data";
 import { listReservations } from "@/lib/reservations-data";
 import { StayCountdown } from "@/components/dashboard/stay-countdown";
+import { getCurrentUser } from "@/lib/dal";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 
 function formatFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/ |,/g, " ")} FCFA`;
@@ -39,6 +41,10 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
   if (!property) {
     notFound();
   }
+
+  const currentUser = await getCurrentUser();
+  const canEditTariffs = hasEstablishmentPermission(currentUser, "CAN_EDIT_TARIFFS");
+  const canDeleteProperty = hasEstablishmentPermission(currentUser, "CAN_DELETE_PROPERTY");
 
   const status = await getPropertyStatus(property);
   const tariffs = await listTariffsForProperty(property.id);
@@ -136,16 +142,20 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         <div className="lg:[grid-area:tariffs]">
           <div className="mt-5 flex items-center justify-between">
             <p className="text-xs font-bold tracking-wide text-fg/50">TARIFS</p>
-            <Link href={`/logements/${property.id}/tariffs/new`} className="text-xs font-bold text-coral">
-              + Ajouter un tarif
-            </Link>
+            {canEditTariffs ? (
+              <Link href={`/logements/${property.id}/tariffs/new`} className="text-xs font-bold text-coral">
+                + Ajouter un tarif
+              </Link>
+            ) : null}
           </div>
 
           {tariffs.length === 0 ? (
             <Card className="mt-2 px-4 py-6 text-center">
               <p className="text-sm font-semibold text-fg">Aucun tarif pour ce logement</p>
               <p className="mt-1 text-xs text-fg/60">
-                Ajoutez au moins un tarif pour pouvoir proposer ce logement.
+                {canEditTariffs
+                  ? "Ajoutez au moins un tarif pour pouvoir proposer ce logement."
+                  : "Aucun tarif n'a encore été configuré pour ce logement."}
               </p>
             </Card>
           ) : (
@@ -157,12 +167,18 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <Link
-                        href={`/logements/${property.id}/tariffs/${tariff.id}/edit`}
-                        className="truncate text-sm font-black text-white hover:text-brand-orange transition-colors"
-                      >
-                        {tariff.label}
-                      </Link>
+                      {canEditTariffs ? (
+                        <Link
+                          href={`/logements/${property.id}/tariffs/${tariff.id}/edit`}
+                          className="truncate text-sm font-black text-white hover:text-brand-orange transition-colors"
+                        >
+                          {tariff.label}
+                        </Link>
+                      ) : (
+                        <span className="truncate text-sm font-black text-white">
+                          {tariff.label}
+                        </span>
+                      )}
                       {!tariff.active ? (
                         <span className="shrink-0 rounded-full bg-neutral-bg px-2 py-0.5 text-[10px] font-bold text-neutral">
                           Inactif
@@ -171,12 +187,14 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                     </div>
                     <p className="mt-0.5 text-xs font-black text-brand-orange font-mono">{formatFcfa(tariff.amount)}</p>
                   </div>
-                  <TariffRowActions
-                    id={tariff.id}
-                    propertyId={property.id}
-                    active={tariff.active}
-                    label={tariff.label}
-                  />
+                  {canEditTariffs ? (
+                    <TariffRowActions
+                      id={tariff.id}
+                      propertyId={property.id}
+                      active={tariff.active}
+                      label={tariff.label}
+                    />
+                  ) : null}
                 </div>
               ))}
             </Card>
@@ -241,7 +259,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
               </Link>
             </>
           ) : null}
-          {property.active && !tariffs.some((t) => t.active) && status !== "OCCUPIED" ? (
+          {property.active && !tariffs.some((t) => t.active) && status !== "OCCUPIED" && canEditTariffs ? (
             <Link
               href={`/logements/${property.id}/tariffs/new`}
               className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 text-sm font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-98"
@@ -256,7 +274,9 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
             ✏️ Modifier ce logement
           </Link>
           <ToggleActiveButton id={property.id} active={property.active} />
-          <DeletePropertyButton id={property.id} name={property.name} />
+          {canDeleteProperty ? (
+            <DeletePropertyButton id={property.id} name={property.name} />
+          ) : null}
         </div>
       </div>
     </div>

@@ -1,18 +1,28 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { TariffForm } from "@/app/logements/[id]/tariffs/tariff-form";
 import { getPropertyById } from "@/lib/properties-data";
 import { getTariffById } from "@/lib/tariffs-data";
 import { updateTariff } from "@/app/actions/tariffs";
+import { getCurrentUser } from "@/lib/dal";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 
 export default async function EditTariffPage(
   props: PageProps<"/logements/[id]/tariffs/[tariffId]/edit">,
 ) {
   const { id, tariffId } = await props.params;
-  const [property, tariff] = await Promise.all([getPropertyById(id), getTariffById(tariffId)]);
+  const [currentUser, property, tariff] = await Promise.all([
+    getCurrentUser(),
+    getPropertyById(id),
+    getTariffById(tariffId),
+  ]);
 
   if (!property || !tariff || tariff.propertyId !== property.id) {
     notFound();
+  }
+
+  if (!hasEstablishmentPermission(currentUser, "CAN_EDIT_TARIFFS")) {
+    redirect(`/logements/${property.id}`);
   }
 
   const action = updateTariff.bind(null, tariff.id);

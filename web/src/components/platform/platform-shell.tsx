@@ -5,29 +5,41 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
+import { hasPlatformPermission, type PlatformPermissionId } from "@/lib/permissions";
 
 type PlatformNavItem = {
   href?: string;
   label: string;
   disabled?: boolean;
+  permission: PlatformPermissionId;
 };
 
 const PLATFORM_NAV_ITEMS: PlatformNavItem[] = [
-  { href: "/plateforme", label: "Tableau de bord" },
-  { href: "/plateforme/etablissements", label: "Établissements" },
-  { href: "/plateforme/abonnements", label: "Abonnements et paiements" },
-  { href: "/plateforme/utilisateurs", label: "Utilisateurs" },
-  { href: "/plateforme/parametres", label: "Paramètres" },
-  { href: "/plateforme/historique", label: "Historique des décisions" },
+  { href: "/plateforme", label: "Tableau de bord", permission: "PLATFORM_DASHBOARD" },
+  { href: "/plateforme/etablissements", label: "Établissements", permission: "PLATFORM_ESTABLISHMENTS" },
+  { href: "/plateforme/abonnements", label: "Abonnements et paiements", permission: "PLATFORM_SUBSCRIPTIONS" },
+  { href: "/plateforme/utilisateurs", label: "Utilisateurs", permission: "PLATFORM_USERS" },
+  { href: "/plateforme/parametres", label: "Paramètres", permission: "PLATFORM_SETTINGS" },
+  { href: "/plateforme/historique", label: "Historique des décisions", permission: "PLATFORM_AUDIT" },
 ];
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/plateforme" && pathname.startsWith(`${href}/`));
 }
 
-export function PlatformShell({ children }: { children: ReactNode }) {
+export function PlatformShell({
+  children,
+  userPermissions,
+}: {
+  children: ReactNode;
+  userPermissions?: string | null;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const visibleItems = PLATFORM_NAV_ITEMS.filter((item) =>
+    hasPlatformPermission({ isPlatformAdmin: true, permissions: userPermissions }, item.permission)
+  );
 
   return (
     <div className="flex min-h-dvh w-full max-w-full overflow-x-hidden flex-col bg-[#0b141a] text-white">
@@ -65,7 +77,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
 
           {/* Navigation centrale flottante (Desktop >= lg) */}
           <nav className="hidden items-center gap-1 rounded-2xl border border-white/10 bg-white/5 p-1 lg:flex">
-            {PLATFORM_NAV_ITEMS.map((item) => {
+            {visibleItems.map((item) => {
               if (item.disabled || !item.href) {
                 return (
                   <span
@@ -141,7 +153,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
         {menuOpen ? (
           <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-white/10 bg-[#0e1a22] px-4 py-3 shadow-2xl lg:hidden">
             <nav className="flex flex-col gap-1.5">
-              {PLATFORM_NAV_ITEMS.map((item) => {
+              {visibleItems.map((item) => {
                 if (item.disabled || !item.href) {
                   return (
                     <span

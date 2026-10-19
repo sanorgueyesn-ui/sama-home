@@ -77,9 +77,23 @@ export async function createUser(
   }
 
   const passwordHash = await hashPassword(password);
+  const permissionsMode = formData.get("permissionsMode")?.toString();
+  let permissionsJson: string | null = null;
+  if (permissionsMode === "CUSTOM") {
+    const selected = formData.getAll("permissions").map(String).filter(Boolean);
+    permissionsJson = JSON.stringify(selected);
+  }
+
   try {
     await prisma.user.create({
-      data: { username, name, passwordHash, role, establishmentId: admin.establishmentId },
+      data: {
+        username,
+        name,
+        passwordHash,
+        role,
+        permissions: permissionsJson,
+        establishmentId: admin.establishmentId,
+      },
     });
   } catch (error) {
     console.error("createUser() — échec inattendu de la création de l'utilisateur :", error);
@@ -163,15 +177,19 @@ export async function updateUser(
             throw new UserActionError(LAST_ADMIN_MESSAGE);
           }
         }
-        // Phase 3D / Lot D2 — `updateMany` (pas `update`) : seule méthode
-        // Prisma acceptant un filtre supplémentaire (`establishmentId`) au-
-        // delà de la clé unique dans son `where`. `count !== 1` couvre à la
-        // fois l'id disparu entre la lecture et l'écriture ET, en défense en
-        // profondeur, un établissement qui ne correspondrait plus — jamais
-        // modifier le compte cible si son établissement ne correspond pas.
+        const permissionsMode = formData.get("permissionsMode")?.toString();
+        let permissionsJson: string | null = null;
+        if (permissionsMode === "CUSTOM") {
+          const selected = formData.getAll("permissions").map(String).filter(Boolean);
+          permissionsJson = JSON.stringify(selected);
+        }
+
         const result = await tx.user.updateMany({
           where: { id, establishmentId: admin.establishmentId },
-          data: parsed.data,
+          data: {
+            ...parsed.data,
+            permissions: permissionsJson,
+          },
         });
         if (result.count !== 1) {
           throw new UserActionError("Utilisateur introuvable.");

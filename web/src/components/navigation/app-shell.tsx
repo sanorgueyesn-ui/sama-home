@@ -5,12 +5,14 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 
 type NavItem = {
   href?: string;
   label: string;
   icon: (active: boolean) => ReactNode;
   disabled?: boolean;
+  permission?: string;
 };
 
 function iconProps(active: boolean) {
@@ -149,26 +151,26 @@ function PlatformIcon({ active }: { active: boolean }) {
 
 const PRIMARY_ITEMS: NavItem[] = [
   { href: "/", label: "Accueil", icon: (a) => <HomeIcon active={a} /> },
-  { href: "/sejour", label: "Séjour", icon: (a) => <KeyIcon active={a} /> },
-  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
+  { href: "/sejour", label: "Séjour", icon: (a) => <KeyIcon active={a} />, permission: "MODULE_SEJOUR" },
+  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} />, permission: "MODULE_DEPENSES" },
 ];
 
 const GROUP_RENTAL: NavItem[] = [
-  { href: "/logements", label: "Logements", icon: (a) => <BuildingIcon active={a} /> },
-  { href: "/reservations", label: "Réservations", icon: (a) => <CalendarIcon active={a} /> },
-  { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} /> },
-  { href: "/clients", label: "Locataires", icon: (a) => <PeopleIcon active={a} /> },
+  { href: "/logements", label: "Logements", icon: (a) => <BuildingIcon active={a} />, permission: "MODULE_LOGEMENTS" },
+  { href: "/reservations", label: "Réservations", icon: (a) => <CalendarIcon active={a} />, permission: "MODULE_RESERVATIONS" },
+  { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} />, permission: "MODULE_LOCATIONS" },
+  { href: "/clients", label: "Locataires", icon: (a) => <PeopleIcon active={a} />, permission: "MODULE_CLIENTS" },
 ];
 
 const GROUP_FINANCES: NavItem[] = [
-  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} /> },
-  { href: "/caisse", label: "Caisse", icon: (a) => <CashIcon active={a} /> },
+  { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} />, permission: "MODULE_DEPENSES" },
+  { href: "/caisse", label: "Caisse", icon: (a) => <CashIcon active={a} />, permission: "MODULE_CAISSE" },
   { label: "Finances", icon: (a) => <FinanceIcon active={a} />, disabled: true },
 ];
 
 const GROUP_ADMIN: NavItem[] = [
-  { href: "/settings", label: "Paramètres", icon: (a) => <GearIcon active={a} /> },
-  { href: "/settings/users", label: "Utilisateurs", icon: (a) => <UserIcon active={a} /> },
+  { href: "/settings", label: "Paramètres", icon: (a) => <GearIcon active={a} />, permission: "MODULE_SETTINGS" },
+  { href: "/settings/users", label: "Utilisateurs", icon: (a) => <UserIcon active={a} />, permission: "CAN_MANAGE_USERS" },
   { label: "Sécurité", icon: (a) => <SecurityIcon active={a} />, disabled: true },
 ];
 
@@ -325,22 +327,35 @@ function TopNavDropdown({
 export function AppShell({
   children,
   isPlatformAdmin = false,
+  userPermissions,
+  userRole,
 }: {
   children: ReactNode;
   isPlatformAdmin?: boolean;
+  userPermissions?: string | null;
+  userRole?: string | null;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Groupes enrichis
-  const adminGroup = isPlatformAdmin ? [...GROUP_ADMIN, PLATFORM_NAV_ITEM] : GROUP_ADMIN;
+  const userPermContext = { role: userRole, isPlatformAdmin, permissions: userPermissions };
+  const filterByPerm = (items: NavItem[]) =>
+    items.filter((item) => !item.permission || hasEstablishmentPermission(userPermContext, item.permission));
+
+  const visiblePrimary = filterByPerm(PRIMARY_ITEMS);
+  const visibleRental = filterByPerm(GROUP_RENTAL);
+  const visibleFinances = filterByPerm(GROUP_FINANCES);
+  const baseAdmin = isPlatformAdmin ? [...GROUP_ADMIN, PLATFORM_NAV_ITEM] : GROUP_ADMIN;
+  const visibleAdmin = filterByPerm(baseAdmin);
+
+  const isSejourAllowed = hasEstablishmentPermission(userPermContext, "MODULE_SEJOUR");
 
   // Détection d'état actif pour les sous-menus
-  const isRentalActive = GROUP_RENTAL.some((i) => i.href && isActive(pathname, i.href));
-  const isFinancesActive = GROUP_FINANCES.some((i) => i.href && isActive(pathname, i.href));
-  const isAdminActive = adminGroup.some((i) => i.href && isActive(pathname, i.href));
+  const isRentalActive = visibleRental.some((i) => i.href && isActive(pathname, i.href));
+  const isFinancesActive = visibleFinances.some((i) => i.href && isActive(pathname, i.href));
+  const isAdminActive = visibleAdmin.some((i) => i.href && isActive(pathname, i.href));
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -421,41 +436,49 @@ export function AppShell({
               Accueil
             </Link>
 
-            <Link
-              href="/sejour"
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                isActive(pathname, "/sejour")
-                  ? "bg-navy text-white shadow-sm"
-                  : "text-fg/80 hover:bg-surface-sunken hover:text-white"
-              }`}
-            >
-              <KeyIcon active={isActive(pathname, "/sejour")} />
-              Séjour
-            </Link>
+            {isSejourAllowed && (
+              <Link
+                href="/sejour"
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                  isActive(pathname, "/sejour")
+                    ? "bg-navy text-white shadow-sm"
+                    : "text-fg/80 hover:bg-surface-sunken hover:text-white"
+                }`}
+              >
+                <KeyIcon active={isActive(pathname, "/sejour")} />
+                Séjour
+              </Link>
+            )}
 
             {/* Dropdown 1: Gestion Locative */}
-            <TopNavDropdown
-              label="Gestion Locative"
-              icon={<BuildingIcon active={isRentalActive} />}
-              active={isRentalActive}
-              items={GROUP_RENTAL}
-            />
+            {visibleRental.length > 0 && (
+              <TopNavDropdown
+                label="Gestion Locative"
+                icon={<BuildingIcon active={isRentalActive} />}
+                active={isRentalActive}
+                items={visibleRental}
+              />
+            )}
 
             {/* Dropdown 2: Finances & Caisse */}
-            <TopNavDropdown
-              label="Finances"
-              icon={<CashIcon active={isFinancesActive} />}
-              active={isFinancesActive}
-              items={GROUP_FINANCES}
-            />
+            {visibleFinances.length > 0 && (
+              <TopNavDropdown
+                label="Finances"
+                icon={<CashIcon active={isFinancesActive} />}
+                active={isFinancesActive}
+                items={visibleFinances}
+              />
+            )}
 
             {/* Dropdown 3: Administration */}
-            <TopNavDropdown
-              label="Administration"
-              icon={<GearIcon active={isAdminActive} />}
-              active={isAdminActive}
-              items={adminGroup}
-            />
+            {visibleAdmin.length > 0 && (
+              <TopNavDropdown
+                label="Administration"
+                icon={<GearIcon active={isAdminActive} />}
+                active={isAdminActive}
+                items={visibleAdmin}
+              />
+            )}
           </nav>
         </div>
 
@@ -527,12 +550,12 @@ export function AppShell({
         {children}
       </div>
 
-      {/* Barre flottante mobile — 3 items principaux */}
+      {/* Barre flottante mobile — items principaux visibles */}
       <nav
         inert={menuOpen}
         className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex h-16 items-stretch gap-1 rounded-[28px] border border-border/10 bg-surface-raised px-2 shadow-card lg:hidden"
       >
-        {PRIMARY_ITEMS.map((item) => {
+        {visiblePrimary.map((item) => {
           const active = isActive(pathname, item.href!);
           return (
             <Link
@@ -587,55 +610,61 @@ export function AppShell({
 
             <nav className="flex flex-col gap-4">
               {/* Groupe Gestion */}
-              <div>
-                <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
-                  Gestion Locative
-                </p>
-                <div className="flex flex-col gap-1">
-                  {GROUP_RENTAL.map((item) => (
-                    <NavRow
-                      key={item.label}
-                      item={item}
-                      active={!item.disabled && isActive(pathname, item.href!)}
-                      onNavigate={() => setMenuOpen(false)}
-                    />
-                  ))}
+              {visibleRental.length > 0 && (
+                <div>
+                  <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
+                    Gestion Locative
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {visibleRental.map((item) => (
+                      <NavRow
+                        key={item.label}
+                        item={item}
+                        active={!item.disabled && isActive(pathname, item.href!)}
+                        onNavigate={() => setMenuOpen(false)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Groupe Finances */}
-              <div>
-                <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
-                  Finances &amp; Caisse
-                </p>
-                <div className="flex flex-col gap-1">
-                  {GROUP_FINANCES.map((item) => (
-                    <NavRow
-                      key={item.label}
-                      item={item}
-                      active={!item.disabled && isActive(pathname, item.href!)}
-                      onNavigate={() => setMenuOpen(false)}
-                    />
-                  ))}
+              {visibleFinances.length > 0 && (
+                <div>
+                  <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
+                    Finances &amp; Caisse
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {visibleFinances.map((item) => (
+                      <NavRow
+                        key={item.label}
+                        item={item}
+                        active={!item.disabled && isActive(pathname, item.href!)}
+                        onNavigate={() => setMenuOpen(false)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Groupe Administration */}
-              <div>
-                <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
-                  Administration
-                </p>
-                <div className="flex flex-col gap-1">
-                  {adminGroup.map((item) => (
-                    <NavRow
-                      key={item.label}
-                      item={item}
-                      active={!item.disabled && isActive(pathname, item.href!)}
-                      onNavigate={() => setMenuOpen(false)}
-                    />
-                  ))}
+              {visibleAdmin.length > 0 && (
+                <div>
+                  <p className="px-2 text-[10px] font-black uppercase tracking-wider text-fg/40 mb-1">
+                    Administration
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {visibleAdmin.map((item) => (
+                      <NavRow
+                        key={item.label}
+                        item={item}
+                        active={!item.disabled && isActive(pathname, item.href!)}
+                        onNavigate={() => setMenuOpen(false)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <form action={logout} className="pt-2 border-t border-white/10">
                 <button

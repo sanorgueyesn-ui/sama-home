@@ -30,7 +30,12 @@ export default async function EditUserPage(props: PageProps<"/settings/users/[id
 
       <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
         {user.role ? (
-          <EditUserForm userId={user.id} defaultName={user.name} defaultRole={user.role} />
+          <EditUserForm
+            userId={user.id}
+            defaultName={user.name}
+            defaultRole={user.role}
+            defaultPermissions={user.permissions}
+          />
         ) : (
           <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
             Ce compte n&apos;a pas de rôle d&apos;établissement — la modification du rôle n&apos;est pas disponible

@@ -4,14 +4,20 @@ import { PropertyForm } from "@/app/logements/property-form";
 import { getPropertyById } from "@/lib/properties-data";
 import { updateProperty } from "@/app/actions/properties";
 import { DeletePropertyButton } from "../delete-property-button";
+import { getCurrentUser } from "@/lib/dal";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 
 export default async function EditPropertyPage(props: PageProps<"/logements/[id]/edit">) {
   const { id } = await props.params;
-  const property = await getPropertyById(id);
+  const [currentUser, property] = await Promise.all([
+    getCurrentUser(),
+    getPropertyById(id),
+  ]);
   if (!property) {
     notFound();
   }
 
+  const canDeleteProperty = hasEstablishmentPermission(currentUser, "CAN_DELETE_PROPERTY");
   const action = updateProperty.bind(null, property.id);
 
   return (
@@ -45,15 +51,17 @@ export default async function EditPropertyPage(props: PageProps<"/logements/[id]
         />
 
         {/* Zone de suppression */}
-        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 sm:p-5">
-          <div className="mb-3">
-            <h2 className="text-sm font-black text-rose-400 uppercase tracking-wide">Supprimer ce logement</h2>
-            <p className="mt-1 text-xs text-fg/60">
-              Supprime définitivement ce logement ainsi que ses tarifs et historiques associés.
-            </p>
+        {canDeleteProperty ? (
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 sm:p-5">
+            <div className="mb-3">
+              <h2 className="text-sm font-black text-rose-400 uppercase tracking-wide">Supprimer ce logement</h2>
+              <p className="mt-1 text-xs text-fg/60">
+                Supprime définitivement ce logement ainsi que ses tarifs et historiques associés.
+              </p>
+            </div>
+            <DeletePropertyButton id={property.id} name={property.name} />
           </div>
-          <DeletePropertyButton id={property.id} name={property.name} />
-        </div>
+        ) : null}
       </div>
     </div>
   );

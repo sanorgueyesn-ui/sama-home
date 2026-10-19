@@ -6,6 +6,7 @@ import {
 } from "@/lib/subscription-data";
 import { ConfirmPaymentButton } from "../confirm-payment-button";
 import { SubscriptionsTable } from "./subscriptions-table";
+import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -42,6 +43,7 @@ function PaymentRequestCard({ payment }: { payment: PendingSubscriptionPaymentVi
 }
 
 export default async function PlatformSubscriptionPaymentsPage() {
+  await requirePlatformPermission("PLATFORM_SUBSCRIPTIONS");
   let overview: PlatformSubscriptionsOverview | null = null;
   let loadError: string | null = null;
 

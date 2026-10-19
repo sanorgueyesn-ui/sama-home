@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 import {
   TariffSchema,
   type TariffFormState,
@@ -90,6 +91,10 @@ export async function createTariff(
   }
   const { user } = access;
 
+  if (!hasEstablishmentPermission(user, "CAN_EDIT_TARIFFS")) {
+    return { message: "Action refusée : votre compte n'a pas l'autorisation de créer des tarifs." };
+  }
+
   // Phase 3D / Lot D8 — le logement cible doit appartenir au même
   // établissement avant d'y rattacher un nouveau tarif ; un logement d'un
   // autre établissement est désormais indistinguable d'un id inexistant.
@@ -172,6 +177,10 @@ export async function updateTariff(
     }
   }
   const { user } = access;
+
+  if (!hasEstablishmentPermission(user, "CAN_EDIT_TARIFFS")) {
+    return { message: "Action refusée : votre compte n'a pas l'autorisation de modifier les tarifs." };
+  }
 
   // Un tarif d'un autre établissement est indistinguable d'un id inexistant.
   const existing = await prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } });
@@ -334,6 +343,10 @@ export async function deleteTariff(id: string): Promise<{ error?: string }> {
     }
   }
   const { user } = access;
+
+  if (!hasEstablishmentPermission(user, "CAN_EDIT_TARIFFS")) {
+    return { error: "Action refusée : votre compte n'a pas l'autorisation de supprimer les tarifs." };
+  }
 
   // Phase 14 audit (Bloc 7): same fix as toggleTariffActive above.
   // Phase 3D / Lot D3 — un tarif d'un autre établissement suit désormais ce

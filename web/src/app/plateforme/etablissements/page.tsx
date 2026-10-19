@@ -2,6 +2,7 @@ import { listEstablishments, type EstablishmentListView, type EstablishmentStatu
 import { EstablishmentDecisionButtons } from "../establishment-decision-buttons";
 import { EstablishmentLifecycleButtons } from "./establishment-lifecycle-buttons";
 import { EstablishmentFilterBar } from "./filter-bar";
+import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
@@ -73,6 +74,7 @@ function EstablishmentRow({ establishment, now }: { establishment: Establishment
 }
 
 export default async function PlatformEstablishmentsPage(props: PageProps<"/plateforme/etablissements">) {
+  await requirePlatformPermission("PLATFORM_ESTABLISHMENTS");
   const { status, q } = await props.searchParams;
   const statusParam = typeof status === "string" ? status : "ALL";
   const query = typeof q === "string" ? q : "";

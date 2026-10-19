@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Field } from "@/components/ui/field";
 import { createUser } from "@/app/actions/users";
+import { EstablishmentPermissionsSelector } from "../establishment-permissions-selector";
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
   { value: "GESTIONNAIRE", label: "Gestionnaire" },
@@ -50,6 +51,8 @@ export function CreateUserForm() {
           </p>
         ))}
       </div>
+
+      <EstablishmentPermissionsSelector role={role} />
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">

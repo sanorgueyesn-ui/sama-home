@@ -3,6 +3,7 @@ import { getPlatformDashboardSummary } from "@/lib/platform-dashboard-data";
 import { ACTION_LABELS } from "./historique/action-labels";
 import type { PlatformDecisionAction } from "@/lib/audit-log-data";
 import { COMPANY_LEGAL_INFO } from "@/lib/company-info";
+import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -17,6 +18,7 @@ function fmtTime(d: Date) {
 }
 
 export default async function PlatformDashboardPage() {
+  await requirePlatformPermission("PLATFORM_DASHBOARD");
   let summary = null;
   let loadError: string | null = null;
 

@@ -7,6 +7,7 @@ import { createSession, deleteSession } from "@/lib/session";
 import { LoginSchema, type LoginFormState } from "@/lib/definitions";
 import { checkRateLimit, resetRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
+import { getFirstAuthorizedPlatformUrl } from "@/lib/permissions";
 
 const GENERIC_ERROR = "Identifiant ou mot de passe incorrect.";
 
@@ -79,7 +80,11 @@ export async function login(
 
   resetRateLimit(rateLimitKey);
   await createSession(user.id, remember);
-  redirect(user.isPlatformAdmin ? "/plateforme" : "/");
+  if (user.isPlatformAdmin) {
+    const target = getFirstAuthorizedPlatformUrl(user.permissions);
+    redirect(target);
+  }
+  redirect("/");
 }
 
 export async function setPasswordWithGoogleToken(
@@ -119,7 +124,11 @@ export async function setPasswordWithGoogleToken(
   });
 
   await createSession(user.id, true);
-  redirect(user.isPlatformAdmin ? "/plateforme" : "/");
+  if (user.isPlatformAdmin) {
+    const target = getFirstAuthorizedPlatformUrl(user.permissions);
+    redirect(target);
+  }
+  redirect("/");
 }
 
 export async function logout() {
