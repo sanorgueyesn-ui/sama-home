@@ -167,7 +167,11 @@ export async function createRentalDirect(
   // checkInReservation : jamais dans le futur, jamais plus de 24h dans le
   // passé, justification obligatoire dès que l'écart sort de la tolérance.
   const registeredAt = new Date();
-  const retroCheck = checkRetroactiveArrival(registeredAt, arrivalDateTime, retroactiveReason);
+  const effectiveRetroReason =
+    retroactiveReason && retroactiveReason.trim().length > 0
+      ? retroactiveReason.trim()
+      : "Enregistrement différé (client arrivé plus tôt)";
+  const retroCheck = checkRetroactiveArrival(registeredAt, arrivalDateTime, effectiveRetroReason);
   if (!retroCheck.ok) {
     return { message: retroCheck.message };
   }

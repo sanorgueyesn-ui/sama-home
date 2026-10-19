@@ -473,6 +473,26 @@ export function ReservationForm({
         </div>
       )}
 
+      {/* Aide visuelle si le formulaire de réservation n'est pas encore complet */}
+      {!canSubmit && !pending ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
+          <span>👉</span>
+          {!propertyId
+            ? "Veuillez sélectionner une chambre / appartement"
+            : !effectiveTariffId
+              ? "Veuillez choisir une formule / tarif"
+              : !clientId
+                ? "Veuillez sélectionner ou créer le client"
+                : availability.checking
+                  ? "Vérification de la disponibilité du créneau..."
+                  : availability.available === false
+                    ? "Ce logement n'est pas disponible pour ce créneau"
+                    : showIdentitySection && (!idDocumentType.trim() || !idDocumentNumber.trim())
+                      ? "Veuillez renseigner la pièce d'identité du client (séjour ≥ 48h)"
+                      : "Veuillez renseigner les champs requis"}
+        </div>
+      ) : null}
+
       {/* Bouton de confirmation unique et évident */}
       <button
         type="submit"

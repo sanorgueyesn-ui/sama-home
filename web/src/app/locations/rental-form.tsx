@@ -144,19 +144,12 @@ export function RentalForm({
     return new Date().getTime() - arrival.getTime() > RETROACTIVE_TOLERANCE_MINUTES * 60_000;
   }, [date, arrivalTime]);
 
-  const retroCheck = useMemo(() => {
-    if (!date || !arrivalTime) return null;
-    const arrival = new Date(`${date}T${arrivalTime}:00`);
-    if (Number.isNaN(arrival.getTime())) return null;
-    return checkRetroactiveArrival(new Date(), arrival, retroactiveReason);
-  }, [date, arrivalTime, retroactiveReason]);
-  const retroBlockedMessage = retroCheck?.ok === false ? retroCheck.message : null;
-
   const canSubmit =
     availability.available === true &&
     !availability.checking &&
-    !retroBlockedMessage &&
     clientId !== "" &&
+    propertyId !== "" &&
+    effectiveTariffId !== "" &&
     (!showIdentitySection || (idDocumentType.trim() !== "" && idDocumentNumber.trim() !== ""));
 
   return (
@@ -235,7 +228,7 @@ export function RentalForm({
         </div>
       </div>
 
-      {/* 2. Horaires d'arrivée (Check-in) */}
+      {/* 2. Horaires d'arrivée (Check-in immédiat) */}
       <div className="relative z-30 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -256,47 +249,60 @@ export function RentalForm({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <LuxuryDatePicker
-            name="date"
-            value={date}
-            onChange={(newDate) => setDate(newDate)}
-            label="Date d'entrée"
-            error={errors?.date?.[0]}
-          />
+        {/* Input hidden : la date d'entrée pour une location immédiate est automatiquement celle du jour */}
+        <input type="hidden" name="date" value={date} />
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Badge informatif : Date d'entrée automatique */}
+          <div className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#141d24] p-3.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-fg/50">Date d&apos;entrée</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Aujourd&apos;hui
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xl">📅</span>
+              <div>
+                <p className="text-sm font-extrabold text-white capitalize">
+                  {new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())}
+                </p>
+                <p className="text-[11px] font-medium text-fg/40">Entrée automatique en date du jour</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sélecteur d'heure d'entrée : modifiable librement (ex : 14h30) */}
           <LuxuryTimePicker
             name="arrivalTime"
             value={arrivalTime}
             onChange={(newTime) => setArrivalTime(newTime)}
             label="Heure d'entrée"
             selectedDate={date}
+            allowPastTimes={true}
             error={errors?.arrivalTime?.[0]}
           />
         </div>
 
-        {/* Justification rétroactive si arrivée dans le passé */}
+        {/* Note informative si arrivée antérieure (ex : 14h30 saisi à 15h) */}
         {isRetroactive ? (
-          <div className="mt-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5">
-            <p className="text-xs font-bold text-amber-300">
-              ⚠️ Arrivée rétroactive constatée (dans le passé).
-            </p>
-            <p className="mt-0.5 text-[11px] text-amber-300/80">
-              Indiquez la raison pour laquelle cette entrée est enregistrée après coup.
+          <div className="mt-3.5 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-3.5">
+            <div className="flex items-center gap-2 text-brand-orange text-xs font-bold">
+              <span>⏱️</span>
+              <span>Arrivée antérieure enregistrée ({arrivalTime.replace(":", "h")})</span>
+            </div>
+            <p className="mt-1 text-[11px] text-fg/70">
+              Le client est arrivé à {arrivalTime.replace(":", "h")}. La libération de la chambre a été calculée automatiquement ci-dessous sur cette base.
             </p>
             <input
               name="retroactiveReason"
-              type="text"
-              value={retroactiveReason}
-              onChange={(e) => setRetroactiveReason(e.target.value)}
-              placeholder="Ex : Problème de connexion, saisie différée..."
-              className="mt-2 h-11 w-full rounded-xl border border-amber-500/30 bg-surface px-3 text-xs text-fg outline-none focus:border-brand-orange"
+              type="hidden"
+              value={retroactiveReason.trim() || "Enregistrement différé (client arrivé plus tôt)"}
             />
-            {retroBlockedMessage ? (
-              <p className="mt-1 text-xs font-medium text-danger">{retroBlockedMessage}</p>
-            ) : null}
           </div>
         ) : null}
+
 
         {/* Live Stay Calculations & Availability Card */}
         <div className="mt-4 rounded-xl border border-white/5 bg-surface-sunken p-3.5">
@@ -473,6 +479,26 @@ export function RentalForm({
           ⚠️ {state.message}
         </div>
       )}
+
+      {/* Aide visuelle si le formulaire n'est pas encore complet */}
+      {!canSubmit && !pending ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
+          <span>👉</span>
+          {!propertyId
+            ? "Veuillez sélectionner une chambre / logement"
+            : !effectiveTariffId
+              ? "Veuillez choisir une formule / tarif"
+              : !clientId
+                ? "Veuillez sélectionner ou créer le client"
+                : availability.checking
+                  ? "Vérification de la disponibilité..."
+                  : availability.available === false
+                    ? "Ce logement n'est pas disponible pour ce créneau"
+                    : showIdentitySection && (!idDocumentType.trim() || !idDocumentNumber.trim())
+                      ? "Veuillez renseigner la pièce d'identité du client (séjour ≥ 48h)"
+                      : "Veuillez renseigner les champs requis"}
+        </div>
+      ) : null}
 
       {/* Bouton de confirmation unique */}
       <button

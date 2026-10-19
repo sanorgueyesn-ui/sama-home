@@ -267,17 +267,28 @@ export function StayCountdown({
         </div>
 
         {clientName ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-white/10 bg-surface-sunken px-3 py-1 text-xs font-bold text-fg">
               👤 {clientName}
             </span>
             {clientPhone ? (
-              <a
-                href={`tel:${clientPhone}`}
-                className="rounded-full border border-brand-orange/30 bg-brand-orange/10 px-2.5 py-1 text-xs font-bold text-brand-orange hover:bg-brand-orange/20"
-              >
-                📞 {clientPhone}
-              </a>
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={`tel:${clientPhone}`}
+                  className="rounded-full border border-brand-orange/30 bg-brand-orange/10 px-2.5 py-1 text-xs font-bold text-brand-orange hover:bg-brand-orange/20"
+                >
+                  📞 {clientPhone}
+                </a>
+                <a
+                  href={`https://wa.me/${clientPhone.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-emerald-500/40 bg-[#25D366]/15 px-2.5 py-1 text-xs font-bold text-[#25D366] hover:bg-[#25D366]/25 transition-colors"
+                  title="Contacter sur WhatsApp"
+                >
+                  💬 WhatsApp
+                </a>
+              </div>
             ) : null}
           </div>
         ) : null}

@@ -86,6 +86,17 @@ function fmtFcfa(amount: number) {
 
 function ActionButtons({ property }: { property: MyPropertyItem }) {
   if (property.status === "AVAILABLE") {
+    if (property.fromPrice === null) {
+      return (
+        <Link
+          href={`/logements/${property.id}/tariffs/new`}
+          className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/15 text-xs font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-95"
+        >
+          <span>🏷️</span> Configurer un tarif
+        </Link>
+      );
+    }
+
     return (
       <>
         <Link

@@ -88,7 +88,6 @@ export function buildReservationWhatsAppLink(input: WhatsAppReservationInput): W
   return { ok: true, url: `https://wa.me/${digits}?text=${encodeURIComponent(message)}` };
 }
 
-/** Lot "WhatsApp — locations" — même mécanisme que les réservations (wa.me, PHONE_REGEX), jamais un deuxième. */
 export type WhatsAppRentalInput = {
   clientName: string;
   clientPhone: string | null | undefined;
@@ -97,19 +96,40 @@ export type WhatsAppRentalInput = {
   arrivalAt: Date;
   plannedDepartureAt: Date;
   amount: number;
+  isCompleted?: boolean;
+  actualDepartureAt?: Date | null;
 };
 
 export function buildRentalWhatsAppMessage(input: WhatsAppRentalInput): string {
+  if (input.isCompleted) {
+    const departure = input.actualDepartureAt ?? input.plannedDepartureAt;
+    const lines = [
+      `Bonjour ${input.clientName},`,
+      "",
+      `Voici le récapitulatif de votre séjour chez ${input.establishmentName} :`,
+      `🏨 Logement : ${input.propertyName}`,
+      `📥 Arrivée : ${fmtDateTime(input.arrivalAt)}`,
+      `📤 Départ : ${fmtDateTime(departure)}`,
+      `💰 Montant total : ${fmtFcfa(input.amount)}`,
+      `✅ Statut : Séjour terminé (Check-out effectué)`,
+      "",
+      "Nous vous remercions chaleureusement pour votre visite et espérons vous revoir très bientôt !",
+      `— L'équipe ${input.establishmentName}`,
+    ];
+    return lines.join("\n");
+  }
+
   const lines = [
     `Bonjour ${input.clientName},`,
     "",
-    `Voici les informations de votre séjour chez ${input.establishmentName}.`,
-    `Logement : ${input.propertyName}`,
-    `Arrivée : ${fmtDateTime(input.arrivalAt)}`,
-    `Départ prévu : ${fmtDateTime(input.plannedDepartureAt)}`,
-    `Montant du séjour : ${fmtFcfa(input.amount)}`,
+    `Voici les informations de votre séjour chez ${input.establishmentName} :`,
+    `🏨 Logement : ${input.propertyName}`,
+    `📥 Arrivée : ${fmtDateTime(input.arrivalAt)}`,
+    `📤 Départ prévu : ${fmtDateTime(input.plannedDepartureAt)}`,
+    `💰 Montant du séjour : ${fmtFcfa(input.amount)}`,
     "",
     "Merci de votre confiance.",
+    `— L'équipe ${input.establishmentName}`,
   ];
   return lines.join("\n");
 }
@@ -122,4 +142,15 @@ export function buildRentalWhatsAppLink(input: WhatsAppRentalInput): WhatsAppLin
   const digits = phone.replace(/^\+/, "");
   const message = buildRentalWhatsAppMessage(input);
   return { ok: true, url: `https://wa.me/${digits}?text=${encodeURIComponent(message)}` };
+}
+
+/** Lien direct vers WhatsApp sans message pré-rempli ou avec message sur mesure */
+export function buildDirectWhatsAppLink(phone: string | null | undefined, text?: string): WhatsAppLinkResult {
+  const trimmed = phone?.trim();
+  if (!trimmed || !PHONE_REGEX.test(trimmed)) {
+    return { ok: false, reason: "Numéro de téléphone invalide pour WhatsApp." };
+  }
+  const digits = trimmed.replace(/^\+/, "");
+  const query = text ? `?text=${encodeURIComponent(text)}` : "";
+  return { ok: true, url: `https://wa.me/${digits}${query}` };
 }

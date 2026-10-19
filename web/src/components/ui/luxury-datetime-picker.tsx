@@ -463,6 +463,7 @@ export type LuxuryTimePickerProps = {
   onChange: (time: string) => void;
   label?: string;
   selectedDate?: string;
+  allowPastTimes?: boolean;
   error?: string;
   className?: string;
   disabled?: boolean;
@@ -476,6 +477,7 @@ export function LuxuryTimePicker({
   onChange,
   label,
   selectedDate,
+  allowPastTimes = false,
   error,
   className = "",
   disabled = false,
@@ -514,6 +516,7 @@ export function LuxuryTimePicker({
   }, [open]);
 
   function isTimeInPast(h: number, m: number = 0): boolean {
+    if (allowPastTimes) return false;
     if (!isToday) return false;
     if (h < nowHour) return true;
     if (h === nowHour && m < nowMinute) return true;
@@ -673,7 +676,7 @@ export function LuxuryTimePicker({
               <div className="max-h-36 overflow-y-auto rounded-xl border border-white/5 bg-surface-sunken/60 p-1 space-y-1 scrollbar-thin">
                 {Array.from({ length: 24 }).map((_, i) => {
                   const hourStr = pad(i);
-                  const isPast = isToday && i < nowHour;
+                  const isPast = !allowPastTimes && isToday && i < nowHour;
                   const isSelected = currentHourVal === hourStr;
                   return (
                     <button
@@ -705,7 +708,7 @@ export function LuxuryTimePicker({
               <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1">Minute</p>
               <div className="max-h-36 overflow-y-auto rounded-xl border border-white/5 bg-surface-sunken/60 p-1 space-y-1 scrollbar-thin">
                 {["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"].map((minStr) => {
-                  const isPast = isToday && Number(currentHourVal) === nowHour && Number(minStr) < nowMinute;
+                  const isPast = !allowPastTimes && isToday && Number(currentHourVal) === nowHour && Number(minStr) < nowMinute;
                   const isSelected = currentMinuteVal === minStr;
                   return (
                     <button

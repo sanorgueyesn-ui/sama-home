@@ -235,6 +235,14 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
               </Link>
             </>
           ) : null}
+          {property.active && !tariffs.some((t) => t.active) && status !== "OCCUPIED" ? (
+            <Link
+              href={`/logements/${property.id}/tariffs/new`}
+              className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 text-sm font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-98"
+            >
+              <span>🏷️</span> Configurer un tarif pour louer cette chambre
+            </Link>
+          ) : null}
           <Link
             href={`/logements/${property.id}/edit`}
             className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg"
