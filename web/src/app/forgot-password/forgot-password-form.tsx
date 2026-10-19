@@ -91,7 +91,21 @@ export function ForgotPasswordForm() {
         </div>
 
         <form action={confirmAction} className="flex flex-col gap-4">
-          <input type="hidden" name="email" value={currentEmail} />
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-fg/70">
+              Adresse e-mail <span className="text-danger">*</span>
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={currentEmail}
+              onChange={(e) => setCurrentEmail(e.target.value)}
+              placeholder="nom@exemple.com"
+              className="h-12 w-full rounded-2xl border border-border/20 bg-surface-sunken px-4 text-sm font-semibold text-fg placeholder:text-fg/30 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+            />
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="code" className="text-xs font-bold uppercase tracking-wider text-fg/70">
@@ -287,7 +301,18 @@ export function ForgotPasswordForm() {
         )}
       </button>
 
-      <div className="pt-2 text-center">
+      <div className="pt-2 text-center flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setActiveStep("CODE")}
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-brand-orange hover:underline transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2m-2-2l-4 4a5 5 0 1 1-7-7l4-4 7 7z" />
+          </svg>
+          J&apos;ai déjà reçu mon code de confirmation →
+        </button>
+
         <Link
           href="/login"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-fg/60 hover:text-fg hover:underline transition-colors"

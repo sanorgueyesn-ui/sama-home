@@ -33,17 +33,20 @@ export async function sendOtpEmail({
     return { success: true, simulated: true };
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: isSecure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: isSecure,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 8000,
+  });
 
+  try {
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -99,8 +102,13 @@ export async function sendOtpEmail({
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[SAMA HOME MAIL] Erreur lors de l'envoi SMTP :`, errorMsg);
-    // En cas d'échec SMTP, on garde le code valide pour ne pas bloquer l'utilisateur
     return { success: true, simulated: true, error: errorMsg };
+  } finally {
+    try {
+      transporter.close();
+    } catch {
+      // ignore
+    }
   }
 }
 
@@ -136,17 +144,20 @@ export async function sendPasswordResetEmail({
     return { success: false, simulated: true, error: "SMTP_PASS_NOT_CONFIGURED" };
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: isSecure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: isSecure,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 8000,
+  });
 
+  try {
     const displayName = name ? `Bonjour ${name},` : "Bonjour,";
 
     const htmlContent = `
@@ -206,5 +217,11 @@ export async function sendPasswordResetEmail({
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[SAMA HOME MAIL] Erreur lors de l'envoi SMTP :`, errorMsg);
     return { success: false, simulated: false, error: errorMsg };
+  } finally {
+    try {
+      transporter.close();
+    } catch {
+      // ignore
+    }
   }
 }
