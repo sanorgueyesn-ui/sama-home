@@ -17,8 +17,6 @@ export function ForgotPasswordForm() {
   const [activeStep, setActiveStep] = useState<"REQUEST" | "CODE" | "SUCCESS">("REQUEST");
   const [currentEmail, setCurrentEmail] = useState<string>("");
   const [maskedEmail, setMaskedEmail] = useState<string>("");
-  const [testCode, setTestCode] = useState<string | undefined>(undefined);
-  const [emailSent, setEmailSent] = useState<boolean>(true);
   const [countdown, setCountdown] = useState<number>(0);
 
   // Synchronisation avec les retours serveur
@@ -35,8 +33,6 @@ export function ForgotPasswordForm() {
       setActiveStep("CODE");
       setCurrentEmail(requestState.email);
       setMaskedEmail(requestState.maskedEmail || requestState.email);
-      setTestCode(requestState.testCode);
-      setEmailSent(requestState.emailSent ?? true);
       setCountdown(60); // 60s cooldown pour renvoi
     }
   }, [requestState]);
@@ -85,38 +81,14 @@ export function ForgotPasswordForm() {
   if (activeStep === "CODE") {
     return (
       <div className="flex flex-col gap-4">
-        {emailSent ? (
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-left">
-            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-xs font-black uppercase tracking-wider">
-              <span>✉️</span> Code de sécurité expédié par e-mail
-            </div>
-            <p className="mt-1 text-xs text-fg/80 leading-relaxed">
-              Consultez votre boîte de réception à l'adresse <strong className="text-fg">{currentEmail}</strong>. Saisissez le code à 6 chiffres reçu pour définir votre nouveau mot de passe.
-            </p>
+        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-left">
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-xs font-black uppercase tracking-wider">
+            <span>✉️</span> Code envoyé par e-mail
           </div>
-        ) : (
-          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-left">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs font-black uppercase tracking-wider">
-              <span>⚠️</span> Envoi automatique en attente de configuration SMTP
-            </div>
-            <p className="mt-1 text-xs text-fg/80 leading-relaxed">
-              Le mot de passe d'application Gmail (<code className="font-mono text-amber-700 dark:text-amber-300">SMTP_PASS</code>) n'est pas encore renseigné dans le fichier .env du serveur.
-            </p>
-            {testCode && (
-              <div className="mt-3 rounded-xl border border-dashed border-amber-500/50 bg-surface p-3.5 text-center">
-                <p className="text-[11px] font-bold text-fg/70 uppercase tracking-wider">
-                  Votre code de confirmation généré :
-                </p>
-                <p className="mt-1 font-mono text-3xl font-black tracking-widest text-brand-orange">
-                  {testCode}
-                </p>
-                <p className="mt-1 text-[11px] text-fg/60">
-                  (Valable pendant 15 minutes. Saisissez ce code ci-dessous pour changer votre mot de passe)
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+          <p className="mt-1 text-xs text-fg/80 leading-relaxed">
+            Consultez votre boîte de réception à l&apos;adresse <strong className="text-fg">{maskedEmail}</strong>. Saisissez le code de sécurité à 6 chiffres reçu par e-mail pour définir votre nouveau mot de passe.
+          </p>
+        </div>
 
         <form action={confirmAction} className="flex flex-col gap-4">
           <input type="hidden" name="email" value={currentEmail} />

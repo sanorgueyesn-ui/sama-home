@@ -20,7 +20,7 @@ async function run() {
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
-  console.log("=== TEST DU FLUX MOT DE PASSE OUBLIÉ ===");
+  console.log("=== TEST DU FLUX MOT DE PASSE OUBLIÉ (SÉCURITÉ STRICTE) ===");
 
   // 1. Test compte inexistant
   console.log("\n1. Test avec un compte inexistant (inconnu_99999@test.com)...");
@@ -45,12 +45,32 @@ async function run() {
   existFormData.append("identifier", user.email);
   const existResult = await requestPasswordReset(undefined, existFormData);
   console.log("Résultat compte existant :", existResult);
-  if (existResult.step !== "CODE") {
-    throw new Error("Échec : attendu passage à l'étape CODE");
-  }
-  console.log("✅ Succès : passage à l'étape CODE avec code généré :", existResult.testCode);
 
-  // 3. Test code invalide
+  // Le serveur vérifie que l'e-mail a bien pu être expédié
+  if (!process.env.SMTP_PASS) {
+    if (existResult.step !== "REQUEST" || !existResult.error?.includes("SMTP_PASS")) {
+      throw new Error("Échec : attendu blocage sécurisé tant que SMTP_PASS n'est pas configuré.");
+    }
+    console.log("✅ Succès : blocage sécurisé quand SMTP_PASS n'est pas configuré (aucun code affiché sur l'écran).");
+  } else {
+    if (existResult.step !== "CODE") {
+      throw new Error("Échec : attendu passage à l'étape CODE avec e-mail expédié.");
+    }
+    console.log("✅ Succès : e-mail expédié et passage à l'étape CODE.");
+  }
+
+  // 3. Test de validation : créer un jeton de test dans la base et vérifier la saisie
+  const testCode = "847291";
+  await prisma.passwordResetToken.deleteMany({ where: { email: user.email.toLowerCase() } });
+  await prisma.passwordResetToken.create({
+    data: {
+      email: user.email.toLowerCase(),
+      code: testCode,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      attempts: 0,
+    },
+  });
+
   console.log("\n3. Test avec code invalide (000000)...");
   const wrongCodeFormData = new FormData();
   wrongCodeFormData.append("email", user.email);
@@ -65,16 +85,10 @@ async function run() {
   console.log("✅ Succès : code invalide correctement rejeté avec décompte des tentatives.");
 
   // 4. Test code valide
-  const token = await prisma.passwordResetToken.findFirst({
-    where: { email: user.email.toLowerCase() },
-    orderBy: { createdAt: "desc" },
-  });
-  if (!token) throw new Error("Jeton introuvable en base.");
-
-  console.log(`\n4. Test avec le bon code généré (${token.code})...`);
+  console.log(`\n4. Test avec le bon code généré (${testCode})...`);
   const correctFormData = new FormData();
   correctFormData.append("email", user.email);
-  correctFormData.append("code", token.code);
+  correctFormData.append("code", testCode);
   correctFormData.append("newPassword", "0912Toubas");
   correctFormData.append("confirmPassword", "0912Toubas");
   const successResult = await confirmPasswordReset(undefined, correctFormData);

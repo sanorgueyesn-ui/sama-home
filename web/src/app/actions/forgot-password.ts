@@ -12,8 +12,6 @@ export type ForgotPasswordState = {
   error?: string;
   message?: string;
   success?: boolean;
-  testCode?: string;
-  emailSent?: boolean;
 };
 
 function maskEmail(email: string): string {
@@ -120,17 +118,18 @@ export async function requestPasswordReset(
         step: "CODE",
         email: targetEmail,
         maskedEmail: maskEmail(targetEmail),
-        emailSent: true,
-        message: `Un code de sécurité à 6 chiffres a été envoyé à l'adresse ${targetEmail}.`,
+        message: `Un code de sécurité à 6 chiffres a été envoyé à votre adresse e-mail (${maskEmail(targetEmail)}).`,
       };
     } else {
+      console.error("[requestPasswordReset] Échec d'envoi du mail :", mailResult.error);
+      const isConfigError =
+        mailResult.error?.includes("SMTP_PASS") ||
+        mailResult.error?.includes("Missing credentials");
       return {
-        step: "CODE",
-        email: targetEmail,
-        maskedEmail: maskEmail(targetEmail),
-        emailSent: false,
-        testCode: code,
-        message: `Code de sécurité généré pour ${targetEmail}.`,
+        step: "REQUEST",
+        error: isConfigError
+          ? "Le serveur d'envoi d'e-mails n'est pas encore activé (clé SMTP_PASS non renseignée dans le fichier .env). Aucun e-mail n'a pu être expédié."
+          : "Impossible d'expédier l'e-mail contenant le code de sécurité. Veuillez réessayer ultérieurement.",
       };
     }
   } catch (err) {
