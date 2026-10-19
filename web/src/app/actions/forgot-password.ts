@@ -130,8 +130,8 @@ export async function requestPasswordReset(
       return {
         step: "REQUEST",
         error: isConfigError
-          ? "Le serveur d'envoi d'e-mails n'est pas encore activé (clé SMTP_PASS non renseignée dans le fichier .env). Aucun e-mail n'a pu être expédié."
-          : "Impossible d'expédier l'e-mail contenant le code de sécurité. Veuillez réessayer ultérieurement.",
+          ? "Votre compte a bien été reconnu ! Cependant, pour que le serveur puisse expédier l'e-mail dans votre boîte, la clé SMTP_PASS doit être configurée sur Vercel (mot de passe d'application Google)."
+          : "Votre compte a bien été reconnu, mais une erreur est survenue lors de l'envoi de l'e-mail. Veuillez réessayer ultérieurement.",
       };
     }
   } catch (err) {

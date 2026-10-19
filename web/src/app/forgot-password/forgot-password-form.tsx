@@ -208,27 +208,42 @@ export function ForgotPasswordForm() {
       {requestState?.error && (
         <div
           role="alert"
-          className="rounded-2xl border border-danger/30 bg-danger-bg p-4 text-left animate-in fade-in"
+          className={`rounded-2xl border p-4 text-left animate-in fade-in ${
+            requestState.accountNotFound
+              ? "border-danger/30 bg-danger-bg text-danger"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+          }`}
         >
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-danger">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            {requestState.accountNotFound ? "Adresse e-mail introuvable" : "Erreur"}
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider">
+            {requestState.accountNotFound ? (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>Adresse e-mail introuvable</span>
+              </>
+            ) : (
+              <>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-[11px] font-bold">
+                  ✓
+                </span>
+                <span>Compte identifié • Configuration d&apos;envoi requise</span>
+              </>
+            )}
           </div>
 
-          <p className="mt-1.5 text-xs font-semibold text-danger leading-relaxed">
+          <p className="mt-1.5 text-xs font-semibold leading-relaxed">
             {requestState.error}
           </p>
 
