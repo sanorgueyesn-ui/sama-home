@@ -259,9 +259,9 @@ export async function confirmPasswordReset(
 
   if (!user) {
     return {
-      step: "SUCCESS",
-      success: true,
-      message: "Votre mot de passe a été réinitialisé avec succès.",
+      step: "REQUEST",
+      accountNotFound: true,
+      error: "Ce compte n'existe pas ou a été supprimé de la plateforme.",
     };
   }
 

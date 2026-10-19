@@ -91,8 +91,6 @@ export function ReservationForm({
   const [date, setDate] = useState(defaultValues?.date ?? todayIso());
   const [arrivalTime, setArrivalTime] = useState(defaultValues?.arrivalTime ?? "15:00");
   const [deposit, setDeposit] = useState(defaultValues?.deposit ?? 0);
-  const [depositMethod, setDepositMethod] = useState(defaultValues?.depositMethod ?? "");
-  const [note, setNote] = useState(defaultValues?.note ?? "");
   const [idDocumentType, setIdDocumentType] = useState("");
   const [idDocumentNumber, setIdDocumentNumber] = useState("");
 
@@ -113,19 +111,6 @@ export function ReservationForm({
   const activeTariffs = selectedProperty?.tariffs ?? [];
   const effectiveTariffId = activeTariffs.some((t) => t.id === tariffId) ? tariffId : (activeTariffs[0]?.id ?? "");
   const selectedTariff = activeTariffs.find((t) => t.id === effectiveTariffId);
-
-  // Auto-sélection systématique du premier tarif selon le mode (Jour vs Heure)
-  useEffect(() => {
-    if (propertyId && (!tariffId || !activeTariffs.some((t) => t.id === tariffId)) && activeTariffs.length > 0) {
-      if (billingMode === "DAY") {
-        const dayTariff = activeTariffs.find((t) => t.durationUnit === "DAY" || /jour|24h|nuit/i.test(t.label));
-        setTariffId(dayTariff ? dayTariff.id : activeTariffs[0].id);
-      } else {
-        const hourTariff = activeTariffs.find((t) => t.durationUnit === "HOURS" || /heure|passage|sieste/i.test(t.label));
-        setTariffId(hourTariff ? hourTariff.id : activeTariffs[0].id);
-      }
-    }
-  }, [propertyId, tariffId, activeTariffs, billingMode]);
 
   // Client-side past check protection: if date is today and time is in the past, or date < today
   const isPastDateTime = useMemo(() => {

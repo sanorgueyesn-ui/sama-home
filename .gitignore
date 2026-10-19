@@ -17,3 +17,7 @@ desktop.ini
 !web/prisma/migrations/**/*.sql
 *.zip
 web-playwright-test/
+/MAQUETTE AT/
+/connexion et inscription/
+/image/
+*.txt

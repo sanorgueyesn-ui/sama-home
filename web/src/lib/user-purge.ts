@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 
 /**
@@ -16,7 +15,7 @@ import type { Prisma } from "@/generated/prisma/client";
  * Toute tentative de mot de passe oublié ou de connexion échouera immédiatement.
  */
 export async function purgeUserFromDatabase(
-  tx: any,
+  tx: Prisma.TransactionClient,
   targetUserId: string
 ): Promise<{ id: string; email: string | null; username: string; name: string }> {
   const target = await tx.user.findUnique({

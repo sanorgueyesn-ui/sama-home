@@ -48,7 +48,7 @@ async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ suc
       });
 
       const text = await res.text();
-      let data: any = {};
+      let data: Record<string, unknown> = {};
       try {
         data = JSON.parse(text);
       } catch {
@@ -61,8 +61,9 @@ async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ suc
       } else {
         console.warn(`[SAMA HOME MAIL] Réponse du relais HTTPS :`, text);
       }
-    } catch (relayErr: any) {
-      console.warn(`[SAMA HOME MAIL] Échec de l'appel au relais HTTPS, repli vers SMTP...`, relayErr.message);
+    } catch (relayErr: unknown) {
+      const msg = relayErr instanceof Error ? relayErr.message : String(relayErr);
+      console.warn(`[SAMA HOME MAIL] Échec de l'appel au relais HTTPS, repli vers SMTP...`, msg);
     }
   }
 
@@ -83,11 +84,10 @@ async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ suc
   for (const config of portsToTry) {
     let transporter: Transporter | null = null;
     try {
-      const transportOptions: any = {
+      const transportOptions: Parameters<typeof nodemailer.createTransport>[0] = {
         host,
         port: config.port,
         secure: config.secure,
-        family: 4, // Force IPv4
         auth: {
           user,
           pass,

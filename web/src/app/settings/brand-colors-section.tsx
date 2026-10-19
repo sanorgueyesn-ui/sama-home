@@ -39,7 +39,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
  * useState, appel direct de la Server Action).
  */
 export function BrandColorsSection({
-  currentPaletteId,
+  currentPaletteId: _currentPaletteId,
   currentColors,
 }: {
   currentPaletteId: BrandPaletteId | null;

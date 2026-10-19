@@ -21,13 +21,20 @@ async function check(identifier: string) {
     where: { email: { equals: identifier, mode: "insensitive" } },
   });
 
-  console.log(`Identifier: "${identifier}" => User found:`, user ? `${user.name} (${user.id})` : "NONE (ACCOUNT_NOT_FOUND)", "Tokens in DB:", tokens.length);
+  const otps = await prisma.otpVerification.findMany({
+    where: { email: { equals: identifier, mode: "insensitive" } },
+  });
+
+  console.log(`Identifier: "${identifier}" => User found:`, user ? `${user.name} (${user.id})` : "NONE (DOES NOT EXIST)", `Tokens: ${tokens.length}, OTPs: ${otps.length}`);
 }
 
 async function main() {
   await check("gsanor5@gmail.com");
-  await check("fake-test-unknown@gmail.com");
+  await check("ibrot55@gmail.com");
   await check("tawfekhsenegal221@gmail.com");
+  await check("sanorgueye221@gmail.com");
+  await check("admin");
+  await check("sanorgueye00@gmail.com");
   await prisma.$disconnect();
 }
 
