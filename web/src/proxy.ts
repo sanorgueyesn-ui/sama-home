@@ -15,6 +15,7 @@ import { getSessionCookiePayload } from "@/lib/session-token";
 // un visiteur non authentifié ne pourrait jamais l'atteindre : la logique
 // ci-dessous (déjà générique, non modifiée) s'applique à l'identique à
 const isPublicRoutePath = (pathname: string) =>
+  pathname === "/" ||
   pathname === "/login" ||
   pathname === "/register" ||
   pathname.startsWith("/register/") ||

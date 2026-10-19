@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/dal";
+import { getCurrentUserOrNull } from "@/lib/dal";
+import { LandingView } from "@/components/landing/landing-view";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AvailableIcon, OccupiedIcon, ReservationsIcon, RevenueIcon } from "@/components/dashboard/stat-icons";
 import { MyProperties, type MyPropertyItem } from "@/components/dashboard/my-properties";
@@ -34,10 +35,13 @@ function fmtTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
-export default async function Dashboard() {
-  // Server-side, database-backed check — see src/lib/dal.ts. Redirects to
-  // /login on its own if there is no valid session (Bloc 17).
-  const user = await getCurrentUser();
+export default async function Page() {
+  // Si le visiteur n'est pas encore connecté, il arrive sur la Landing Page officielle
+  const user = await getCurrentUserOrNull();
+  if (!user) {
+    return <LandingView />;
+  }
+
   const now = new Date();
 
   // Phase 3C / Lot C2 — `establishmentId` résolu depuis `user` ci-dessus
