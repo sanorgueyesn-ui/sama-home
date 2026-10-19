@@ -85,7 +85,7 @@ export async function login(
     const target = getFirstAuthorizedPlatformUrl(user.permissions);
     redirect(target);
   }
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function setPasswordWithGoogleToken(
@@ -133,7 +133,7 @@ export async function setPasswordWithGoogleToken(
     const target = getFirstAuthorizedPlatformUrl(user.permissions);
     redirect(target);
   }
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function logout() {

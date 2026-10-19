@@ -150,7 +150,7 @@ function PlatformIcon({ active }: { active: boolean }) {
 }
 
 const PRIMARY_ITEMS: NavItem[] = [
-  { href: "/", label: "Accueil", icon: (a) => <HomeIcon active={a} /> },
+  { href: "/dashboard", label: "Tableau de bord", icon: (a) => <HomeIcon active={a} /> },
   { href: "/sejour", label: "Séjour", icon: (a) => <KeyIcon active={a} />, permission: "MODULE_SEJOUR" },
   { href: "/depenses", label: "Dépenses", icon: (a) => <WalletIcon active={a} />, permission: "MODULE_DEPENSES" },
 ];
@@ -405,7 +405,7 @@ export function AppShell({
       >
         {/* Brand Logo */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-orange/10 p-0.5 shadow-sm">
               <Image
                 src="/brand/Sama-Home-icone-Orange.png"
@@ -425,15 +425,15 @@ export function AppShell({
           <nav className="flex items-center gap-1.5">
             {/* Direct Links */}
             <Link
-              href="/"
+              href="/dashboard"
               className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                pathname === "/"
+                pathname === "/dashboard"
                   ? "bg-navy text-white shadow-sm"
                   : "text-fg/80 hover:bg-surface-sunken hover:text-white"
               }`}
             >
-              <HomeIcon active={pathname === "/"} />
-              Accueil
+              <HomeIcon active={pathname === "/dashboard"} />
+              Tableau de bord
             </Link>
 
             {isSejourAllowed && (
@@ -517,7 +517,7 @@ export function AppShell({
         >
           <GearIcon active={isActive(pathname, "/settings")} />
         </Link>
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-orange/10 p-0.5 shadow-sm">
             <Image
               src="/brand/Sama-Home-icone-Orange.png"

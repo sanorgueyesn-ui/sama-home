@@ -105,7 +105,7 @@ export const getCurrentUser = cache(async () => {
 export const requireAdmin = cache(async () => {
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") {
-    redirect("/");
+    redirect("/dashboard");
   }
   return user;
 });
@@ -127,7 +127,7 @@ export const requireAdmin = cache(async () => {
 export const requirePlatformAdmin = cache(async () => {
   const user = await getCurrentUser();
   if (!user.isPlatformAdmin) {
-    redirect("/");
+    redirect("/dashboard");
   }
   return user;
 });

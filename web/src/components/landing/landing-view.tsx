@@ -12,7 +12,7 @@ export function LandingView() {
       
       {/* 
         Arrière-plan Haute Couture :
-        Image de la suite d'hôtel de luxe SAMA HOME avec opacité des couleurs réduite
+        Image polie de la suite d'hôtel de luxe SAMA HOME avec opacité des couleurs réduite
         pour que la chambre, les lampes et la literie soient bien visibles tout en restant élégantes.
       */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
@@ -149,13 +149,19 @@ export function LandingView() {
                   href={`tel:${COMPANY_LEGAL_INFO.phone}`}
                   className="flex items-center justify-center gap-2 rounded-lg bg-white/5 py-2 border border-white/10 text-amber-300"
                 >
-                  📞 Ligne 1 : {COMPANY_LEGAL_INFO.formattedPhone}
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span>Ligne 1 : {COMPANY_LEGAL_INFO.formattedPhone}</span>
                 </a>
                 <a
                   href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`}
                   className="flex items-center justify-center gap-2 rounded-lg bg-white/5 py-2 border border-white/10 text-amber-300"
                 >
-                  📞 Ligne 2 : {COMPANY_LEGAL_INFO.formattedPhoneSecondary}
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span>Ligne 2 : {COMPANY_LEGAL_INFO.formattedPhoneSecondary}</span>
                 </a>
               </div>
             </div>
@@ -218,7 +224,10 @@ export function LandingView() {
                   rel="noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 backdrop-blur-md px-5 sm:px-6 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-slate-200 hover:bg-white/10 hover:text-white hover:border-amber-300/40 transition-all shadow-sm text-center"
                 >
-                  <span>💬 Démo WhatsApp</span>
+                  <svg className="h-4 w-4 text-emerald-400 shrink-0 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1.004.573 1.777.877 2.806.877 3.18 0 5.768-2.587 5.768-5.766.001-3.18-2.587-5.76-5.768-5.76zm3.364 8.163c-.141.396-.714.735-1.026.779-.276.038-.636.064-2.029-.513-1.636-.677-2.737-2.348-2.818-2.456-.081-.108-.66-.879-.66-1.673 0-.794.417-1.185.565-1.345.148-.16.324-.2.432-.2.108 0 .216.002.311.007.1.006.234-.038.366.279.135.324.462 1.127.502 1.208.04.081.067.176.013.283-.053.108-.08.175-.16.27-.08.094-.17.21-.243.282-.08.081-.164.17-.07.332.094.162.418.69.898 1.117.618.55 1.14.721 1.302.802.162.081.256.068.35-.041.095-.108.405-.472.513-.634.108-.162.216-.135.365-.081.148.054.945.446 1.107.527.162.081.27.122.31.189.041.068.041.392-.1.788z" />
+                  </svg>
+                  <span>Démo WhatsApp</span>
                   <span className="hidden sm:inline">({COMPANY_LEGAL_INFO.formattedPhone})</span>
                 </a>
               </div>
@@ -226,13 +235,19 @@ export function LandingView() {
               {/* Les 2 Numéros de Contact Direct Officiels (Adaptés Mobile) */}
               <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 text-xs font-semibold text-slate-300">
                 <div className="flex items-center justify-center sm:justify-start gap-2 rounded-lg bg-white/5 px-3 py-2 border border-white/10 backdrop-blur-sm">
-                  <span className="text-amber-300">📞 Ligne 1 :</span>
+                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-amber-300">Ligne 1 :</span>
                   <a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className="hover:text-amber-300 transition-colors font-bold text-white">
                     {COMPANY_LEGAL_INFO.formattedPhone}
                   </a>
                 </div>
                 <div className="flex items-center justify-center sm:justify-start gap-2 rounded-lg bg-white/5 px-3 py-2 border border-white/10 backdrop-blur-sm">
-                  <span className="text-amber-300">📞 Ligne 2 :</span>
+                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-amber-300">Ligne 2 :</span>
                   <a href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`} className="hover:text-amber-300 transition-colors font-bold text-white">
                     {COMPANY_LEGAL_INFO.formattedPhoneSecondary}
                   </a>
@@ -242,15 +257,21 @@ export function LandingView() {
               {/* Rassurance discrète */}
               <div className="mt-6 flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-6 text-xs font-medium text-slate-400">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-amber-300">✓</span>
+                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
                   <span>100% sur mobile & PC</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-amber-300">✓</span>
+                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
                   <span>Zéro installation requise</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-amber-300">✓</span>
+                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
                   <span>Support 7j/7 Dakar</span>
                 </div>
               </div>
@@ -301,15 +322,21 @@ export function LandingView() {
                   {/* Boutons d'Action Rapide SAMA HOME */}
                   <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
                     <div className="rounded-xl bg-white/5 p-2 text-center border border-white/10 hover:border-amber-400/40 transition-colors">
-                      <span className="text-sm sm:text-base block">🔑</span>
+                      <svg className="h-4 w-4 text-amber-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
                       <p className="mt-1 text-[9px] font-bold text-slate-200">Séjour</p>
                     </div>
                     <div className="rounded-xl bg-white/5 p-2 text-center border border-white/10 hover:border-amber-400/40 transition-colors">
-                      <span className="text-sm sm:text-base block">📅</span>
+                      <svg className="h-4 w-4 text-amber-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                       <p className="mt-1 text-[9px] font-bold text-slate-200">Réserver</p>
                     </div>
                     <div className="rounded-xl bg-white/5 p-2 text-center border border-white/10 hover:border-amber-400/40 transition-colors">
-                      <span className="text-sm sm:text-base block">💵</span>
+                      <svg className="h-4 w-4 text-amber-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
                       <p className="mt-1 text-[9px] font-bold text-slate-200">Caisse</p>
                     </div>
                   </div>
@@ -324,8 +351,8 @@ export function LandingView() {
                     <div className="space-y-1.5 sm:space-y-2">
                       <div className="flex items-center justify-between rounded-xl bg-white/5 p-2 sm:p-2.5 border border-white/10">
                         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center font-bold text-[10px] shrink-0">
-                            🌊
+                          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center font-black text-xs shrink-0 border border-sky-500/30">
+                            W
                           </div>
                           <div className="min-w-0">
                             <p className="font-bold text-slate-100 text-[10px] sm:text-[11px] truncate">Chambre VIP 104</p>
@@ -337,8 +364,8 @@ export function LandingView() {
 
                       <div className="flex items-center justify-between rounded-xl bg-white/5 p-2 sm:p-2.5 border border-white/10">
                         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-orange-500/15 text-orange-400 flex items-center justify-center font-bold text-[10px] shrink-0">
-                            🍊
+                          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-orange-500/15 text-orange-400 flex items-center justify-center font-black text-[10px] shrink-0 border border-orange-500/30">
+                            OM
                           </div>
                           <div className="min-w-0">
                             <p className="font-bold text-slate-100 text-[10px] sm:text-[11px] truncate">Studio F2 CICES</p>
@@ -360,10 +387,12 @@ export function LandingView() {
                 </div>
               </div>
 
-              {/* Notification Flottante 1 (Haut Droite - Cachée sur Petit Mobile pour Éviter Débordement) */}
+              {/* Notification Flottante 1 (Haut Droite) */}
               <div className="hidden sm:flex absolute -top-4 right-0 lg:-right-4 items-center gap-2.5 rounded-2xl border border-amber-400/30 bg-[#121e26]/95 p-2.5 sm:p-3 shadow-xl backdrop-blur-xl">
                 <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-xs shrink-0">
-                  ✓
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
                 </span>
                 <div>
                   <p className="text-[10px] sm:text-[11px] font-bold text-white">Wave Reçu : 45 000 F</p>
@@ -371,10 +400,12 @@ export function LandingView() {
                 </div>
               </div>
 
-              {/* Notification Flottante 2 (Bas Gauche - Cachée sur Petit Mobile pour Éviter Débordement) */}
+              {/* Notification Flottante 2 (Bas Gauche) */}
               <div className="hidden sm:flex absolute -bottom-5 left-0 lg:-left-6 items-center gap-2.5 rounded-2xl border border-white/15 bg-[#121e26]/95 p-2.5 sm:p-3 shadow-xl backdrop-blur-xl">
                 <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 text-sm font-bold shrink-0">
-                  📄
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                 </div>
                 <div>
                   <p className="text-[11px] sm:text-xs font-bold text-white">Contrat généré en 1 clic</p>
@@ -387,7 +418,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* 3. Bandeau de Pilules Fonctionnelles SAMA HOME (Feutré & Calibré) */}
+      {/* 3. Bandeau de Pilules Fonctionnelles SAMA HOME (Avec Vraies Icônes SVG) */}
       <section className="relative z-10 border-y border-white/10 bg-[#0b141a]/80 backdrop-blur-lg py-5 sm:py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="text-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-300/80 mb-4 sm:mb-5">
@@ -395,34 +426,46 @@ export function LandingView() {
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
             <div className="flex items-center justify-center sm:justify-start gap-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-3 py-2 text-xs text-slate-200 hover:border-amber-400/40 transition-colors">
-              <span className="text-sm sm:text-base text-amber-300">🛡️</span>
+              <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
               <span className="font-semibold text-[11px] sm:text-xs text-center sm:text-left">Multi-tenant étanche</span>
             </div>
             <div className="flex items-center justify-center sm:justify-start gap-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-3 py-2 text-xs text-slate-200 hover:border-amber-400/40 transition-colors">
-              <span className="text-sm sm:text-base text-amber-300">⚡</span>
+              <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
               <span className="font-semibold text-[11px] sm:text-xs text-center sm:text-left">Temps réel Cloud</span>
             </div>
             <div className="flex items-center justify-center sm:justify-start gap-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-3 py-2 text-xs text-slate-200 hover:border-amber-400/40 transition-colors">
-              <span className="text-sm sm:text-base text-amber-300">📅</span>
+              <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
               <span className="font-semibold text-[11px] sm:text-xs text-center sm:text-left">Anti-chevauchement</span>
             </div>
             <div className="flex items-center justify-center sm:justify-start gap-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-3 py-2 text-xs text-slate-200 hover:border-amber-400/40 transition-colors">
-              <span className="text-sm sm:text-base text-amber-300">💰</span>
+              <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
               <span className="font-semibold text-[11px] sm:text-xs text-center sm:text-left">Tarifs Nuitée / Heures</span>
             </div>
             <div className="flex items-center justify-center sm:justify-start gap-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-3 py-2 text-xs text-slate-200 hover:border-amber-400/40 transition-colors">
-              <span className="text-sm sm:text-base text-amber-300">💵</span>
+              <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
               <span className="font-semibold text-[11px] sm:text-xs text-center sm:text-left">Zéro écart de caisse</span>
             </div>
             <div className="flex items-center justify-center sm:justify-start gap-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-3 py-2 text-xs text-slate-200 hover:border-amber-400/40 transition-colors">
-              <span className="text-sm sm:text-base text-amber-300">📱</span>
+              <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
               <span className="font-semibold text-[11px] sm:text-xs text-center sm:text-left">Mobile & Ordinateur</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. Les 4 Chiffres Clés SAMA HOME (Cartes Glassmorphism Proportions Mobile / Tablette) */}
+      {/* 4. Les 4 Chiffres Clés SAMA HOME (Cartes Glassmorphism) */}
       <section className="relative z-10 py-12 sm:py-16 lg:py-20 border-b border-white/10 bg-black/20" id="tarifs">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-3 sm:gap-6 text-center lg:grid-cols-4">
@@ -469,7 +512,11 @@ export function LandingView() {
             {/* Avant SAMA HOME */}
             <div className="rounded-2xl sm:rounded-3xl border border-rose-500/30 bg-[#0b141a]/85 backdrop-blur-xl p-5 sm:p-8 shadow-xl">
               <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-300 font-black text-base sm:text-lg shrink-0">✕</span>
+                <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-300 font-black text-base sm:text-lg shrink-0">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </span>
                 <h3 className="text-lg sm:text-xl font-extrabold text-rose-300">Sans SAMA HOME (Gestion Manuelle)</h3>
               </div>
               <ul className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-300">
@@ -499,7 +546,11 @@ export function LandingView() {
             {/* Avec SAMA HOME */}
             <div className="rounded-2xl sm:rounded-3xl border border-amber-400/30 bg-[#0b141a]/85 backdrop-blur-xl p-5 sm:p-8 shadow-2xl">
               <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 font-black text-base sm:text-lg shrink-0">✓</span>
+                <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 font-black text-base sm:text-lg shrink-0">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
                 <h3 className="text-lg sm:text-xl font-extrabold text-amber-300">Avec SAMA HOME (Gestion Digitale)</h3>
               </div>
               <ul className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-300">
@@ -529,7 +580,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* 6. Section : Pour Qui est fait SAMA HOME ? */}
+      {/* 6. Section : Pour Qui est fait SAMA HOME ? (Avec Vraies Icônes SVG) */}
       <section className="relative z-10 py-12 sm:py-16 bg-[#0b141a]/70 backdrop-blur-lg border-y border-white/10" id="pour-qui">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
@@ -543,28 +594,36 @@ export function LandingView() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
             <div className="rounded-2xl border border-white/10 bg-[#121e26]/80 backdrop-blur-xl p-5 sm:p-6 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1 shadow-lg">
-              <span className="text-3xl sm:text-4xl block mb-2 sm:mb-3">🏨</span>
+              <svg className="h-8 w-8 text-amber-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
               <h4 className="font-extrabold text-white text-base">Hôtels & Auberges</h4>
               <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 Gestion des chambres, check-in express, passage/sieste, room service et facturation unifiée.
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#121e26]/80 backdrop-blur-xl p-5 sm:p-6 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1 shadow-lg">
-              <span className="text-3xl sm:text-4xl block mb-2 sm:mb-3">🛋️</span>
+              <svg className="h-8 w-8 text-amber-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
               <h4 className="font-extrabold text-white text-base">Résidences Meublées</h4>
               <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 Courts et moyens séjours, caution, contrat de bail et synchronisation des réservations.
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#121e26]/80 backdrop-blur-xl p-5 sm:p-6 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1 shadow-lg">
-              <span className="text-3xl sm:text-4xl block mb-2 sm:mb-3">🏢</span>
+              <svg className="h-8 w-8 text-amber-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+              </svg>
               <h4 className="font-extrabold text-white text-base">Agences Immobilières</h4>
               <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 Centralisation de logements multiples pour le compte de plusieurs propriétaires bailleurs.
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#121e26]/80 backdrop-blur-xl p-5 sm:p-6 text-center hover:border-amber-400/40 transition-all hover:-translate-y-1 shadow-lg">
-              <span className="text-3xl sm:text-4xl block mb-2 sm:mb-3">🌴</span>
+              <svg className="h-8 w-8 text-amber-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
               <h4 className="font-extrabold text-white text-base">Maisons d'Hôtes & Villas</h4>
               <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 Planning sans aucun doublon, accueil personnalisé et suivi des charges d'entretien.
@@ -699,7 +758,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* 8. Bannière Call To Action Majeure avec Boutons Directs & Contacts (Responsive) */}
+      {/* 8. Bannière Call To Action Majeure avec Boutons Directs & Contacts */}
       <section className="relative z-10 py-12 sm:py-20 bg-gradient-to-b from-transparent via-[#060f15]/80 to-[#060f15] border-t border-white/10">
         <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
           <div className="rounded-2xl sm:rounded-3xl border border-amber-400/30 bg-gradient-to-b from-[#182127]/90 via-[#0b141a]/95 to-[#060f15]/95 p-6 sm:p-10 lg:p-14 shadow-2xl relative overflow-hidden backdrop-blur-xl">
@@ -716,7 +775,9 @@ export function LandingView() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-300 hover:to-orange-400 hover:scale-105 active:scale-95 transition-all text-center"
               >
                 <span>Se Connecter à l'Application</span>
-                <span>→</span>
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </Link>
               <a
                 href="https://wa.me/221773386660?text=Bonjour%20M.%20GUEYE%2C%20je%20souhaite%20activer%20mon%20%C3%A9tablissement%20sur%20SAMA%20HOME"
@@ -724,25 +785,34 @@ export function LandingView() {
                 rel="noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 backdrop-blur-md px-5 sm:px-7 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-slate-200 hover:bg-white/10 hover:text-white hover:border-amber-400/40 transition-all shadow-sm text-center"
               >
-                <span>💬 WhatsApp</span>
+                <svg className="h-4 w-4 text-emerald-400 shrink-0 fill-current" viewBox="0 0 24 24">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1.004.573 1.777.877 2.806.877 3.18 0 5.768-2.587 5.768-5.766.001-3.18-2.587-5.76-5.768-5.76zm3.364 8.163c-.141.396-.714.735-1.026.779-.276.038-.636.064-2.029-.513-1.636-.677-2.737-2.348-2.818-2.456-.081-.108-.66-.879-.66-1.673 0-.794.417-1.185.565-1.345.148-.16.324-.2.432-.2.108 0 .216.002.311.007.1.006.234-.038.366.279.135.324.462 1.127.502 1.208.04.081.067.176.013.283-.053.108-.08.175-.16.27-.08.094-.17.21-.243.282-.08.081-.164.17-.07.332.094.162.418.69.898 1.117.618.55 1.14.721 1.302.802.162.081.256.068.35-.041.095-.108.405-.472.513-.634.108-.162.216-.135.365-.081.148.054.945.446 1.107.527.162.081.27.122.31.189.041.068.041.392-.1.788z" />
+                </svg>
+                <span>WhatsApp</span>
                 <span className="hidden sm:inline">: {COMPANY_LEGAL_INFO.formattedPhone}</span>
               </a>
             </div>
 
             {/* Deux Lignes Directes d'Assistance Téléphonique */}
             <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm font-semibold text-slate-300">
-              <span className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10 text-center">
-                Ligne 1 : <a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhone}</a>
+              <span className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10 text-center inline-flex items-center justify-center gap-2">
+                <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span>Ligne 1 : <a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhone}</a></span>
               </span>
-              <span className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10 text-center">
-                Ligne 2 : <a href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhoneSecondary}</a>
+              <span className="rounded-lg bg-white/5 px-3 py-1.5 border border-white/10 text-center inline-flex items-center justify-center gap-2">
+                <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span>Ligne 2 : <a href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhoneSecondary}</a></span>
               </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 9. Pied de Page Institutionnel avec les Deux Contacts (Responsive) */}
+      {/* 9. Pied de Page Institutionnel avec les Deux Contacts */}
       <footer className="relative z-10 border-t border-white/10 bg-[#03080b]/90 backdrop-blur-md py-10 sm:py-12 text-xs text-slate-400" id="contact">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -773,16 +843,38 @@ export function LandingView() {
 
             <div>
               <p className="font-bold text-white text-sm mb-3">Contacts & Siège</p>
-              <ul className="space-y-2 text-slate-400">
-                <li>📍 {COMPANY_LEGAL_INFO.address}</li>
-                <li>🇸🇳 {COMPANY_LEGAL_INFO.city}, {COMPANY_LEGAL_INFO.country}</li>
-                <li className="pt-1 text-slate-200">
-                  📞 <strong>Ligne 1 :</strong> <a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhone}</a>
+              <ul className="space-y-2.5 text-slate-400">
+                <li className="flex items-start gap-2">
+                  <svg className="h-4 w-4 text-amber-300 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{COMPANY_LEGAL_INFO.address}</span>
                 </li>
-                <li className="text-slate-200">
-                  📞 <strong>Ligne 2 :</strong> <a href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhoneSecondary}</a>
+                <li className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{COMPANY_LEGAL_INFO.city}, {COMPANY_LEGAL_INFO.country}</span>
                 </li>
-                <li className="pt-1">✉️ <strong>Support :</strong> <a href={`mailto:${COMPANY_LEGAL_INFO.supportEmail}`} className="text-amber-300 hover:underline break-all">{COMPANY_LEGAL_INFO.supportEmail}</a></li>
+                <li className="pt-1 text-slate-200 flex items-center gap-2">
+                  <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span><strong>Ligne 1 :</strong> <a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhone}</a></span>
+                </li>
+                <li className="text-slate-200 flex items-center gap-2">
+                  <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span><strong>Ligne 2 :</strong> <a href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`} className="text-amber-300 hover:underline">{COMPANY_LEGAL_INFO.formattedPhoneSecondary}</a></span>
+                </li>
+                <li className="pt-1 flex items-center gap-2">
+                  <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span><strong>Support :</strong> <a href={`mailto:${COMPANY_LEGAL_INFO.supportEmail}`} className="text-amber-300 hover:underline break-all">{COMPANY_LEGAL_INFO.supportEmail}</a></span>
+                </li>
               </ul>
             </div>
           </div>
