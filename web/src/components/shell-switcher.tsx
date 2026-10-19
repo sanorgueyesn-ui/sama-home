@@ -33,7 +33,17 @@ export function ShellSwitcher({
 }) {
   const pathname = usePathname();
   const isPlatformConsole = pathname === "/plateforme" || pathname.startsWith("/plateforme/");
+  const isStandalonePublic =
+    pathname === "/landing" ||
+    pathname.startsWith("/landing/") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname.startsWith("/register/") ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/forgot-password/") ||
+    pathname === "/verify-otp";
 
+  if (isStandalonePublic) return <>{children}</>;
   if (isPlatformConsole) return <PlatformShell userPermissions={userPermissions}>{children}</PlatformShell>;
   if (showChrome) {
     return (

@@ -20,7 +20,9 @@ const isPublicRoutePath = (pathname: string) =>
   pathname.startsWith("/register/") ||
   pathname === "/verify-otp" ||
   pathname === "/forgot-password" ||
-  pathname.startsWith("/forgot-password/");
+  pathname.startsWith("/forgot-password/") ||
+  pathname === "/landing" ||
+  pathname.startsWith("/landing/");
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -34,7 +36,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isPublicRoute && isAuthenticated) {
-    if (request.method === "GET") {
+    if ((pathname === "/login" || pathname === "/register") && request.method === "GET") {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
