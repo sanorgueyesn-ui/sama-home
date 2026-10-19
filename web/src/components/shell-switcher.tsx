@@ -41,11 +41,12 @@ export function ShellSwitcher({
     pathname.startsWith("/register/") ||
     pathname === "/forgot-password" ||
     pathname.startsWith("/forgot-password/") ||
-    pathname === "/verify-otp";
+    pathname === "/verify-otp" ||
+    (pathname === "/" && !userRole);
 
   if (isStandalonePublic) return <>{children}</>;
   if (isPlatformConsole) return <PlatformShell userPermissions={userPermissions}>{children}</PlatformShell>;
-  if (showChrome) {
+  if (showChrome && userRole) {
     return (
       <AppShell
         isPlatformAdmin={isPlatformAdmin}
