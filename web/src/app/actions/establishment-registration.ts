@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { hashPassword } from "@/lib/password";
@@ -57,7 +58,8 @@ export async function registerEstablishment(
   const passwordHash = await hashPassword(password);
 
   // Vérification si l'inscription est validée par Google OAuth
-  const googleToken = formData.get("googleToken")?.toString();
+  const cookieStore = await cookies();
+  const googleToken = formData.get("googleToken")?.toString() || cookieStore.get("google_auth_token")?.value;
   if (googleToken) {
     const verifiedGoogle = await verifyGoogleAuthToken(googleToken);
     if (verifiedGoogle && verifiedGoogle.email.toLowerCase() === email.toLowerCase()) {
@@ -146,6 +148,8 @@ export async function registerEstablishment(
             }
           }
         });
+
+        cookieStore.delete("google_auth_token");
 
         return {
           success: true,

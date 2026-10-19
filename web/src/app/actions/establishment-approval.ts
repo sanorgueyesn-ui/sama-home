@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
 import { verifyPassword } from "@/lib/password";
+import { hasPlatformPermission } from "@/lib/permissions";
 
 class EstablishmentApprovalError extends Error {}
 
@@ -40,6 +41,9 @@ class EstablishmentApprovalError extends Error {}
  */
 export async function approveEstablishment(establishmentId: string): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation d'approuver les établissements." };
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -88,6 +92,9 @@ export async function approveEstablishment(establishmentId: string): Promise<{ e
 
 export async function rejectEstablishment(establishmentId: string, reason: string): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de refuser les établissements." };
+  }
 
   // Motif obligatoire, texte non blanc — vérifié avant toute connexion à la
   // logique de décision elle-même, jamais une validation uniquement côté
@@ -165,6 +172,9 @@ export async function rejectEstablishment(establishmentId: string, reason: strin
  */
 export async function suspendEstablishment(establishmentId: string): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de suspendre les établissements." };
+  }
 
   if (!establishmentId) {
     return { error: "Identifiant d'établissement manquant." };
@@ -236,6 +246,9 @@ export async function suspendEstablishment(establishmentId: string): Promise<{ e
  */
 export async function reactivateEstablishment(establishmentId: string): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de réactiver les établissements." };
+  }
 
   if (!establishmentId) {
     return { error: "Identifiant d'établissement manquant." };
@@ -299,6 +312,9 @@ export async function deleteEstablishment(
   adminPassword?: string
 ): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de supprimer les établissements." };
+  }
 
   if (!establishmentId) {
     return { error: "Identifiant d'établissement manquant." };

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, hashPassword } from "@/lib/password";
 import { createSession, deleteSession } from "@/lib/session";
@@ -91,7 +92,8 @@ export async function setPasswordWithGoogleToken(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ): Promise<{ error?: string }> {
-  const token = formData.get("token")?.toString();
+  const cookieStore = await cookies();
+  const token = formData.get("token")?.toString() || cookieStore.get("google_auth_token")?.value;
   const password = formData.get("password")?.toString();
   const confirmPassword = formData.get("confirmPassword")?.toString();
 
@@ -122,6 +124,9 @@ export async function setPasswordWithGoogleToken(
     where: { id: user.id },
     data: { passwordHash },
   });
+
+  // Nettoyer le jeton à usage unique
+  cookieStore.delete("google_auth_token");
 
   await createSession(user.id, true);
   if (user.isPlatformAdmin) {

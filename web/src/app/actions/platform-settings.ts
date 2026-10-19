@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
 import { hashPassword } from "@/lib/password";
+import { getSessionCookiePayload } from "@/lib/session-token";
+import { hasPlatformPermission } from "@/lib/permissions";
 import { PricingSettingsSchema, type PricingSettingsFormState } from "@/lib/definitions";
 import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
 
@@ -31,6 +33,9 @@ import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PR
  */
 export async function setAutoApprovalEnabled(enabled: boolean): Promise<{ error?: string }> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_SETTINGS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de modifier les réglages de la plateforme." };
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -101,6 +106,9 @@ export async function setPricingSettings(
   formData: FormData,
 ): Promise<PricingSettingsFormState> {
   const user = await requirePlatformAdmin();
+  if (!hasPlatformPermission(user, "PLATFORM_SETTINGS")) {
+    return { message: "Action refusée : vous n'avez pas l'autorisation de modifier les réglages tarifaires." };
+  }
 
   const parsed = PricingSettingsSchema.safeParse({
     trialDurationMonths: Number(formData.get("trialDurationMonths")),
@@ -174,9 +182,20 @@ export async function updateAdminPassword(formData: FormData): Promise<{ error?:
 
   try {
     const passwordHash = await hashPassword(newPassword);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash },
+    const sessionPayload = await getSessionCookiePayload();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      });
+
+      // Invalider toutes les autres sessions de cet admin pour protéger le compte
+      if (sessionPayload?.sessionId) {
+        await tx.session.deleteMany({
+          where: { userId: user.id, id: { not: sessionPayload.sessionId } },
+        });
+      }
     });
 
     revalidatePath("/plateforme/parametres");
@@ -189,6 +208,11 @@ export async function updateAdminPassword(formData: FormData): Promise<{ error?:
 
 export async function createPlatformAdminUser(formData: FormData): Promise<{ error?: string; success?: boolean }> {
   const admin = await requirePlatformAdmin();
+
+  if (!hasPlatformPermission(admin, "PLATFORM_USERS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs sur la plateforme." };
+  }
+
   const name = formData.get("name")?.toString()?.trim();
   const username = formData.get("username")?.toString()?.trim().toLowerCase();
   const email = formData.get("email")?.toString()?.trim().toLowerCase();
@@ -207,6 +231,11 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
   }
   if (password !== confirmPassword) {
     return { error: "Les deux mots de passe ne correspondent pas." };
+  }
+
+  // Empêcher l'escalade de privilèges : un collaborateur restreint ne peut pas créer un admin avec pleins pouvoirs
+  if (admin.permissions && permissionsMode === "ALL") {
+    return { error: "Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet." };
   }
 
   const existing = await prisma.user.findFirst({
@@ -264,11 +293,26 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
 
 export async function updatePlatformUserPermissions(formData: FormData): Promise<{ error?: string; success?: boolean }> {
   const admin = await requirePlatformAdmin();
+
+  if (!hasPlatformPermission(admin, "PLATFORM_USERS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de modifier les accès." };
+  }
+
   const userId = formData.get("userId")?.toString()?.trim();
   const permissionsMode = formData.get("permissionsMode")?.toString(); // "ALL" ou "CUSTOM"
 
   if (!userId) {
     return { error: "Identifiant utilisateur manquant." };
+  }
+
+  // Protection anti-escalade : impossible de modifier ses propres permissions
+  if (userId === admin.id) {
+    return { error: "Action refusée : vous ne pouvez pas modifier vos propres permissions." };
+  }
+
+  // Protection anti-escalade : un admin restreint ne peut pas octroyer les pleins pouvoirs
+  if (admin.permissions && permissionsMode === "ALL") {
+    return { error: "Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet." };
   }
 
   const targetUser = await prisma.user.findUnique({

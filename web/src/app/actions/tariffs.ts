@@ -234,22 +234,11 @@ export async function toggleTariffActive(
   id: string,
   nextActive: boolean,
 ): Promise<{ error?: string }> {
-  // Phase 3G / Lot D12-O9 — requireActiveEstablishment() placé en tout
-  // premier pour la réactivation, avant la lecture de `existing`, toute
-  // vérification de conflit et toute écriture. Retour mappé en `{ error }`
-  // (pas `{ message }`) pour rester compatible avec le type de retour
-  // existant et son appelant UI (tariff-row-actions.tsx), qui affiche bien
-  // `result.error` (confirmé par lecture directe du composant).
-  //
-  // Phase 3G / Lot D12-P53 — sur-blocage confirmé en D12-P50 : le garde
-  // s'appliquait jusqu'ici inconditionnellement, bloquant donc aussi la
-  // DÉSACTIVATION d'un tarif pour un établissement inactif/sans
-  // abonnement/expiré — alors que désactiver réduit le risque commercial et
-  // ne touche aucune réservation/location existante (même principe que
-  // cancelReservation/cancelRental/toggleActive des logements, D12-P52). Le
-  // garde ne s'applique donc plus qu'à `nextActive === true` ; la
-  // désactivation conserve uniquement l'authentification et la résolution
-  // serveur de `establishmentId`, jamais fournie par le client.
+  const currentUser = await getCurrentUser();
+  if (!hasEstablishmentPermission(currentUser, "CAN_EDIT_TARIFFS")) {
+    return { error: "Action refusée : votre compte n'a pas l'autorisation de modifier les tarifs." };
+  }
+
   let establishmentId: string;
 
   if (nextActive) {

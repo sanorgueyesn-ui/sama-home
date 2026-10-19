@@ -11,6 +11,7 @@ import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
 import { checkRetroactiveArrival } from "@/lib/retroactive-checkin";
 import { PHONE_REGEX } from "@/lib/phone";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 
 class RentalActionError extends Error {}
 
@@ -652,6 +653,10 @@ export async function cancelRental(id: string): Promise<{ error?: string }> {
   const user = await getCurrentUser();
   if (!user.establishmentId) {
     return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette location." };
+  }
+
+  if (!hasEstablishmentPermission(user, "CAN_DELETE_RENTAL")) {
+    return { error: "Action refusée : votre compte n'a pas l'autorisation d'annuler les locations." };
   }
 
   const rental = await prisma.rental.findFirst({ where: { id, establishmentId: user.establishmentId } });

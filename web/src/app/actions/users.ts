@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, requireActiveEstablishment } from "@/lib/dal";
 import { hashPassword } from "@/lib/password";
+import { hasEstablishmentPermission } from "@/lib/permissions";
 import {
   CreateUserSchema,
   UpdateUserSchema,
@@ -50,6 +51,9 @@ export async function createUser(
     }
   }
   const admin = await requireAdmin();
+  if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
+    return { message: "Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs." };
+  }
   // Phase 3B / Lot B — l'établissement du nouvel utilisateur est TOUJOURS
   // celui de l'administrateur qui le crée, résolu côté serveur depuis sa
   // propre session (jamais transmis par le formulaire, qui ne contient
@@ -130,6 +134,9 @@ export async function updateUser(
     }
   }
   const admin = await requireAdmin();
+  if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
+    return { message: "Action refusée : vous n'avez pas l'autorisation de modifier des utilisateurs." };
+  }
   if (!admin.establishmentId) {
     return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier un utilisateur." };
   }
@@ -178,6 +185,10 @@ export async function updateUser(
           }
         }
         const permissionsMode = formData.get("permissionsMode")?.toString();
+        // Protection anti-escalade : un administrateur aux accès restreints ne peut pas s'octroyer les pleins pouvoirs
+        if (id === admin.id && admin.permissions && permissionsMode === "ALL") {
+          throw new UserActionError("Action refusée : vous ne pouvez pas vous octroyer les pleins pouvoirs.");
+        }
         let permissionsJson: string | null = null;
         if (permissionsMode === "CUSTOM") {
           const selected = formData.getAll("permissions").map(String).filter(Boolean);
@@ -226,6 +237,9 @@ export async function resetUserPassword(
   // doit rester capable de neutraliser immédiatement un compte problématique,
   // jamais empêché de le faire par son propre statut.
   const admin = await requireAdmin();
+  if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
+    return { message: "Action refusée : vous n'avez pas l'autorisation de réinitialiser les mots de passe." };
+  }
   if (!admin.establishmentId) {
     return { message: "Votre compte n'est rattaché à aucun établissement — impossible de réinitialiser ce mot de passe." };
   }

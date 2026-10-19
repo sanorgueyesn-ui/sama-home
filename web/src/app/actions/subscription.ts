@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { getCurrentUser } from "@/lib/dal";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
 import { computeDepartureTime } from "@/lib/duration";
+import { hasPlatformPermission } from "@/lib/permissions";
 
 class SubscriptionPaymentRequestError extends Error {}
 class SubscriptionPaymentConfirmationError extends Error {}
@@ -225,8 +226,8 @@ export async function confirmSubscriptionPayment(paymentId: string): Promise<{ e
 
   // Jamais `user.role === "ADMIN"` comme preuve d'administration de
   // plateforme — booléen distinct, vérifié seul.
-  if (!user.isPlatformAdmin) {
-    return { error: "Seul un administrateur de plateforme peut confirmer un paiement." };
+  if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de confirmer les paiements d'abonnement." };
   }
 
   try {
@@ -337,8 +338,8 @@ export async function prolongSubscriptionAction(
   reason?: string
 ): Promise<{ error?: string }> {
   const user = await getCurrentUser();
-  if (!user.isPlatformAdmin) {
-    return { error: "Seul un administrateur de plateforme peut prolonger un abonnement." };
+  if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation de prolonger un abonnement." };
   }
 
   if (!days || days <= 0) {
@@ -418,8 +419,8 @@ export async function recordManualSubscriptionPaymentAction(
   reference?: string
 ): Promise<{ error?: string }> {
   const user = await getCurrentUser();
-  if (!user.isPlatformAdmin) {
-    return { error: "Seul un administrateur de plateforme peut enregistrer un paiement." };
+  if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+    return { error: "Action refusée : vous n'avez pas l'autorisation d'enregistrer un paiement d'abonnement." };
   }
 
   if (!amount || amount <= 0) {
