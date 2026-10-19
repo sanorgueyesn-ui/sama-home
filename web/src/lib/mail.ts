@@ -12,8 +12,8 @@ export async function sendOtpEmail({
   code,
   establishmentName,
 }: SendOtpEmailParams): Promise<{ success: boolean; simulated: boolean; error?: string }> {
-  const smtpUser = process.env.SMTP_USER || "samahome221@gmail.com";
-  const smtpPass = process.env.SMTP_PASS;
+  const smtpUser = process.env.SMTP_USER || "sanorgueye00@gmail.com";
+  const smtpPass = process.env.SMTP_PASS || "sxdfedgamqrvhukb";
   const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
   const smtpPort = Number(process.env.SMTP_PORT || "465");
   const isSecure = smtpPort === 465;
@@ -115,8 +115,8 @@ export async function sendPasswordResetEmail({
   code,
   name,
 }: SendPasswordResetEmailParams): Promise<{ success: boolean; simulated: boolean; error?: string }> {
-  const smtpUser = process.env.SMTP_USER || "samahome221@gmail.com";
-  const smtpPass = process.env.SMTP_PASS;
+  const smtpUser = process.env.SMTP_USER || "sanorgueye00@gmail.com";
+  const smtpPass = process.env.SMTP_PASS || "sxdfedgamqrvhukb";
   const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
   const smtpPort = Number(process.env.SMTP_PORT || "465");
   const isSecure = smtpPort === 465;
