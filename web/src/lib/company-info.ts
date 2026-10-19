@@ -19,6 +19,8 @@ export const COMPANY_LEGAL_INFO = {
   country: "Sénégal",
   phone: "+221 77 338 66 60",
   formattedPhone: "+221 77 338 66 60",
+  phoneSecondary: "+221 76 880 20 20",
+  formattedPhoneSecondary: "+221 76 880 20 20",
   supportEmail: "support@samahome.sn",
   status: "Conforme & Immatriculée",
 } as const;
