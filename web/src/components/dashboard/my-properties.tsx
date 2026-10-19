@@ -119,13 +119,25 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
     const targetHref = property.activeRental?.id
       ? `/locations/${property.activeRental.id}`
       : `/logements/${property.id}`;
+    const payHref = property.activeRental?.id
+      ? `/locations/${property.activeRental.id}/pay`
+      : targetHref;
+
     return (
-      <Link
-        href={targetHref}
-        className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs font-bold text-rose-200 transition-all hover:bg-rose-500/20 active:scale-95"
-      >
-        <span>🚪</span> Gérer la sortie (Check-out)
-      </Link>
+      <div className="flex w-full items-center gap-2">
+        <Link
+          href={payHref}
+          className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-xs font-black text-emerald-300 transition-all hover:bg-emerald-500/30 active:scale-95"
+        >
+          <span>💳</span> Encaisser
+        </Link>
+        <Link
+          href={targetHref}
+          className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs font-bold text-rose-200 transition-all hover:bg-rose-500/20 active:scale-95"
+        >
+          <span>📋</span> Séjour
+        </Link>
+      </div>
     );
   }
 

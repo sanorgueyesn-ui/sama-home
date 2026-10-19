@@ -48,7 +48,22 @@ function fmtFcfa(amount: number): string {
 /** Texte prérempli — uniquement des données réellement enregistrées (jamais inventées). */
 export function buildReservationWhatsAppMessage(input: WhatsAppReservationInput): string {
   if (input.customTemplate && input.customTemplate.trim().length > 0) {
-    let msg = input.customTemplate;
+    const template = input.customTemplate.trim();
+    if (!template.includes("{")) {
+      return [
+        `Bonjour ${input.clientName},`,
+        "",
+        template,
+        "",
+        `🏨 Logement : ${input.propertyName}`,
+        `📥 Arrivée : ${fmtDateTime(input.arrivalAt)}`,
+        `📤 Départ prévu : ${fmtDateTime(input.departureAt)}`,
+        `💰 Montant total : ${fmtFcfa(input.amount)}`,
+        "",
+        `— L'équipe ${input.establishmentName}`,
+      ].join("\n");
+    }
+    let msg = template;
     msg = msg.replace(/\{client\}/gi, input.clientName);
     msg = msg.replace(/\{logement\}/gi, input.propertyName);
     msg = msg.replace(/\{arrivee\}/gi, fmtDateTime(input.arrivalAt));
@@ -118,9 +133,24 @@ export function normalizeWhatsAppDigits(rawPhone: string): string {
 export function buildRentalWhatsAppMessage(input: WhatsAppRentalInput): string {
   const departure = input.actualDepartureAt ?? input.plannedDepartureAt;
 
-  // Si un modèle personnalisé est configuré dans les Paramètres
+  // Si un message personnalisé est configuré dans les Paramètres
   if (input.customTemplate && input.customTemplate.trim().length > 0) {
-    let msg = input.customTemplate;
+    const template = input.customTemplate.trim();
+    if (!template.includes("{")) {
+      return [
+        `Bonjour ${input.clientName},`,
+        "",
+        template,
+        "",
+        `🏨 Logement : ${input.propertyName}`,
+        `📥 Arrivée : ${fmtDateTime(input.arrivalAt)}`,
+        `📤 Départ prévu : ${fmtDateTime(departure)}`,
+        `💰 Montant du séjour : ${fmtFcfa(input.amount)}`,
+        "",
+        `— L'équipe ${input.establishmentName}`,
+      ].join("\n");
+    }
+    let msg = template;
     msg = msg.replace(/\{client\}/gi, input.clientName);
     msg = msg.replace(/\{logement\}/gi, input.propertyName);
     msg = msg.replace(/\{arrivee\}/gi, fmtDateTime(input.arrivalAt));

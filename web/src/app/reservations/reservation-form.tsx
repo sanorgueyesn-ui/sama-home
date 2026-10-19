@@ -185,11 +185,12 @@ export function ReservationForm({
 
   const isEdit = Boolean(excludeReservationId);
 
-  // Règle de pièce d'identité : requise pour réservation journalière
+  // Règle de pièce d'identité : requise uniquement pour les séjours de longue durée (2 jours ou plus)
+  const isContractStay = billingMode === "DAY" && numberOfDays >= 2;
   const clientAlreadyHasIdentity = Boolean(
     clientMode === "EXISTING" && selectedClient?.idDocumentType && selectedClient?.idDocumentNumber
   );
-  const showIdentitySection = billingMode === "DAY" && !clientAlreadyHasIdentity;
+  const showIdentitySection = isContractStay && !clientAlreadyHasIdentity;
 
   const stayAmount = useMemo(() => {
     if (!selectedTariff) return 0;
@@ -217,13 +218,13 @@ export function ReservationForm({
     if (isPastDateTime) return "L'heure d'arrivée est déjà passée. Veuillez choisir un horaire futur.";
     if (!propertyId) return "Veuillez sélectionner une chambre / appartement";
     if (!effectiveTariffId) return "Veuillez choisir une formule / tarif";
-    if (clientMode === "EXISTING" && showIdentitySection && !clientId) return "Veuillez sélectionner un client pour cette réservation par jour";
+    if (clientMode === "EXISTING" && showIdentitySection && !clientId) return "Veuillez sélectionner un client pour ce séjour avec contrat";
     if (clientMode === "NEW" && !newClientName.trim()) return "Veuillez renseigner le nom complet du client";
     if (clientMode === "NEW" && newClientPhone.trim().replace(/[\s.-]/g, "").length < 8) return "Veuillez indiquer un numéro de téléphone valide (8 chiffres min)";
     if (availability.checking) return "Vérification de la disponibilité du créneau...";
     if (availability.available === false) return availability.message ?? "Ce logement n'est pas disponible pour ce créneau";
     if (showIdentitySection && (!idDocumentType.trim() || !idDocumentNumber.trim())) {
-      return "Pièce d'identité obligatoire pour la réservation par jour (contrat de location)";
+      return "Pièce d'identité obligatoire pour ce séjour avec contrat (2 jours ou plus)";
     }
     return null;
   }
@@ -239,21 +240,9 @@ export function ReservationForm({
         }
       }}
     >
-      {/* 0. Choix fondamental : Par Jour ou Par Heure */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
-              ⚡
-            </span>
-            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Type de réservation</h2>
-          </div>
-          <span className="text-[11px] font-bold text-fg/50">
-            {billingMode === "DAY" ? "📅 Par Jour (Contrat PDF)" : "⏱️ Par Heure (Sans contrat)"}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* 0. Choix immédiat : 2 petits boutons bien visibles sans textes encombrants */}
+      <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-surface-raised p-2.5 sm:p-3 shadow-sm backdrop-blur-md">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => {
@@ -261,24 +250,14 @@ export function ReservationForm({
               const dayTariff = activeTariffs.find((t) => t.durationUnit === "DAY" || /jour|24h|nuit/i.test(t.label));
               if (dayTariff) setTariffId(dayTariff.id);
             }}
-            className={`relative flex flex-col p-4 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
               billingMode === "DAY"
-                ? "border-brand-orange bg-brand-orange/15 shadow-md shadow-brand-orange/10 ring-1 ring-brand-orange"
-                : "border-white/10 bg-surface hover:bg-white/5 opacity-80"
+                ? "bg-brand-orange text-ink shadow-md font-black"
+                : "bg-surface border border-white/10 text-fg/70 hover:text-white hover:bg-white/5"
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-2xl">📅</span>
-              <span className={`text-[10.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                billingMode === "DAY" ? "bg-brand-orange text-ink font-black" : "bg-white/10 text-fg/60"
-              }`}>
-                Contrat PDF &amp; CNI
-              </span>
-            </div>
-            <p className="text-sm font-black text-white">Par Jour (Séjour)</p>
-            <p className="mt-1 text-xs text-fg/60 leading-relaxed">
-              Sélectionnez le nombre de jours. Contrat officiel PDF imprimable et pièce d&apos;identité demandée.
-            </p>
+            <span className="text-base">📅</span>
+            <span>Par Jour</span>
           </button>
 
           <button
@@ -289,82 +268,55 @@ export function ReservationForm({
               const hourTariff = activeTariffs.find((t) => t.durationUnit === "HOURS" || /heure|passage|sieste/i.test(t.label));
               if (hourTariff) setTariffId(hourTariff.id);
             }}
-            className={`relative flex flex-col p-4 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
               billingMode === "HOUR"
-                ? "border-emerald-500 bg-emerald-500/15 shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500"
-                : "border-white/10 bg-surface hover:bg-white/5 opacity-80"
+                ? "bg-brand-orange text-ink shadow-md font-black"
+                : "bg-surface border border-white/10 text-fg/70 hover:text-white hover:bg-white/5"
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-2xl">⏱️</span>
-              <span className={`text-[10.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                billingMode === "HOUR" ? "bg-emerald-400 text-ink font-black" : "bg-white/10 text-fg/60"
-              }`}>
-                Réservation Express
-              </span>
-            </div>
-            <p className="text-sm font-black text-white">Par Heure (Passage)</p>
-            <p className="mt-1 text-xs text-fg/60 leading-relaxed">
-              Réservation courte durée (heures). Pas besoin de contrat de location ni de pièce d&apos;identité.
-            </p>
+            <span className="text-base">⏱️</span>
+            <span>Par Heure</span>
           </button>
         </div>
 
-        {/* Sélecteur de nombre de jours (si Par Jour) */}
+        {/* Sélecteur de nombre de jours (si Par Jour) : compact et ultra-simple */}
         {billingMode === "DAY" ? (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-center justify-between mb-2">
-              <label htmlFor="numberOfDays" className="text-xs font-bold text-fg">
-                Nombre de jours réservés <span className="text-rose-400">*</span>
-              </label>
-              <span className="text-xs font-extrabold text-brand-orange">
-                {numberOfDays} jour{numberOfDays > 1 ? "s" : ""}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center rounded-xl border border-white/10 bg-surface overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5">
+            <span className="text-xs font-bold text-fg/80">Nombre de jours :</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center rounded-lg border border-white/10 bg-surface overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => Math.max(1, d - 1))}
-                  className="flex h-11 w-11 items-center justify-center text-lg font-bold text-fg hover:bg-white/10 active:scale-95 transition-all"
-                  aria-label="Diminuer le nombre de jours"
+                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-white/10 active:scale-95"
+                  aria-label="Diminuer"
                 >
                   −
                 </button>
-                <input
-                  id="numberOfDays"
-                  type="number"
-                  min={1}
-                  max={365}
-                  value={numberOfDays}
-                  onChange={(e) => setNumberOfDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  className="h-11 w-16 bg-transparent text-center text-base font-black text-white outline-none"
-                />
+                <span className="w-10 text-center text-xs font-black text-white">{numberOfDays}j</span>
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => d + 1)}
-                  className="flex h-11 w-11 items-center justify-center text-lg font-bold text-fg hover:bg-white/10 active:scale-95 transition-all"
-                  aria-label="Augmenter le nombre de jours"
+                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-white/10 active:scale-95"
+                  aria-label="Augmenter"
                 >
                   +
                 </button>
               </div>
 
-              {/* Pilules rapides */}
-              <div className="flex flex-wrap gap-1.5 flex-1">
+              <div className="flex flex-wrap gap-1">
                 {[1, 2, 3, 5, 7, 10, 15, 30].map((d) => (
                   <button
                     key={d}
                     type="button"
                     onClick={() => setNumberOfDays(d)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                    className={`rounded-md px-2 py-1 text-[11px] font-bold transition-all ${
                       numberOfDays === d
                         ? "bg-brand-orange text-ink font-black shadow-sm"
-                        : "bg-surface border border-white/10 text-fg/70 hover:bg-white/10"
+                        : "bg-surface/80 border border-white/10 text-fg/70 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    {d} {d === 1 ? "jour" : "j"}
+                    {d}j
                   </button>
                 ))}
               </div>
@@ -527,14 +479,14 @@ export function ReservationForm({
         </div>
       </div>
 
-      {/* 3. Client & Acompte (avec création directe ultra-simple) */}
+      {/* 3. Client */}
       <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
               3
             </span>
-            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Client &amp; Acompte</h2>
+            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Client</h2>
           </div>
 
           {/* Onglets rapides : Nouveau client direct OU Client existant */}
@@ -638,58 +590,22 @@ export function ReservationForm({
           </div>
         )}
 
-        {/* Acompte & Mode de règlement */}
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label htmlFor="deposit" className="mb-1.5 block text-xs font-bold text-fg">
-              Acompte versé (FCFA)
-            </label>
-            <input
-              id="deposit"
-              name="deposit"
-              type="number"
-              min={0}
-              value={deposit}
-              onChange={(e) => setDeposit(Number(e.target.value))}
-              placeholder="0"
-              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange font-mono font-bold"
-            />
-            {errors?.deposit?.map((error) => (
-              <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
-              </p>
-            ))}
-          </div>
+        {/* Paramètres par défaut envoyés en arrière-plan (l'acompte/paiement se gère séparément) */}
+        <input type="hidden" name="deposit" value="0" />
+        <input type="hidden" name="depositMethod" value="CASH" />
+        <input type="hidden" name="note" value="" />
 
-          <div>
-            <label className="mb-1.5 block text-xs font-bold text-fg">Mode de paiement de l&apos;acompte</label>
-            <select
-              name="depositMethod"
-              value={depositMethod}
-              onChange={(e) => setDepositMethod(e.target.value)}
-              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange"
-            >
-              <option value="">Non renseigné</option>
-              {PAYMENT_MODES.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Section Pièce d'identité : Strictement requise pour les réservations par jour (contrat de location PDF) */}
+        {/* Section Pièce d'identité : Strictement requise uniquement pour les séjours de 2 jours ou plus */}
         {showIdentitySection ? (
           <div className="mt-4 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-4">
             <div className="flex items-center gap-2 text-brand-orange">
               <span className="text-base">📋</span>
               <p className="text-xs font-black uppercase tracking-wider">
-                Réservation par jour — Pièce d&apos;identité obligatoire pour le contrat
+                Séjour de {numberOfDays} jours — Pièce d&apos;identité obligatoire pour le contrat
               </p>
             </div>
             <p className="mt-1 text-xs text-fg/70">
-              Pour des raisons légales et la génération automatique du contrat de bail PDF officiel, veuillez renseigner la pièce d&apos;identité du client.
+              Pour des raisons légales et la génération automatique du contrat de bail officiel, veuillez renseigner la pièce d&apos;identité du client.
             </p>
             <div className="mt-3">
               <input type="hidden" name="idDocumentType" value={idDocumentType} />
@@ -729,25 +645,9 @@ export function ReservationForm({
         ) : (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-sunken p-2.5 text-xs text-fg/60">
             <span>⏱️</span>
-            <span>Réservation par heure : aucune pièce d&apos;identité ni contrat exigé.</span>
+            <span>Réservation courte durée : aucune pièce d&apos;identité ni contrat exigé.</span>
           </div>
         )}
-
-        {/* Note */}
-        <div className="mt-3.5">
-          <label htmlFor="note" className="mb-1 block text-xs font-bold text-fg">
-            Note interne <span className="font-normal text-fg/40">(optionnel)</span>
-          </label>
-          <input
-            id="note"
-            name="note"
-            type="text"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Ex : Arrivée tardive, demande de lit d'appoint..."
-            className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange"
-          />
-        </div>
       </div>
 
       {/* Message d'erreur serveur éventuel */}
@@ -789,7 +689,7 @@ export function ReservationForm({
         >
           {pending
             ? "Enregistrement en cours..."
-            : billingMode === "DAY"
+            : isContractStay
               ? "📄 ENREGISTRER LA RÉSERVATION & CONTRAT"
               : `📅 ${submitLabel}`}
         </button>

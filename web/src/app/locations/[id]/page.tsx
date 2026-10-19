@@ -51,7 +51,9 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
   const now = new Date();
   const canPay = isActive && summary.remaining > 0;
 
-  const isDayStay = rental.durationUnit === "DAY" || (rental.durationValue >= 24 && rental.durationUnit === "HOURS");
+  const thresholdDays = settings?.contractThresholdDays ?? 2;
+  const stayDays = rental.durationUnit === "DAY" ? rental.durationValue : Math.floor(rental.durationValue / 24);
+  const isContractStay = stayDays >= thresholdDays;
   const isLongStay = rental.plannedDepartureAt.getTime() - rental.arrivalAt.getTime() >= 240 * 3600_000;
 
   const whatsapp = buildRentalWhatsAppLink({
@@ -162,7 +164,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           className="flex h-14 items-center justify-center gap-2 rounded-2xl border border-brand-orange/40 bg-surface-raised px-4 text-sm font-black text-brand-orange hover:bg-brand-orange/10 active:scale-98 transition-all"
         >
           <span>📄</span>
-          <span>{isDayStay ? "Télécharger le Contrat (PDF)" : "Télécharger le Reçu (PDF)"}</span>
+          <span>{isContractStay ? "Télécharger le Contrat (PDF)" : "Télécharger le Reçu (PDF)"}</span>
         </a>
       </div>
 

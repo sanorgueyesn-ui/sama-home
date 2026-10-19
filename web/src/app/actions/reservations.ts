@@ -229,8 +229,9 @@ export async function createReservation(
   const settings = user.establishmentId
     ? await prisma.settings.findUnique({ where: { establishmentId: user.establishmentId } })
     : null;
-  const thresholdDays = settings?.contractThresholdDays ?? 1;
-  const thresholdHours = isDayBilling ? Math.min(thresholdDays * 24, 24) : 240;
+  const thresholdDays = settings?.contractThresholdDays ?? 2;
+  const isContractStay = isDayBilling && numberOfDays >= thresholdDays;
+  const thresholdHours = isContractStay ? thresholdDays * 24 : 999999;
 
   const identityCheck = checkIdentityRequirement(
     arrivalDateTime,

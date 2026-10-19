@@ -46,11 +46,6 @@ export type ContractData = {
   brandColors: BrandColors;
 };
 
-const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  ROOM: "Chambre meublée",
-  APARTMENT: "Appartement meublé",
-};
-
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
@@ -75,10 +70,10 @@ function fmtDateOnly(d: Date) {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 30,
-    paddingBottom: 32,
-    paddingHorizontal: 36,
-    fontSize: 9,
+    paddingTop: 24,
+    paddingBottom: 24,
+    paddingHorizontal: 32,
+    fontSize: 8.5,
     fontFamily: "Helvetica",
     color: "#1A202C",
     backgroundColor: "#FFFFFF",
@@ -86,25 +81,25 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     borderBottomWidth: 1.5,
     borderBottomColor: "#D97706",
-    paddingBottom: 14,
-    marginBottom: 12,
+    paddingBottom: 8,
+    marginBottom: 8,
   },
   brandBlock: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    maxWidth: "58%",
+    gap: 8,
+    maxWidth: "60%",
   },
   logo: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     objectFit: "contain",
   },
   establishmentName: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "Helvetica-Bold",
     color: "#0F172A",
     textTransform: "uppercase",
@@ -113,185 +108,124 @@ const styles = StyleSheet.create({
     fontSize: 7.5,
     color: "#64748B",
     marginTop: 2,
-    lineHeight: 1.3,
   },
-  titleBlock: {
+  contractTitleBlock: {
     alignItems: "flex-end",
-    maxWidth: "40%",
   },
-  contractBadge: {
-    backgroundColor: "#FEF3C7",
-    borderWidth: 1,
-    borderColor: "#F59E0B",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginBottom: 4,
-  },
-  contractBadgeText: {
-    fontSize: 7.5,
+  contractMainTitle: {
+    fontSize: 12,
     fontFamily: "Helvetica-Bold",
-    color: "#B45309",
+    color: "#D97706",
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  contractTitle: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    color: "#0F172A",
-    textAlign: "right",
-  },
-  contractMeta: {
+  contractRef: {
     fontSize: 7.5,
     color: "#64748B",
     marginTop: 2,
-    textAlign: "right",
   },
-  subHeaderLegal: {
-    fontSize: 7.5,
-    color: "#94A3B8",
-    fontStyle: "italic",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 9,
+  betweenBlock: {
+    fontSize: 8.5,
     fontFamily: "Helvetica-Bold",
-    color: "#0F172A",
+    color: "#334155",
+    marginVertical: 4,
+    textAlign: "center",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-    borderLeftWidth: 3,
-    borderLeftColor: "#D97706",
-    paddingLeft: 6,
-    marginBottom: 6,
-    marginTop: 8,
+    letterSpacing: 0.8,
   },
   twoCols: {
     flexDirection: "row",
-    gap: 12,
+    justifyContent: "space-between",
+    marginBottom: 6,
   },
   boxCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 6,
-    padding: 8,
-    backgroundColor: "#F8FAFC",
-  },
-  boxCardTitle: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    color: "#334155",
-    textTransform: "uppercase",
-    marginBottom: 5,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#CBD5E1",
-    paddingBottom: 2,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 3,
-    fontSize: 8,
-  },
-  infoLabel: {
-    color: "#64748B",
-  },
-  infoValue: {
-    fontFamily: "Helvetica-Bold",
-    color: "#0F172A",
-    textAlign: "right",
-  },
-  highlightCard: {
-    borderWidth: 1,
-    borderColor: "#FCD34D",
-    backgroundColor: "#FFFBEB",
-    borderRadius: 6,
-    padding: 8,
-    marginVertical: 6,
-  },
-  highlightTitle: {
-    fontSize: 8.5,
-    fontFamily: "Helvetica-Bold",
-    color: "#92400E",
-    marginBottom: 4,
-    textTransform: "uppercase",
-  },
-  tableFinancial: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 6,
-    marginVertical: 6,
-    overflow: "hidden",
-  },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#F1F5F9",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  tableRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 3.5,
-    paddingHorizontal: 8,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#F1F5F9",
-    fontSize: 8,
-  },
-  tableRowTotal: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 4.5,
-    paddingHorizontal: 8,
-    backgroundColor: "#F8FAFC",
-    borderTopWidth: 1,
-    borderTopColor: "#CBD5E1",
-    fontSize: 8.5,
-  },
-  clausesBox: {
+    width: "48.5%",
     borderWidth: 1,
     borderColor: "#E2E8F0",
     borderRadius: 6,
     padding: 7,
-    backgroundColor: "#FAFAFA",
-    marginTop: 6,
-    marginBottom: 10,
+    backgroundColor: "#F8FAFC",
   },
-  clauseArticle: {
+  boxCardTitle: {
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    color: "#0F172A",
+    borderBottomWidth: 0.8,
+    borderBottomColor: "#E2E8F0",
+    paddingBottom: 3,
     marginBottom: 4,
-    fontSize: 7.2,
-    lineHeight: 1.25,
+  },
+  infoRow: {
+    flexDirection: "row",
+    marginBottom: 2,
+    fontSize: 8,
+  },
+  infoLabel: {
+    width: "35%",
+    color: "#64748B",
+    fontFamily: "Helvetica-Bold",
+  },
+  infoValue: {
+    width: "65%",
+    color: "#0F172A",
+  },
+  articleBox: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 5,
+    padding: 6,
+    marginBottom: 4,
+    backgroundColor: "#FFFFFF",
+  },
+  articleHeader: {
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    color: "#0F172A",
+    marginBottom: 2.5,
+    textTransform: "uppercase",
+  },
+  articleContent: {
+    fontSize: 8,
+    lineHeight: 1.3,
     color: "#334155",
   },
-  clauseTitle: {
-    fontFamily: "Helvetica-Bold",
+  bulletList: {
+    marginTop: 2,
+    paddingLeft: 4,
+  },
+  bulletItem: {
+    fontSize: 7.8,
+    lineHeight: 1.25,
+    color: "#334155",
+    marginBottom: 1,
+  },
+  paymentCheckRow: {
+    flexDirection: "row",
+    gap: 14,
+    marginTop: 3,
+    fontSize: 7.8,
+  },
+  checkItem: {
     color: "#0F172A",
   },
   signaturesBlock: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#E2E8F0",
+    marginTop: 6,
   },
   sigBox: {
-    width: "47%",
+    width: "48.5%",
     borderWidth: 1,
     borderColor: "#CBD5E1",
-    borderRadius: 6,
-    padding: 8,
-    minHeight: 70,
+    borderRadius: 5,
+    padding: 6,
+    minHeight: 58,
     backgroundColor: "#FFFFFF",
   },
   sigTitle: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
     color: "#0F172A",
-    textTransform: "uppercase",
   },
   sigMention: {
     fontSize: 6.8,
@@ -300,32 +234,35 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   sigLineArea: {
-    marginTop: 28,
+    marginTop: 24,
     borderTopWidth: 0.8,
     borderTopColor: "#94A3B8",
-    paddingTop: 3,
+    paddingTop: 2,
     flexDirection: "row",
     justifyContent: "space-between",
   },
   footer: {
     position: "absolute",
-    bottom: 14,
-    left: 36,
-    right: 36,
+    bottom: 10,
+    left: 32,
+    right: 32,
     flexDirection: "row",
     justifyContent: "space-between",
-    fontSize: 7,
+    fontSize: 6.8,
     color: "#94A3B8",
     borderTopWidth: 0.5,
     borderTopColor: "#E2E8F0",
-    paddingTop: 4,
+    paddingTop: 3,
   },
 });
 
-export function RentalContractDocument({ rental, settings, summary, logoImage, brandColors }: ContractData) {
+export function RentalContractDocument({ rental, settings, summary, logoImage }: ContractData) {
   const establishmentName = settings?.establishmentName ?? "SAMA HOME";
-  const generatedAt = fmtDateTime(new Date());
   const todayDate = fmtDateOnly(new Date());
+  const propertyTitle = rental.property.type === "APARTMENT" ? "D'APPARTEMENT MEUBLÉ" : "DE CHAMBRE MEUBLÉE";
+
+  const isLongContract = rental.durationUnit === "DAY" && rental.durationValue >= 2;
+  const docTitle = isLongContract ? `CONTRAT DE LOCATION ${propertyTitle}` : `REÇU DE LOCATION ${propertyTitle}`;
 
   return (
     <Document>
@@ -337,57 +274,44 @@ export function RentalContractDocument({ rental, settings, summary, logoImage, b
             <View>
               <Text style={styles.establishmentName}>{establishmentName}</Text>
               <Text style={styles.establishmentMeta}>
-                {settings?.address || "Dakar, Sénégal"}{"\n"}
-                Tél : {[settings?.phone, settings?.secondaryPhone].filter(Boolean).join(" / ")}
-                {settings?.email ? ` • ${settings.email}` : ""}
+                {[settings?.address, settings?.phone].filter(Boolean).join(" • Tél : ")}
               </Text>
             </View>
           </View>
 
-          <View style={styles.titleBlock}>
-            <View style={styles.contractBadge}>
-              <Text style={styles.contractBadgeText}>Contrat de Bail Saisonnier</Text>
-            </View>
-            <Text style={styles.contractTitle}>CONTRAT DE LOCATION</Text>
-            <Text style={styles.contractMeta}>
-              Réf. dossier : #{rental.id.slice(-8).toUpperCase()}{"\n"}
-              Établi le : {todayDate}
+          <View style={styles.contractTitleBlock}>
+            <Text style={styles.contractMainTitle}>{docTitle}</Text>
+            <Text style={styles.contractRef}>
+              Réf. dossier : #{rental.id.slice(-8).toUpperCase()} • Date : {todayDate}
             </Text>
           </View>
         </View>
 
-        <Text style={styles.subHeaderLegal}>
-          Bail de location meublée saisonnière à usage exclusif de villégiature — Régie par les articles 1713 et suivants du Code civil
-        </Text>
+        <Text style={styles.betweenBlock}>Entre les soussignés :</Text>
 
-        {/* 1. LES PARTIES CONTRACTANTES */}
-        <Text style={styles.sectionTitle}>1. Désignation des parties</Text>
+        {/* BAILLEUR ET LOCATAIRE */}
         <View style={styles.twoCols}>
           <View style={styles.boxCard}>
-            <Text style={styles.boxCardTitle}>Le Bailleur (Établissement)</Text>
+            <Text style={styles.boxCardTitle}>Le Bailleur :</Text>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Nom :</Text>
               <Text style={styles.infoValue}>{establishmentName}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Téléphone :</Text>
-              <Text style={styles.infoValue}>{settings?.phone || "—"}</Text>
-            </View>
-            <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Adresse :</Text>
-              <Text style={styles.infoValue}>{settings?.address || "Dakar"}</Text>
+              <Text style={styles.infoValue}>{settings?.address || "Dakar, Sénégal"}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Statut :</Text>
-              <Text style={styles.infoValue}>Gestionnaire professionnel</Text>
+              <Text style={styles.infoLabel}>Téléphone :</Text>
+              <Text style={styles.infoValue}>{[settings?.phone, settings?.secondaryPhone].filter(Boolean).join(" / ") || "—"}</Text>
             </View>
           </View>
 
           <View style={styles.boxCard}>
-            <Text style={styles.boxCardTitle}>Le Preneur (Locataire)</Text>
+            <Text style={styles.boxCardTitle}>Et le Locataire :</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Nom complet :</Text>
-              <Text style={styles.infoValue}>{rental.client.name}</Text>
+              <Text style={styles.infoLabel}>Nom :</Text>
+              <Text style={[styles.infoValue, { fontFamily: "Helvetica-Bold" }]}>{rental.client.name}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Téléphone :</Text>
@@ -395,98 +319,84 @@ export function RentalContractDocument({ rental, settings, summary, logoImage, b
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Pièce d&apos;identité :</Text>
-              <Text style={[styles.infoValue, { color: "#D97706" }]}>
-                {rental.client.idDocumentType ? `${rental.client.idDocumentType} : ${rental.client.idDocumentNumber || "—"}` : "Non requise"}
+              <Text style={[styles.infoValue, { color: "#D97706", fontFamily: "Helvetica-Bold" }]}>
+                {rental.client.idDocumentType ? `${rental.client.idDocumentType} : ${rental.client.idDocumentNumber || "—"}` : "Renseignée"}
               </Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Adresse / Ville :</Text>
-              <Text style={styles.infoValue}>{rental.client.address || "Dakar"}</Text>
-            </View>
           </View>
         </View>
 
-        {/* 2. LE LOGEMENT ET LA DURÉE FERME DU SÉJOUR */}
-        <Text style={styles.sectionTitle}>2. Objet de la location &amp; Durée ferme</Text>
-        <View style={styles.twoCols}>
-          <View style={styles.boxCard}>
-            <Text style={styles.boxCardTitle}>Logement loué</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Désignation :</Text>
-              <Text style={styles.infoValue}>{rental.property.name}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Type de bien :</Text>
-              <Text style={styles.infoValue}>{PROPERTY_TYPE_LABELS[rental.property.type] ?? "Hébergement meublé"}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Formule :</Text>
-              <Text style={styles.infoValue}>{rental.tariff?.label ?? "Séjour standard"}</Text>
-            </View>
-          </View>
+        {/* ARTICLE 1 : OBJET DU CONTRAT */}
+        <View style={styles.articleBox}>
+          <Text style={styles.articleHeader}>ARTICLE 1 : OBJET DU CONTRAT</Text>
+          <Text style={styles.articleContent}>
+            Le présent contrat concerne la location du logement meublé situé à :{" "}
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>{settings?.address || "Dakar"}</Text>.{"\n"}
+            Désignation : <Text style={{ fontFamily: "Helvetica-Bold" }}>{rental.property.name}</Text>.{" "}
+            Le logement est loué meublé avec les équipements suivants : lit, climatisation, télévision, salle d&apos;eau privée, rangements, et accessoires d&apos;accueil.
+          </Text>
+        </View>
 
-          <View style={styles.boxCard}>
-            <Text style={styles.boxCardTitle}>Période du séjour</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Arrivée (Check-in) :</Text>
-              <Text style={styles.infoValue}>{fmtDateTime(rental.arrivalAt)}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Départ (Check-out) :</Text>
-              <Text style={styles.infoValue}>{fmtDateTime(rental.plannedDepartureAt)}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Durée convenue :</Text>
-              <Text style={[styles.infoValue, { color: "#2563EB" }]}>{formatDuration(rental.durationValue, rental.durationUnit)}</Text>
-            </View>
+        {/* ARTICLE 2 : DURÉE */}
+        <View style={styles.articleBox}>
+          <Text style={styles.articleHeader}>ARTICLE 2 : DURÉE</Text>
+          <Text style={styles.articleContent}>
+            La location est consentie pour une durée ferme de :{" "}
+            <Text style={{ fontFamily: "Helvetica-Bold", color: "#2563EB" }}>
+              {formatDuration(rental.durationValue, rental.durationUnit)}
+            </Text>.{"\n"}
+            À compter du : <Text style={{ fontFamily: "Helvetica-Bold" }}>{fmtDateTime(rental.arrivalAt)}</Text>{" "}
+            Jusqu&apos;au : <Text style={{ fontFamily: "Helvetica-Bold" }}>{fmtDateTime(rental.plannedDepartureAt)}</Text>.
+          </Text>
+        </View>
+
+        {/* ARTICLE 3 : LOYER */}
+        <View style={styles.articleBox}>
+          <Text style={styles.articleHeader}>ARTICLE 3 : LOYER ET MODALITÉS DE PAIEMENT</Text>
+          <Text style={styles.articleContent}>
+            Le montant total du loyer est fixé à :{" "}
+            <Text style={{ fontFamily: "Helvetica-Bold", color: "#0F172A" }}>{fmtFcfa(summary.totalDue)}</Text>.
+          </Text>
+          <View style={styles.paymentCheckRow}>
+            <Text style={styles.checkItem}>Modalités : [ ✓ ] Séjour / Forfait   [   ] Quotidien   [   ] Mensuel</Text>
+            <Text style={styles.checkItem}>Paiement : [ ✓ ] Espèces   [ ✓ ] Transfert mobile (Wave, Orange Money)</Text>
           </View>
         </View>
 
-        {/* 3. CONDITIONS FINANCIÈRES */}
-        <Text style={styles.sectionTitle}>3. Conditions financières &amp; Règlement</Text>
-        <View style={styles.tableFinancial}>
-          <View style={styles.tableRow}>
-            <Text style={styles.infoLabel}>Loyer total du séjour ({formatDuration(rental.durationValue, rental.durationUnit)}) :</Text>
-            <Text style={styles.infoValue}>{fmtFcfa(summary.totalDue)}</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.infoLabel}>Montant versé / Dépôt à l&apos;entrée :</Text>
-            <Text style={[styles.infoValue, { color: "#16A34A" }]}>{fmtFcfa(summary.totalPaid)}</Text>
-          </View>
-          <View style={styles.tableRowTotal}>
-            <Text style={{ fontFamily: "Helvetica-Bold", color: "#0F172A" }}>Solde restant dû :</Text>
+        {/* ARTICLE 4 : CAUTION / RÈGLEMENT */}
+        <View style={styles.articleBox}>
+          <Text style={styles.articleHeader}>ARTICLE 4 : CAUTION / ACOMPTE ET SOLDE</Text>
+          <Text style={styles.articleContent}>
+            Le locataire a versé la somme de :{" "}
+            <Text style={{ fontFamily: "Helvetica-Bold", color: "#16A34A" }}>{fmtFcfa(summary.totalPaid)}</Text>{" "}
+            pour la durée de son séjour.{"\n"}
+            Solde restant dû :{" "}
             <Text style={{ fontFamily: "Helvetica-Bold", color: summary.remaining > 0 ? "#DC2626" : "#16A34A" }}>
               {summary.remaining > 0 ? fmtFcfa(summary.remaining) : "0 FCFA (Entièrement soldé)"}
-            </Text>
+            </Text>.
+          </Text>
+        </View>
+
+        {/* ARTICLE 5 : OBLIGATIONS DU LOCATAIRE */}
+        <View style={styles.articleBox}>
+          <Text style={styles.articleHeader}>ARTICLE 5 : OBLIGATIONS DU LOCATAIRE</Text>
+          <View style={styles.bulletList}>
+            <Text style={styles.bulletItem}>• Utiliser le logement de manière responsable et paisible.</Text>
+            <Text style={styles.bulletItem}>• Ne pas causer de nuisances sonores de jour comme de nuit (respect absolu du voisinage).</Text>
+            <Text style={styles.bulletItem}>• Respecter les équipements, le mobilier et la propreté des lieux (logement strictement non-fumeur).</Text>
           </View>
         </View>
 
-        {/* 4. CLAUSES ET RÈGLEMENT INTÉRIEUR */}
-        <Text style={styles.sectionTitle}>4. Conditions générales &amp; Obligations des parties</Text>
-        <View style={styles.clausesBox}>
-          <Text style={styles.clauseArticle}>
-            <Text style={styles.clauseTitle}>Art. 1 — Usage des lieux : </Text>
-            Le logement est consenti exclusivement à usage d&apos;habitation temporaire et de villégiature. Il est strictement interdit d&apos;y élire domicile, de sous-louer ou de céder le présent contrat à un tiers, même à titre gracieux.
-          </Text>
-          <Text style={styles.clauseArticle}>
-            <Text style={styles.clauseTitle}>Art. 2 — Tranquillité &amp; Bon père de famille : </Text>
-            Le preneur s&apos;engage à user paisiblement des locaux. Les fêtes bruyantes, soirées de groupe et toute nuisance sonore nocturne sont formellement interdites. Le preneur s&apos;engage à respecter scrupuleusement le repos des autres résidents et du voisinage.
-          </Text>
-          <Text style={styles.clauseArticle}>
-            <Text style={styles.clauseTitle}>Art. 3 — Respect du mobilier &amp; Non-fumeur : </Text>
-            Le preneur s&apos;engage à maintenir le mobilier, la climatisation et les équipements en parfait état. Le logement est strictement non-fumeur à l&apos;intérieur.
-          </Text>
-          <Text style={styles.clauseArticle}>
-            <Text style={styles.clauseTitle}>Art. 4 — Restitution &amp; Dégradations : </Text>
-            À l&apos;expiration de la durée convenue, le logement et ses clés doivent être restitués dans l&apos;état constaté à l&apos;arrivée. Tout objet manquant ou détérioré fera l&apos;objet d&apos;une facturation immédiate au preneur.
-          </Text>
-          <Text style={styles.clauseArticle}>
-            <Text style={styles.clauseTitle}>Art. 5 — Clause résolutoire : </Text>
-            En cas de non-respect avéré des clauses de ce contrat ou de comportement préjudiciable, le présent contrat sera résilié de plein droit sur-le-champ par le bailleur, sans préavis ni indemnité de remboursement.
-          </Text>
+        {/* ARTICLE 6 : OBLIGATIONS DU BAILLEUR */}
+        <View style={styles.articleBox}>
+          <Text style={styles.articleHeader}>ARTICLE 6 : OBLIGATIONS DU BAILLEUR</Text>
+          <View style={styles.bulletList}>
+            <Text style={styles.bulletItem}>• Fournir un logement propre, fonctionnel et en parfait état d&apos;usage.</Text>
+            <Text style={styles.bulletItem}>• Assurer les réparations nécessaires au bon déroulement du séjour (hors dégâts imputables au locataire).</Text>
+          </View>
         </View>
 
-        {/* 5. SIGNATURES */}
+        {/* SIGNATURES */}
         <View style={styles.signaturesBlock}>
           <View style={styles.sigBox}>
             <Text style={styles.sigTitle}>Pour le Bailleur</Text>
@@ -497,18 +407,18 @@ export function RentalContractDocument({ rental, settings, summary, logoImage, b
           </View>
 
           <View style={styles.sigBox}>
-            <Text style={styles.sigTitle}>Le Preneur (Locataire)</Text>
+            <Text style={styles.sigTitle}>Et le Locataire</Text>
             <Text style={styles.sigMention}>Mention manuscrite « Lu et approuvé »</Text>
             <View style={styles.sigLineArea}>
-              <Text style={{ fontSize: 6.5, color: "#64748B" }}>Signature précédée de la mention</Text>
+              <Text style={{ fontSize: 6.5, color: "#64748B" }}>Signature du preneur</Text>
             </View>
           </View>
         </View>
 
         {/* PIED DE PAGE */}
         <View style={styles.footer}>
-          <Text>SAMA HOME • Gestion Locative &amp; Hôtelière Professionnelle</Text>
-          <Text>Contrat généré le {generatedAt} — Page 1 / 1</Text>
+          <Text>SAMA HOME • Établissement {establishmentName}</Text>
+          <Text>Document contractuel officiel — Page 1 / 1</Text>
         </View>
       </Page>
     </Document>
