@@ -29,6 +29,7 @@ export default async function LoginPage(props: {
     username?: string;
     establishment?: string;
     token?: string;
+    resetSuccess?: string;
   }>;
 }) {
   const [theme, searchParams] = await Promise.all([
@@ -41,6 +42,7 @@ export default async function LoginPage(props: {
   const googleUsername = searchParams?.username ?? "";
   const googleEstablishment = searchParams?.establishment ?? "";
   const googleToken = searchParams?.token ?? "";
+  const isResetSuccess = searchParams?.resetSuccess === "1";
 
 
   return (
@@ -104,6 +106,20 @@ export default async function LoginPage(props: {
             <p className="mt-1 mb-6 text-sm font-medium text-fg/60">
               Accédez à votre espace de gestion.
             </p>
+
+            {isResetSuccess && (
+              <div role="status" className="mb-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-800 dark:text-emerald-300 animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
+                    ✓
+                  </span>
+                  <p className="font-extrabold">Mot de passe réinitialisé avec succès</p>
+                </div>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-700/80 dark:text-emerald-300/80">
+                  Votre mot de passe a bien été mis à jour. Vous pouvez maintenant vous connecter à votre compte.
+                </p>
+              </div>
+            )}
 
             {errorMessage && (
               <div role="alert" className="mb-5 rounded-2xl border border-danger/30 bg-danger-bg p-3 text-xs font-semibold text-danger">

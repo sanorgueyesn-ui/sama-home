@@ -1359,3 +1359,16 @@ model OtpVerification {
 
   @@index([email])
 }
+
+/// Jeton et code OTP sécurisé pour la réinitialisation de mot de passe oublié
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   /// Code à 6 chiffres
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+

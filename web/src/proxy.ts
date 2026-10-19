@@ -18,7 +18,9 @@ const isPublicRoutePath = (pathname: string) =>
   pathname === "/login" ||
   pathname === "/register" ||
   pathname.startsWith("/register/") ||
-  pathname === "/verify-otp";
+  pathname === "/verify-otp" ||
+  pathname === "/forgot-password" ||
+  pathname.startsWith("/forgot-password/");
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { login, setPasswordWithGoogleToken } from "@/app/actions/auth";
 import { AuthField } from "@/components/auth/auth-field";
 
@@ -114,9 +115,12 @@ export function LoginForm({
             Première connexion ou mot de passe non défini ? Définir mon mot de passe
           </button>
         ) : (
-          <p className="text-xs font-medium text-fg/50">
-            Mot de passe oublié ? Contactez un administrateur.
-          </p>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-bold text-brand-orange hover:underline transition-colors"
+          >
+            Mot de passe oublié ?
+          </Link>
         )}
       </div>
 
