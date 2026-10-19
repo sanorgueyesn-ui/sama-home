@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAMA HOME — Logiciel Tout-en-Un de Gestion Hôtelière & Immobilière</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #064e3b; /* Vert Émeraude Profond */
+      --primary-light: #059669;
+      --primary-dark: #022c22;
+      --accent-gold: #d97706; /* Or Chaud */
+      --accent-gold-light: #fbbf24;
+      --bg-dark: #091512;
+      --bg-card: #0f241e;
+      --bg-card-hover: #15332b;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-gold: #fcd34d;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-gold: rgba(217, 119, 6, 0.35);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 21, 18, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 0;
+    }
+
+    .nav-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-white);
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--primary-light));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ffffff, var(--accent-gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-gold-light);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #000;
+      font-weight: 700;
+      box-shadow: 0 4px 20px rgba(217, 119, 6, 0.4);
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(217, 119, 6, 0.6);
+    }
+
+    .btn-whatsapp {
+      background: #25D366;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .btn-whatsapp:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--border-gold);
+      color: var(--text-white);
+      background: rgba(217, 119, 6, 0.08);
+    }
+
+    .btn-outline:hover {
+      background: rgba(217, 119, 6, 0.18);
+      border-color: var(--accent-gold);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(217, 119, 6, 0.12);
+      border: 1px solid var(--border-gold);
+      border-radius: 50px;
+      color: var(--accent-gold-light);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: 54px;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      max-width: 950px;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 700;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 36px;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 50px;
+    }
+
+    /* Image Affiche Showcase */
+    .poster-showcase {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-gold);
+      margin-bottom: 80px;
+      background: #000;
+    }
+
+    .poster-showcase img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+
+    .poster-showcase:hover img {
+      transform: scale(1.01);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 90px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Features Section */
+    .section-title-wrap {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-subtitle {
+      color: var(--accent-gold-light);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 100px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px 28px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-gold);
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      background: rgba(217, 119, 6, 0.15);
+      border: 1px solid var(--border-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    .feature-card p {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Catalogue / Guide Step-by-Step */
+    .catalogue-section {
+      background: linear-gradient(180deg, rgba(6, 78, 59, 0.1) 0%, rgba(9, 21, 18, 0) 100%);
+      padding: 80px 0;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 100px;
+    }
+
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .step-card {
+      display: flex;
+      gap: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s ease;
+    }
+
+    .step-card:hover {
+      border-color: var(--border-gold);
+    }
+
+    .step-badge {
+      width: 48px;
+      height: 48px;
+      background: var(--accent-gold);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: var(--accent-gold-light);
+    }
+
+    .step-content p {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    .step-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .step-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-white);
+    }
+
+    /* Target Audiences */
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 100px;
+    }
+
+    .audience-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .audience-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+    }
+
+    .audience-card h4 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .audience-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* CTA Section */
+    .cta-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+      border: 1px solid var(--border-gold);
+      border-radius: 24px;
+      padding: 60px 40px;
+      text-align: center;
+      margin-bottom: 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-banner::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .cta-banner h2 {
+      font-family: var(--font-serif);
+      font-size: 38px;
+      margin-bottom: 16px;
+    }
+
+    .cta-banner p {
+      font-size: 18px;
+      color: #cbd5e1;
+      max-width: 650px;
+      margin: 0 auto 32px;
+    }
+
+    /* Footer */
+    footer {
+      background: #050d0b;
+      border-top: 1px solid var(--border-color);
+      padding: 60px 0 30px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand h4 {
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .footer-legal-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--accent-gold-light);
+      margin-top: 12px;
+    }
+
+    .footer-links h5 {
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .footer-links ul {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 8px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-gold-light);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .hero h1 { font-size: 40px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .audience-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 32px; }
+      .hero p { font-size: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: 1fr; }
+      .audience-grid { grid-template-columns: 1fr; }
+      .step-card { flex-direction: column; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container nav-wrapper">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">S</div>
+        <div class="brand-name">SAMA HOME</div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#presentation">Présentation</a></li>
+        <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+        <li><a href="#catalogue">Guide & Catalogue</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div style="display: flex; gap: 12px;">
+        <a href="https://wa.me/221773386660?text=Bonjour%2C%20je%20souhaite%20une%20d%C3%A9monstration%20de%20SAMA%20HOME" class="btn btn-whatsapp" target="_blank">
+          <span>💬 Démo WhatsApp</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="presentation">
+    <div class="container">
+      <div class="badge-pill">✨ Solution SaaS N°1 au Sénégal & en Afrique de l'Ouest</div>
+      <h1>Pilotez vos Résidences, Hôtels & Meublés avec <span>SAMA HOME</span></h1>
+      <p>La plateforme intelligente tout-en-un pour gérer vos réservations, séjours, contrats de bail, règlements (Wave, OM, Espèces) et caisse en temps réel.</p>
+      
+      <div class="hero-actions">
+        <a href="https://wa.me/221773386660?text=Bonjour%2C%20je%20souhaite%20activer%20mon%20%C3%A9tablissement%20sur%20SAMA%20HOME" class="btn btn-gold" target="_blank">
+          🚀 Activer Mon Établissement
+        </a>
+        <a href="#catalogue" class="btn btn-outline">
+          📖 Découvrir le Catalogue Utilisateur
+        </a>
+      </div>
+
+      <!-- AFFICHE SHOWCASE -->
+      <div class="poster-showcase">
+        <img src="AFFICHE_SAMA_HOME.jpg" alt="Affiche Officielle SAMA HOME - Logiciel Hôtelier et Immobilier">
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Multi-Établissements Étanche</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">0 Clôture</div>
+          <div class="stat-label">Zéro Écart de Caisse</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">1 Clic</div>
+          <div class="stat-label">Contrat & Facture Générés</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Accessible sur Mobile & PC</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pour qui est fait SAMA HOME ? -->
+  <section class="container" style="margin-bottom: 80px;">
+    <div class="section-title-wrap">
+      <span class="section-subtitle">À qui s'adresse cette solution ?</span>
+      <h2 class="section-title">Conçu pour les professionnels de l'hospitalité</h2>
+      <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">Que vous gériez un seul appartement meublé ou un parc de 50 chambres d'hôtel, SAMA HOME s'adapte instantanément.</p>
+    </div>
+
+    <div class="audience-grid">
+      <div class="audience-card">
+        <div class="audience-icon">🏨</div>
+        <h4>Hôtels & Auberges</h4>
+        <p>Gestion des chambres, check-in, check-out, grille tarifaire jour & heure, facturation globale.</p>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">🛋️</div>
+        <h4>Résidences Meublées</h4>
+        <p>Suivi des réservations Airbnb/Booking, contrats de court séjour, gestion de caution.</p>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">🏢</div>
+        <h4>Agences Immobilières</h4>
+        <p>Centralisation de multiples appartements, suivi des propriétaires, commissions et bilan net.</p>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">🌴</div>
+        <h4>Maisons d'Hôtes & Villas</h4>
+        <p>Planning sans double réservation, accueil personnalisé et suivi des dépenses d'entretien.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fonctionnalités Principales -->
+  <section class="container" id="fonctionnalites">
+    <div class="section-title-wrap">
+      <span class="section-subtitle">Les Piliers du Système</span>
+      <h2 class="section-title">Tout ce dont vous avez besoin au même endroit</h2>
+      <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">Fini les carnets papier égarés, les vols de caisse et les litiges clients.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🛏️</div>
+        <h3>Parc de Logements & Tarifs Flexibles</h3>
+        <p>Configurez vos chambres, studios ou appartements. Définissez vos grilles tarifaires par Journée (nuitée) ou par Heure (sieste / passage) avec gestion automatique de caution.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Planning & Réservations Anti-Chevauchement</h3>
+        <p>Visualisez la disponibilité en temps réel. Le système bloque automatiquement toute double attribution sur une même période et alerte vos réceptionnistes.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>Contrats de Séjour & Reçus Instantanés</h3>
+        <p>Générez en 1 clic un contrat d'hébergement complet avec les règles de la maison, les coordonnées du client et le reçu de paiement prêt à imprimer ou envoyer sur WhatsApp.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💵</div>
+        <h3>Caisse Journalière avec Double Contrôle</h3>
+        <p>Chaque réceptionniste ouvre sa session de caisse avec un fond de départ. Les encaissements (Espèces, Wave, OM) sont comptabilisés à la seconde. Contrôle et clôture étanches.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🏦</div>
+        <h3>Virements Bancaires & Suivi Trésorerie</h3>
+        <p>Transférez facilement les recettes de la caisse physique vers vos comptes bancaires d'entreprise. Calendriers de versement automatisés pour sécuriser vos fonds.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Comptabilité, Dépenses & Rentabilité</h3>
+        <p>Enregistrez les charges courantes (électricité Senelec, eau, ménage, maintenance). Visualisez votre chiffre d'affaires brut et votre bénéfice net en FCFA.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Catalogue & Guide d'Utilisation -->
+  <section class="catalogue-section" id="catalogue">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-subtitle">Catalogue & Guide Utilisateur</span>
+        <h2 class="section-title">Comment utiliser SAMA HOME en 5 étapes simples ?</h2>
+        <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">Un parcours intuitif pour former vos collaborateurs en moins de 15 minutes.</p>
+      </div>
+
+      <div class="steps-container">
+        
+        <div class="step-card">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4>Étape 1 : Créer votre compte & Personnaliser votre établissement</h4>
+            <p>Connectez-vous en tant qu'administrateur. Renseignez le nom commercial de votre résidence, votre adresse, et choisissez les couleurs de votre marque pour les contrats.</p>
+            <div class="step-tags">
+              <span class="step-tag">⚙️ Paramètres</span>
+              <span class="step-tag">🎨 Charte Graphique</span>
+              <span class="step-tag">👥 Gestion Utilisateurs</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4>Étape 2 : Enregistrer vos logements et fixer vos prix</h4>
+            <p>Dans l'onglet « Logements », créez vos chambres (ex: Chambre VIP N°1, Appartement F3 Almadies). Ajoutez les tarifs (ex: 35 000 FCFA/nuitée ou 15 000 FCFA la sieste de 3 heures).</p>
+            <div class="step-tags">
+              <span class="step-tag">🛏️ Fiche Logement</span>
+              <span class="step-tag">💰 Grille Tarifaire</span>
+              <span class="step-tag">🕒 Durées Personnalisées</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4>Étape 3 : Ouvrir la session de caisse au début du quart</h4>
+            <p>Le réceptionniste démarre sa journée en déclarant le fond de caisse initial (ex: 20 000 FCFA en monnaie). Dès cet instant, chaque entrée et sortie d'argent est enregistrée sous son nom.</p>
+            <div class="step-tags">
+              <span class="step-tag">💼 Fond de Caisse</span>
+              <span class="step-tag">🛡️ Sécurité Caisse</span>
+              <span class="step-tag">🕒 Traçabilité</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">4</div>
+          <div class="step-content">
+            <h4>Étape 4 : Enregistrer l'arrivée d'un client (Séjour ou Réservation)</h4>
+            <p>Sélectionnez le logement disponible, renseignez le nom du client et son numéro. Choisissez le mode de règlement (Espèces, Wave, Orange Money, Carte). Le reçu et le contrat sont imprimés instantanément.</p>
+            <div class="step-tags">
+              <span class="step-tag">📱 Check-in Immédiat</span>
+              <span class="step-tag">📲 Wave / Orange Money</span>
+              <span class="step-tag">📄 Reçu Client</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">5</div>
+          <div class="step-content">
+            <h4>Étape 5 : Clôturer la journée et consulter les bénéfices</h4>
+            <p>À la fin du quart, le réceptionniste compte les espèces en caisse. SAMA HOME vérifie s'il y a concordance parfaite. Le propriétaire consulte sur son smartphone le bilan complet des revenus.</p>
+            <div class="step-tags">
+              <span class="step-tag">🔒 Clôture de Caisse</span>
+              <span class="step-tag">🏦 Virement Banque</span>
+              <span class="step-tag">📈 Bilan Financier</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Bannière CTA Contact -->
+  <section class="container" id="contact">
+    <div class="cta-banner">
+      <h2>Prêt à professionnaliser la gestion de votre établissement ?</h2>
+      <p>Rejoignez les gestionnaires d'hôtels et résidences qui gagnent du temps et éliminent les pertes avec SAMA HOME.</p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <a href="https://wa.me/221773386660?text=Bonjour%20M.%20GUEYE%2C%20je%20souhaite%20d%C3%A9couvrir%20SAMA%20HOME%20pour%20mon%20%C3%A9tablissement" class="btn btn-whatsapp" target="_blank">
+          <span>💬 Discuter sur WhatsApp (+221 77 338 66 60)</span>
+        </a>
+        <a href="tel:+221773386660" class="btn btn-outline">
+          <span>📞 Appeler le Service Commercial</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Légal & Institutionnel -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>SAMA HOME</h4>
+          <p>Plateforme logicielle éditée par <strong>COMPAGNIE GUEYE TAWFEKH (C.G.T)</strong>.</p>
+          <p>Entreprise immatriculée au Registre du Commerce et du Crédit Mobilier de Dakar et auprès de l'ANSD.</p>
+          <div class="footer-legal-badge">
+            NINEA : 012521599 2R1 &nbsp;|&nbsp; RCCM : SN.DKR.2025.A.38803
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <h5>Modules</h5>
+          <ul>
+            <li><a href="#fonctionnalites">Gestion des Logements</a></li>
+            <li><a href="#fonctionnalites">Réservations & Séjours</a></li>
+            <li><a href="#fonctionnalites">Caisse & Rapprochement</a></li>
+            <li><a href="#fonctionnalites">Bilan & Dépenses</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h5>Siège & Contact</h5>
+          <ul>
+            <li>📍 Grand Yoff, Quartier CICES Foire, Villa N° 278, Dakar</li>
+            <li>📞 Téléphone : +221 77 338 66 60</li>
+            <li>✉️ Email : support@samahome.sn</li>
+            <li>🇸🇳 Dakar, Sénégal</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 COMPAGNIE GUEYE TAWFEKH — Tous droits réservés.</div>
+        <div style="color: var(--accent-gold-light);">SAMA HOME : Le Standard de l'Hospitalité en Afrique de l'Ouest</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
