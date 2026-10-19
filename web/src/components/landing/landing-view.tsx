@@ -20,10 +20,10 @@ export function LandingView() {
         <img
           src="/images/landing/lounge-corniche-fann.jpeg"
           alt=""
-          className="h-full w-full object-cover opacity-25 scale-105 filter blur-[2px] transition-transform duration-1000"
+          className="h-full w-full object-cover opacity-70 sm:opacity-75 scale-105 transition-transform duration-1000"
         />
-        {/* Voile feutré dégradé sombre laissant transparaître l'élégance de la pièce */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#060f15]/80 via-[#0b141a]/85 to-[#060f15]/95 backdrop-blur-[1px]" />
+        {/* Voile feutré dégradé équilibré laissant ressortir l'élégance de la pièce tout en garantissant la lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060f15]/30 via-[#0b141a]/40 to-[#060f15]/65" />
         
         {/* Halos lumineux dorés feutrés */}
         <div className="absolute -top-32 left-1/2 h-[550px] w-[950px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[160px]" />
@@ -219,11 +219,11 @@ export function LandingView() {
                 La solution tout-en-un conçue pour les gérants au Sénégal : séjours en direct, réservations, caisse automatique reliée aux dépenses (<strong className="text-amber-300 font-semibold">Wave, Orange Money, Espèces</strong>) et contrats en 1 clic.
               </p>
 
-              {/* Boutons d'Action Principaux (Centrés sur Mobile & Tablette) */}
-              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full sm:w-auto mx-auto lg:mx-0">
+              {/* Boutons d'Action Principaux (Centrés sur Mobile & Tablette, Taille Cohérente & Faciles à Utiliser) */}
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full sm:w-auto mx-auto lg:mx-0 max-w-md sm:max-w-none">
                 <Link
                   href="/login"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-6 sm:px-7 py-3.5 sm:py-4 text-sm sm:text-base font-black text-slate-950 shadow-xl shadow-amber-500/20 hover:from-amber-300 hover:to-orange-400 hover:scale-[1.02] active:scale-[0.98] transition-all text-center"
+                  className="w-full sm:w-auto min-h-[52px] sm:min-h-[54px] inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-6 sm:px-8 py-3.5 text-sm sm:text-base font-black text-slate-950 shadow-xl shadow-amber-500/25 hover:from-amber-300 hover:to-orange-400 hover:scale-[1.02] active:scale-[0.98] transition-all text-center"
                 >
                   <span>Accéder à l&apos;application</span>
                   <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,40 +235,41 @@ export function LandingView() {
                   href="https://wa.me/221773386660?text=Bonjour%2C%20je%20souhaite%20une%20d%C3%A9monstration%20de%20SAMA%20HOME"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md px-5 sm:px-6 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-slate-200 hover:bg-white/10 hover:text-white hover:border-amber-300/40 transition-all shadow-sm text-center"
+                  className="w-full sm:w-auto min-h-[52px] sm:min-h-[54px] inline-flex items-center justify-center gap-2.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-6 sm:px-7 py-3.5 text-sm sm:text-base font-bold text-white hover:bg-white/15 hover:border-amber-300/50 hover:text-amber-200 transition-all shadow-md text-center"
                 >
-                  <svg className="h-4 w-4 text-emerald-400 shrink-0 fill-current" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-emerald-400 shrink-0 fill-current" viewBox="0 0 24 24">
                     <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1.004.573 1.777.877 2.806.877 3.18 0 5.768-2.587 5.768-5.766.001-3.18-2.587-5.76-5.768-5.76zm3.364 8.163c-.141.396-.714.735-1.026.779-.276.038-.636.064-2.029-.513-1.636-.677-2.737-2.348-2.818-2.456-.081-.108-.66-.879-.66-1.673 0-.794.417-1.185.565-1.345.148-.16.324-.2.432-.2.108 0 .216.002.311.007.1.006.234-.038.366.279.135.324.462 1.127.502 1.208.04.081.067.176.013.283-.053.108-.08.175-.16.27-.08.094-.17.21-.243.282-.08.081-.164.17-.07.332.094.162.418.69.898 1.117.618.55 1.14.721 1.302.802.162.081.256.068.35-.041.095-.108.405-.472.513-.634.108-.162.216-.135.365-.081.148.054.945.446 1.107.527.162.081.27.122.31.189.041.068.041.392-.1.788z" />
                   </svg>
-                  <span>Démo WhatsApp</span>
-                  <span className="hidden sm:inline">({COMPANY_LEGAL_INFO.formattedPhone})</span>
+                  <span>Démo WhatsApp Directe</span>
                 </a>
               </div>
 
-              {/* Les 2 Numéros de Contact Direct Officiels (Centrés sur Mobile & Tablette) */}
-              <div className="mt-5 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-3 text-xs font-semibold text-slate-300 mx-auto lg:mx-0 w-full sm:w-auto">
-                <div className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3.5 py-2 border border-white/10 backdrop-blur-sm w-full sm:w-auto">
-                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {/* Les 2 Numéros de Contact Direct Officiels (Centrés, Lisibles & Click-to-Call) */}
+              <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-2.5 sm:gap-3 text-xs font-semibold text-slate-200 mx-auto lg:mx-0 w-full sm:w-auto max-w-md sm:max-w-none">
+                <a
+                  href={`tel:${COMPANY_LEGAL_INFO.phone}`}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#0f1922]/85 px-4 py-2.5 border border-white/15 backdrop-blur-md hover:border-amber-400/50 hover:bg-[#152330] transition-all w-full sm:w-auto text-center min-h-[44px]"
+                >
+                  <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                   <span className="text-amber-300 font-bold">Ligne 1 :</span>
-                  <a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className="hover:text-amber-300 transition-colors font-bold text-white">
-                    {COMPANY_LEGAL_INFO.formattedPhone}
-                  </a>
-                </div>
-                <div className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3.5 py-2 border border-white/10 backdrop-blur-sm w-full sm:w-auto">
-                  <svg className="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <span className="font-extrabold text-white">{COMPANY_LEGAL_INFO.formattedPhone}</span>
+                </a>
+                <a
+                  href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#0f1922]/85 px-4 py-2.5 border border-white/15 backdrop-blur-md hover:border-amber-400/50 hover:bg-[#152330] transition-all w-full sm:w-auto text-center min-h-[44px]"
+                >
+                  <svg className="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                   <span className="text-amber-300 font-bold">Ligne 2 :</span>
-                  <a href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`} className="hover:text-amber-300 transition-colors font-bold text-white">
-                    {COMPANY_LEGAL_INFO.formattedPhoneSecondary}
-                  </a>
-                </div>
+                  <span className="font-extrabold text-white">{COMPANY_LEGAL_INFO.formattedPhoneSecondary}</span>
+                </a>
               </div>
 
               {/* Rassurance discrète et centrée sur mobile & tablette */}
-              <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-xs font-medium text-slate-400 mx-auto lg:mx-0">
+              <div className="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[11px] sm:text-xs font-medium text-slate-300 mx-auto lg:mx-0">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   <span>100% sur PC, Tablette &amp; Mobile</span>
@@ -350,7 +351,7 @@ export function LandingView() {
                 </div>
 
                 {/* Badge Flottant 1 (Haut Droite) : Wave Reçu en Temps Réel */}
-                <div className="hidden sm:flex absolute -top-4 -right-3 items-center gap-2.5 rounded-2xl border border-amber-400/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20 animate-in fade-in duration-300">
+                <div className="hidden sm:flex absolute -top-3 right-0 sm:top-2 sm:right-2 lg:-top-4 lg:-right-3 items-center gap-2.5 rounded-2xl border border-amber-400/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20 animate-in fade-in duration-300">
                   <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-xs shrink-0">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -363,7 +364,7 @@ export function LandingView() {
                 </div>
 
                 {/* Badge Flottant 2 (Bas Gauche) : Caisse & Dépenses Étanche */}
-                <div className="hidden sm:flex absolute -bottom-4 -left-3 items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20 animate-in fade-in duration-300">
+                <div className="hidden sm:flex absolute -bottom-3 left-0 sm:bottom-2 sm:left-2 lg:-bottom-4 lg:-left-3 items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20 animate-in fade-in duration-300">
                   <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold shrink-0">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -455,62 +456,62 @@ export function LandingView() {
                 <span className="text-xs sm:text-sm font-bold text-white">Démo Interactive Multi-Écrans</span>
                 <span className="hidden sm:inline text-xs text-slate-400">— Cliquez sur un appareil pour zoomer</span>
               </div>
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 text-xs font-semibold">
+              <div className="grid grid-cols-4 sm:flex sm:items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-black/60 border border-white/10 text-[11px] sm:text-xs font-semibold w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setActiveDeviceTab("all")}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
                     activeDeviceTab === "all"
                       ? "bg-amber-400 text-slate-950 font-bold shadow-md"
                       : "text-slate-300 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
-                  <span>Tous les Écrans</span>
+                  <span className="truncate"><span className="hidden sm:inline">Tous les </span>Écrans</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveDeviceTab("pc")}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
                     activeDeviceTab === "pc"
                       ? "bg-amber-400 text-slate-950 font-bold shadow-md"
                       : "text-slate-300 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span>Ordinateur</span>
+                  <span className="truncate">PC</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveDeviceTab("tablet")}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
                     activeDeviceTab === "tablet"
                       ? "bg-sky-400 text-slate-950 font-bold shadow-md"
                       : "text-slate-300 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span>Tablette</span>
+                  <span className="truncate">Tablette</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveDeviceTab("mobile")}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
                     activeDeviceTab === "mobile"
                       ? "bg-emerald-400 text-slate-950 font-bold shadow-md"
                       : "text-slate-300 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span>Smartphone</span>
+                  <span className="truncate">Mobile</span>
                 </button>
               </div>
             </div>
@@ -519,7 +520,7 @@ export function LandingView() {
               
               {/* Image Visuelle de la Maquette Studio Multi-Devices Réelle */}
               <div className="lg:col-span-7 relative">
-                <div className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-2xl relative aspect-[16/10] flex items-center justify-center p-2 sm:p-4">
+                <div className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-2xl relative min-h-[260px] sm:min-h-[380px] lg:min-h-[440px] aspect-[16/10] flex items-center justify-center p-2 sm:p-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={
@@ -536,16 +537,18 @@ export function LandingView() {
                   />
                   
                   {/* Badge d'identification du mode actif */}
-                  <div className="absolute top-4 left-4 z-20">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#060f15]/85 px-3 py-1 text-xs font-bold text-white shadow-xl backdrop-blur-md">
-                      <span className="h-2 w-2 rounded-full bg-amber-400" />
-                      {activeDeviceTab === "pc"
-                        ? "Tableau de Bord & Caisse • Écran PC"
-                        : activeDeviceTab === "tablet"
-                        ? "Planning des Réservations • Tablette iPad"
-                        : activeDeviceTab === "mobile"
-                        ? "Caisse & Dépenses en Direct • Smartphone"
-                        : "Studio Multi-Écrans Synchronisé"}
+                  <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20 max-w-[calc(100%-1.5rem)]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#060f15]/90 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-white shadow-xl backdrop-blur-md truncate">
+                      <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+                      <span className="truncate">
+                        {activeDeviceTab === "pc"
+                          ? "Tableau de Bord & Caisse • Écran PC"
+                          : activeDeviceTab === "tablet"
+                          ? "Planning des Réservations • Tablette iPad"
+                          : activeDeviceTab === "mobile"
+                          ? "Caisse & Dépenses en Direct • Smartphone"
+                          : "Studio Multi-Écrans Synchronisé"}
+                      </span>
                     </span>
                   </div>
                 </div>

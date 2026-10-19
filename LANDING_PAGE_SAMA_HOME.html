@@ -45,10 +45,10 @@
     <img
       src="./web/public/images/landing/lounge-corniche-fann.jpeg"
       alt=""
-      class="h-full w-full object-cover opacity-25 scale-105 filter blur-[2px] transition-transform duration-1000"
+      class="h-full w-full object-cover opacity-70 sm:opacity-75 scale-105 transition-transform duration-1000"
     />
-    <!-- Voile feutré dégradé sombre laissant transparaître l'élégance de la pièce -->
-    <div class="absolute inset-0 bg-gradient-to-b from-[#060f15]/80 via-[#0b141a]/85 to-[#060f15]/95 backdrop-blur-[1px]"></div>
+    <!-- Voile feutré dégradé équilibré laissant ressortir l'élégance de la pièce tout en garantissant la lisibilité -->
+    <div class="absolute inset-0 bg-gradient-to-b from-[#060f15]/30 via-[#0b141a]/40 to-[#060f15]/65"></div>
     
     <!-- Halos lumineux dorés feutrés -->
     <div class="absolute -top-32 left-1/2 h-[550px] w-[950px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[160px]"></div>
@@ -182,48 +182,57 @@
             La solution tout-en-un conçue pour les gérants au Sénégal : séjours en direct, réservations, caisse automatique reliée aux dépenses (<strong class="text-amber-300 font-semibold">Wave, Orange Money, Espèces</strong>) et contrats en 1 clic.
           </p>
 
-          <!-- Boutons d'Action Principaux (Centrés sur Mobile & Tablette) -->
-          <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full sm:w-auto mx-auto lg:mx-0">
-            <a href="http://localhost:3000/login" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-6 sm:px-7 py-3.5 sm:py-4 text-sm sm:text-base font-black text-slate-950 shadow-xl shadow-amber-500/20 hover:from-amber-300 hover:to-orange-400 hover:scale-[1.02] active:scale-[0.98] transition-all text-center">
+          <!-- Boutons d'Action Principaux (Centrés sur Mobile & Tablette, Taille Cohérente & Faciles à Utiliser) -->
+          <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full sm:w-auto mx-auto lg:mx-0 max-w-md sm:max-w-none">
+            <a
+              href="http://localhost:3000/login"
+              class="w-full sm:w-auto min-h-[52px] sm:min-h-[54px] inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-6 sm:px-8 py-3.5 text-sm sm:text-base font-black text-slate-950 shadow-xl shadow-amber-500/25 hover:from-amber-300 hover:to-orange-400 hover:scale-[1.02] active:scale-[0.98] transition-all text-center"
+            >
               <span>Accéder à l'application</span>
               <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
 
-            <a href="https://wa.me/221773386660?text=Bonjour%2C%20je%20souhaite%20une%20d%C3%A9monstration%20de%20SAMA%20HOME" target="_blank" rel="noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md px-5 sm:px-6 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-slate-200 hover:bg-white/10 hover:text-white hover:border-amber-300/40 transition-all shadow-sm text-center">
-              <svg class="h-4 w-4 text-emerald-400 shrink-0 fill-current" viewBox="0 0 24 24">
+            <a
+              href="https://wa.me/221773386660?text=Bonjour%2C%20je%20souhaite%20une%20d%C3%A9monstration%20de%20SAMA%20HOME"
+              target="_blank"
+              rel="noreferrer"
+              class="w-full sm:w-auto min-h-[52px] sm:min-h-[54px] inline-flex items-center justify-center gap-2.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-6 sm:px-7 py-3.5 text-sm sm:text-base font-bold text-white hover:bg-white/15 hover:border-amber-300/50 hover:text-amber-200 transition-all shadow-md text-center"
+            >
+              <svg class="h-5 w-5 text-emerald-400 shrink-0 fill-current" viewBox="0 0 24 24">
                 <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1.004.573 1.777.877 2.806.877 3.18 0 5.768-2.587 5.768-5.766.001-3.18-2.587-5.76-5.768-5.76zm3.364 8.163c-.141.396-.714.735-1.026.779-.276.038-.636.064-2.029-.513-1.636-.677-2.737-2.348-2.818-2.456-.081-.108-.66-.879-.66-1.673 0-.794.417-1.185.565-1.345.148-.16.324-.2.432-.2.108 0 .216.002.311.007.1.006.234-.038.366.279.135.324.462 1.127.502 1.208.04.081.067.176.013.283-.053.108-.08.175-.16.27-.08.094-.17.21-.243.282-.08.081-.164.17-.07.332.094.162.418.69.898 1.117.618.55 1.14.721 1.302.802.162.081.256.068.35-.041.095-.108.405-.472.513-.634.108-.162.216-.135.365-.081.148.054.945.446 1.107.527.162.081.27.122.31.189.041.068.041.392-.1.788z" />
               </svg>
-              <span>Démo WhatsApp</span>
-              <span class="hidden sm:inline">(+221 77 338 66 60)</span>
+              <span>Démo WhatsApp Directe</span>
             </a>
           </div>
 
-          <!-- Les 2 Numéros de Contact Direct Officiels (Centrés sur Mobile & Tablette) -->
-          <div class="mt-5 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-3 text-xs font-semibold text-slate-300 mx-auto lg:mx-0 w-full sm:w-auto">
-            <div class="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3.5 py-2 border border-white/10 backdrop-blur-sm w-full sm:w-auto">
-              <svg class="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <!-- Les 2 Numéros de Contact Direct Officiels (Centrés, Lisibles & Click-to-Call) -->
+          <div class="mt-4 sm:mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-2.5 sm:gap-3 text-xs font-semibold text-slate-200 mx-auto lg:mx-0 w-full sm:w-auto max-w-md sm:max-w-none">
+            <a
+              href="tel:+221773386660"
+              class="flex items-center justify-center gap-2 rounded-xl bg-[#0f1922]/85 px-4 py-2.5 border border-white/15 backdrop-blur-md hover:border-amber-400/50 hover:bg-[#152330] transition-all w-full sm:w-auto text-center min-h-[44px]"
+            >
+              <svg class="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
               <span class="text-amber-300 font-bold">Ligne 1 :</span>
-              <a href="tel:+221773386660" class="hover:text-amber-300 transition-colors font-bold text-white">
-                +221 77 338 66 60
-              </a>
-            </div>
-            <div class="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3.5 py-2 border border-white/10 backdrop-blur-sm w-full sm:w-auto">
-              <svg class="h-3.5 w-3.5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <span class="font-extrabold text-white">+221 77 338 66 60</span>
+            </a>
+            <a
+              href="tel:+221772495080"
+              class="flex items-center justify-center gap-2 rounded-xl bg-[#0f1922]/85 px-4 py-2.5 border border-white/15 backdrop-blur-md hover:border-amber-400/50 hover:bg-[#152330] transition-all w-full sm:w-auto text-center min-h-[44px]"
+            >
+              <svg class="h-4 w-4 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
               <span class="text-amber-300 font-bold">Ligne 2 :</span>
-              <a href="tel:+221773634040" class="hover:text-amber-300 transition-colors font-bold text-white">
-                +221 77 363 40 40
-              </a>
-            </div>
+              <span class="font-extrabold text-white">+221 77 249 50 80</span>
+            </a>
           </div>
 
           <!-- Rassurance discrète et centrée sur mobile & tablette -->
-          <div class="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-xs font-medium text-slate-400 mx-auto lg:mx-0">
+          <div class="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[11px] sm:text-xs font-medium text-slate-300 mx-auto lg:mx-0">
             <div class="flex items-center gap-1.5">
               <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
               <span>100% sur PC, Tablette & Mobile</span>
@@ -304,7 +313,7 @@
             </div>
 
             <!-- Badge Flottant 1 (Haut Droite) : Wave Reçu en Temps Réel -->
-            <div class="hidden sm:flex absolute -top-4 -right-3 items-center gap-2.5 rounded-2xl border border-amber-400/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20">
+            <div class="hidden sm:flex absolute -top-3 right-0 sm:top-2 sm:right-2 lg:-top-4 lg:-right-3 items-center gap-2.5 rounded-2xl border border-amber-400/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20">
               <span class="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-xs shrink-0">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
@@ -317,7 +326,7 @@
             </div>
 
             <!-- Badge Flottant 2 (Bas Gauche) : Caisse & Dépenses Étanche -->
-            <div class="hidden sm:flex absolute -bottom-4 -left-3 items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20">
+            <div class="hidden sm:flex absolute -bottom-3 left-0 sm:bottom-2 sm:left-2 lg:-bottom-4 lg:-left-3 items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-[#121e26]/95 p-3 shadow-2xl backdrop-blur-xl z-20">
               <div class="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold shrink-0">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -409,50 +418,50 @@
             <span class="text-xs sm:text-sm font-bold text-white">Démo Interactive Multi-Écrans</span>
             <span class="hidden sm:inline text-xs text-slate-400">— Cliquez sur un appareil pour zoomer</span>
           </div>
-          <div class="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 text-xs font-semibold" id="device-tabs">
+          <div class="grid grid-cols-4 sm:flex sm:items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-black/60 border border-white/10 text-[11px] sm:text-xs font-semibold w-full sm:w-auto" id="device-tabs">
             <button
               type="button"
               onclick="setDeviceMockup('all')"
               id="tab-all"
-              class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-amber-400 text-slate-950 font-bold shadow-md"
+              class="px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 bg-amber-400 text-slate-950 font-bold shadow-md"
             >
-              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
-              <span>Tous les Écrans</span>
+              <span class="truncate"><span class="hidden sm:inline">Tous les </span>Écrans</span>
             </button>
             <button
               type="button"
               onclick="setDeviceMockup('pc')"
               id="tab-pc"
-              class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/5"
+              class="px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-slate-300 hover:text-white hover:bg-white/5"
             >
-              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              <span>Ordinateur</span>
+              <span class="truncate">PC</span>
             </button>
             <button
               type="button"
               onclick="setDeviceMockup('tablet')"
               id="tab-tablet"
-              class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/5"
+              class="px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-slate-300 hover:text-white hover:bg-white/5"
             >
-              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              <span>Tablette</span>
+              <span class="truncate">Tablette</span>
             </button>
             <button
               type="button"
               onclick="setDeviceMockup('mobile')"
               id="tab-mobile"
-              class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/5"
+              class="px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-slate-300 hover:text-white hover:bg-white/5"
             >
-              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              <span>Smartphone</span>
+              <span class="truncate">Mobile</span>
             </button>
           </div>
         </div>
@@ -461,7 +470,7 @@
           
           <!-- Image Visuelle de la Maquette Studio Multi-Devices Réelle -->
           <div class="lg:col-span-7 relative">
-            <div class="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-2xl relative aspect-[16/10] flex items-center justify-center p-2 sm:p-4">
+            <div class="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-2xl relative min-h-[260px] sm:min-h-[380px] lg:min-h-[440px] aspect-[16/10] flex items-center justify-center p-2 sm:p-4">
               <img
                 id="main-device-mockup"
                 src="./web/public/images/landing/mockup-multi-devices-studio.jpg"
@@ -470,10 +479,10 @@
               />
               
               <!-- Badge d'identification du mode actif -->
-              <div class="absolute top-4 left-4 z-20">
+              <div class="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-20">
                 <span id="device-badge" class="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#060f15]/85 px-3 py-1 text-xs font-bold text-white shadow-xl backdrop-blur-md">
                   <span class="h-2 w-2 rounded-full bg-amber-400"></span>
-                  Studio Multi-Écrans Synchronisé
+                  <span class="truncate max-w-[220px] sm:max-w-none">Studio Multi-Écrans Synchronisé</span>
                 </span>
               </div>
             </div>
@@ -1164,7 +1173,7 @@
       
       img.src = deviceMockups[mode].src;
       if (badge) {
-        badge.innerHTML = '<span class="h-2 w-2 rounded-full bg-amber-400"></span> ' + deviceMockups[mode].badge;
+        badge.innerHTML = '<span class="h-2 w-2 rounded-full bg-amber-400"></span> <span class="truncate max-w-[220px] sm:max-w-none">' + deviceMockups[mode].badge + '</span>';
       }
 
       ['all', 'pc', 'tablet', 'mobile'].forEach(m => {
@@ -1172,9 +1181,9 @@
         const card = document.getElementById('card-' + m);
         if (tab) {
           if (m === mode) {
-            tab.className = 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-amber-400 text-slate-950 font-bold shadow-md';
+            tab.className = 'px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 bg-amber-400 text-slate-950 font-bold shadow-md';
           } else {
-            tab.className = 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/5';
+            tab.className = 'px-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-slate-300 hover:text-white hover:bg-white/5';
           }
         }
         if (card) {
