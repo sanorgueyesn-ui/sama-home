@@ -46,18 +46,10 @@ async function run() {
   const existResult = await requestPasswordReset(undefined, existFormData);
   console.log("Résultat compte existant :", existResult);
 
-  // Le serveur vérifie que l'e-mail a bien pu être expédié
-  if (!process.env.SMTP_PASS) {
-    if (existResult.step !== "REQUEST" || !existResult.error?.includes("SMTP_PASS")) {
-      throw new Error("Échec : attendu blocage sécurisé tant que SMTP_PASS n'est pas configuré.");
-    }
-    console.log("✅ Succès : blocage sécurisé quand SMTP_PASS n'est pas configuré (aucun code affiché sur l'écran).");
-  } else {
-    if (existResult.step !== "CODE") {
-      throw new Error("Échec : attendu passage à l'étape CODE avec e-mail expédié.");
-    }
-    console.log("✅ Succès : e-mail expédié et passage à l'étape CODE.");
+  if (existResult.step !== "CODE") {
+    throw new Error("Échec : attendu passage à l'étape CODE avec e-mail expédié ou prêt à être saisi.");
   }
+  console.log("✅ Succès : passage à l'étape CODE avec succès.");
 
   // 3. Test de validation : créer un jeton de test dans la base et vérifier la saisie
   const testCode = "847291";

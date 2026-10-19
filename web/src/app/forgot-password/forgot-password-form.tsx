@@ -13,13 +13,14 @@ export function ForgotPasswordForm() {
   const [requestState, requestAction, isRequesting] = useActionState(requestPasswordReset, initialState);
   const [confirmState, confirmAction, isConfirming] = useActionState(confirmPasswordReset, initialState);
 
-  // Étape actuelle dérivée des états d'action
+  // Étape actuelle
   const [activeStep, setActiveStep] = useState<"REQUEST" | "CODE" | "SUCCESS">("REQUEST");
+  const [identifierInput, setIdentifierInput] = useState<string>("");
   const [currentEmail, setCurrentEmail] = useState<string>("");
   const [maskedEmail, setMaskedEmail] = useState<string>("");
   const [countdown, setCountdown] = useState<number>(0);
 
-  // Synchronisation avec les retours serveur
+  // Synchronisation avec les retours serveur pour confirmation
   useEffect(() => {
     if (confirmState?.step === "SUCCESS") {
       setActiveStep("SUCCESS");
@@ -28,6 +29,7 @@ export function ForgotPasswordForm() {
     }
   }, [confirmState]);
 
+  // Synchronisation avec les retours serveur pour demande
   useEffect(() => {
     if (requestState?.step === "CODE" && requestState.email) {
       setActiveStep("CODE");
@@ -50,8 +52,8 @@ export function ForgotPasswordForm() {
   // =========================================================================
   if (activeStep === "SUCCESS") {
     return (
-      <div className="flex flex-col items-center text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 animate-in zoom-in-75 duration-300">
+      <div className="flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -79,35 +81,43 @@ export function ForgotPasswordForm() {
   // ÉTAPE 2 : CODE DE VÉRIFICATION & NOUVEAU MOT DE PASSE
   // =========================================================================
   if (activeStep === "CODE") {
+    const displayTarget = maskedEmail || currentEmail || "votre boîte e-mail";
+
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 animate-in fade-in duration-300">
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-left">
           <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-xs font-black uppercase tracking-wider">
-            <span>✉️</span> Code envoyé par e-mail
+            <span>✉️</span> Code de confirmation envoyé
           </div>
           <p className="mt-1 text-xs text-fg/80 leading-relaxed">
-            Consultez votre boîte de réception à l&apos;adresse <strong className="text-fg">{maskedEmail}</strong>. Saisissez le code de sécurité à 6 chiffres reçu par e-mail pour définir votre nouveau mot de passe.
+            Consultez votre boîte à l&apos;adresse <strong className="text-fg">{displayTarget}</strong>. Saisissez le code de sécurité à 6 chiffres pour définir votre nouveau mot de passe.
           </p>
         </div>
 
+        {requestState?.message && (
+          <p className="text-xs text-brand-orange/90 font-semibold text-left">
+            ℹ️ {requestState.message}
+          </p>
+        )}
+
         <form action={confirmAction} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 text-left">
             <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-fg/70">
-              Adresse e-mail <span className="text-danger">*</span>
+              Adresse e-mail ou identifiant <span className="text-danger">*</span>
             </label>
             <input
               id="email"
               name="email"
-              type="email"
+              type="text"
               required
               value={currentEmail}
               onChange={(e) => setCurrentEmail(e.target.value)}
-              placeholder="nom@exemple.com"
+              placeholder="nom@exemple.com ou identifiant"
               className="h-12 w-full rounded-2xl border border-border/20 bg-surface-sunken px-4 text-sm font-semibold text-fg placeholder:text-fg/30 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 text-left">
             <label htmlFor="code" className="text-xs font-bold uppercase tracking-wider text-fg/70">
               Code de sécurité à 6 chiffres <span className="text-danger">*</span>
             </label>
@@ -164,7 +174,7 @@ export function ForgotPasswordForm() {
                 Validation en cours...
               </span>
             ) : (
-              "CHANGER MON MOT DE PASSE"
+              "VALIDER MON NOUVEAU MOT DE PASSE"
             )}
           </button>
         </form>
@@ -188,9 +198,9 @@ export function ForgotPasswordForm() {
           <button
             type="button"
             onClick={() => setActiveStep("REQUEST")}
-            className="text-[11px] font-medium text-fg/50 hover:text-fg hover:underline"
+            className="text-xs font-medium text-fg/50 hover:text-fg hover:underline transition-colors"
           >
-            ← Modifier l'adresse e-mail
+            ← Modifier l&apos;adresse e-mail / Retour
           </button>
         </div>
       </div>
@@ -201,23 +211,27 @@ export function ForgotPasswordForm() {
   // ÉTAPE 1 : DEMANDE D'ENVOI DU CODE
   // =========================================================================
   return (
-    <form action={requestAction} className="flex flex-col gap-4">
+    <form action={requestAction} className="flex flex-col gap-4 animate-in fade-in duration-300">
       <div className="text-left">
         <p className="text-xs text-fg/70 leading-relaxed">
-          Saisissez l'adresse e-mail ou l'identifiant associé à votre compte. Nous vous enverrons immédiatement un code de confirmation sécurisé par e-mail.
+          Saisissez l&apos;adresse e-mail ou l&apos;identifiant associé à votre compte. Nous vous enverrons immédiatement un code de confirmation sécurisé par e-mail.
         </p>
       </div>
 
-      <AuthField
-        id="identifier"
-        name="identifier"
-        label="Adresse e-mail ou identifiant"
-        icon="person"
-        autoComplete="username"
-        required
-        autoFocus
-        hint="Ex: nom@exemple.com ou mon_identifiant"
-      />
+      <div className="flex flex-col gap-1.5 text-left">
+        <AuthField
+          id="identifier"
+          name="identifier"
+          label="Adresse e-mail ou identifiant"
+          icon="person"
+          autoComplete="username"
+          required
+          autoFocus
+          value={identifierInput}
+          onChange={(e) => setIdentifierInput(e.target.value)}
+          hint="Ex: nom@exemple.com ou mon_identifiant"
+        />
+      </div>
 
       {requestState?.error && (
         <div
@@ -252,7 +266,7 @@ export function ForgotPasswordForm() {
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-[11px] font-bold">
                   ✓
                 </span>
-                <span>Compte identifié • Configuration d&apos;envoi requise</span>
+                <span>Compte identifié</span>
               </>
             )}
           </div>
@@ -304,13 +318,19 @@ export function ForgotPasswordForm() {
       <div className="pt-2 text-center flex flex-col items-center gap-3">
         <button
           type="button"
-          onClick={() => setActiveStep("CODE")}
-          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-brand-orange hover:underline transition-colors"
+          onClick={() => {
+            if (identifierInput) {
+              setCurrentEmail(identifierInput);
+              setMaskedEmail(identifierInput);
+            }
+            setActiveStep("CODE");
+          }}
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-brand-orange/40 bg-brand-orange/10 px-4 text-xs font-black text-brand-orange transition-all hover:bg-brand-orange/20 active:scale-98"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2m-2-2l-4 4a5 5 0 1 1-7-7l4-4 7 7z" />
           </svg>
-          J&apos;ai déjà reçu mon code de confirmation →
+          <span>J&apos;AI DÉJÀ REÇU MON CODE DE CONFIRMATION →</span>
         </button>
 
         <Link

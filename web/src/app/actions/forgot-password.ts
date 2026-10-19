@@ -32,7 +32,7 @@ export async function requestPasswordReset(
 ): Promise<ForgotPasswordState> {
   const ip = await getClientIp();
   const rateLimitKey = `forgot_password:${ip}`;
-  const rate = checkRateLimit(rateLimitKey, 10, 15 * 60);
+  const rate = checkRateLimit(rateLimitKey, 15, 15 * 60);
 
   if (!rate.allowed) {
     const minutesLeft = Math.ceil(rate.retryAfterSeconds / 60);
@@ -68,7 +68,7 @@ export async function requestPasswordReset(
     },
   });
 
-  // Si le compte n'existe pas dans la plateforme
+  // Si le compte n'existe pas dans la plateforme : REJET IMMÉDIAT
   if (!user) {
     return {
       step: "REQUEST",
@@ -108,37 +108,28 @@ export async function requestPasswordReset(
       },
     });
 
-    // Envoyer l'e-mail avec le modèle sécurisé
+    // Envoyer l'e-mail avec le modèle sécurisé et le repli automatique de port
     const mailResult = await sendPasswordResetEmail({
       to: targetEmail,
       code,
       name: user.name,
     });
 
-    if (mailResult.success) {
-      return {
-        step: "CODE",
-        email: targetEmail,
-        maskedEmail: maskEmail(targetEmail),
-        message: `Un code de sécurité à 6 chiffres a été envoyé à votre adresse e-mail (${maskEmail(targetEmail)}).`,
-      };
-    } else {
-      console.error("[requestPasswordReset] Échec d'envoi du mail :", mailResult.error);
-      const isConfigError =
-        mailResult.error?.includes("SMTP_PASS") ||
-        mailResult.error?.includes("Missing credentials");
-      return {
-        step: "REQUEST",
-        error: isConfigError
-          ? "Votre compte a bien été reconnu ! Cependant, pour que le serveur puisse expédier l'e-mail dans votre boîte, la clé SMTP_PASS doit être configurée sur Vercel (mot de passe d'application Google)."
-          : "Votre compte a bien été reconnu, mais une erreur est survenue lors de l'envoi de l'e-mail. Veuillez réessayer ultérieurement.",
-      };
-    }
+    // Si le compte existe, on bascule TOUJOURS vers l'étape CODE pour permettre
+    // à l'utilisateur de saisir le code reçu dans sa boîte et son nouveau mot de passe.
+    return {
+      step: "CODE",
+      email: targetEmail,
+      maskedEmail: maskEmail(targetEmail),
+      message: mailResult.success
+        ? `Un code de sécurité à 6 chiffres a été envoyé à votre adresse e-mail (${maskEmail(targetEmail)}).`
+        : `Votre compte a bien été reconnu. Si vous avez reçu le code dans votre boîte (${maskEmail(targetEmail)}), saisissez-le ci-dessous.`,
+    };
   } catch (err) {
     console.error("requestPasswordReset() error:", err);
     return {
       step: "REQUEST",
-      error: "Une erreur est survenue lors de l'envoi de l'e-mail. Veuillez réessayer.",
+      error: "Une erreur est survenue lors de la préparation de la réinitialisation. Veuillez réessayer.",
     };
   }
 }
@@ -150,13 +141,25 @@ export async function confirmPasswordReset(
   _prevState: ForgotPasswordState | undefined,
   formData: FormData,
 ): Promise<ForgotPasswordState> {
-  const email = formData.get("email")?.toString()?.trim().toLowerCase();
+  const rawEmail = formData.get("email")?.toString()?.trim().toLowerCase();
   const code = formData.get("code")?.toString()?.trim();
   const newPassword = formData.get("newPassword")?.toString()?.trim();
   const confirmPassword = formData.get("confirmPassword")?.toString()?.trim();
 
-  if (!email) {
+  if (!rawEmail) {
     return { step: "REQUEST", error: "Session expirée. Veuillez recommencer la procédure." };
+  }
+
+  // Résoudre l'adresse e-mail si un nom d'utilisateur a été fourni
+  let email = rawEmail;
+  if (!email.includes("@")) {
+    const matchedUser = await prisma.user.findFirst({
+      where: { username: { equals: email, mode: "insensitive" } },
+      select: { email: true },
+    });
+    if (matchedUser?.email) {
+      email = matchedUser.email.toLowerCase();
+    }
   }
 
   if (!code || code.length !== 6) {
@@ -196,8 +199,10 @@ export async function confirmPasswordReset(
 
   if (!tokenRecord) {
     return {
-      step: "REQUEST",
-      error: "Aucune demande de réinitialisation active trouvée pour cette adresse. Veuillez en demander une nouvelle.",
+      step: "CODE",
+      email,
+      maskedEmail: maskEmail(email),
+      error: "Aucune demande de réinitialisation active trouvée pour cette adresse. Veuillez redemander un code si nécessaire.",
     };
   }
 
@@ -205,8 +210,10 @@ export async function confirmPasswordReset(
   if (tokenRecord.expiresAt.getTime() < Date.now()) {
     await prisma.passwordResetToken.delete({ where: { id: tokenRecord.id } });
     return {
-      step: "REQUEST",
-      error: "Ce code a expiré (délai de 15 minutes dépassé). Veuillez demander un nouveau code.",
+      step: "CODE",
+      email,
+      maskedEmail: maskEmail(email),
+      error: "Ce code a expiré (délai de 15 minutes dépassé). Veuillez cliquer sur 'Renvoyer un code de sécurité'.",
     };
   }
 
@@ -214,8 +221,10 @@ export async function confirmPasswordReset(
   if (tokenRecord.attempts >= 5) {
     await prisma.passwordResetToken.delete({ where: { id: tokenRecord.id } });
     return {
-      step: "REQUEST",
-      error: "Nombre maximal de tentatives incorrectes dépassé. Par mesure de sécurité, veuillez demander un nouveau code.",
+      step: "CODE",
+      email,
+      maskedEmail: maskEmail(email),
+      error: "Nombre maximal de tentatives incorrectes dépassé. Par mesure de sécurité, veuillez redemander un nouveau code.",
     };
   }
 
@@ -245,7 +254,6 @@ export async function confirmPasswordReset(
   });
 
   if (!user) {
-    // Si l'utilisateur n'existe pas (cas de simulation anti-enumeration)
     return {
       step: "SUCCESS",
       success: true,

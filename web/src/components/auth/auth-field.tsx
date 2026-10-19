@@ -45,6 +45,8 @@ export function AuthField({
   errors,
   passwordToggle,
   defaultValue,
+  value,
+  onChange,
   autoFocus,
   readOnly,
 }: {
@@ -60,6 +62,8 @@ export function AuthField({
   errors?: string[];
   passwordToggle?: boolean;
   defaultValue?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   autoFocus?: boolean;
   readOnly?: boolean;
 }) {
@@ -84,6 +88,8 @@ export function AuthField({
           required={required}
           disabled={disabled}
           defaultValue={defaultValue}
+          value={value}
+          onChange={onChange}
           autoFocus={autoFocus}
           readOnly={readOnly}
           className={`h-12 w-full rounded-xl border border-border/15 bg-surface pl-10 text-sm font-medium text-fg outline-none placeholder:text-fg/50 focus:border-navy focus-visible:ring-2 focus-visible:ring-navy disabled:opacity-60 ${
