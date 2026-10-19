@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getPlatformSettings, getPricingSettings } from "@/lib/platform-settings-data";
+import { getCurrentUser } from "@/lib/dal";
 import { AutoApprovalToggle } from "../auto-approval-toggle";
 import { PricingSettingsForm } from "../pricing-settings-form";
+import { AdminPasswordForm } from "./admin-password-form";
 import { COMPANY_LEGAL_INFO } from "@/lib/company-info";
 
 function fmtFcfa(amount: number) {
@@ -13,11 +15,17 @@ export default async function PlatformSettingsPage() {
   let autoApproveEstablishments = false;
   let pricing: { trialDurationMonths: number; periodMonths: number; periodPriceFcfa: number } | null = null;
   let loadError: string | null = null;
+  let currentUser: { username: string; name: string } | null = null;
 
   try {
-    const [platformSettings, pricingSettings] = await Promise.all([getPlatformSettings(), getPricingSettings()]);
+    const [platformSettings, pricingSettings, user] = await Promise.all([
+      getPlatformSettings(),
+      getPricingSettings(),
+      getCurrentUser(),
+    ]);
     autoApproveEstablishments = platformSettings.autoApproveEstablishments;
     pricing = pricingSettings;
+    currentUser = user;
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error && typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
       throw error;
@@ -382,11 +390,35 @@ export default async function PlatformSettingsPage() {
             </div>
           </div>
 
-          {/* Section 4 : Sécurité & Traçabilité */}
+          {/* Section 4 : Sécurité & Mot de passe administrateur */}
+          <div className="rounded-3xl border border-brand-orange/30 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-black text-white">4. Sécurité du compte & Modification du mot de passe</h2>
+                <p className="mt-1 text-xs text-white/50">
+                  Modifiez votre mot de passe d&apos;accès administrateur de plateforme SAMA HOME.
+                </p>
+              </div>
+              <span className="self-start rounded-full bg-brand-orange/20 px-2.5 py-0.5 text-xs font-bold text-brand-orange whitespace-nowrap sm:self-auto">
+                Accès Super-Administrateur
+              </span>
+            </div>
+
+            <div className="mt-6">
+              {currentUser ? (
+                <AdminPasswordForm
+                  currentUsername={currentUser.username}
+                  currentName={currentUser.name}
+                />
+              ) : null}
+            </div>
+          </div>
+
+          {/* Section 5 : Sécurité & Traçabilité */}
           <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
             <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-black text-white">4. Sécurité & Gouvernance Plateforme</h2>
+                <h2 className="text-lg font-black text-white">5. Sécurité & Gouvernance Plateforme</h2>
                 <p className="mt-1 text-xs text-white/50">
                   Traçabilité des décisions administratives, isolation multi-tenant et intégrité système.
                 </p>
@@ -426,11 +458,11 @@ export default async function PlatformSettingsPage() {
             </div>
           </div>
 
-          {/* Section 5 : Mentions Légales & Immatriculation Juridique */}
+          {/* Section 6 : Mentions Légales & Immatriculation Juridique */}
           <div className="rounded-3xl border border-white/10 bg-[#0e1a22] p-5 shadow-sm sm:p-7">
             <div className="flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-black text-white">5. Mentions Légales & Entité Juridique Sénégalaise</h2>
+                <h2 className="text-lg font-black text-white">6. Mentions Légales & Entité Juridique Sénégalaise</h2>
                 <p className="mt-1 text-xs text-white/50">
                   Immatriculation officielle de l&apos;entreprise éditrice et exploitante de la plateforme SAMA HOME.
                 </p>

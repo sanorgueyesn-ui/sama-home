@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
+import { hashPassword } from "@/lib/password";
 import { PricingSettingsSchema, type PricingSettingsFormState } from "@/lib/definitions";
 import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
 
@@ -158,3 +159,95 @@ export async function setPricingSettings(
 
   return { success: true };
 }
+
+export async function updateAdminPassword(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+  const user = await requirePlatformAdmin();
+  const newPassword = formData.get("newPassword")?.toString()?.trim();
+  const confirmPassword = formData.get("confirmPassword")?.toString()?.trim();
+
+  if (!newPassword || newPassword.length < 8) {
+    return { error: "Le mot de passe doit comporter au moins 8 caractères." };
+  }
+  if (newPassword !== confirmPassword) {
+    return { error: "Les deux mots de passe ne correspondent pas." };
+  }
+
+  try {
+    const passwordHash = await hashPassword(newPassword);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    revalidatePath("/plateforme/parametres");
+    return { success: true };
+  } catch (error) {
+    console.error("updateAdminPassword() error:", error);
+    return { error: "Une erreur est survenue lors de la mise à jour du mot de passe." };
+  }
+}
+
+export async function createPlatformAdminUser(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+  const admin = await requirePlatformAdmin();
+  const name = formData.get("name")?.toString()?.trim();
+  const username = formData.get("username")?.toString()?.trim().toLowerCase();
+  const email = formData.get("email")?.toString()?.trim().toLowerCase();
+  const password = formData.get("password")?.toString()?.trim();
+  const confirmPassword = formData.get("confirmPassword")?.toString()?.trim();
+
+  if (!name || name.length < 2) {
+    return { error: "Veuillez renseigner un nom complet valide (2 caractères min)." };
+  }
+  if (!username || username.length < 3) {
+    return { error: "L'identifiant de connexion doit comporter au moins 3 caractères." };
+  }
+  if (!password || password.length < 8) {
+    return { error: "Le mot de passe doit comporter au moins 8 caractères." };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Les deux mots de passe ne correspondent pas." };
+  }
+
+  const existing = await prisma.user.findFirst({
+    where: {
+      OR: [{ username }, ...(email ? [{ email }] : [])],
+    },
+  });
+  if (existing) {
+    return { error: `Un compte existe déjà avec cet identifiant ou cet email (${username}).` };
+  }
+
+  try {
+    const passwordHash = await hashPassword(password);
+    await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          username,
+          email: email || null,
+          passwordHash,
+          isPlatformAdmin: true,
+          role: "ADMIN",
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: admin.id,
+          action: "PLATFORM_ADMIN_CREATED",
+          entityType: "User",
+          entityId: newUser.id,
+          reason: `Création du compte administrateur plateforme ${username} par ${admin.name}`,
+          establishmentId: null,
+        },
+      });
+    });
+
+    revalidatePath("/plateforme/utilisateurs");
+    return { success: true };
+  } catch (error) {
+    console.error("createPlatformAdminUser() error:", error);
+    return { error: "Une erreur est survenue lors de la création du compte administrateur." };
+  }
+}
+

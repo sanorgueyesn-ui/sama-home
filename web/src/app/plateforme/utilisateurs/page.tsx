@@ -2,6 +2,7 @@ import { listPlatformUsers, type PlatformUserView } from "@/lib/platform-users-d
 import { ROLE_LABELS, ESTABLISHMENT_STATUS_LABELS } from "./filter-labels";
 import { PlatformUserFilterBar } from "./filter-bar";
 import { UserLifecycleButtons } from "./user-lifecycle-buttons";
+import { NewPlatformAdminModal } from "./new-platform-admin-modal";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
@@ -100,10 +101,17 @@ export default async function PlatformUsersPage(props: PageProps<"/plateforme/ut
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 pt-6 pb-16 sm:px-6 md:px-8 lg:px-10">
-      <h1 className="text-2xl font-black text-white sm:text-3xl">Utilisateurs</h1>
-      <p className="mt-1 text-xs font-medium text-white/50 sm:text-sm">
-        Supervision globale et gestion des comptes utilisateurs de la plateforme SAMA HOME.
-      </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-white sm:text-3xl">Utilisateurs</h1>
+          <p className="mt-1 text-xs font-medium text-white/50 sm:text-sm">
+            Supervision globale et gestion des comptes utilisateurs de la plateforme SAMA HOME.
+          </p>
+        </div>
+        <div className="shrink-0">
+          <NewPlatformAdminModal />
+        </div>
+      </div>
 
       <div className="mt-5">
         <PlatformUserFilterBar
