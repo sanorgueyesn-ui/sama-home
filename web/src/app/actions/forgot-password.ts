@@ -10,6 +10,7 @@ export type ForgotPasswordState = {
   email?: string;
   maskedEmail?: string;
   error?: string;
+  accountNotFound?: boolean;
   message?: string;
   success?: boolean;
 };
@@ -71,7 +72,8 @@ export async function requestPasswordReset(
   if (!user) {
     return {
       step: "REQUEST",
-      error: "Ce compte n'existe pas. Veuillez vérifier votre adresse e-mail ou votre identifiant.",
+      accountNotFound: true,
+      error: "Cette adresse e-mail n'existe pas sur la plateforme. Pas besoin d'envoyer un code de validation.",
     };
   }
 

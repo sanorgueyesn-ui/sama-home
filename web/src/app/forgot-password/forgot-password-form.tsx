@@ -206,9 +206,50 @@ export function ForgotPasswordForm() {
       />
 
       {requestState?.error && (
-        <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-xs font-bold text-danger animate-in fade-in">
-          {requestState.error}
-        </p>
+        <div
+          role="alert"
+          className="rounded-2xl border border-danger/30 bg-danger-bg p-4 text-left animate-in fade-in"
+        >
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-danger">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            {requestState.accountNotFound ? "Adresse e-mail introuvable" : "Erreur"}
+          </div>
+
+          <p className="mt-1.5 text-xs font-semibold text-danger leading-relaxed">
+            {requestState.error}
+          </p>
+
+          {requestState.accountNotFound && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-danger/20 pt-2.5 text-xs">
+              <Link
+                href="/register"
+                className="font-extrabold text-brand-orange underline hover:no-underline"
+              >
+                Créer un compte SAMA HOME →
+              </Link>
+              <span className="text-fg/30">•</span>
+              <Link
+                href="/login"
+                className="font-bold text-fg/70 hover:text-fg hover:underline"
+              >
+                Se connecter
+              </Link>
+            </div>
+          )}
+        </div>
       )}
 
       <button

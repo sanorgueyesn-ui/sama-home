@@ -28,10 +28,10 @@ async function run() {
   nonExistentFormData.append("identifier", "inconnu_99999@test.com");
   const nonExistentResult = await requestPasswordReset(undefined, nonExistentFormData);
   console.log("Résultat compte inexistant :", nonExistentResult);
-  if (nonExistentResult.step !== "REQUEST" || !nonExistentResult.error?.includes("Ce compte n'existe pas")) {
-    throw new Error("Échec : attendu 'Ce compte n'existe pas.'");
+  if (nonExistentResult.step !== "REQUEST" || !nonExistentResult.accountNotFound || !nonExistentResult.error?.includes("n'existe pas")) {
+    throw new Error("Échec : attendu message d'erreur et accountNotFound: true");
   }
-  console.log("✅ Succès : le compte inexistant affiche bien 'Ce compte n'existe pas.'");
+  console.log("✅ Succès : le compte inexistant affiche bien l'erreur et accountNotFound.");
 
   // 2. Test avec un compte existant
   const user = await prisma.user.findFirst({
