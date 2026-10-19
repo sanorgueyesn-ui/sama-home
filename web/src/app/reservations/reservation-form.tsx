@@ -76,6 +76,10 @@ export function ReservationForm({
   const [propertyId, setPropertyId] = useState(initialPropId);
   const [tariffId, setTariffId] = useState(initialTariffId);
 
+  // Mode de facturation : Par Jour (avec contrat & CNI) vs Par Heure (passage express)
+  const [billingMode, setBillingMode] = useState<"HOUR" | "DAY">("DAY");
+  const [numberOfDays, setNumberOfDays] = useState(1);
+
   // Mode de saisie client : Nouveau client direct OU sélection d'un client existant
   const [clientMode, setClientMode] = useState<"EXISTING" | "NEW">(
     defaultValues?.clientId ? "EXISTING" : clients.length === 0 ? "NEW" : "EXISTING"
@@ -110,12 +114,18 @@ export function ReservationForm({
   const effectiveTariffId = activeTariffs.some((t) => t.id === tariffId) ? tariffId : (activeTariffs[0]?.id ?? "");
   const selectedTariff = activeTariffs.find((t) => t.id === effectiveTariffId);
 
-  // Auto-sélection systématique du premier tarif si une chambre est choisie mais pas le tarif
+  // Auto-sélection systématique du premier tarif selon le mode (Jour vs Heure)
   useEffect(() => {
     if (propertyId && (!tariffId || !activeTariffs.some((t) => t.id === tariffId)) && activeTariffs.length > 0) {
-      setTariffId(activeTariffs[0].id);
+      if (billingMode === "DAY") {
+        const dayTariff = activeTariffs.find((t) => t.durationUnit === "DAY" || /jour|24h|nuit/i.test(t.label));
+        setTariffId(dayTariff ? dayTariff.id : activeTariffs[0].id);
+      } else {
+        const hourTariff = activeTariffs.find((t) => t.durationUnit === "HOURS" || /heure|passage|sieste/i.test(t.label));
+        setTariffId(hourTariff ? hourTariff.id : activeTariffs[0].id);
+      }
     }
-  }, [propertyId, tariffId, activeTariffs]);
+  }, [propertyId, tariffId, activeTariffs, billingMode]);
 
   // Client-side past check protection: if date is today and time is in the past, or date < today
   const isPastDateTime = useMemo(() => {
@@ -150,6 +160,8 @@ export function ReservationForm({
         date,
         arrivalTime,
         excludeReservationId,
+        billingMode,
+        numberOfDays: billingMode === "DAY" ? numberOfDays : 1,
       });
       setAvailability({
         checking: false,
@@ -159,7 +171,7 @@ export function ReservationForm({
       });
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [propertyId, effectiveTariffId, date, arrivalTime, excludeReservationId, isPastDateTime]);
+  }, [propertyId, effectiveTariffId, date, arrivalTime, excludeReservationId, isPastDateTime, billingMode, numberOfDays]);
 
   const departurePreview = useMemo(() => {
     if (!availability.departureTime) return null;
@@ -173,23 +185,23 @@ export function ReservationForm({
 
   const isEdit = Boolean(excludeReservationId);
 
-  // Règle des 10 jours (> 240 heures)
-  const needsIdentity = useMemo(() => {
-    if (!availability.departureTime || !date || !arrivalTime) return false;
-    const arrival = new Date(`${date}T${arrivalTime}:00`);
-    const departure = new Date(availability.departureTime);
-    if (Number.isNaN(arrival.getTime()) || Number.isNaN(departure.getTime())) return false;
-    return requiresIdentity(arrival, departure);
-  }, [availability.departureTime, date, arrivalTime]);
-
+  // Règle de pièce d'identité : requise pour réservation journalière
   const clientAlreadyHasIdentity = Boolean(
     clientMode === "EXISTING" && selectedClient?.idDocumentType && selectedClient?.idDocumentNumber
   );
-  const showIdentitySection = needsIdentity && !clientAlreadyHasIdentity;
+  const showIdentitySection = billingMode === "DAY" && !clientAlreadyHasIdentity;
+
+  const stayAmount = useMemo(() => {
+    if (!selectedTariff) return 0;
+    if (billingMode === "DAY" && numberOfDays > 1) {
+      return selectedTariff.amount * numberOfDays;
+    }
+    return selectedTariff.amount;
+  }, [selectedTariff, billingMode, numberOfDays]);
 
   const hasValidClient =
     clientMode === "EXISTING"
-      ? (clientId !== "" || (!needsIdentity && !isEdit))
+      ? (clientId !== "" || (!showIdentitySection && !isEdit))
       : newClientName.trim() !== "" && newClientPhone.trim().replace(/[\s.-]/g, "").length >= 8;
 
   const canSubmit =
@@ -205,13 +217,13 @@ export function ReservationForm({
     if (isPastDateTime) return "L'heure d'arrivée est déjà passée. Veuillez choisir un horaire futur.";
     if (!propertyId) return "Veuillez sélectionner une chambre / appartement";
     if (!effectiveTariffId) return "Veuillez choisir une formule / tarif";
-    if (clientMode === "EXISTING" && needsIdentity && !clientId) return "Veuillez sélectionner un client pour ce long séjour (> 10 jours)";
+    if (clientMode === "EXISTING" && showIdentitySection && !clientId) return "Veuillez sélectionner un client pour cette réservation par jour";
     if (clientMode === "NEW" && !newClientName.trim()) return "Veuillez renseigner le nom complet du client";
     if (clientMode === "NEW" && newClientPhone.trim().replace(/[\s.-]/g, "").length < 8) return "Veuillez indiquer un numéro de téléphone valide (8 chiffres min)";
     if (availability.checking) return "Vérification de la disponibilité du créneau...";
     if (availability.available === false) return availability.message ?? "Ce logement n'est pas disponible pour ce créneau";
     if (showIdentitySection && (!idDocumentType.trim() || !idDocumentNumber.trim())) {
-      return "Pièce d'identité obligatoire pour ce séjour de plus de 10 jours";
+      return "Pièce d'identité obligatoire pour la réservation par jour (contrat de location)";
     }
     return null;
   }
@@ -227,6 +239,142 @@ export function ReservationForm({
         }
       }}
     >
+      {/* 0. Choix fondamental : Par Jour ou Par Heure */}
+      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
+              ⚡
+            </span>
+            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Type de réservation</h2>
+          </div>
+          <span className="text-[11px] font-bold text-fg/50">
+            {billingMode === "DAY" ? "📅 Par Jour (Contrat PDF)" : "⏱️ Par Heure (Sans contrat)"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setBillingMode("DAY");
+              const dayTariff = activeTariffs.find((t) => t.durationUnit === "DAY" || /jour|24h|nuit/i.test(t.label));
+              if (dayTariff) setTariffId(dayTariff.id);
+            }}
+            className={`relative flex flex-col p-4 rounded-xl border text-left transition-all cursor-pointer ${
+              billingMode === "DAY"
+                ? "border-brand-orange bg-brand-orange/15 shadow-md shadow-brand-orange/10 ring-1 ring-brand-orange"
+                : "border-white/10 bg-surface hover:bg-white/5 opacity-80"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl">📅</span>
+              <span className={`text-[10.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                billingMode === "DAY" ? "bg-brand-orange text-ink font-black" : "bg-white/10 text-fg/60"
+              }`}>
+                Contrat PDF &amp; CNI
+              </span>
+            </div>
+            <p className="text-sm font-black text-white">Par Jour (Séjour)</p>
+            <p className="mt-1 text-xs text-fg/60 leading-relaxed">
+              Sélectionnez le nombre de jours. Contrat officiel PDF imprimable et pièce d&apos;identité demandée.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setBillingMode("HOUR");
+              setNumberOfDays(1);
+              const hourTariff = activeTariffs.find((t) => t.durationUnit === "HOURS" || /heure|passage|sieste/i.test(t.label));
+              if (hourTariff) setTariffId(hourTariff.id);
+            }}
+            className={`relative flex flex-col p-4 rounded-xl border text-left transition-all cursor-pointer ${
+              billingMode === "HOUR"
+                ? "border-emerald-500 bg-emerald-500/15 shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500"
+                : "border-white/10 bg-surface hover:bg-white/5 opacity-80"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl">⏱️</span>
+              <span className={`text-[10.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                billingMode === "HOUR" ? "bg-emerald-400 text-ink font-black" : "bg-white/10 text-fg/60"
+              }`}>
+                Réservation Express
+              </span>
+            </div>
+            <p className="text-sm font-black text-white">Par Heure (Passage)</p>
+            <p className="mt-1 text-xs text-fg/60 leading-relaxed">
+              Réservation courte durée (heures). Pas besoin de contrat de location ni de pièce d&apos;identité.
+            </p>
+          </button>
+        </div>
+
+        {/* Sélecteur de nombre de jours (si Par Jour) */}
+        {billingMode === "DAY" ? (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="numberOfDays" className="text-xs font-bold text-fg">
+                Nombre de jours réservés <span className="text-rose-400">*</span>
+              </label>
+              <span className="text-xs font-extrabold text-brand-orange">
+                {numberOfDays} jour{numberOfDays > 1 ? "s" : ""}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center rounded-xl border border-white/10 bg-surface overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setNumberOfDays((d) => Math.max(1, d - 1))}
+                  className="flex h-11 w-11 items-center justify-center text-lg font-bold text-fg hover:bg-white/10 active:scale-95 transition-all"
+                  aria-label="Diminuer le nombre de jours"
+                >
+                  −
+                </button>
+                <input
+                  id="numberOfDays"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={numberOfDays}
+                  onChange={(e) => setNumberOfDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="h-11 w-16 bg-transparent text-center text-base font-black text-white outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setNumberOfDays((d) => d + 1)}
+                  className="flex h-11 w-11 items-center justify-center text-lg font-bold text-fg hover:bg-white/10 active:scale-95 transition-all"
+                  aria-label="Augmenter le nombre de jours"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Pilules rapides */}
+              <div className="flex flex-wrap gap-1.5 flex-1">
+                {[1, 2, 3, 5, 7, 10, 15, 30].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setNumberOfDays(d)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                      numberOfDays === d
+                        ? "bg-brand-orange text-ink font-black shadow-sm"
+                        : "bg-surface border border-white/10 text-fg/70 hover:bg-white/10"
+                    }`}
+                  >
+                    {d} {d === 1 ? "jour" : "j"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <input type="hidden" name="billingMode" value={billingMode} />
+        <input type="hidden" name="numberOfDays" value={billingMode === "DAY" ? numberOfDays : 1} />
+      </div>
       {/* 1. Logement & Formule */}
       <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
         <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-white/10">
@@ -341,9 +489,11 @@ export function ReservationForm({
             <span className="font-extrabold text-white text-sm">{departurePreview ?? "—"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 text-xs">
-            <span className="font-bold text-fg/60">Montant total du séjour :</span>
+            <span className="font-bold text-fg/60">
+              Montant total du séjour {billingMode === "DAY" && numberOfDays > 1 ? `(${numberOfDays} jours)` : ""} :
+            </span>
             <span className="font-black text-brand-orange text-base">
-              {selectedTariff ? fmtFcfa(selectedTariff.amount) : "—"}
+              {selectedTariff ? fmtFcfa(stayAmount) : "—"}
             </span>
           </div>
         </div>
@@ -464,7 +614,7 @@ export function ReservationForm({
           /* Option B : Sélection client existant */
           <div>
             <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
-              Sélectionner le client existant {needsIdentity ? <span className="text-rose-400">*</span> : <span className="font-normal text-fg/40">(facultatif si court séjour)</span>}
+              Sélectionner le client existant {showIdentitySection ? <span className="text-rose-400">*</span> : <span className="font-normal text-fg/40">(facultatif si passage)</span>}
             </label>
             <select
               id="clientId"
@@ -529,17 +679,17 @@ export function ReservationForm({
           </div>
         </div>
 
-        {/* Section Pièce d'identité : Strictement requise uniquement pour les séjours de plus de 10 jours (> 240h) */}
+        {/* Section Pièce d'identité : Strictement requise pour les réservations par jour (contrat de location PDF) */}
         {showIdentitySection ? (
-          <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-            <div className="flex items-center gap-2 text-amber-300">
+          <div className="mt-4 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-4">
+            <div className="flex items-center gap-2 text-brand-orange">
               <span className="text-base">📋</span>
               <p className="text-xs font-black uppercase tracking-wider">
-                Séjour de plus de 10 jours — Pièce d&apos;identité obligatoire
+                Réservation par jour — Pièce d&apos;identité obligatoire pour le contrat
               </p>
             </div>
-            <p className="mt-1 text-xs text-amber-200/80">
-              Pour des raisons de sécurité et pour la génération automatique du contrat de bail PDF, veuillez renseigner la pièce d&apos;identité du client.
+            <p className="mt-1 text-xs text-fg/70">
+              Pour des raisons légales et la génération automatique du contrat de bail PDF officiel, veuillez renseigner la pièce d&apos;identité du client.
             </p>
             <div className="mt-3">
               <input type="hidden" name="idDocumentType" value={idDocumentType} />
@@ -564,12 +714,24 @@ export function ReservationForm({
                 type="text"
                 value={idDocumentNumber}
                 onChange={(e) => setIdDocumentNumber(e.target.value)}
-                placeholder="Numéro de la pièce (ex : 1 234 5678 90)"
+                placeholder="Numéro de la pièce (CNI, Passeport ou Permis)"
                 className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange font-mono"
               />
             </div>
           </div>
-        ) : null}
+        ) : clientAlreadyHasIdentity ? (
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+            <span>✓</span>
+            <span>
+              Pièce d&apos;identité enregistrée : <strong>{selectedClient?.idDocumentType} n° {selectedClient?.idDocumentNumber}</strong> (pré-remplie sur le contrat).
+            </span>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-sunken p-2.5 text-xs text-fg/60">
+            <span>⏱️</span>
+            <span>Réservation par heure : aucune pièce d&apos;identité ni contrat exigé.</span>
+          </div>
+        )}
 
         {/* Note */}
         <div className="mt-3.5">
@@ -625,7 +787,11 @@ export function ReservationForm({
               : "bg-surface-raised border border-brand-orange/40 text-brand-orange hover:bg-brand-orange/10 cursor-pointer"
           } disabled:opacity-50`}
         >
-          {pending ? "Enregistrement en cours..." : `📅 ${submitLabel}`}
+          {pending
+            ? "Enregistrement en cours..."
+            : billingMode === "DAY"
+              ? "📄 ENREGISTRER LA RÉSERVATION & CONTRAT"
+              : `📅 ${submitLabel}`}
         </button>
       </div>
     </form>

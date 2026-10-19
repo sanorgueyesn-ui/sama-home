@@ -55,19 +55,9 @@ export async function checkAvailability(input: {
   date: string;
   arrivalTime: string;
   excludeReservationId?: string;
-}): Promise<{ available: boolean; message?: string; departureTime?: string }> {
-  // Phase 3G / Lot D12-P13 — faille confirmée en D12-P12 : le tarif n'était
-  // pas filtré par établissement, et `input.propertyId` est entièrement
-  // fourni par l'appelant — un utilisateur authentifié pouvait interroger
-  // la disponibilité réelle (nom de client inclus via formatConflictMessage)
-  // d'un logement appartenant à un autre établissement. `getCurrentUser()`
-  // remplace `verifySession()` pour disposer de `establishmentId` ; même
-  // réponse `{ available: false }` pour un id absent ou étranger — jamais
-  // révélé lequel. Filtrer le tarif suffit : un Tariff n'est créé que
-  // rattaché à un logement du même établissement (invariant garanti à la
-  // création, createTariff), donc une fois `tariff.propertyId ===
-  // input.propertyId` confirmé, ce logement appartient lui aussi au bon
-  // établissement.
+  billingMode?: "HOUR" | "DAY";
+  numberOfDays?: number;
+}): Promise<{ available: boolean; message?: string; departureTime?: string; totalAmount?: number }> {
   const user = await getCurrentUser();
   if (!user.establishmentId) return { available: false };
 
@@ -96,7 +86,12 @@ export async function checkAvailability(input: {
     };
   }
 
-  const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
+  const days = input.numberOfDays && input.numberOfDays > 1 ? input.numberOfDays : 1;
+  const isDayBilling = input.billingMode === "DAY" || days > 1;
+  const durationValue = isDayBilling && days > 1 ? days : tariff.durationValue;
+  const durationUnit = isDayBilling && days > 1 ? "DAY" : tariff.durationUnit;
+  const departureDateTime = computeDepartureTime(arrivalDateTime, durationValue, durationUnit);
+  const totalAmount = isDayBilling && days > 1 ? tariff.amount * days : tariff.amount;
 
   const conflict = await findAvailabilityConflict(prisma, {
     propertyId: input.propertyId,
@@ -109,6 +104,7 @@ export async function checkAvailability(input: {
     available: !conflict,
     message: conflict ? formatConflictMessage(conflict) : undefined,
     departureTime: departureDateTime.toISOString(),
+    totalAmount,
   };
 }
 
@@ -215,24 +211,37 @@ export async function createReservation(
     return { message: "La date et l'heure d'arrivée d'une réservation doivent être dans le futur." };
   }
 
-  const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
+  const billingMode = (formData.get("billingMode") as string) || "DAY";
+  const rawDays = formData.get("numberOfDays");
+  const numberOfDays = rawDays ? Math.max(1, parseInt(String(rawDays), 10) || 1) : 1;
+  const isDayBilling = billingMode === "DAY";
 
-  // The amount is ALWAYS the tariff's current amount — never a client-
-  // submitted value (Bloc 13 + Bloc 17: never trust the browser for money).
-  const amount = tariff.amount;
+  const durationValue = isDayBilling && numberOfDays > 1 ? numberOfDays : tariff.durationValue;
+  const durationUnit = isDayBilling && numberOfDays > 1 ? "DAY" : tariff.durationUnit;
+  const departureDateTime = computeDepartureTime(arrivalDateTime, durationValue, durationUnit);
+
+  const amount = isDayBilling && numberOfDays > 1 ? tariff.amount * numberOfDays : tariff.amount;
   if (deposit > amount) {
     return { errors: { deposit: ["L'acompte ne peut pas dépasser le montant total."] } };
   }
 
-  // Audit Client/Réservation, Bloc 3/4 — identité obligatoire côté serveur
-  // à partir de 10 jours réels, jamais uniquement côté interface. Calculé ici
-  // (avant la transaction) pour pouvoir refuser immédiatement avec un
-  // message clair ; la mise à jour du client, elle, reste dans la
-  // transaction ci-dessous pour rester atomique avec la réservation.
-  const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
-    idDocumentType,
-    idDocumentNumber,
-  });
+  // Seuil pour la pièce d'identité et le contrat
+  const settings = user.establishmentId
+    ? await prisma.settings.findUnique({ where: { establishmentId: user.establishmentId } })
+    : null;
+  const thresholdDays = settings?.contractThresholdDays ?? 1;
+  const thresholdHours = isDayBilling ? Math.min(thresholdDays * 24, 24) : 240;
+
+  const identityCheck = checkIdentityRequirement(
+    arrivalDateTime,
+    departureDateTime,
+    client,
+    {
+      idDocumentType,
+      idDocumentNumber,
+    },
+    thresholdHours,
+  );
   if (!identityCheck.ok) {
     return { message: identityCheck.message };
   }
@@ -274,8 +283,8 @@ export async function createReservation(
             date: new Date(`${date}T00:00:00`),
             arrivalTime: arrivalDateTime,
             departureTime: departureDateTime,
-            durationValue: tariff.durationValue,
-            durationUnit: tariff.durationUnit,
+            durationValue,
+            durationUnit,
             amount,
             deposit,
             depositMethod: depositMethod ?? null,

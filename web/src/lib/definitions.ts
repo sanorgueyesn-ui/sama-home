@@ -406,6 +406,19 @@ export const SettingsSchema = z.object({
     .pipe(z.email("Email invalide.").optional())
     .optional(),
   description: optionalText(500, "Description"),
+  whatsappTemplate: optionalText(2000, "Modèle WhatsApp"),
+  contractThresholdDays: z
+    .string()
+    .trim()
+    .transform((v) => (v.length === 0 ? 1 : Number(v)))
+    .pipe(
+      z
+        .number()
+        .int("Le seuil doit être un entier.")
+        .min(1, "Minimum 1 jour.")
+        .max(365, "Maximum 365 jours.")
+    )
+    .optional(),
 });
 
 // Lot "Téléversement durable des images" — `logoUrl` n'est plus un champ

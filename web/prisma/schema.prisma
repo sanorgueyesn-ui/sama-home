@@ -773,6 +773,11 @@ model Settings {
   secondaryColor String?
   accentColor    String?
 
+  /// Message WhatsApp personnalisé pour les confirmations
+  whatsappTemplate      String?
+  /// Seuil de jours à partir duquel le contrat PDF et la pièce d'identité sont exigés (par défaut 1 jour)
+  contractThresholdDays Int?     @default(1)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

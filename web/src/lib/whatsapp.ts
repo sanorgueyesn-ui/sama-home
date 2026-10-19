@@ -26,6 +26,7 @@ export type WhatsAppReservationInput = {
   deposit: number;
   /** Optionnel : préserve la signature pour tout appelant existant qui ne le fournirait pas. */
   statusLabel?: string;
+  customTemplate?: string | null;
 };
 
 export type WhatsAppLinkResult = { ok: true; url: string } | { ok: false; reason: string };
@@ -46,6 +47,18 @@ function fmtFcfa(amount: number): string {
 
 /** Texte prérempli — uniquement des données réellement enregistrées (jamais inventées). */
 export function buildReservationWhatsAppMessage(input: WhatsAppReservationInput): string {
+  if (input.customTemplate && input.customTemplate.trim().length > 0) {
+    let msg = input.customTemplate;
+    msg = msg.replace(/\{client\}/gi, input.clientName);
+    msg = msg.replace(/\{logement\}/gi, input.propertyName);
+    msg = msg.replace(/\{arrivee\}/gi, fmtDateTime(input.arrivalAt));
+    msg = msg.replace(/\{depart\}/gi, fmtDateTime(input.departureAt));
+    msg = msg.replace(/\{montant\}/gi, fmtFcfa(input.amount));
+    msg = msg.replace(/\{etablissement\}/gi, input.establishmentName);
+    msg = msg.replace(/\{acompte\}/gi, fmtFcfa(input.deposit));
+    return msg;
+  }
+
   const lines = [
     `Bonjour ${input.clientName},`,
     "",
@@ -66,24 +79,15 @@ export function buildReservationWhatsAppMessage(input: WhatsAppReservationInput)
   return lines.join("\n");
 }
 
-/**
- * `wa.me` (format universel officiel Meta pour le "click-to-chat") plutôt
- * qu'une distinction mobile/web/desktop : ce lien redirige lui-même vers
- * l'app WhatsApp si installée (mobile) ou vers WhatsApp Web/l'app bureau
- * sinon — aucune détection de plateforme à coder ici.
- *
- * Ne construit JAMAIS un lien à partir d'un numéro absent ou invalide — le
- * `+` initial éventuel est retiré (format attendu par wa.me : chiffres
- * uniquement), mais aucun indicatif pays n'est ajouté ou supposé : si le
- * numéro enregistré n'en contient pas, le lien généré reflète exactement ce
- * qui est en base, ni plus ni moins.
- */
 export function buildReservationWhatsAppLink(input: WhatsAppReservationInput): WhatsAppLinkResult {
   const phone = input.clientPhone?.trim();
-  if (!phone || !PHONE_REGEX.test(phone)) {
-    return { ok: false, reason: "Ce client n'a pas de numéro de téléphone valide pour WhatsApp." };
+  if (!phone) {
+    return { ok: false, reason: "Ce client n'a pas de numéro de téléphone enregistré." };
   }
-  const digits = phone.replace(/^\+/, "");
+  const digits = normalizeWhatsAppDigits(phone);
+  if (!/^[0-9]{9,15}$/.test(digits)) {
+    return { ok: false, reason: "Numéro de téléphone invalide pour WhatsApp." };
+  }
   const message = buildReservationWhatsAppMessage(input);
   return { ok: true, url: `https://wa.me/${digits}?text=${encodeURIComponent(message)}` };
 }
@@ -98,11 +102,36 @@ export type WhatsAppRentalInput = {
   amount: number;
   isCompleted?: boolean;
   actualDepartureAt?: Date | null;
+  customTemplate?: string | null;
 };
 
+/** Normalise un numéro pour un lien wa.me (ajoute 221 si numéro local sénégalais à 9 chiffres) */
+export function normalizeWhatsAppDigits(rawPhone: string): string {
+  let digits = rawPhone.trim().replace(/[\s.-]/g, "").replace(/^\+/, "");
+  // Si numéro sénégalais à 9 chiffres débutant par 7 (70, 75, 76, 77, 78) sans indicatif
+  if (/^7[05678][0-9]{7}$/.test(digits)) {
+    digits = `221${digits}`;
+  }
+  return digits;
+}
+
 export function buildRentalWhatsAppMessage(input: WhatsAppRentalInput): string {
+  const departure = input.actualDepartureAt ?? input.plannedDepartureAt;
+
+  // Si un modèle personnalisé est configuré dans les Paramètres
+  if (input.customTemplate && input.customTemplate.trim().length > 0) {
+    let msg = input.customTemplate;
+    msg = msg.replace(/\{client\}/gi, input.clientName);
+    msg = msg.replace(/\{logement\}/gi, input.propertyName);
+    msg = msg.replace(/\{arrivee\}/gi, fmtDateTime(input.arrivalAt));
+    msg = msg.replace(/\{depart\}/gi, fmtDateTime(departure));
+    msg = msg.replace(/\{montant\}/gi, fmtFcfa(input.amount));
+    msg = msg.replace(/\{etablissement\}/gi, input.establishmentName);
+    msg = msg.replace(/\{statut\}/gi, input.isCompleted ? "Séjour terminé" : "En cours");
+    return msg;
+  }
+
   if (input.isCompleted) {
-    const departure = input.actualDepartureAt ?? input.plannedDepartureAt;
     const lines = [
       `Bonjour ${input.clientName},`,
       "",
@@ -136,10 +165,13 @@ export function buildRentalWhatsAppMessage(input: WhatsAppRentalInput): string {
 
 export function buildRentalWhatsAppLink(input: WhatsAppRentalInput): WhatsAppLinkResult {
   const phone = input.clientPhone?.trim();
-  if (!phone || !PHONE_REGEX.test(phone)) {
-    return { ok: false, reason: "Ce client n'a pas de numéro de téléphone valide pour WhatsApp." };
+  if (!phone) {
+    return { ok: false, reason: "Ce client n'a pas de numéro de téléphone enregistré." };
   }
-  const digits = phone.replace(/^\+/, "");
+  const digits = normalizeWhatsAppDigits(phone);
+  if (!/^[0-9]{9,15}$/.test(digits)) {
+    return { ok: false, reason: "Numéro de téléphone invalide pour WhatsApp." };
+  }
   const message = buildRentalWhatsAppMessage(input);
   return { ok: true, url: `https://wa.me/${digits}?text=${encodeURIComponent(message)}` };
 }

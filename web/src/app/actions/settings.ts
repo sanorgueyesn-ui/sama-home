@@ -59,6 +59,8 @@ export async function updateSettings(
     address: formData.get("address"),
     email: formData.get("email"),
     description: formData.get("description"),
+    whatsappTemplate: formData.get("whatsappTemplate") || undefined,
+    contractThresholdDays: formData.get("contractThresholdDays") || undefined,
   });
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };

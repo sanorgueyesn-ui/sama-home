@@ -48,14 +48,9 @@ export async function checkRentalAvailability(input: {
   tariffId: string;
   date: string;
   arrivalTime: string;
-}): Promise<{ available: boolean; message?: string; departureTime?: string }> {
-  // Phase 3G / Lot D12-P15 — faille confirmée en D12-P14 : même nature que
-  // checkAvailability/checkExtensionAvailability (D12-P11/P13) — le tarif
-  // n'était pas filtré par établissement, et `input.propertyId` est fourni
-  // par l'appelant, permettant d'interroger la disponibilité réelle (nom de
-  // client inclus via formatConflictMessage) d'un logement d'un autre
-  // établissement. Filtrer le tarif suffit (invariant : un Tariff n'est créé
-  // que rattaché à un logement du même établissement).
+  billingMode?: "HOUR" | "DAY";
+  numberOfDays?: number;
+}): Promise<{ available: boolean; message?: string; departureTime?: string; totalAmount?: number }> {
   const user = await getCurrentUser();
   if (!user.establishmentId) return { available: false };
 
@@ -72,7 +67,13 @@ export async function checkRentalAvailability(input: {
   if (Number.isNaN(arrivalDateTime.getTime())) {
     return { available: false };
   }
-  const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
+
+  const days = input.numberOfDays && input.numberOfDays > 1 ? input.numberOfDays : 1;
+  const isDayBilling = input.billingMode === "DAY" || days > 1;
+  const durationValue = isDayBilling && days > 1 ? days : tariff.durationValue;
+  const durationUnit = isDayBilling && days > 1 ? "DAY" : tariff.durationUnit;
+  const departureDateTime = computeDepartureTime(arrivalDateTime, durationValue, durationUnit);
+  const totalAmount = isDayBilling && days > 1 ? tariff.amount * days : tariff.amount;
 
   const conflict = await findAvailabilityConflict(prisma, {
     propertyId: input.propertyId,
@@ -84,6 +85,7 @@ export async function checkRentalAvailability(input: {
     available: !conflict,
     message: conflict ? formatConflictMessage(conflict) : undefined,
     departureTime: departureDateTime.toISOString(),
+    totalAmount,
   };
 }
 
@@ -216,20 +218,37 @@ export async function createRentalDirect(
     return { message: retroCheck.message };
   }
 
-  const departureDateTime = computeDepartureTime(arrivalDateTime, tariff.durationValue, tariff.durationUnit);
+  const billingMode = (formData.get("billingMode") as string) || "DAY";
+  const rawDays = formData.get("numberOfDays");
+  const numberOfDays = rawDays ? Math.max(1, parseInt(String(rawDays), 10) || 1) : 1;
+  const isDayBilling = billingMode === "DAY";
 
-  const amount = tariff.amount; // never a client-submitted value
+  const durationValue = isDayBilling && numberOfDays > 1 ? numberOfDays : tariff.durationValue;
+  const durationUnit = isDayBilling && numberOfDays > 1 ? "DAY" : tariff.durationUnit;
+  const departureDateTime = computeDepartureTime(arrivalDateTime, durationValue, durationUnit);
+
+  const amount = isDayBilling && numberOfDays > 1 ? tariff.amount * numberOfDays : tariff.amount;
   if (deposit > amount) {
     return { errors: { deposit: ["L'acompte ne peut pas dépasser le montant total."] } };
   }
 
-  // Audit Client/Réservation, Bloc 3/4 — même règle que createReservation :
-  // une location directe de 10 jours ou plus exige une identité au
-  // dossier du client, vérifié côté serveur, jamais seulement côté UI.
-  const identityCheck = checkIdentityRequirement(arrivalDateTime, departureDateTime, client, {
-    idDocumentType,
-    idDocumentNumber,
-  });
+  // Seuil pour la pièce d'identité et le contrat de location
+  const settings = user.establishmentId
+    ? await prisma.settings.findUnique({ where: { establishmentId: user.establishmentId } })
+    : null;
+  const thresholdDays = settings?.contractThresholdDays ?? 1;
+  const thresholdHours = isDayBilling ? Math.min(thresholdDays * 24, 24) : 240;
+
+  const identityCheck = checkIdentityRequirement(
+    arrivalDateTime,
+    departureDateTime,
+    client,
+    {
+      idDocumentType,
+      idDocumentNumber,
+    },
+    thresholdHours,
+  );
   if (!identityCheck.ok) {
     return { message: identityCheck.message };
   }
@@ -270,8 +289,8 @@ export async function createRentalDirect(
             tariffId,
             arrivalAt: arrivalDateTime,
             plannedDepartureAt: departureDateTime,
-            durationValue: tariff.durationValue,
-            durationUnit: tariff.durationUnit,
+            durationValue,
+            durationUnit,
             amount,
             deposit,
             note,

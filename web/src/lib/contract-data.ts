@@ -45,6 +45,7 @@ export async function getRentalContractData(rentalId: string) {
         client: true,
         property: { select: { id: true, name: true, type: true, description: true, establishmentId: true } },
         tariff: { select: { id: true, label: true } },
+        establishment: { select: { id: true, name: true } },
       },
     }),
     prisma.settings.findUnique({ where: { establishmentId: user.establishmentId } }),
@@ -55,20 +56,19 @@ export async function getRentalContractData(rentalId: string) {
 
   const [summary, logoImage] = await Promise.all([
     getRentalPaymentSummary(prisma, rentalId),
-    // Lot "Téléversement durable des images" — octets BRUTS lus directement
-    // depuis le Bucket Railway (jamais une URL présignée transmise au
-    // générateur PDF, qui pourrait expirer pendant le rendu ou échouer sur
-    // un bucket privé). `null` si absent/inaccessible/format non pris en
-    // charge par le PDF (WebP) — ne fait jamais échouer la génération. Le
-    // client S3 n'est obtenu que si un logo est réellement enregistré.
     settings?.logoUrl ? resolveImagePdfSource(getS3Client(), getBucketName(), settings.logoUrl) : Promise.resolve(null),
   ]);
 
-  // Lot "Personnalisation des couleurs" — couleurs résolues ici (jamais
-  // individuellement, jamais une valeur non validée, voir resolveBrandColors())
-  // pour que le contrat PDF reçoive les mêmes couleurs que le reste de
-  // l'application, sans recalculer sa propre logique de résolution.
   const brandColors = resolveBrandColors(settings);
 
-  return { rental, settings, summary, logoImage, brandColors };
+  // Fallback intelligent pour toujours afficher un bailleur professionnel et complet
+  const effectiveSettings = {
+    establishmentName: settings?.establishmentName || rental.establishment?.name || "SAMA HOME",
+    phone: settings?.phone || "+221 77 338 66 60",
+    secondaryPhone: settings?.secondaryPhone || null,
+    address: settings?.address || "Grand Yoff, CICES Foire, Dakar (Sénégal)",
+    email: settings?.email || "contact@samahome.sn",
+  };
+
+  return { rental, settings: effectiveSettings, summary, logoImage, brandColors };
 }
