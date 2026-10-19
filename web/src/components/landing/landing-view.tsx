@@ -325,17 +325,26 @@ export function LandingView() {
 
                   {/* Légende interactive sous l'image */}
                   <div className="mt-3.5 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs">
-                    <div className="rounded-xl border border-white/10 bg-white/5 py-2 px-1">
-                      <span className="block font-bold text-white">🖥️ Ordinateur</span>
+                    <div className="rounded-xl border border-white/10 bg-white/5 py-2 px-1 flex flex-col items-center justify-center gap-1">
+                      <svg className="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span className="block font-bold text-white">Ordinateur</span>
                       <span className="text-[10px] text-amber-300/80">Réception &amp; Caisse</span>
                     </div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 py-2 px-1">
-                      <span className="block font-bold text-white">📱 Tablette</span>
-                      <span className="text-[10px] text-amber-300/80">Check-in chambre</span>
+                    <div className="rounded-xl border border-white/10 bg-white/5 py-2 px-1 flex flex-col items-center justify-center gap-1">
+                      <svg className="h-4 w-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span className="block font-bold text-white">Tablette</span>
+                      <span className="text-[10px] text-sky-300/80">Check-in chambre</span>
                     </div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 py-2 px-1">
-                      <span className="block font-bold text-white">📲 Smartphone</span>
-                      <span className="text-[10px] text-amber-300/80">Suivi du patron</span>
+                    <div className="rounded-xl border border-white/10 bg-white/5 py-2 px-1 flex flex-col items-center justify-center gap-1">
+                      <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span className="block font-bold text-white">Smartphone</span>
+                      <span className="text-[10px] text-emerald-300/80">Suivi du patron</span>
                     </div>
                   </div>
                 </div>
@@ -439,18 +448,108 @@ export function LandingView() {
           {/* Composition Multi-Écrans avec Grand Mockup Haute Définition */}
           <div className="rounded-3xl border border-white/15 bg-gradient-to-b from-[#111c24] via-[#0b141a] to-[#060f15] p-4 sm:p-8 lg:p-10 shadow-2xl overflow-hidden relative">
             
+            {/* Barre de sélection d'écrans interactive */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs sm:text-sm font-bold text-white">Démo Interactive Multi-Écrans</span>
+                <span className="hidden sm:inline text-xs text-slate-400">— Cliquez sur un appareil pour zoomer</span>
+              </div>
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("all")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    activeDeviceTab === "all"
+                      ? "bg-amber-400 text-slate-950 font-bold shadow-md"
+                      : "text-slate-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  <span>Tous les Écrans</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("pc")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    activeDeviceTab === "pc"
+                      ? "bg-amber-400 text-slate-950 font-bold shadow-md"
+                      : "text-slate-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>Ordinateur</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("tablet")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    activeDeviceTab === "tablet"
+                      ? "bg-sky-400 text-slate-950 font-bold shadow-md"
+                      : "text-slate-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span>Tablette</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("mobile")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    activeDeviceTab === "mobile"
+                      ? "bg-emerald-400 text-slate-950 font-bold shadow-md"
+                      : "text-slate-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span>Smartphone</span>
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
-              {/* Image Visuelle de la Maquette Studio Multi-Devices */}
+              {/* Image Visuelle de la Maquette Studio Multi-Devices Réelle */}
               <div className="lg:col-span-7 relative">
-                <div className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-2xl">
+                <div className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-2xl relative aspect-[16/10] flex items-center justify-center p-2 sm:p-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/images/landing/mockup-multi-devices-studio.jpg"
-                    alt="SAMA HOME sur Grand Écran PC, Ordinateur Portable et Tablette tactile"
-                    className="w-full h-auto object-cover hover:scale-[1.01] transition-transform duration-500"
+                    src={
+                      activeDeviceTab === "pc"
+                        ? "/images/landing/mockup-pc-dashboard.png"
+                        : activeDeviceTab === "tablet"
+                        ? "/images/landing/mockup-tablet-planning.png"
+                        : activeDeviceTab === "mobile"
+                        ? "/images/landing/mockup-phone-caisse.png"
+                        : "/images/landing/mockup-multi-devices-studio.jpg"
+                    }
+                    alt="SAMA HOME sur Grand Écran PC, Tablette iPad et Smartphone iPhone avec captures réelles de l'application"
+                    className="w-full h-full object-contain transition-all duration-500 animate-in fade-in"
                   />
+                  
+                  {/* Badge d'identification du mode actif */}
+                  <div className="absolute top-4 left-4 z-20">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#060f15]/85 px-3 py-1 text-xs font-bold text-white shadow-xl backdrop-blur-md">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      {activeDeviceTab === "pc"
+                        ? "Tableau de Bord & Caisse • Écran PC"
+                        : activeDeviceTab === "tablet"
+                        ? "Planning des Réservations • Tablette iPad"
+                        : activeDeviceTab === "mobile"
+                        ? "Caisse & Dépenses en Direct • Smartphone"
+                        : "Studio Multi-Écrans Synchronisé"}
+                    </span>
+                  </div>
                 </div>
+
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-400 px-2">
                   <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -460,14 +559,26 @@ export function LandingView() {
                 </div>
               </div>
 
-              {/* Les 3 Piliers de l'Expérience Multi-Écrans */}
+              {/* Les 3 Piliers de l'Expérience Multi-Écrans avec Sélection Interactive */}
               <div className="lg:col-span-5 flex flex-col gap-4">
                 
                 {/* 1. Sur Ordinateur PC / Mac */}
-                <div className="rounded-2xl border border-white/10 bg-surface/60 backdrop-blur-md p-4 sm:p-5 hover:border-amber-400/40 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("pc")}
+                  className={`text-left rounded-2xl border p-4 sm:p-5 transition-all cursor-pointer ${
+                    activeDeviceTab === "pc"
+                      ? "border-amber-400 bg-amber-400/10 shadow-lg shadow-amber-500/10 ring-1 ring-amber-400/30"
+                      : "border-white/10 bg-surface/60 backdrop-blur-md hover:border-amber-400/40"
+                  }`}
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 font-black text-base shrink-0">
-                      🖥️
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl font-black shrink-0 ${
+                      activeDeviceTab === "pc" ? "bg-amber-400 text-slate-950" : "bg-amber-400/15 text-amber-300"
+                    }`}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
                     </span>
                     <div>
                       <h3 className="font-extrabold text-white text-base">Sur Ordinateur (PC &amp; Mac)</h3>
@@ -477,13 +588,25 @@ export function LandingView() {
                   <p className="text-xs text-slate-300 leading-relaxed">
                     Grand calendrier visuel des réservations, pointage complet des recettes, impression des contrats officiels de bail et clôture de quart sans risque d&apos;erreur.
                   </p>
-                </div>
+                </button>
 
                 {/* 2. Sur Tablette (iPad / Android) */}
-                <div className="rounded-2xl border border-white/10 bg-surface/60 backdrop-blur-md p-4 sm:p-5 hover:border-amber-400/40 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("tablet")}
+                  className={`text-left rounded-2xl border p-4 sm:p-5 transition-all cursor-pointer ${
+                    activeDeviceTab === "tablet"
+                      ? "border-sky-400 bg-sky-400/10 shadow-lg shadow-sky-500/10 ring-1 ring-sky-400/30"
+                      : "border-white/10 bg-surface/60 backdrop-blur-md hover:border-sky-400/40"
+                  }`}
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-400/15 text-sky-300 font-black text-base shrink-0">
-                      📱
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl font-black shrink-0 ${
+                      activeDeviceTab === "tablet" ? "bg-sky-400 text-slate-950" : "bg-sky-400/15 text-sky-300"
+                    }`}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
                     </span>
                     <div>
                       <h3 className="font-extrabold text-white text-base">Sur Tablette (iPad &amp; Android)</h3>
@@ -493,13 +616,25 @@ export function LandingView() {
                   <p className="text-xs text-slate-300 leading-relaxed">
                     Parfait pour accompagner le client jusqu&apos;à sa chambre, vérifier l&apos;état des lieux, lui faire signer le contrat au doigt et encaisser immédiatement.
                   </p>
-                </div>
+                </button>
 
                 {/* 3. Sur Smartphone (iPhone / Android) */}
-                <div className="rounded-2xl border border-white/10 bg-surface/60 backdrop-blur-md p-4 sm:p-5 hover:border-amber-400/40 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setActiveDeviceTab("mobile")}
+                  className={`text-left rounded-2xl border p-4 sm:p-5 transition-all cursor-pointer ${
+                    activeDeviceTab === "mobile"
+                      ? "border-emerald-400 bg-emerald-400/10 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-400/30"
+                      : "border-white/10 bg-surface/60 backdrop-blur-md hover:border-emerald-400/40"
+                  }`}
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-300 font-black text-base shrink-0">
-                      📲
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl font-black shrink-0 ${
+                      activeDeviceTab === "mobile" ? "bg-emerald-400 text-slate-950" : "bg-emerald-400/15 text-emerald-300"
+                    }`}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
                     </span>
                     <div>
                       <h3 className="font-extrabold text-white text-base">Sur Smartphone (iPhone &amp; Android)</h3>
@@ -509,7 +644,7 @@ export function LandingView() {
                   <p className="text-xs text-slate-300 leading-relaxed">
                     Où que vous soyez (à Dakar, en région ou en voyage à l&apos;étranger), surveillez le taux d&apos;occupation, les paiements Wave/OM reçus et les dépenses engagées.
                   </p>
-                </div>
+                </button>
 
               </div>
 
