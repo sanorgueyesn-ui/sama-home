@@ -28,6 +28,42 @@ function getSmtpConfig() {
  * Force IPv4 (family: 4) pour éviter les blocages de routage IPv6 fréquents sur les environnements serverless Vercel / AWS Lambda.
  */
 async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ success: boolean; error?: string }> {
+  // 1. Relais prioritaire HTTPS (Google Apps Script Web App sur port 443)
+  // Indispensable pour Railway qui bloque les ports SMTP sortants (25, 465, 587)
+  const relayUrl = process.env.GMAIL_RELAY_URL?.trim();
+  if (relayUrl) {
+    try {
+      const res = await fetch(relayUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: process.env.GMAIL_RELAY_SECRET || "samahome_otp_relay_secret_2026",
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+          text: mailOptions.text,
+        }),
+      });
+
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // ignore
+      }
+
+      if (data.success || text.includes('"success":true') || res.ok) {
+        console.log(`[SAMA HOME MAIL] E-mail envoyé avec succès via le relais HTTPS Google Apps Script à ${mailOptions.to}`);
+        return { success: true };
+      } else {
+        console.warn(`[SAMA HOME MAIL] Réponse du relais HTTPS :`, text);
+      }
+    } catch (relayErr: any) {
+      console.warn(`[SAMA HOME MAIL] Échec de l'appel au relais HTTPS, repli vers SMTP...`, relayErr.message);
+    }
+  }
+
   const { host, user, pass } = getSmtpConfig();
 
   if (!pass) {
