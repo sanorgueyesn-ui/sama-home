@@ -145,14 +145,160 @@ L'application articule 3 niveaux de privilèges :
 
 ---
 
-## 6. Recommandations pour le Déploiement en Production
+## 7. Retours d'Expérience, Résolution d'Incidents & Guide de Réemploi pour Nouveaux Projets SaaS
 
-1. **Stockage Distribué du Rate Limiter :**  
-   Le module `rate-limit.ts` utilise actuellement un cache mémoire in-process adapté à une instance unique. Pour un déploiement multi-instances (ex: plusieurs conteneurs Railway, Vercel ou cluster Docker), il est recommandé de brancher ce module sur un cache Redis partagé (Upstash ou Redis autonome).
-2. **Surveillance & Alerting :**  
-   Consigner les tentatives d'authentification bloquées par le rate limiter ainsi que les tentatives d'accès IDOR détectées vers un système de centralisation des logs (Sentry / Datadog) afin d'identifier les IP suspectes en temps réel.
-3. **Sauvegardes Automatisées :**  
-   S'assurer que la stratégie de dump documentée dans `web/docs/production/BACKUP.md` est planifiée avec rotation chiffrée quotidienne.
+> **Note méthodologique :**  
+> Cette section capitalise sur l'intégralité des défis techniques, régressions évitées et résolutions d'incidents critiques survenus lors de la conception et de la finalisation de SAMA HOME. Chaque point constitue une **recette directement réutilisable** pour tout nouveau projet SaaS ou application web moderne.
+
+### 7.1 Incidents Techniques Rencontrés et Leurs Résolutions
+
+#### 🛠️ Incident 1 : Verrouillage de Fichiers sous Windows (`EPERM` / `EBUSY` sur `prisma generate` et `next build`)
+* **Symptôme :** Erreur bloquante lors de la regénération Prisma ou du build de production :  
+  `Error: EPERM: operation not permitted, mkdir '...\src\generated\prisma\models'` ou `EBUSY: resource busy or locked`.
+* **Cause sous-jacente :** Sous Windows, lorsque le serveur de développement (`next dev`) tourne ou que des processus Node enfants restent orphelins en arrière-plan, le système de fichiers NTFS/FAT verrouille l'accès exclusif aux dossiers cibles de génération. Tuer uniquement la tâche parente dans l'IDE ne libère pas toujours ces verrous.
+* **Solution standardisée :**
+  Exécuter un nettoyage forcé des processus Node avant toute commande de génération ou de build :
+  ```powershell
+  Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+  ```
+  Puis relancer `npx prisma generate` ou `npm run build`.
 
 ---
-*Fin du rapport d'audit — SAMA HOME version sécurisée et prête pour la production.*
+
+#### 🛠️ Incident 2 : Incompatibilité de Version Majeure PostgreSQL (`pg_dump` 16 vs Supabase PostgreSQL 17)
+* **Symptôme :** Le script de sauvegarde automatisée `backup-db.mts` échouait avec le message :  
+  `pg_dump: erreur : annulation à cause de la différence des versions. version du serveur : 17.11 ; pg_dump version : 16.14`.
+* **Cause sous-jacente :** `pg_dump` refuse formellement d'exporter un schéma depuis un serveur PostgreSQL d'une version majeure plus récente que la sienne afin de ne pas corrompre les métadonnées de fonctionnalités SQL nouvelles. De plus, `error.message.split('\n')[0]` masquait la ligne explicative de `stderr`.
+* **Solutions & Bonnes pratiques :**
+  1. **Capture d'erreur explicite :** Dans les scripts d'automatisation Node/TypeScript, toujours inspecter `error.stderr || error.message` pour exposer la cause exacte dans les logs.
+  2. **Environnement de sauvegarde :** Sur les serveurs ou conteneurs exécutant les sauvegardes, s'assurer que les outils clients PostgreSQL (`postgresql-client-17`) correspondent ou dépassent la version majeure du serveur distant.
+  3. **Stratégie hybride de sauvegarde :** Pour les bases managées (Supabase, AWS RDS), combiner les dumps d'archives avec les sauvegardes automatiques quotidiennes de la plateforme (PITR / Snapshots).
+
+---
+
+#### 🛠️ Incident 3 : Bug du Double Header & Isolation du Shell Applicatif (`shell-switcher.tsx`)
+* **Symptôme :** Lorsqu'un utilisateur authentifié visitait la page d'accueil `/`, deux barres de navigation se superposaient : celle de la landing page publique ET la barre de navigation interne de l'application (`AppShell`).
+* **Cause sous-jacente :** La logique de sélection de layout utilisait une condition liant la route à l'état de session (`pathname === "/" && !userRole`). Si l'utilisateur possédait un cookie de session actif, le composant considérait à tort qu'il devait envelopper la landing page dans l'AppShell.
+* **Solution standardisée :**
+  Découpler rigoureusement le contrat d'affichage public de la présence d'une session :
+  ```typescript
+  const isStandalonePublic =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname.startsWith("/register/") ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/forgot-password/");
+  ```
+  La landing page est une vitrine commerciale autonome : elle ne doit JAMAIS être enveloppée par l'`AppShell`, même pour un utilisateur connecté.
+
+---
+
+#### 🛠️ Incident 4 : Interception des Actifs Statiques et Images par le Middleware / Proxy
+* **Symptôme :** Les images des pages publiques d'authentification (/login, /register) refusaient de charger et provoquaient l'erreur Next.js : `The requested resource isn't a valid image`.
+* **Cause sous-jacente :** Le proxy/middleware configuré pour protéger les routes par défaut interceptait la requête interne de Next Image (`/_next/image?url=/images/illustration.jpg`) et la redirigeait avec un code 307 vers `/login`. Next.js recevait du code HTML (la page de login) au lieu du flux binaire de l'image.
+* **Solution standardisée :**
+  Exclure explicitement tous les répertoires d'actifs statiques dans la configuration du matcher :
+  ```typescript
+  export const config = {
+    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|brand/|images/).*)"],
+  };
+  ```
+
+---
+
+#### 🛠️ Incident 5 : Concurrence d'Écriture & Fichiers Orphelins S3 / Cloudflare R2
+* **Symptôme :** En cas de modification simultanée d'un logement par deux gérants, le dernier écrasait sans avertissement les données du premier. De plus, si l'upload S3 réussissait mais que la transaction SQL échouait, une photo orpheline restait sur le bucket sans référence.
+* **Solution standardisée (Pattern Upload-First avec Verrou Optimiste) :**
+  1. **Upload anticipé :** Le fichier est envoyé vers le bucket.
+  2. **Verrouillage optimiste `@updatedAt` :**
+     ```typescript
+     const result = await prisma.property.updateMany({
+       where: { id, updatedAt: existing.updatedAt, establishmentId: user.establishmentId },
+       data: { ...parsed.data, photo: nextPhoto },
+     });
+     ```
+  3. **Rollback immédiat de l'upload :** Si `result.count === 0` (modification concurrente) ou en cas d'exception SQL, l'objet tout juste téléversé est immédiatement détruit sur S3 via `deleteImageObject(upload.key)`.
+  4. **Purge différée de l'ancienne image :** L'ancienne photo n'est supprimée du bucket S3 qu'APRÈS confirmation formelle (`result.count === 1`) de la mise à jour en base de données.
+
+---
+
+#### 🛠️ Incident 6 : Violations de Clés Étrangères lors des Suppressions en Cascade
+* **Symptôme :** Erreurs Prisma `Foreign key constraint failed` lors de la suppression d'une ressource liée à de multiples tables (logements liés à des tarifs, réservations, baux, paiements, extensions).
+* **Solution standardisée :**
+  Toujours encapsuler la suppression dans une transaction atomique `prisma.$transaction(async (tx) => ...)` avec contrôle des invariants métier préalables :
+  1. Bloquer la suppression si une ressource est en cours d'exploitation (ex: séjour actif `status === "ACTIVE"`).
+  2. Supprimer les tables dépendantes terminales (paiements, reçus).
+  3. Supprimer les contrats, extensions et réservations.
+  4. Supprimer les grilles tarifaires.
+  5. Supprimer la ressource principale.
+  6. Nettoyer les fichiers médias associés sur le stockage cloud.
+
+---
+
+### 7.2 Patterns d'Architecture Réutilisables pour Tout Nouveau SaaS
+
+```mermaid
+graph TD
+    subgraph "Couche Client / Navigateur"
+        A["Interface Utilisateur (React 19)"]
+        B["Bouton Flottant Permanent (FAB)"]
+        C["Menus Déroulants (Nocturne Opulence)"]
+    end
+    subgraph "Couche Sécurité / Middleware"
+        D["Proxy / Middleware (Route Matching)"]
+        E["Rate Limiter par IP (Anti Brute-Force)"]
+    end
+    subgraph "Couche Métier / DAL"
+        F["Data Access Layer (dal.ts / 'server-only')"]
+        G["Extraction Session Serveur (Anti-IDOR)"]
+        H["Timing-Attack Guard (DUMMY_HASH)"]
+    end
+    subgraph "Couche Infrastructure"
+        I["PostgreSQL (Prisma 7)"]
+        J["Stockage S3 / R2 (Nettoyage orphelins)"]
+        K["Relais Hybride Email (HTTPS 443 + SMTP)"]
+    end
+    A --> D
+    D --> F
+    F --> G
+    G --> I
+    F --> H
+    F --> J
+    F --> K
+```
+
+#### 🛡️ Pattern 1 : Le Data Access Layer (DAL) Hermétique & Anti-IDOR
+* Déclarer `"server-only";` en en-tête de `dal.ts`.
+* Utiliser `React.cache()` pour mémoïser la vérification de session sur la durée d'une même requête.
+* Bannir tout identifiant de tenant passé en paramètre client. Extraire systématiquement `establishmentId` ou `tenantId` de la session validée en base de données.
+* Assortir chaque mutation d'un garde côté serveur : le masquage d'un bouton dans l'interface ne constitue aucune sécurité.
+
+#### ⏱️ Pattern 2 : La Mitigation des Timing Attacks
+* Exécuter systématiquement `bcrypt.compare` avec un `DUMMY_HASH` constant lorsqu'un compte ou une adresse email est inexistant.
+* Retourner un message d'erreur générique : *"Identifiant ou mot de passe incorrect."* afin d'empêcher toute énumération de compte.
+
+#### ✉️ Pattern 3 : L'Architecture Hybride Email (Bypass du Blocage Cloud)
+* Pour contourner le blocage sortant des ports SMTP (25, 465, 587) imposé par les hébergeurs cloud modernes (Railway, AWS, Render), implémenter un basculement automatique :
+  1. *Canal 1 (Prioritaire)* : Appel HTTPS sécurisé via webhook Google Apps Script sur le port web standard 443.
+  2. *Canal 2 (Repli)* : Transport direct SMTP Nodemailer.
+
+#### 📱 Pattern 4 : Le Bouton d'Action Flottant Permanent (FAB) Responsive
+* Composant d'engagement fixé en bas à droite (`fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40`).
+* Adaptation textuelle automatique selon l'écran :
+  * Écran bureau & tablette : libellé complet explicite (*« Accéder à l'application »*).
+  * Écran mobile : format pilule compact (*« Accéder à l'app »*) évitant de masquer les pieds de page ou le contenu critique.
+* Intégration de `overflow-x-hidden` sur le conteneur racine pour interdire tout défilement horizontal parasite sur mobile.
+
+#### 🎨 Pattern 5 : Navigation Premium à Menus Déroulants CSS/Tailwind
+* Regroupement des fonctionnalités riches sous des menus déroulants thématiques (*Solutions ▾*, *Modules Métier ▾*).
+* Déclenchement fluide via les classes Tailwind `group-hover:opacity-100 group-hover:pointer-events-auto` sans ajout de librairie externe lourde.
+* Réplication miroir intégrale dans le tiroir mobile tactile pour une parité d'accès 100% responsive.
+
+#### 🚨 Pattern 6 : Pages d'Erreur de Marque (`not-found.tsx` et `error.tsx`)
+* Toujours concevoir une page 404 dédiée aux couleurs du projet, avec icône SVG épurée et boutons de redirection vers l'accueil public et le tableau de bord de l'application.
+* Évite tout écran 404 brut par défaut et maintient une expérience utilisateur soignée de bout en bout.
+
+---
+*Fin du rapport d'audit et guide de réemploi technique — SAMA HOME / SaaS Production Ready.*
+
