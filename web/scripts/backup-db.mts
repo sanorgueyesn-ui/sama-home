@@ -124,8 +124,9 @@ async function main() {
       ["-h", conn.host, "-p", conn.port, "-U", conn.user, "-d", conn.database, "-Fc", "-f", dailyPath],
       { env: { ...process.env, PGPASSWORD: conn.password } },
     );
-  } catch (error) {
-    fail(`pg_dump a échoué — ${error instanceof Error ? error.message.split("\n")[0] : "erreur inconnue"}. Vérifiez que pg_dump est installé et accessible dans le PATH.`);
+  } catch (error: any) {
+    const detail = error?.stderr || error?.message || "erreur inconnue";
+    fail(`pg_dump a échoué — ${detail}`);
   }
 
   if (!fs.existsSync(dailyPath)) {
