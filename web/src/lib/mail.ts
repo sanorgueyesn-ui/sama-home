@@ -14,8 +14,8 @@ interface SendPasswordResetEmailParams {
 }
 
 function getSmtpConfig() {
-  const rawUser = process.env.SMTP_USER || "sanorgueye00@gmail.com";
-  const rawPass = process.env.SMTP_PASS || "sxdfedgamqrvhukb";
+  const rawUser = process.env.SMTP_USER || "";
+  const rawPass = process.env.SMTP_PASS || "";
   const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
   const user = rawUser.trim();
   // Nettoyage rigoureux : suppression des espaces et guillemets accidentels dans le mot de passe d'application Google
@@ -39,7 +39,7 @@ async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ suc
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          secret: process.env.GMAIL_RELAY_SECRET || "samahome_otp_relay_secret_2026",
+          secret: process.env.GMAIL_RELAY_SECRET || "",
           to: mailOptions.to,
           subject: mailOptions.subject,
           html: mailOptions.html,
