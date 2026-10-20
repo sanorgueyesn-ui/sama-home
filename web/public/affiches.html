@@ -3,21 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Affiches Publicitaires Officielles — SAMA HOME</title>
+  <title>5 Affiches Publicitaires Officielles — SAMA HOME</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy-deep: #050B14;
-      --navy-card: #0A1628;
+      --navy-950: #03070E;
+      --navy-900: #050B14;
+      --navy-800: #0A1628;
+      --navy-700: #0F203C;
       --gold-primary: #D4AF37;
       --gold-light: #F7D070;
+      --gold-amber: #F59E0B;
       --gold-gradient: linear-gradient(135deg, #F5D061 0%, #D4AF37 50%, #B38312 100%);
-      --emerald: #10B981;
-      --blue-accent: #2563EB;
+      --emerald-500: #10B981;
+      --blue-600: #2563EB;
       --text-white: #FFFFFF;
-      --text-muted: #94A3B8;
+      --text-slate: #94A3B8;
+      --border-gold: rgba(212, 175, 55, 0.35);
+      --border-light: rgba(255, 255, 255, 0.12);
     }
 
     * {
@@ -27,33 +32,33 @@
     }
 
     body {
-      background-color: #03070E;
+      background-color: var(--navy-950);
       color: var(--text-white);
       font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 20px 80px;
+      padding: 25px 15px 80px;
     }
 
-    /* BARRE SUPÉRIEURE DE SÉLECTION & CONTRÔLE */
-    .control-header {
+    /* BARRE DE PILOTAGE STUDIO */
+    .studio-bar {
       width: 100%;
-      max-width: 1100px;
-      background: rgba(10, 22, 40, 0.85);
+      max-width: 1140px;
+      background: rgba(10, 22, 40, 0.88);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(212, 175, 55, 0.35);
+      border: 1px solid var(--border-gold);
       border-radius: 24px;
       padding: 20px 28px;
-      margin-bottom: 35px;
+      margin-bottom: 25px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
     }
 
-    .control-top {
+    .studio-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -61,37 +66,37 @@
       gap: 15px;
     }
 
-    .brand-title-box {
+    .brand-identity-box {
       display: flex;
       align-items: center;
       gap: 15px;
     }
 
-    .brand-title-box img {
-      height: 42px;
+    .brand-identity-box img {
+      height: 44px;
       object-fit: contain;
     }
 
-    .brand-title-box h1 {
-      font-size: 19px;
+    .brand-identity-box h1 {
+      font-size: 20px;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: -0.3px;
       background: var(--gold-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .brand-title-box p {
+    .brand-identity-box p {
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--text-slate);
     }
 
-    .export-actions {
+    .studio-actions {
       display: flex;
       gap: 12px;
     }
 
-    .btn-print {
+    .btn-action-gold {
       background: var(--gold-gradient);
       color: #050B14;
       font-weight: 800;
@@ -107,53 +112,52 @@
       box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
     }
 
-    .btn-print:hover {
+    .btn-action-gold:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(212, 175, 55, 0.55);
     }
 
-    /* SÉLECTEUR DES 3 AFFICHES */
-    .tabs-row {
-      display: flex;
-      gap: 10px;
+    /* SÉLECTEUR DES 5 AFFICHES */
+    .posters-tabs-nav {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
       border-top: 1px solid rgba(212, 175, 55, 0.2);
       padding-top: 16px;
-      flex-wrap: wrap;
     }
 
-    .tab-btn {
-      flex: 1;
-      min-width: 220px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+    .tab-item-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
-      padding: 12px 16px;
-      color: #E2E8F0;
+      padding: 12px 10px;
+      color: #CBD5E1;
       cursor: pointer;
       font-family: inherit;
-      font-size: 13px;
-      font-weight: 700;
+      text-align: left;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: all 0.25s ease;
     }
 
-    .tab-btn:hover {
+    .tab-item-btn:hover {
       background: rgba(212, 175, 55, 0.1);
       border-color: rgba(212, 175, 55, 0.4);
+      color: #FFFFFF;
     }
 
-    .tab-btn.active {
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(10, 22, 40, 0.8) 100%);
+    .tab-item-btn.active {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.22) 0%, rgba(10, 22, 40, 0.85) 100%);
       border-color: var(--gold-light);
       color: #FFFFFF;
-      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
     }
 
-    .tab-btn .badge-num {
-      width: 24px;
-      height: 24px;
+    .tab-num {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
       border-radius: 50%;
       background: var(--gold-primary);
       color: #050B14;
@@ -164,17 +168,31 @@
       font-weight: 800;
     }
 
+    .tab-text {
+      line-height: 1.25;
+    }
+
+    .tab-text .t-title {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tab-text .t-sub {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
     /* SÉLECTEUR DE FORMAT (Carré 1:1, Story 9:16, Imprimable A3/A4) */
     .format-switcher-row {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       flex-wrap: wrap;
     }
 
-    .format-pill {
+    .format-btn {
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 30px;
@@ -189,20 +207,20 @@
       transition: all 0.2s ease;
     }
 
-    .format-pill:hover {
+    .format-btn:hover {
       color: #FFFFFF;
       border-color: var(--gold-primary);
     }
 
-    .format-pill.active {
+    .format-btn.active {
       background: var(--gold-gradient);
       color: #050B14;
       border-color: transparent;
       box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
     }
 
-    /* CONTENEUR PRINCIPAL D'AFFICHAGE */
-    .poster-viewport {
+    /* CONTENEUR DE L'AFFICHE ACTIVE */
+    .poster-stage {
       width: 100%;
       display: flex;
       justify-content: center;
@@ -210,25 +228,23 @@
       transition: all 0.3s ease;
     }
 
-    /* GABARIT DE BASE DE L'AFFICHE */
-    .poster-card {
-      background: radial-gradient(circle at 50% 10%, #0E1B30 0%, #060D19 60%, #03070E 100%);
-      border: 2px solid var(--border-gold);
-      border-radius: 24px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 50px rgba(212, 175, 55, 0.15);
+    /* CARCASSE GÉNÉRALE DES AFFICHES */
+    .poster-frame {
+      border-radius: 28px;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: all 0.4s ease;
-      padding: 45px 40px;
+      transition: all 0.3s ease;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85);
     }
 
-    /* RATIOS DE FORMATS DYNAMIQUES */
+    /* FORMATS DYNAMIQUES */
     .format-print {
       width: 860px;
       min-height: 1200px;
+      padding: 45px 42px;
     }
 
     .format-square {
@@ -240,105 +256,257 @@
     .format-story {
       width: 600px;
       min-height: 1060px;
-      padding: 45px 30px;
+      padding: 42px 30px;
     }
 
-    /* ÉLÉMENTS GRAPHIQUES DE L'AFFICHE 1 (INSTITUTIONNELLE & PRESTIGE) */
-    .theme-1 {
-      background: radial-gradient(circle at 50% 15%, #11223D 0%, #060E1A 60%, #03070E 100%);
-      border-color: rgba(212, 175, 55, 0.45);
+    /* ========================================================
+       AFFICHE 1 : INSTITUTIONNELLE & PREMIUM (CONFIANCE & LUXE)
+       Inspiration : Reference 4 & Reference 1 (Dark Luxury)
+       ======================================================== */
+    .poster-theme-1 {
+      background: radial-gradient(circle at 50% 12%, #11223D 0%, #060D19 55%, #03070E 100%);
+      border: 2px solid var(--border-gold);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(212, 175, 55, 0.15);
     }
 
-    .theme-1 .tag-prestige {
+    .poster-theme-1 .tag-gold-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       background: rgba(212, 175, 55, 0.12);
       border: 1px solid rgba(212, 175, 55, 0.4);
-      padding: 5px 16px;
+      padding: 6px 18px;
       border-radius: 30px;
       font-size: 11px;
       font-weight: 800;
-      letter-spacing: 2px;
+      letter-spacing: 2.2px;
       text-transform: uppercase;
       color: var(--gold-light);
-      margin-bottom: 16px;
+      margin-bottom: 15px;
     }
 
-    .theme-1 .main-h1 {
+    .poster-theme-1 h2.title-h1 {
       font-family: 'Cinzel', serif;
       font-size: 32px;
       font-weight: 800;
       line-height: 1.25;
       letter-spacing: 1px;
       text-transform: uppercase;
-      background: linear-gradient(135deg, #FFFFFF 20%, #F5DEB3 60%, #D4AF37 100%);
+      background: linear-gradient(135deg, #FFFFFF 10%, #F5DEB3 60%, #D4AF37 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    .theme-1 .sub-h2 {
+    .poster-theme-1 p.sub-p {
       font-family: 'Playfair Display', serif;
-      font-size: 17px;
+      font-size: 16px;
       font-style: italic;
       color: var(--gold-light);
       margin-bottom: 22px;
     }
 
-    /* ÉLÉMENTS GRAPHIQUES DE L'AFFICHE 2 (MODERNE & DYNAMIQUE) */
-    .theme-2 {
-      background: radial-gradient(circle at 50% 10%, #0F203C 0%, #0A1424 50%, #050B14 100%);
-      border-color: rgba(59, 130, 246, 0.45);
+    /* GRILLE 4 PILIERS DE L'AFFICHE 1 */
+    .grid-4-pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0 24px;
     }
 
-    .theme-2 .tag-modern {
+    .pillar-card {
+      background: rgba(11, 22, 40, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+
+    .pillar-card .icon-circ {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 8px;
+      border-radius: 10px;
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pillar-card h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+
+    .pillar-card p {
+      font-size: 10px;
+      color: var(--text-slate);
+      line-height: 1.35;
+    }
+
+    /* ========================================================
+       AFFICHE 2 : MODERNE & MOBILE-FIRST (L'APP SUR SMARTPHONE)
+       Inspiration : Reference 5 (Prenez le contrôle de votre budget)
+       ======================================================== */
+    .poster-theme-2 {
+      background: radial-gradient(circle at 50% 10%, #0F2342 0%, #081220 50%, #040810 100%);
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(16, 185, 129, 0.15);
+    }
+
+    .poster-theme-2 .tag-emerald-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(37, 99, 235, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.5);
-      padding: 5px 16px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      padding: 6px 18px;
       border-radius: 30px;
       font-size: 11px;
       font-weight: 800;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: #60A5FA;
-      margin-bottom: 16px;
+      color: #34D399;
+      margin-bottom: 15px;
     }
 
-    .theme-2 .main-h1 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+    .poster-theme-2 h2.title-h1 {
       font-size: 34px;
       font-weight: 900;
       line-height: 1.2;
       letter-spacing: -0.5px;
       color: #FFFFFF;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    .theme-2 .main-h1 span.highlight {
-      background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .poster-theme-2 h2.title-h1 span.green {
+      color: #34D399;
     }
 
-    .theme-2 .sub-h2 {
+    .poster-theme-2 p.sub-p {
       font-size: 15.5px;
       color: #CBD5E1;
       margin-bottom: 22px;
-      font-weight: 500;
     }
 
-    /* ÉLÉMENTS GRAPHIQUES DE L'AFFICHE 3 (COMMERCIALE & IMPACTANTE) */
-    .theme-3 {
-      background: radial-gradient(circle at 50% 15%, #181128 0%, #0C0816 60%, #040208 100%);
-      border-color: rgba(245, 158, 11, 0.6);
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(245, 158, 11, 0.25);
+    .mobile-gallery-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 15px;
     }
 
-    .theme-3 .tag-commercial {
+    .mobile-screen-thumb {
+      background: #060D17;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      overflow: hidden;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .mobile-screen-thumb img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .mobile-screen-thumb span {
+      font-size: 10px;
+      font-weight: 700;
+      color: #CBD5E1;
+    }
+
+    /* ========================================================
+       AFFICHE 3 : ORDINATEUR & DASHBOARD (PILOTAGE & TABLEAU DE BORD)
+       Inspiration : Reference 3 (NextWave Solutions / Corporate Tech)
+       ======================================================== */
+    .poster-theme-3 {
+      background: radial-gradient(circle at 60% 15%, #0E1F38 0%, #060D18 60%, #03070E 100%);
+      border: 2px solid rgba(59, 130, 246, 0.45);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(59, 130, 246, 0.15);
+    }
+
+    .split-layout-3 {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 25px;
+      align-items: center;
+      margin: 15px 0 25px;
+    }
+
+    .checklist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .check-bullet-box {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .check-bullet-box .b-icon {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 10px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60A5FA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .check-bullet-box h4 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 2px;
+    }
+
+    .check-bullet-box p {
+      font-size: 10.5px;
+      color: var(--text-slate);
+    }
+
+    .dashboard-preview-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+      background: #000;
+    }
+
+    .dashboard-preview-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ========================================================
+       AFFICHE 4 : DYNAMIQUE & COMMERCIALE (CONVERSION & IMPACT CHOC)
+       Inspiration : Reference 1 (SEO Services) & Reference 2 (Need a Website)
+       ======================================================== */
+    .poster-theme-4 {
+      background: radial-gradient(circle at 50% 15%, #1F1530 0%, #0E0818 55%, #05020A 100%);
+      border: 2px solid rgba(245, 158, 11, 0.65);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 55px rgba(245, 158, 11, 0.25);
+    }
+
+    .poster-theme-4 .tag-fire-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -346,105 +514,144 @@
       border: 1px solid #F59E0B;
       padding: 6px 18px;
       border-radius: 30px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
-      letter-spacing: 2.5px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: #FBBF24;
-      margin-bottom: 16px;
+      margin-bottom: 15px;
     }
 
-    .theme-3 .main-h1 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+    .poster-theme-4 h2.title-h1 {
       font-size: 36px;
       font-weight: 900;
       line-height: 1.15;
       letter-spacing: -0.5px;
       text-transform: uppercase;
       color: #FFFFFF;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    .theme-3 .main-h1 span.gold {
+    .poster-theme-4 h2.title-h1 span.amber {
       color: #F59E0B;
       text-shadow: 0 0 25px rgba(245, 158, 11, 0.5);
     }
 
-    .theme-3 .sub-h2 {
-      font-size: 16px;
-      color: #E2E8F0;
-      margin-bottom: 22px;
-      font-weight: 600;
+    .floating-tags-strip {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 15px 0 22px;
     }
 
-    /* BLOCS DE FONCTIONNALITÉS (GRID) */
-    .features-list {
+    .floating-tag {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #FDE68A;
+    }
+
+    .kpi-stat-boxes-3 {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-bottom: 25px;
+      margin-bottom: 22px;
     }
 
-    .feature-item {
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    .kpi-stat-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(245, 158, 11, 0.3);
       border-radius: 14px;
-      padding: 14px 12px;
+      padding: 12px;
       text-align: center;
     }
 
-    .feature-item .icon {
-      width: 36px;
-      height: 36px;
-      margin: 0 auto 8px;
-      border-radius: 10px;
+    .kpi-stat-box .num {
+      font-size: 22px;
+      font-weight: 900;
+      color: #FBBF24;
+    }
+
+    .kpi-stat-box .lbl {
+      font-size: 10px;
+      color: var(--text-slate);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* ========================================================
+       AFFICHE 5 : COMPLÈTE & HAUT DE GAMME (MULTI-ÉCRANS & SUITE)
+       Inspiration : Synthèse d'Excellence des 5 Références
+       ======================================================== */
+    .poster-theme-5 {
+      background: radial-gradient(circle at 50% 12%, #142845 0%, #07101F 55%, #02050B 100%);
+      border: 2px solid var(--border-gold);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(212, 175, 55, 0.2);
+    }
+
+    .modules-grid-6 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 18px 0 24px;
+    }
+
+    .module-mini-card {
+      background: rgba(11, 22, 40, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 10px;
     }
 
-    .feature-item h4 {
-      font-size: 12px;
+    .module-mini-card .m-icon {
+      font-size: 18px;
+    }
+
+    .module-mini-card .m-title {
+      font-size: 11px;
       font-weight: 700;
       color: #FFFFFF;
-      margin-bottom: 4px;
     }
 
-    .feature-item p {
-      font-size: 10px;
-      color: var(--text-muted);
-      line-height: 1.35;
+    .module-mini-card .m-desc {
+      font-size: 9.5px;
+      color: var(--text-slate);
     }
 
-    /* CADRE VISUEL CENTRAL */
-    .poster-visual-frame {
+    /* CADRE IMAGE UNIFIÉ */
+    .real-device-canvas {
+      position: relative;
       border-radius: 18px;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      margin-bottom: 25px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-      background: #020610;
-      position: relative;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+      background: #000;
     }
 
-    .poster-visual-frame img {
+    .real-device-canvas img {
       width: 100%;
       height: auto;
       display: block;
       object-fit: cover;
     }
 
-    /* FOOTER DE CONTACT OFFICIEL EN BÉTON */
-    .official-poster-footer {
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(8, 14, 26, 0.98) 100%);
+    /* BANDEAU DE CONTACT STRICT & COMMUN */
+    .master-footer-bar {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 14, 26, 0.99) 100%);
       border: 1px solid rgba(212, 175, 55, 0.5);
       border-radius: 18px;
       padding: 18px 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
     }
 
-    .contact-row-grid {
+    .footer-contacts-grid {
       display: grid;
       grid-template-columns: 1.3fr 1fr 1fr;
       gap: 15px;
@@ -454,25 +661,25 @@
       margin-bottom: 12px;
     }
 
-    .contact-item {
+    .footer-contact-item {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .icon-badge {
+    .footer-icon-badge {
       width: 42px;
       height: 42px;
       min-width: 42px;
       border-radius: 12px;
+      background: var(--gold-gradient);
+      color: #050B14;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--gold-gradient);
-      color: #050B14;
     }
 
-    .contact-info .lbl {
+    .footer-contact-item .f-lbl {
       font-size: 9.5px;
       font-weight: 700;
       text-transform: uppercase;
@@ -481,41 +688,41 @@
       margin-bottom: 2px;
     }
 
-    .contact-info .val {
+    .footer-contact-item .f-val {
       font-size: 14.5px;
       font-weight: 800;
       color: #FFFFFF;
     }
 
-    .contact-info .val a {
+    .footer-contact-item .f-val a {
       color: #FFFFFF;
       text-decoration: none;
     }
 
-    .legal-bottom-bar {
+    .legal-cert-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 10px;
-      color: var(--text-muted);
+      color: var(--text-slate);
       flex-wrap: wrap;
       gap: 8px;
     }
 
-    .legal-bottom-bar strong {
-      color: #E2E8F0;
+    .legal-cert-bar strong {
+      color: #CBD5E1;
     }
 
-    /* RÈGLES D'IMPRESSION HAUTE DÉFINITION SANS MARGES */
+    /* RÈGLES IMPRESSION HAUTE DÉFINITION 300 DPI SANS MARGES */
     @media print {
       body {
         background: #050B14 !important;
         padding: 0 !important;
       }
-      .control-header, .format-switcher-row {
+      .studio-bar, .format-switcher-row {
         display: none !important;
       }
-      .poster-card {
+      .poster-frame {
         max-width: 100% !important;
         width: 100% !important;
         border: none !important;
@@ -524,23 +731,43 @@
         padding: 30px !important;
       }
     }
+
+    @media (max-width: 860px) {
+      .posters-tabs-nav {
+        grid-template-columns: 1fr;
+      }
+      .split-layout-3 {
+        grid-template-columns: 1fr;
+      }
+      .grid-4-pillars, .mobile-gallery-strip, .modules-grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .footer-contacts-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .poster-frame {
+        width: 100% !important;
+        padding: 25px 20px !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- BARRE DE CONTRÔLE SUPÉRIEURE -->
-  <aside class="control-header">
-    <div class="control-top">
-      <div class="brand-title-box">
+  <!-- BARRE DU STUDIO CRÉATIF -->
+  <aside class="studio-bar">
+    <div class="studio-top">
+      <div class="brand-identity-box">
         <img src="Logo SAMA HOME/Sama-Home-Blanc-cassé-1.png" alt="SAMA HOME" onerror="this.src='web/public/brand/Sama-Home-Blanc-cassé-1.png'">
         <div>
-          <h1>Studio d'Affiches Publicitaires Officielles</h1>
-          <p>Conforme à la charte graphique SAMA HOME • Exportation Réseaux Sociaux & Impression 300 DPI</p>
+          <h1>Studio des 5 Affiches Publicitaires Officielles</h1>
+          <p>Conforme à l'expérience réelle de l'application SAMA HOME • Export Réseaux Sociaux & Print 300 DPI</p>
         </div>
       </div>
-      <div class="export-actions">
-        <button type="button" onclick="window.print()" class="btn-print">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <div class="studio-actions">
+        <button type="button" onclick="window.print()" class="btn-action-gold">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
@@ -550,99 +777,117 @@
       </div>
     </div>
 
-    <!-- SÉLECTION DE L'AFFICHE -->
-    <div class="tabs-row">
-      <button type="button" class="tab-btn active" onclick="switchPoster(1)">
-        <span class="badge-num">1</span>
-        <div>
-          <div>Affiche 1 : Institutionnelle & Prestige</div>
-          <div style="font-size:11px; font-weight:400; opacity:0.75;">Excellence, Confiance & Sécurité</div>
+    <!-- SÉLECTEUR DES 5 PROPOSITIONS D'AFFICHES -->
+    <nav class="posters-tabs-nav">
+      <button type="button" class="tab-item-btn active" onclick="switchPoster(1)">
+        <span class="tab-num">1</span>
+        <div class="tab-text">
+          <div class="t-title">Institutionnelle</div>
+          <div class="t-sub">Confiance & Prestige</div>
         </div>
       </button>
 
-      <button type="button" class="tab-btn" onclick="switchPoster(2)">
-        <span class="badge-num">2</span>
-        <div>
-          <div>Affiche 2 : Moderne & Dynamique</div>
-          <div style="font-size:11px; font-weight:400; opacity:0.75;">Digitalisation, Fluidité & Multi-Écrans</div>
+      <button type="button" class="tab-item-btn" onclick="switchPoster(2)">
+        <span class="tab-num">2</span>
+        <div class="tab-text">
+          <div class="t-title">Moderne & Mobile</div>
+          <div class="t-sub">Check-in 30s sur smartphone</div>
         </div>
       </button>
 
-      <button type="button" class="tab-btn" onclick="switchPoster(3)">
-        <span class="badge-num">3</span>
-        <div>
-          <div>Affiche 3 : Commerciale & Impactante</div>
-          <div style="font-size:11px; font-weight:400; opacity:0.75;">Conversion Réseaux & Rentabilité</div>
+      <button type="button" class="tab-item-btn" onclick="switchPoster(3)">
+        <span class="tab-num">3</span>
+        <div class="tab-text">
+          <div class="t-title">Dashboard PC</div>
+          <div class="t-sub">Pilotage & Réception</div>
         </div>
       </button>
-    </div>
+
+      <button type="button" class="tab-item-btn" onclick="switchPoster(4)">
+        <span class="tab-num">4</span>
+        <div class="tab-text">
+          <div class="t-title">Commerciale</div>
+          <div class="t-sub">Conversion Réseaux Sociaux</div>
+        </div>
+      </button>
+
+      <button type="button" class="tab-item-btn" onclick="switchPoster(5)">
+        <span class="tab-num">5</span>
+        <div class="tab-text">
+          <div class="t-title">Écosystème Global</div>
+          <div class="t-sub">Suite Multi-Écrans</div>
+        </div>
+      </button>
+    </nav>
   </aside>
 
-  <!-- SÉLECTEUR DE FORMAT RÉACTIF -->
+  <!-- SÉLECTEUR DE FORMAT RÉACTIF (1:1, 9:16, A3/A4) -->
   <div class="format-switcher-row">
-    <button type="button" class="format-pill active" onclick="switchFormat('print')">
+    <button type="button" class="format-btn active" onclick="switchFormat('print')">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path></svg>
       Format Affiche Imprimable A3 / A4
     </button>
-    <button type="button" class="format-pill" onclick="switchFormat('square')">
+    <button type="button" class="format-btn" onclick="switchFormat('square')">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
       Publication Carrée Réseaux Sociaux (1:1)
     </button>
-    <button type="button" class="format-pill" onclick="switchFormat('story')">
+    <button type="button" class="format-btn" onclick="switchFormat('story')">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"></rect></svg>
       Story & Statut Mobile (9:16)
     </button>
   </div>
 
   <!-- ZONE DE RENDU DES AFFICHES -->
-  <main class="poster-viewport">
+  <main class="poster-stage">
 
-    <!-- ==================== AFFICHE 1 : INSTITUTIONNELLE & PRESTIGE ==================== -->
-    <article id="poster-1" class="poster-card theme-1 format-print">
-      <header style="text-align:center; margin-bottom:20px;">
-        <div class="tag-prestige">
-          <span>👑</span> N°1 de l'Hospitalité & Gestion Immobilière • Sénégal
+    <!-- ========================================================
+         AFFICHE 1 : INSTITUTIONNELLE & PREMIUM (CONFIANCE & LUXE)
+         ======================================================== -->
+    <article id="poster-1" class="poster-frame poster-theme-1 format-print">
+      <header style="text-align:center;">
+        <div class="tag-gold-pill">
+          <span>👑</span> Plateforme Cloud Agréée & Sécurisée • Dakar, Sénégal
         </div>
         <div style="margin-bottom:12px;">
           <img src="Logo SAMA HOME/Sama-Home-Blanc-cassé-1.png" alt="SAMA HOME" style="height:65px; object-fit:contain;" onerror="this.src='web/public/brand/Sama-Home-Blanc-cassé-1.png'">
         </div>
-        <h2 class="main-h1">L'Excellence de la Gestion Hôtelière & Immobilière</h2>
-        <p class="sub-h2">Le standard de confiance pour résidences de standing, hôtels et gestionnaires exigeants</p>
+        <h2 class="title-h1">L'Excellence de la Gestion Hôtelière & Immobilière</h2>
+        <p class="sub-p">La solution de référence pour hôtels de prestige, résidences meublées et gestionnaires exigeants</p>
       </header>
 
-      <!-- VISUEL OFFICIEL 1 -->
-      <div class="poster-visual-frame">
-        <img src="AFFICHE_1_INSTITUTIONNELLE.jpg" alt="Affiche Institutionnelle SAMA HOME" onerror="this.src='web/public/images/affiche-1-institutionnelle.jpg'">
+      <!-- VISUEL RÉEL SAMA HOME (PC DASHBOARD EN HAUTE RÉSOLUTION) -->
+      <div class="real-device-canvas">
+        <img src="web/public/images/landing/mockup-pc-dashboard.png" alt="Dashboard SAMA HOME" onerror="this.src='Image Landing Page/mockup-pc-dashboard.png'">
       </div>
 
-      <!-- 4 PILIERS DE SÉRIEUX & DE CONFIANCE -->
-      <div class="features-list">
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(212,175,55,0.15); color:var(--gold-light);">
+      <!-- 4 PILIERS DE SÉRIEUX & SÉCURITÉ BANCAIRE -->
+      <div class="grid-4-pillars">
+        <div class="pillar-card">
+          <div class="icon-circ">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           </div>
           <h4>Sécurité Bancaire</h4>
           <p>Données et comptes bancaires 100% isolés et chiffrés.</p>
         </div>
 
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(16,185,129,0.15); color:var(--emerald);">
+        <div class="pillar-card">
+          <div class="icon-circ" style="color:var(--emerald-500); background:rgba(16,185,129,0.15);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
           </div>
           <h4>Caisse Étanche</h4>
           <p>Zéro écart, clôtures blindées et validation des dépenses.</p>
         </div>
 
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(59,130,246,0.15); color:#60A5FA;">
+        <div class="pillar-card">
+          <div class="icon-circ" style="color:#60A5FA; background:rgba(59,130,246,0.15);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
           </div>
           <h4>Baux & Contrats</h4>
           <p>Génération de baux conformes et quittances automatiques.</p>
         </div>
 
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(212,175,55,0.15); color:var(--gold-light);">
+        <div class="pillar-card">
+          <div class="icon-circ">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
           </div>
           <h4>Support Dédié</h4>
@@ -650,41 +895,41 @@
         </div>
       </div>
 
-      <!-- PIED DE PAGE AVEC COORDONNÉES OFFICIELLES STRICTES -->
-      <footer class="official-poster-footer">
-        <div class="contact-row-grid">
-          <div class="contact-item">
-            <div class="icon-badge">
+      <!-- FOOTER OFFICIEL STRICT -->
+      <footer class="master-footer-bar">
+        <div class="footer-contacts-grid">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Direction Commerciale</div>
-              <div class="val"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
+            <div>
+              <div class="f-lbl">Direction Commerciale</div>
+              <div class="f-val"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
             </div>
           </div>
 
-          <div class="contact-item">
-            <div class="icon-badge">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Support & Démo</div>
-              <div class="val"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
+            <div>
+              <div class="f-lbl">Support & Démo 24/7</div>
+              <div class="f-val"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
             </div>
           </div>
 
-          <div class="contact-item">
-            <div class="icon-badge">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Email Officiel</div>
-              <div class="val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
+            <div>
+              <div class="f-lbl">Email Officiel</div>
+              <div class="f-val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
             </div>
           </div>
         </div>
 
-        <div class="legal-bottom-bar">
+        <div class="legal-cert-bar">
           <div>
             Édité par <strong>COMPAGNIE GUEYE TAWFEKH (C.G.T)</strong> • <strong>NINEA : 012521599 2R1</strong> — <strong>RCCM : SN.DKR.2025.A.38803</strong>
           </div>
@@ -696,94 +941,81 @@
     </article>
 
 
-    <!-- ==================== AFFICHE 2 : MODERNE & DYNAMIQUE ==================== -->
-    <article id="poster-2" class="poster-card theme-2 format-print" style="display:none;">
-      <header style="text-align:center; margin-bottom:20px;">
-        <div class="tag-modern">
-          <span>⚡</span> Digitalisation • Prise en Main en 30 Secondes
+    <!-- ========================================================
+         AFFICHE 2 : MODERNE & MOBILE-FIRST (L'APP SUR SMARTPHONE)
+         ======================================================== -->
+    <article id="poster-2" class="poster-frame poster-theme-2 format-print" style="display:none;">
+      <header style="text-align:center;">
+        <div class="tag-emerald-pill">
+          <span>📱</span> 100% Mobile & Réactif • Check-in en 30 Secondes
         </div>
         <div style="margin-bottom:12px;">
-          <img src="Logo SAMA HOME/Sama-Home-Orange-1.png" alt="SAMA HOME" style="height:65px; object-fit:contain;" onerror="this.src='web/public/brand/Sama-Home-Orange-1.png'">
+          <img src="Logo SAMA HOME/Sama-Home-Blanc-cassé-1.png" alt="SAMA HOME" style="height:65px; object-fit:contain;" onerror="this.src='web/public/brand/Sama-Home-Blanc-cassé-1.png'">
         </div>
-        <h2 class="main-h1">Pilotez Votre Établissement <span class="highlight">en Toute Simplicité</span></h2>
-        <p class="sub-h2">Check-in express, suivi en direct sur mobile et zéro paperasse au quotidien</p>
+        <h2 class="title-h1">Toute Votre Gestion <span class="green">au Creux de la Main</span></h2>
+        <p class="sub-p">Enregistrez vos clients en 30 secondes et envoyez les reçus sur WhatsApp en direct</p>
       </header>
 
-      <!-- VISUEL OFFICIEL 2 -->
-      <div class="poster-visual-frame">
-        <img src="AFFICHE_2_MODERNE.jpg" alt="Affiche Moderne SAMA HOME" onerror="this.src='web/public/images/affiche-2-moderne.jpg'">
+      <!-- VISUEL RÉEL SMARTPHONE SAMA HOME -->
+      <div class="real-device-canvas" style="border-color:rgba(16,185,129,0.35);">
+        <img src="web/public/images/landing/mockup-phone-caisse.png" alt="Application Mobile SAMA HOME Caisse" onerror="this.src='Image Landing Page/mockup-phone-caisse.png'">
       </div>
 
-      <!-- 4 AVANTAGES DE PRODUCTIVITÉ -->
-      <div class="features-list">
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(37,99,235,0.2); color:#60A5FA;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          </div>
-          <h4>Check-in 30s</h4>
-          <p>Attribution de clé et reçu client instantanés.</p>
+      <!-- GALERIE D'ÉCRANS RÉELS DE L'APPLICATION MOBILE -->
+      <div class="mobile-gallery-strip">
+        <div class="mobile-screen-thumb">
+          <img src="web/public/images/screenshots/app-caisse-mobile.png" alt="Caisse Mobile" onerror="this.src='web/public/images/screenshots/crop-tablet.jpg'">
+          <span>Caisse en Direct</span>
         </div>
-
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(16,185,129,0.2); color:var(--emerald);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-          </div>
-          <h4>100% Mobile & PC</h4>
-          <p>Accès temps réel sur smartphone, tablette et PC.</p>
+        <div class="mobile-screen-thumb">
+          <img src="web/public/images/screenshots/app-clients-mobile.png" alt="Répertoire Clients" onerror="this.src='web/public/images/screenshots/crop-tablet.jpg'">
+          <span>Fiches Clients</span>
         </div>
-
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(245,158,11,0.2); color:#FBBF24;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-          </div>
-          <h4>Reçus WhatsApp</h4>
-          <p>Envoi de quittance directe en un seul clic.</p>
+        <div class="mobile-screen-thumb">
+          <img src="web/public/images/screenshots/app-login-mobile.png" alt="Sécurité Mobile" onerror="this.src='web/public/images/screenshots/crop-tablet.jpg'">
+          <span>Accès Sécurisé</span>
         </div>
-
-        <div class="feature-item">
-          <div class="icon" style="background:rgba(239,68,68,0.2); color:#F87171;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-          <h4>-80% de Papiers</h4>
-          <p>Gestion 100% dématérialisée et archivée.</p>
+        <div class="mobile-screen-thumb">
+          <img src="web/public/images/landing/suite-royale-almadies.jpeg" alt="Logements" onerror="this.src='Image Landing Page/suite-royale-almadies.jpeg'">
+          <span>Suivi Logements</span>
         </div>
       </div>
 
-      <!-- FOOTER OFFICIEL -->
-      <footer class="official-poster-footer">
-        <div class="contact-row-grid">
-          <div class="contact-item">
-            <div class="icon-badge" style="background:linear-gradient(135deg, #60A5FA 0%, #2563EB 100%); color:#FFFFFF;">
+      <!-- FOOTER OFFICIEL STRICT -->
+      <footer class="master-footer-bar">
+        <div class="footer-contacts-grid">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); color:#FFFFFF;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Appel & WhatsApp Direct</div>
-              <div class="val"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
+            <div>
+              <div class="f-lbl">Appel & WhatsApp Direct</div>
+              <div class="f-val"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
             </div>
           </div>
 
-          <div class="contact-item">
-            <div class="icon-badge" style="background:linear-gradient(135deg, #60A5FA 0%, #2563EB 100%); color:#FFFFFF;">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); color:#FFFFFF;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Assistance Clientèle</div>
-              <div class="val"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
+            <div>
+              <div class="f-lbl">Support Démo 24/7</div>
+              <div class="f-val"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
             </div>
           </div>
 
-          <div class="contact-item">
-            <div class="icon-badge" style="background:linear-gradient(135deg, #60A5FA 0%, #2563EB 100%); color:#FFFFFF;">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); color:#FFFFFF;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Support Technique</div>
-              <div class="val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
+            <div>
+              <div class="f-lbl">Email Officiel</div>
+              <div class="f-val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
             </div>
           </div>
         </div>
 
-        <div class="legal-bottom-bar">
+        <div class="legal-cert-bar">
           <div>
             Édité par <strong>COMPAGNIE GUEYE TAWFEKH (C.G.T)</strong> • <strong>NINEA : 012521599 2R1</strong> — <strong>RCCM : SN.DKR.2025.A.38803</strong>
           </div>
@@ -795,94 +1027,314 @@
     </article>
 
 
-    <!-- ==================== AFFICHE 3 : COMMERCIALE & IMPACTANTE ==================== -->
-    <article id="poster-3" class="poster-card theme-3 format-print" style="display:none;">
-      <header style="text-align:center; margin-bottom:20px;">
-        <div class="tag-commercial">
+    <!-- ========================================================
+         AFFICHE 3 : ORDINATEUR & DASHBOARD (PILOTAGE & TABLEAU DE BORD)
+         ======================================================== -->
+    <article id="poster-3" class="poster-frame poster-theme-3 format-print" style="display:none;">
+      <header style="text-align:center;">
+        <div class="tag-gold-pill" style="background:rgba(59,130,246,0.15); border-color:#3B82F6; color:#60A5FA;">
+          <span>💻</span> Conçu pour la Réception & le Pilotage Direction
+        </div>
+        <div style="margin-bottom:12px;">
+          <img src="Logo SAMA HOME/Sama-Home-Blanc-cassé-1.png" alt="SAMA HOME" style="height:65px; object-fit:contain;" onerror="this.src='web/public/brand/Sama-Home-Blanc-cassé-1.png'">
+        </div>
+        <h2 class="title-h1" style="font-family:'Plus Jakarta Sans', sans-serif; font-size:32px; font-weight:900;">Un Tableau de Bord Puissant pour Votre Établissement</h2>
+        <p class="sub-p" style="font-family:'Plus Jakarta Sans', sans-serif; font-style:normal; font-size:15px; color:#E2E8F0;">Pilotez vos séjours, vos flux financiers et vos contrats avec une clarté absolue</p>
+      </header>
+
+      <!-- DISPOSITION SPLIT CRÉATIVE (STYLE RÉFÉRENCE 3 NEXTWAVE) -->
+      <div class="split-layout-3">
+        <div class="checklist-container">
+          <div class="check-bullet-box">
+            <div class="b-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div>
+              <h4>Chiffre d'Affaires en Direct</h4>
+              <p>Revenus, acomptes et taux d'occupation calculés automatiquement.</p>
+            </div>
+          </div>
+
+          <div class="check-bullet-box">
+            <div class="b-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div>
+              <h4>Planning & Réservations</h4>
+              <p>Visibilité totale sur les arrivées, départs et disponibilités.</p>
+            </div>
+          </div>
+
+          <div class="check-bullet-box">
+            <div class="b-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            </div>
+            <div>
+              <h4>Contrats de Bail & Quittances</h4>
+              <p>Édition de contrats longue durée et quittances conformes.</p>
+            </div>
+          </div>
+
+          <div class="check-bullet-box">
+            <div class="b-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div>
+              <h4>Gestion des Collaborateurs</h4>
+              <p>Droits stricts pour réceptionnistes et gérants sans fuite de données.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-preview-card">
+          <img src="web/public/images/screenshots/app-dashboard-desktop.png" alt="Capture d'Écran Dashboard SAMA HOME" onerror="this.src='web/public/images/landing/mockup-pc-dashboard.png'">
+        </div>
+      </div>
+
+      <!-- FOOTER OFFICIEL STRICT -->
+      <footer class="master-footer-bar">
+        <div class="footer-contacts-grid">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </div>
+            <div>
+              <div class="f-lbl">Direction Commerciale</div>
+              <div class="f-val"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
+            </div>
+          </div>
+
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            </div>
+            <div>
+              <div class="f-lbl">Support & Démo 24/7</div>
+              <div class="f-val"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
+            </div>
+          </div>
+
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div>
+              <div class="f-lbl">Email Officiel</div>
+              <div class="f-val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-cert-bar">
+          <div>
+            Édité par <strong>COMPAGNIE GUEYE TAWFEKH (C.G.T)</strong> • <strong>NINEA : 012521599 2R1</strong> — <strong>RCCM : SN.DKR.2025.A.38803</strong>
+          </div>
+          <div>
+            📍 Grand Yoff, Quartier CICES Foire, Villa N° 278, Dakar, Sénégal
+          </div>
+        </div>
+      </footer>
+    </article>
+
+
+    <!-- ========================================================
+         AFFICHE 4 : DYNAMIQUE & COMMERCIALE (CONVERSION & IMPACT CHOC)
+         ======================================================== -->
+    <article id="poster-4" class="poster-frame poster-theme-4 format-print" style="display:none;">
+      <header style="text-align:center;">
+        <div class="tag-fire-pill">
           <span>🔥</span> Offre Établissements 2026 • Boostez Votre Rentabilité
         </div>
         <div style="margin-bottom:12px;">
           <img src="Logo SAMA HOME/Sama-Home-Orange-1.png" alt="SAMA HOME" style="height:65px; object-fit:contain;" onerror="this.src='web/public/brand/Sama-Home-Orange-1.png'">
         </div>
-        <h2 class="main-h1">MULTIPLIEZ VOS REVENUS, <span class="gold">ZÉRO ERREUR DE CAISSE !</span></h2>
-        <p class="sub-h2">La solution tout-en-un qui révolutionne les hôtels, résidences meublées et appartements au Sénégal</p>
+        <h2 class="title-h1">MULTIPLIEZ VOS REVENUS, <span class="amber">ZÉRO ERREUR DE CAISSE !</span></h2>
+        <p class="sub-p" style="font-size:16px; color:#FDE68A;">La solution tout-en-un qui révolutionne les hôtels, résidences meublées et appartements au Sénégal</p>
       </header>
 
-      <!-- VISUEL OFFICIEL 3 -->
-      <div class="poster-visual-frame">
-        <img src="AFFICHE_3_COMMERCIALE.jpg" alt="Affiche Commerciale SAMA HOME" onerror="this.src='web/public/images/affiche-3-commerciale.jpg'">
+      <!-- TAGS FLOTTANTS STYLE RÉFÉRENCE 2 (NEED A WEBSITE) -->
+      <div class="floating-tags-strip">
+        <span class="floating-tag">⚡ Check-in en 30s</span>
+        <span class="floating-tag">💬 WhatsApp 1-Clic</span>
+        <span class="floating-tag">🔒 Caisse Étanche</span>
+        <span class="floating-tag">📅 Planning Visuel</span>
+        <span class="floating-tag">🏨 1 à 100+ Logements</span>
+        <span class="floating-tag">💵 Multi-Tarifs FCFA</span>
       </div>
 
-      <!-- 4 ARGUMENTS CHOC DE CONVERSION -->
-      <div class="features-list">
-        <div class="feature-item" style="border-color:rgba(245,158,11,0.3);">
-          <div class="icon" style="background:rgba(245,158,11,0.25); color:#FBBF24;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-          </div>
-          <h4 style="color:#FBBF24;">+35% Rentabilité</h4>
-          <p>Occupation maximale et calendrier optimisé.</p>
-        </div>
+      <!-- VISUEL CENTRAL AVEC VRAIE APPLICATION -->
+      <div class="real-device-canvas" style="border-color:#F59E0B; margin-bottom:20px;">
+        <img src="web/public/images/landing/mockup-pc-dashboard.png" alt="Interface Commerciale SAMA HOME" onerror="this.src='Image Landing Page/mockup-pc-dashboard.png'">
+      </div>
 
-        <div class="feature-item" style="border-color:rgba(16,185,129,0.3);">
-          <div class="icon" style="background:rgba(16,185,129,0.25); color:var(--emerald);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          </div>
-          <h4 style="color:var(--emerald);">Zéro Fuite de Caisse</h4>
-          <p>Clôture infalsifiable et contrôle des entrées/sorties.</p>
+      <!-- 3 GRANDS BLOCS DE PREUVE STATISTIQUE (STYLE RÉFÉRENCE 4) -->
+      <div class="kpi-stat-boxes-3">
+        <div class="kpi-stat-box">
+          <div class="num">+35%</div>
+          <div class="lbl">Rentabilité Moyenne</div>
         </div>
-
-        <div class="feature-item" style="border-color:rgba(59,130,246,0.3);">
-          <div class="icon" style="background:rgba(59,130,246,0.25); color:#60A5FA;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-          </div>
-          <h4 style="color:#60A5FA;">Reçus WhatsApp</h4>
-          <p>Preuve de paiement instantanée envoyée au voyageur.</p>
+        <div class="kpi-stat-box" style="border-color:#10B981;">
+          <div class="num" style="color:#10B981;">0 FCFA</div>
+          <div class="lbl">Perte ou Fuite de Caisse</div>
         </div>
-
-        <div class="feature-item" style="border-color:rgba(212,175,55,0.3);">
-          <div class="icon" style="background:rgba(212,175,55,0.25); color:var(--gold-light);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-          </div>
-          <h4 style="color:var(--gold-light);">1 à 100+ Logements</h4>
-          <p>Évolue avec votre parc hôtelier ou locatif.</p>
+        <div class="kpi-stat-box">
+          <div class="num">30 sec</div>
+          <div class="lbl">Prise en Main Réception</div>
         </div>
       </div>
 
       <!-- FOOTER AVEC CALL-TO-ACTION VISIBLE ET CONTACTS MASSIFS -->
-      <footer class="official-poster-footer" style="border-color:#F59E0B; box-shadow:0 15px 40px rgba(245,158,11,0.25);">
-        <div class="contact-row-grid">
-          <div class="contact-item">
-            <div class="icon-badge" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); color:#FFFFFF;">
+      <footer class="master-footer-bar" style="border-color:#F59E0B; box-shadow:0 15px 40px rgba(245,158,11,0.3);">
+        <div class="footer-contacts-grid">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); color:#FFFFFF;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl" style="color:#34D399;">Ligne Directe & WhatsApp</div>
-              <div class="val" style="font-size:16px;"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
+            <div>
+              <div class="f-lbl" style="color:#34D399;">Ligne Directe & WhatsApp</div>
+              <div class="f-val" style="font-size:16px;"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
             </div>
           </div>
 
-          <div class="contact-item">
-            <div class="icon-badge" style="background:linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color:#050B14;">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge" style="background:linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color:#050B14;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Démo Gratuite 24h/24</div>
-              <div class="val" style="font-size:16px;"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
+            <div>
+              <div class="f-lbl">Démo Gratuite 24h/24</div>
+              <div class="f-val" style="font-size:16px;"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
             </div>
           </div>
 
-          <div class="contact-item">
-            <div class="icon-badge" style="background:linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color:#050B14;">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge" style="background:linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color:#050B14;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
             </div>
-            <div class="contact-info">
-              <div class="lbl">Contact Email</div>
-              <div class="val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
+            <div>
+              <div class="f-lbl">Contact Email</div>
+              <div class="f-val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
             </div>
           </div>
         </div>
 
-        <div class="legal-bottom-bar">
+        <div class="legal-cert-bar">
+          <div>
+            Édité par <strong>COMPAGNIE GUEYE TAWFEKH (C.G.T)</strong> • <strong>NINEA : 012521599 2R1</strong> — <strong>RCCM : SN.DKR.2025.A.38803</strong>
+          </div>
+          <div>
+            📍 Grand Yoff, Quartier CICES Foire, Villa N° 278, Dakar, Sénégal
+          </div>
+        </div>
+      </footer>
+    </article>
+
+
+    <!-- ========================================================
+         AFFICHE 5 : COMPLÈTE & HAUT DE GAMME (MULTI-ÉCRANS & SUITE)
+         ======================================================== -->
+    <article id="poster-5" class="poster-frame poster-theme-5 format-print" style="display:none;">
+      <header style="text-align:center;">
+        <div class="tag-gold-pill">
+          <span>🌟</span> Écosystème Intégral • PC, Tablette & Smartphone
+        </div>
+        <div style="margin-bottom:12px;">
+          <img src="Logo SAMA HOME/Sama-Home-Blanc-cassé-1.png" alt="SAMA HOME" style="height:65px; object-fit:contain;" onerror="this.src='web/public/brand/Sama-Home-Blanc-cassé-1.png'">
+        </div>
+        <h2 class="title-h1">La Suite Complète de Gestion Hôtelière & Locative</h2>
+        <p class="sub-p">Réception, planning, caisse étanche, baux et relation client réunis sur une seule plateforme</p>
+      </header>
+
+      <!-- VISUEL MULTI-ÉCRANS RÉEL DE SAMA HOME -->
+      <div class="real-device-canvas" style="border-color:rgba(212,175,55,0.4);">
+        <img src="web/public/images/landing/mockup-multi-devices.png" alt="Multi-Écrans SAMA HOME" onerror="this.src='Image Landing Page/mockup-multi-devices.png'">
+      </div>
+
+      <!-- LES 6 MODULES CLÉS DE SAMA HOME -->
+      <div class="modules-grid-6">
+        <div class="module-mini-card">
+          <div class="m-icon">🛎️</div>
+          <div>
+            <div class="m-title">Séjours & Check-in</div>
+            <div class="m-desc">Enregistrement en 30s et caution.</div>
+          </div>
+        </div>
+
+        <div class="module-mini-card">
+          <div class="m-icon">📅</div>
+          <div>
+            <div class="m-title">Planning Visuel</div>
+            <div class="m-desc">Disponibilité multi-logements.</div>
+          </div>
+        </div>
+
+        <div class="module-mini-card">
+          <div class="m-icon">💰</div>
+          <div>
+            <div class="m-title">Caisse Étanche</div>
+            <div class="m-desc">Zéro écart et clôtures blindées.</div>
+          </div>
+        </div>
+
+        <div class="module-mini-card">
+          <div class="m-icon">📜</div>
+          <div>
+            <div class="m-title">Baux & Locations</div>
+            <div class="m-desc">Contrats et quittances automatiques.</div>
+          </div>
+        </div>
+
+        <div class="module-mini-card">
+          <div class="m-icon">🏷️</div>
+          <div>
+            <div class="m-title">Multi-Tarifs FCFA</div>
+            <div class="m-desc">Jour, Nuitée, Heure, Semaine, Mois.</div>
+          </div>
+        </div>
+
+        <div class="module-mini-card">
+          <div class="m-icon">📲</div>
+          <div>
+            <div class="m-title">WhatsApp 1-Clic</div>
+            <div class="m-desc">Reçus et factures dématérialisés.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER OFFICIEL STRICT -->
+      <footer class="master-footer-bar">
+        <div class="footer-contacts-grid">
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </div>
+            <div>
+              <div class="f-lbl">Direction Commerciale</div>
+              <div class="f-val"><a href="tel:+221773386660">+221 77 338 66 60</a></div>
+            </div>
+          </div>
+
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            </div>
+            <div>
+              <div class="f-lbl">Support & Démo 24/7</div>
+              <div class="f-val"><a href="tel:+221772495080">+221 77 249 50 80</a></div>
+            </div>
+          </div>
+
+          <div class="footer-contact-item">
+            <div class="footer-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div>
+              <div class="f-lbl">Email Officiel</div>
+              <div class="f-val"><a href="mailto:support@samahome.sn">support@samahome.sn</a></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-cert-bar">
           <div>
             Édité par <strong>COMPAGNIE GUEYE TAWFEKH (C.G.T)</strong> • <strong>NINEA : 012521599 2R1</strong> — <strong>RCCM : SN.DKR.2025.A.38803</strong>
           </div>
@@ -901,28 +1353,28 @@
 
     function switchPoster(num) {
       currentPoster = num;
-      // Mettre à jour les onglets
-      document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+      // Mise à jour des onglets
+      document.querySelectorAll('.tab-item-btn').forEach((btn, index) => {
         btn.classList.toggle('active', index === num - 1);
       });
-      // Masquer toutes les affiches puis afficher celle sélectionnée
-      document.querySelectorAll('.poster-card').forEach((el, index) => {
-        el.style.display = (index === num - 1) ? 'flex' : 'none';
+      // Masquer toutes les affiches puis afficher celle choisie
+      document.querySelectorAll('.poster-frame').forEach((frame, index) => {
+        frame.style.display = (index === num - 1) ? 'flex' : 'none';
       });
     }
 
     function switchFormat(fmt) {
       currentFormat = fmt;
-      // Mettre à jour les pilules de format
-      document.querySelectorAll('.format-pill').forEach(btn => {
+      // Mise à jour des pilules de format
+      document.querySelectorAll('.format-btn').forEach(btn => {
         btn.classList.remove('active');
       });
       event.currentTarget.classList.add('active');
 
-      // Mettre à jour les classes de format sur toutes les affiches
-      document.querySelectorAll('.poster-card').forEach(card => {
-        card.classList.remove('format-print', 'format-square', 'format-story');
-        card.classList.add('format-' + fmt);
+      // Application des classes sur toutes les affiches
+      document.querySelectorAll('.poster-frame').forEach(frame => {
+        frame.classList.remove('format-print', 'format-square', 'format-story');
+        frame.classList.add('format-' + fmt);
       });
     }
   </script>

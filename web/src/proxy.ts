@@ -23,7 +23,9 @@ const isPublicRoutePath = (pathname: string) =>
   pathname === "/forgot-password" ||
   pathname.startsWith("/forgot-password/") ||
   pathname === "/landing" ||
-  pathname.startsWith("/landing/");
+  pathname.startsWith("/landing/") ||
+  pathname === "/affiches" ||
+  pathname === "/affiches.html";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
