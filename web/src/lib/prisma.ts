@@ -1,6 +1,7 @@
 import "server-only";
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { assertSafeDevelopmentTarget } from "@/lib/env-guard";
 
 // Singleton pattern: reuse one PrismaClient (and its connection pool) across
 // hot reloads in development. See prisma-client-api skill, "Next.js Pattern".
@@ -18,6 +19,13 @@ function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set. See .env.example.");
+  }
+  // Garde contre la production : `next dev` ne doit JAMAIS s'ouvrir sur une
+  // base distante (la base réelle contient de vrais clients). Refus par
+  // défaut avant toute connexion ; voir src/lib/env-guard.ts. N'affecte ni
+  // `next build` ni `next start` (NODE_ENV=production), donc ni la production.
+  if (process.env.NODE_ENV === "development") {
+    assertSafeDevelopmentTarget(process.env, "next dev");
   }
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });

@@ -5,6 +5,11 @@ async function main() {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
     connectionTimeoutMillis: 8000,
+    // Phase 0.6 — session STRICTEMENT en lecture seule : ce script ne lit que
+    // le nom de la base et la version ; aucune écriture n'est possible, même
+    // si le fichier était modifié par erreur. Il ne charge pas `.env` : la
+    // variable DATABASE_URL doit être posée volontairement dans le shell.
+    options: "-c default_transaction_read_only=on",
   });
 
   try {

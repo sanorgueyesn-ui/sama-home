@@ -21,6 +21,8 @@
  * Run with: npx tsx prisma/backfill-payments.ts
  */
 import "dotenv/config";
+// Garde : ce rattrapage CRÉE des paiements — refus de toute cible non locale.
+import "../scripts/lib/safe-env.mjs";
 import { PrismaClient, type PaymentMethod } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 

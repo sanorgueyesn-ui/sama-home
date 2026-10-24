@@ -4,6 +4,9 @@
 // bundler resolves to a no-op on the server and to a hard error everywhere
 // else — including a plain Node/tsx script like this one.
 import "dotenv/config";
+// Garde contre la production : refuse toute cible qui n'est pas une base locale autorisée.
+import "../scripts/lib/safe-env.mjs";
+import { assertTestDatabaseMarker } from "../scripts/lib/db-marker.mjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
@@ -89,6 +92,8 @@ async function seedExpenseCategories() {
 }
 
 async function main() {
+  // Le seed n'écrit que dans une base explicitement marquée comme base de test.
+  await assertTestDatabaseMarker(process.env.DATABASE_URL, "seed");
   await seedAdmin();
   // D12-P135 — seedExpenseCategories() n'est plus appelée (voir le
   // commentaire de EXPENSE_CATEGORIES ci-dessus) : chaque établissement
