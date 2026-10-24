@@ -1,9 +1,28 @@
 import "dotenv/config";
 
 const EXPECTED_DB = "samahome_test_playwright_p114";
-const url = new URL(process.env.DATABASE_URL ?? "");
-if (url.hostname !== "127.0.0.1" || url.port !== "2026" || url.pathname.replace(/^\//, "") !== EXPECTED_DB) {
-  throw new Error(`Cible inattendue (${url.hostname}:${url.port}/${url.pathname}) — attendu ${EXPECTED_DB} — ABANDON.`);
+
+// Garde de sécurité — TOUTES les vérifications ont lieu ici, avant l'import de `@/lib/prisma`, donc avant
+// toute connexion applicative ou écriture. Ordre (voir scripts/lib/safe-env.mts et db-marker.mts) :
+//   1. safe-env : charge `.env.development.local` par-dessus `.env`, puis refuse toute cible qui n'est pas
+//      une base locale explicitement autorisée (src/lib/env-guard.ts) ;
+//   2. contrôle strict propre à ce script : hôte, port et nom de base exacts (comportement conservé) ;
+//   3. marqueur de base de test (lecture seule), uniquement APRÈS la vérification de la cible locale.
+// Les messages des gardes partagées peuvent citer l'hôte, le port ou le nom de base : tout refus est donc
+// remplacé par un message générique (aucune cause chaînée, rien de la cible n'est affiché).
+const REFUSAL_MESSAGE =
+  "Garde de sécurité : exécution refusée (cible non autorisée ou base non marquée comme base de test). " +
+  "Aucune écriture n'a été faite. Détails volontairement masqués.";
+try {
+  await import("./lib/safe-env.mjs");
+  const url = new URL(process.env.DATABASE_URL ?? "");
+  if (url.hostname !== "127.0.0.1" || url.port !== "2026" || url.pathname.replace(/^\//, "") !== EXPECTED_DB) {
+    throw new Error("cible inattendue");
+  }
+  const { assertTestDatabaseMarker } = await import("./lib/db-marker.mjs");
+  await assertTestDatabaseMarker(process.env.DATABASE_URL, "préparation des données P118");
+} catch {
+  throw new Error(REFUSAL_MESSAGE);
 }
 console.log(`Cible confirmée : ${EXPECTED_DB} — écriture autorisée pour ce lot uniquement.\n`);
 

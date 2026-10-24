@@ -23,6 +23,8 @@
  *   - Code de sortie non nul en cas d'échec à n'importe quelle étape.
  */
 import "dotenv/config";
+import { config as loadDotenv } from "dotenv";
+import { assertDeployTarget, assertSafeDevelopmentTarget } from "../src/lib/env-guard.js";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import fs from "node:fs";
@@ -95,16 +97,46 @@ function pruneRetention(dir: string, keep: number) {
   }
 }
 
+/**
+ * Deux modes, jamais ambigus (phase 0.6) :
+ *  - LOCAL (défaut) : charge `.env.development.local` par-dessus `.env` et refuse
+ *    toute cible qui n'est pas une base locale autorisée (garde commune). Les
+ *    sauvegardes vont dans <BACKUP_DIR>/local/…
+ *  - EXPORT DE PRODUCTION : uniquement avec `--export-production=<hôte exact>` ;
+ *    l'hôte saisi doit être celui de DATABASE_URL (comme pour un déploiement),
+ *    jamais une cible locale. Un export de données réelles ne peut donc pas se
+ *    produire par inadvertance avec un simple `npm run backup`. Les fichiers
+ *    vont dans <BACKUP_DIR>/… (emplacement historique, ignoré par Git).
+ */
+function resolveBackupMode(): { production: boolean } {
+  const flag = process.argv.find((a) => a.startsWith("--export-production="));
+  if (flag) {
+    const host = flag.slice("--export-production=".length);
+    assertDeployTarget({ ...process.env, SAMA_DEPLOY_TARGET_HOST: host }, "Export de production");
+    console.log(
+      "[backup-db] ATTENTION : export de la base de PRODUCTION (données réelles et personnelles). " +
+        "Le fichier produit doit rester sur un support protégé et ne jamais être commité ni partagé.",
+    );
+    return { production: true };
+  }
+  loadDotenv({ path: path.resolve(process.cwd(), ".env.development.local"), override: true, quiet: true });
+  const { hostPort } = assertSafeDevelopmentTarget(process.env, "Sauvegarde locale");
+  console.log(`[backup-db] Mode LOCAL — cible ${hostPort}. (Export de production : voir --export-production=<hôte>.)`);
+  return { production: false };
+}
+
 async function main() {
+  const mode = resolveBackupMode();
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     fail("DATABASE_URL n'est pas définie. Voir .env.example — aucune valeur par défaut n'est utilisée.");
   }
   const conn = parseConnection(databaseUrl!);
 
-  const backupRoot = process.env.BACKUP_DIR
+  const baseRoot = process.env.BACKUP_DIR
     ? path.resolve(process.env.BACKUP_DIR)
     : path.resolve(process.cwd(), "backups");
+  const backupRoot = mode.production ? baseRoot : path.join(baseRoot, "local");
   const dailyDir = path.join(backupRoot, "daily");
   const weeklyDir = path.join(backupRoot, "weekly");
   const monthlyDir = path.join(backupRoot, "monthly");

@@ -16,6 +16,16 @@
  *   npx tsx scripts/bootstrap-platform-admin.mts --write
  *   npm run bootstrap:platform-admin -- --write
  *
+ * DEUX MODES SÉPARÉS (phase 1.3), la cible étant vérifiée AVANT toute connexion,
+ * y compris en simple vérification :
+ *   - LOCAL (défaut) : charge `.env.development.local` par-dessus `.env`, exige la
+ *     garde de développement (SAMA_ENV=local, SAMA_EXPECTED_DB, base locale
+ *     autorisée, aucune redirection d'URL) et le marqueur exact de base de test.
+ *     Une cible distante est refusée. En écriture : `--target-host=<hôte local>`.
+ *   - PRODUCTION (jamais par défaut) : `--production` + SAMA_DEPLOY_TARGET_HOST
+ *     (dans l'environnement du processus) + `--target-host=<même hôte>`. Le
+ *     drapeau seul ne suffit jamais. `.env.development.local` n'est pas chargé.
+ *
  * Variables d'environnement requises (voir .env.example) — vérifiées
  * intégralement AVANT toute connexion à la base, dans tous les modes :
  *   BOOTSTRAP_PLATFORM_ADMIN_USERNAME
@@ -57,6 +67,10 @@
  * uniquement, jamais dans un pipeline automatisé sans supervision humaine.
  */
 import "dotenv/config";
+import path from "node:path";
+import { config as loadDotenv } from "dotenv";
+import { evaluateBootstrapTarget } from "../src/lib/env-guard.js";
+import { assertTestDatabaseMarker } from "./lib/db-marker.mjs";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -87,6 +101,13 @@ function parseHostPort(databaseUrl: string): string {
 
 async function main() {
   const writeMode = process.argv.includes("--write");
+
+  // Mode LOCAL (défaut) : la configuration de développement est chargée PAR-DESSUS
+  // `.env` (qui contient la production) avant toute lecture de variable. Mode
+  // PRODUCTION (--production) : `.env.development.local` n'est jamais chargé.
+  if (!process.argv.includes("--production")) {
+    loadDotenv({ path: path.resolve(process.cwd(), ".env.development.local"), override: true, quiet: true });
+  }
 
   // --- 1. Vérification de TOUTES les variables requises, AVANT toute
   //        connexion à la base (y compris en mode vérification). ---
@@ -124,6 +145,20 @@ async function main() {
     }
   }
 
+  // Phase 1.3 — cible vérifiée AVANT toute connexion, dans TOUS les modes (y
+  // compris la simple vérification, qui lit la base). Deux modes séparés, voir
+  // evaluateBootstrapTarget() (src/lib/env-guard.ts) : LOCAL par défaut, PRODUCTION
+  // uniquement avec --production + SAMA_DEPLOY_TARGET_HOST (environnement) +
+  // --target-host. `--target-host` seul n'autorise jamais une cible distante.
+  const verdict = evaluateBootstrapTarget(process.argv, process.env);
+  if (!verdict.ok) {
+    fail(`${verdict.reason} Rien n'a été vérifié ni écrit.`);
+  }
+  const mode = verdict.mode;
+  if (mode === "production") {
+    console.log(`${LOG_PREFIX} ATTENTION : mode PRODUCTION explicitement demandé.`);
+  }
+
   const hostPort = parseHostPort(databaseUrl);
   console.log(`${LOG_PREFIX} Cible (hôte:port uniquement, jamais les identifiants) : ${hostPort}`);
   console.log(
@@ -134,6 +169,12 @@ async function main() {
   // --- 2. Connexion, uniquement après que toutes les vérifications
   //        ci-dessus ont réussi (PrismaClient/PrismaPg importés en tête de
   //        fichier, mais seulement INSTANCIÉS ici, jamais avant). ---
+  // Mode local : la base doit en plus porter le marqueur exact de base de test
+  // (lecture seule) ; sinon refus, sans aucune écriture.
+  if (mode === "local") {
+    await assertTestDatabaseMarker(databaseUrl, "bootstrap local");
+  }
+
   const adapter = new PrismaPg({ connectionString: databaseUrl });
   const prisma = new PrismaClient({ adapter });
 

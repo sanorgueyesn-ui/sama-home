@@ -80,6 +80,8 @@
  * valeur de configuration.
  */
 import "dotenv/config";
+import "./lib/safe-env.mjs";
+import "./lib/safe-storage.mjs";
 import { randomUUID } from "node:crypto";
 import {
   S3Client,

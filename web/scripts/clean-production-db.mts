@@ -1,6 +1,20 @@
 import "dotenv/config";
+import "./lib/safe-env.mjs";
+import { assertTestDatabaseMarker } from "./lib/db-marker.mjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
+// ⛔ SCRIPT NEUTRALISÉ (phase 0.4). Ce script SUPPRIME tous les établissements
+// dont le nom n'est pas « SAMA  HOME  TEST » ainsi que tous leurs utilisateurs
+// et données : exécuté avec la configuration de production, il efface les
+// clients réels. Contenu conservé tel quel pour audit. Pour le réactiver
+// (base locale de test UNIQUEMENT), passer NEUTRALIZED à false APRÈS relecture
+// et autorisation du propriétaire ; la garde de cible locale (safe-env) reste
+// appliquée.
+const NEUTRALIZED = true as boolean;
+if (NEUTRALIZED) {
+  throw new Error("SCRIPT NEUTRALISÉ : clean-production-db.mts ne doit jamais être exécuté. Aucune connexion ouverte.");
+}
 
 const connectionString = process.env.DATABASE_URL!;
 const adapter = new PrismaPg({ connectionString });
@@ -84,6 +98,7 @@ async function cleanPlatformTestData(estId: string) {
 }
 
 async function main() {
+  await assertTestDatabaseMarker(process.env.DATABASE_URL, "nettoyage complet");
   console.log("=== STARTING FULL DATABASE CLEANUP FOR PRODUCTION ===");
 
   // 1. Delete all test establishments and test users

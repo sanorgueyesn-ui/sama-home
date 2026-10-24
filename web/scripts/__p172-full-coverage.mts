@@ -1,3 +1,5 @@
+// Garde : refuse de piloter une application qui ne serait pas en configuration locale (voir scripts/lib/safe-env.mts).
+import "./lib/safe-env.mjs";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import path from "node:path";
 

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./lib/safe-env.mjs";
 import { Client } from "pg";
 
 const EXPECTED_DB = "samahome_test_playwright_p114";

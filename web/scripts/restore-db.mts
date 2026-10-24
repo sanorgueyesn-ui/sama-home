@@ -7,13 +7,18 @@
  *   npm run restore -- backups/daily/samahome_samahome_dev_2026-10-02T...dump samahome_restore_test
  *
  * ⚠️ Ce script ne restaure JAMAIS vers la base identifiée par DATABASE_URL
- * (protection volontaire — une restauration écrase le contenu de la base
+ * (protection volontaire — une restauration modifie le contenu de la base
  * cible, ce qui ne doit jamais arriver par accident sur la base en cours
  * d'utilisation). La base de destination doit être un nom EXPLICITE,
  * différent de celui dans DATABASE_URL, fourni en argument.
  *
+ * La destination doit être une base NEUVE : si elle existe déjà (y compris
+ * postgres, template0 et template1, qui existent toujours), le script s'arrête
+ * avant toute restauration. Il ne supprime, ne vide ni ne recrée jamais une
+ * base existante : la supprimer (dropdb) est une décision de l'opérateur.
+ *
  * Comportement :
- *   - Crée la base de destination si elle n'existe pas (CREATE DATABASE).
+ *   - Crée la base de destination (CREATE DATABASE) ; refuse si elle existe.
  *   - Exécute pg_restore avec le même hôte/port/utilisateur que
  *     DATABASE_URL (la restauration se fait sur la même instance
  *     PostgreSQL, dans une base différente — jamais vers un autre serveur
@@ -22,6 +27,10 @@
  *   - N'affiche jamais le mot de passe.
  */
 import "dotenv/config";
+// Garde : la restauration ne compare que le NOM de la base ; l'hôte doit donc
+// être prouvé local avant toute connexion (sinon CREATE DATABASE + pg_restore
+// pourraient viser l'instance de production).
+import "./lib/safe-env.mjs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import fs from "node:fs";
@@ -81,15 +90,18 @@ async function main() {
   await adminClient.connect();
   try {
     const exists = await adminClient.query("SELECT 1 FROM pg_database WHERE datname = $1", [targetDb]);
-    if (exists.rowCount === 0) {
-      // Nom de base passé en argument explicite par l'opérateur, jamais une
-      // entrée utilisateur non contrôlée — identifiant entre guillemets
-      // doubles pour rester valide même avec des caractères spéciaux.
-      await adminClient.query(`CREATE DATABASE "${targetDb.replace(/"/g, '""')}"`);
-      console.log(`[restore-db] Base "${targetDb}" créée.`);
-    } else {
-      console.log(`[restore-db] La base "${targetDb}" existe déjà — restauration dans la base existante.`);
+    if (exists.rowCount !== 0) {
+      // Destination déjà existante (y compris bases système ou modèles) : refus, aucune restauration.
+      fail(
+        `Refusé : la base de destination ("${targetDb}") existe déjà. La restauration n'a lieu que dans une base NEUVE ; ` +
+          "rien n'a été restauré, supprimé ni modifié. Choisir un autre nom, ou supprimer volontairement cette base (dropdb).",
+      );
     }
+    // Nom de base passé en argument explicite par l'opérateur, jamais une
+    // entrée utilisateur non contrôlée — identifiant entre guillemets
+    // doubles pour rester valide même avec des caractères spéciaux.
+    await adminClient.query(`CREATE DATABASE "${targetDb.replace(/"/g, '""')}"`);
+    console.log(`[restore-db] Base "${targetDb}" créée.`);
   } finally {
     await adminClient.end();
   }

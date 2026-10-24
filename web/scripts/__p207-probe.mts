@@ -1,3 +1,5 @@
+// Garde : refuse de piloter une application qui ne serait pas en configuration locale (voir scripts/lib/safe-env.mts).
+import "./lib/safe-env.mjs";
 import { chromium } from "playwright";
 
 const BASE_URL = "http://localhost:3010";

@@ -1,9 +1,14 @@
 import "dotenv/config";
+import "./lib/safe-env.mjs";
 import { Client } from "pg";
+import { assertTestDatabaseMarker } from "./lib/db-marker.mjs";
 
 const EXPECTED_DB = "samahome_test_playwright_p114";
 const url = new URL(process.env.DATABASE_URL ?? "");
 if (url.pathname.replace(/^\//, "") !== EXPECTED_DB) throw new Error("cible inattendue");
+
+// Marqueur de base de test (lecture seule), AVANT toute connexion applicative ou écriture.
+await assertTestDatabaseMarker(process.env.DATABASE_URL, "seed P187");
 
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 await client.connect();
