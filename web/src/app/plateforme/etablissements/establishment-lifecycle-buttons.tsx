@@ -7,6 +7,7 @@ import {
   reactivateEstablishment,
   deleteEstablishment,
 } from "@/app/actions/establishment-approval";
+import { ESTABLISHMENT_DELETION_ENABLED } from "@/lib/establishment-deletion-gate";
 
 export function EstablishmentLifecycleButtons({
   establishmentId,
@@ -144,7 +145,8 @@ export function EstablishmentLifecycleButtons({
           </button>
         )}
 
-        {/* Bouton icône Corbeille / Supprimer */}
+        {/* Bouton icône Corbeille / Supprimer — masqué par le gel du Lot 0 */}
+        {ESTABLISHMENT_DELETION_ENABLED ? (
         <button
           type="button"
           disabled={pending}
@@ -164,6 +166,7 @@ export function EstablishmentLifecycleButtons({
           </svg>
           <span className="sm:hidden">Supprimer définitivement</span>
         </button>
+        ) : null}
       </div>
 
       {error && !showDeleteModal ? (
@@ -171,7 +174,7 @@ export function EstablishmentLifecycleButtons({
       ) : null}
 
       {/* MODAL DE CONFIRMATION SÉCURISÉE AVEC MOT DE PASSE (Centré sur Mobile & Bureau) */}
-      {showDeleteModal ? (
+      {ESTABLISHMENT_DELETION_ENABLED && showDeleteModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-danger/40 bg-[#0e1a22] p-5 shadow-2xl sm:p-7">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">

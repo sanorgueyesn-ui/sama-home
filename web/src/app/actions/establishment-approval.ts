@@ -6,6 +6,10 @@ import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation"
 import { verifyPassword } from "@/lib/password";
 import { hasPlatformPermission } from "@/lib/permissions";
 import { purgeUserFromDatabase } from "@/lib/user-purge";
+import {
+  ESTABLISHMENT_DELETION_DISABLED_MESSAGE,
+  ESTABLISHMENT_DELETION_ENABLED,
+} from "@/lib/establishment-deletion-gate";
 
 class EstablishmentApprovalError extends Error {}
 
@@ -315,6 +319,12 @@ export async function deleteEstablishment(
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
     return { error: "Action refusée : vous n'avez pas l'autorisation de supprimer les établissements." };
+  }
+
+  // Lot 0 : gel temporaire côté serveur. Placé AVANT toute lecture du mot de
+  // passe, de la base ou de l'identifiant : aucune donnée n'est lue ni écrite.
+  if (!ESTABLISHMENT_DELETION_ENABLED) {
+    return { error: ESTABLISHMENT_DELETION_DISABLED_MESSAGE };
   }
 
   if (!establishmentId) {
