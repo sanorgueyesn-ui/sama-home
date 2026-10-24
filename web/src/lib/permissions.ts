@@ -192,6 +192,73 @@ export function hasPlatformPermission(
 }
 
 /**
+ * Lot 3B — variante STRICTE de `hasPlatformPermission` pour le flux de double approbation des
+ * abonnements. Fonction pure ; `hasPlatformPermission` n'est pas modifiée et garde son comportement.
+ *
+ * Formats réels de `User.permissions` (`String?`, voir schema.prisma et createPlatformAdminUser) :
+ * - `null` : compte « pleins pouvoirs » (mode « ALL » de la création d'un administrateur) ;
+ * - une chaîne JSON `["PLATFORM_SUBSCRIPTIONS", …]` (mode « CUSTOM », au moins un module coché) ;
+ * - tolérée par `parseUserPermissions` : une liste séparée par des virgules.
+ *
+ * Accepté UNIQUEMENT :
+ * - un administrateur de plateforme (`isPlatformAdmin === true` exactement) dont `permissions` vaut
+ *   `null` (pleins pouvoirs canoniques) ;
+ * - un administrateur de plateforme dont la liste NON VIDE contient la permission demandée,
+ *   `PLATFORM_ALL` ou `ALL` (comparaison exacte, sensible à la casse).
+ *
+ * Refusé : tout autre cas, notamment `undefined` (champ non sélectionné : jamais un accès par
+ * omission), chaîne vide ou d'espaces, `[]`, `,`, liste mal formée, liste sans la permission, valeur
+ * qui n'est pas une chaîne, utilisateur absent ou qui n'est pas administrateur de plateforme. À la
+ * différence de `hasPlatformPermission`, une liste vide ne donne JAMAIS les pleins pouvoirs.
+ */
+export function hasExplicitPlatformPermission(
+  user: {
+    isPlatformAdmin: boolean;
+    permissions?: string | null;
+  } | null | undefined,
+  requiredPermission: PlatformPermissionId
+): boolean {
+  if (!user || user.isPlatformAdmin !== true) return false;
+
+  const stored = user.permissions;
+  if (stored === null) return true;
+  if (typeof stored !== "string") return false;
+
+  const perms = parseExplicitPermissions(stored);
+  if (perms === null || perms.length === 0) return false;
+
+  return perms.includes(requiredPermission) || perms.includes("PLATFORM_ALL") || perms.includes("ALL");
+}
+
+/**
+ * Lecture STRICTE de `User.permissions` pour `hasExplicitPlatformPermission`. Contrairement à
+ * `parseUserPermissions` (qui convertit tout élément en texte, donc aplatit une liste imbriquée
+ * `[["X"]]` en "X", et retombe sur un découpage par virgules quand le JSON est invalide), elle
+ * retourne `null` — donc un refus — dès que la valeur n'est pas exactement :
+ * - une liste JSON dont TOUS les éléments sont des chaînes ; ou
+ * - une liste séparée par des virgules (format toléré par le parseur historique), sans crochets.
+ * Les éléments sont nettoyés des espaces ; les éléments vides sont ignorés.
+ */
+function parseExplicitPermissions(stored: string): string[] | null {
+  const trimmed = stored.trim();
+  if (!trimmed) return [];
+
+  if (trimmed.startsWith("[") || trimmed.endsWith("]")) {
+    if (!(trimmed.startsWith("[") && trimmed.endsWith("]"))) return null;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      return null;
+    }
+    if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) return null;
+    return parsed.map((item: string) => item.trim()).filter(Boolean);
+  }
+
+  return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+/**
  * Vérifie si un utilisateur d'établissement a accès à un module ou action
  */
 export function hasEstablishmentPermission(

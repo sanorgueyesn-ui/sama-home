@@ -29,6 +29,13 @@ export const PLATFORM_DECISION_ACTIONS = [
   // métier) : setPricingSettings() (src/app/actions/platform-settings.ts)
   // est une décision de plateforme humaine, jamais `userId: null`.
   "PRICING_SETTINGS_UPDATED",
+  // Lot 3B — double approbation des paiements manuels et prolongations (src/app/actions/subscription-change.ts) :
+  // décisions de plateforme humaines, jamais `userId: null`. Leurs journaux ne contiennent ni référence
+  // de paiement ni motif libre (seulement type, statut, montants, durées) — ils restent dans la demande.
+  "SUBSCRIPTION_CHANGE_REQUESTED",
+  "SUBSCRIPTION_CHANGE_APPROVED",
+  "SUBSCRIPTION_CHANGE_REJECTED",
+  "SUBSCRIPTION_CHANGE_CANCELLED",
 ] as const;
 
 export type PlatformDecisionAction = (typeof PLATFORM_DECISION_ACTIONS)[number];

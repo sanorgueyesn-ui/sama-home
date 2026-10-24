@@ -99,6 +99,18 @@ export async function purgeUserFromDatabase(
   await tx.notificationRead.deleteMany({ where: { userId: targetUserId } });
   await tx.auditLog.deleteMany({ where: { userId: targetUserId } });
 
+  // Lot 3B — demandes de paiement manuel / prolongation encore en attente du demandeur supprimé :
+  // elles ne pourraient plus être approuvées (`requestedByUserId` passe à NULL, clé étrangère
+  // `SET NULL`) ni annulées par personne. On les annule explicitement, en UNE SEULE instruction :
+  // `status_fields_check` exige `decidedAt` dès que le statut quitte l'attente. Aucune demande
+  // n'est supprimée ; les demandes déjà approuvées, rejetées ou annulées sont préservées, et
+  // `decidedByUserId` reste NULL (annulation par le système). Les références restantes à
+  // l'utilisateur (demandeur ou décideur d'une demande close) sont mises à NULL par la base.
+  await tx.subscriptionChangeRequest.updateMany({
+    where: { requestedByUserId: targetUserId, status: "PENDING_SECOND_APPROVAL" },
+    data: { status: "CANCELLED", decidedAt: new Date(), decisionReason: "Demandeur supprimé" },
+  });
+
   // 4. Purge TOTALE des jetons de mot de passe oublié et d'OTP pour cet e-mail / identifiant
   for (const email of emailsToPurge) {
     await tx.passwordResetToken.deleteMany({

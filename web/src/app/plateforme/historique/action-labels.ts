@@ -16,4 +16,8 @@ export const ACTION_LABELS: Record<PlatformDecisionAction, string> = {
   PLATFORM_AUTO_APPROVAL_DISABLED: "Approbation automatique désactivée",
   SUBSCRIPTION_PAYMENT_CONFIRMED: "Paiement d'abonnement confirmé",
   PRICING_SETTINGS_UPDATED: "Tarification globale modifiée",
+  SUBSCRIPTION_CHANGE_REQUESTED: "Paiement ou prolongation d'abonnement demandé (en attente de seconde validation)",
+  SUBSCRIPTION_CHANGE_APPROVED: "Demande de paiement ou de prolongation approuvée",
+  SUBSCRIPTION_CHANGE_REJECTED: "Demande de paiement ou de prolongation rejetée",
+  SUBSCRIPTION_CHANGE_CANCELLED: "Demande de paiement ou de prolongation annulée par son demandeur",
 };

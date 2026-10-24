@@ -74,6 +74,9 @@ model Establishment {
   notifications Notification[]
   subscription  Subscription?
 
+  /// Lot 3B — demandes de paiement manuel / prolongation d'abonnement.
+  subscriptionChangeRequests SubscriptionChangeRequest[]
+
   @@index([status])
 }
 
@@ -150,6 +153,12 @@ model User {
   /// Lot multi-tenant — plateforme et abonnements.
   notificationReads             NotificationRead[]
   subscriptionPaymentsConfirmed SubscriptionPayment[] @relation("SubscriptionPaymentConfirmedBy")
+
+  /// Lot 3B — demandes de paiement manuel / prolongation soumises à seconde validation.
+  /// Les deux clés étrangères sont `SetNull` : la purge d'un utilisateur ne doit jamais
+  /// échouer ni effacer la demande (voir `SubscriptionChangeRequest`).
+  subscriptionChangesRequested SubscriptionChangeRequest[] @relation("SubscriptionChangeRequestedBy")
+  subscriptionChangesDecided   SubscriptionChangeRequest[] @relation("SubscriptionChangeDecidedBy")
 
   @@index([establishmentId])
 }
@@ -1296,8 +1305,92 @@ model SubscriptionPayment {
   createdAt   DateTime  @default(now())
   confirmedAt DateTime?
 
+  /// Lot 3B — relation INVERSE seulement (aucune colonne ici) : la demande de paiement
+  /// manuel qui a créé ce règlement, le cas échéant. Cette table n'est pas modifiée.
+  changeRequest SubscriptionChangeRequest?
+
   @@index([subscriptionId])
   @@index([status])
+}
+
+enum SubscriptionChangeKind {
+  /// Règlement encaissé hors ligne (Wave, Orange Money, espèces, virement) : crée un
+  /// `SubscriptionPayment` CONFIRMED et prolonge l'abonnement, à l'approbation.
+  MANUAL_PAYMENT
+  /// Prolongation manuelle en JOURS (geste commercial, régularisation), sans paiement.
+  PROLONGATION
+}
+
+enum SubscriptionChangeStatus {
+  PENDING_SECOND_APPROVAL
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+/// Lot 3B — demande de paiement manuel ou de prolongation manuelle d'un abonnement,
+/// soumise à la validation d'un SECOND administrateur de plateforme. Aucun effet
+/// (paiement, prolongation) n'existe avant l'approbation : la demande ne modifie ni
+/// `Subscription` ni `SubscriptionPayment`. Les renouvellements initiés par les
+/// établissements (`SubscriptionPayment` PENDING) gardent leur flux et ne passent pas ici.
+///
+/// Les montants, durées et références sont GELÉS à la demande. La demande exige un
+/// établissement ACTIVE disposant déjà d'un abonnement (vérifié par l'application, à la
+/// demande ET à l'approbation) : aucune création d'abonnement.
+///
+/// Garanties portées par la base (contraintes CHECK écrites à la main dans la migration,
+/// non modélisées par Prisma — voir `20261023120000_add_subscription_change_request`) :
+/// champs cohérents avec le type, statut cohérent avec les champs de décision, motif de
+/// rejet non vide, un seul paiement appliqué par demande, décideur différent du demandeur.
+/// Les deux clés étrangères vers `User` sont `SetNull` ; les CHECK tolèrent donc un demandeur
+/// ou un décideur supprimé. Une demande sans demandeur n'est plus approuvable (la condition
+/// `requestedByUserId <> approbateur` n'est jamais vraie pour NULL).
+model SubscriptionChangeRequest {
+  id String @id @default(cuid())
+
+  establishmentId String
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
+  kind   SubscriptionChangeKind
+  status SubscriptionChangeStatus @default(PENDING_SECOND_APPROVAL)
+
+  /// MANUAL_PAYMENT : 100 à 10 000 000 FCFA (entier). NULL pour PROLONGATION.
+  amountFcfa   Int?
+  /// MANUAL_PAYMENT : durée créditée, 1 à 36 mois. NULL pour PROLONGATION.
+  periodMonths Int?
+  /// PROLONGATION : 1 à 366 jours. NULL pour MANUAL_PAYMENT.
+  days         Int?
+  /// Justificatif libre (≤ 200 caractères) — jamais un numéro de carte ni un secret.
+  reference    String?
+  /// Motif général de la demande (≤ 500 caractères).
+  reason       String?
+
+  /// Fournie par le formulaire (16 à 64 caractères [A-Za-z0-9_-]) ; unique PAR DEMANDEUR.
+  idempotencyKey String
+
+  /// NULL si le demandeur a été supprimé (purge) — la demande n'est alors plus approuvable.
+  requestedByUserId String?
+  requestedBy       User?   @relation("SubscriptionChangeRequestedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+
+  /// Renseignés à toute sortie de l'état d'attente (approbation, rejet, annulation).
+  decidedByUserId String?
+  decidedBy       User?     @relation("SubscriptionChangeDecidedBy", fields: [decidedByUserId], references: [id], onDelete: SetNull)
+  decidedAt       DateTime?
+  /// Obligatoire (non vide) pour un rejet.
+  decisionReason  String?
+
+  /// Règlement créé à l'approbation d'un MANUAL_PAYMENT — un seul par demande.
+  appliedPaymentId String?              @unique
+  appliedPayment   SubscriptionPayment? @relation(fields: [appliedPaymentId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requestedByUserId, idempotencyKey])
+  @@index([status, createdAt])
+  @@index([establishmentId])
+  @@index([requestedByUserId])
+  @@index([decidedByUserId])
 }
 
 /// Paramètres de tarification à l'échelle de TOUTE la plateforme — à ne

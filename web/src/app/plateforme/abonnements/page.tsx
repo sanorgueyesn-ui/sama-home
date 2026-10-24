@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import {
   getPlatformSubscriptionsOverview,
@@ -6,6 +7,8 @@ import {
 } from "@/lib/subscription-data";
 import { ConfirmPaymentButton } from "../confirm-payment-button";
 import { SubscriptionsTable } from "./subscriptions-table";
+import { SubscriptionChangeRequestsSection } from "./subscription-change-section";
+import { SubscriptionChangeRequestsLoading } from "./subscription-change-view";
 import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtFcfa(amount: number) {
@@ -185,6 +188,12 @@ export default async function PlatformSubscriptionPaymentsPage() {
               )}
             </div>
           </div>
+
+          {/* Section 1 bis (Lot 3B, consultation seule) : paiements manuels et prolongations à valider. Lecture
+              côté serveur dans son propre <Suspense> : un échec n'affecte pas le reste de la page. */}
+          <Suspense fallback={<SubscriptionChangeRequestsLoading />}>
+            <SubscriptionChangeRequestsSection />
+          </Suspense>
 
           {/* Section 2 : Tableau & Suivi complet de tous les abonnements */}
           <div className="mt-10">
