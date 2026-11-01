@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/dal";
 import { resolveImageDisplayUrl } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
+import { buildReservationTimeWhere, type ReservationTimeFilter } from "@/lib/reservation-filters";
 
 const LIST_LIMIT = 50;
 
-export type ReservationTimeFilter = "today" | "upcoming" | "past" | "cancelled" | "all";
+export type { ReservationTimeFilter };
 
 /**
  * For the "Nouvelle réservation" form: only active properties (Bloc 17:
@@ -72,10 +73,6 @@ export async function listReservations(filters: {
   }
 
   const now = new Date();
-  const startOfToday = new Date(now);
-  startOfToday.setHours(0, 0, 0, 0);
-  const endOfToday = new Date(startOfToday);
-  endOfToday.setDate(endOfToday.getDate() + 1);
 
   const timeFilter = filters.timeFilter ?? "upcoming";
   const trimmedQuery = filters.query?.trim();
@@ -85,14 +82,7 @@ export async function listReservations(filters: {
     ...(filters.propertyId ? { propertyId: filters.propertyId } : {}),
     ...(filters.clientId ? { clientId: filters.clientId } : {}),
     ...(filters.status ? { status: filters.status } : {}),
-    ...(timeFilter === "today" ? { date: { gte: startOfToday, lt: endOfToday } } : {}),
-    ...(timeFilter === "upcoming"
-      ? { arrivalTime: { gte: now }, status: { not: "CANCELLED" as ReservationStatus } }
-      : {}),
-    ...(timeFilter === "past"
-      ? { departureTime: { lt: now }, status: { not: "CANCELLED" as ReservationStatus } }
-      : {}),
-    ...(timeFilter === "cancelled" ? { status: "CANCELLED" as ReservationStatus } : {}),
+    ...buildReservationTimeWhere(timeFilter, now),
     ...(trimmedQuery
       ? {
           client: {

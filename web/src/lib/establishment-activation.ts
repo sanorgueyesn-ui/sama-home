@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { computeDepartureTime } from "@/lib/duration";
 import { DEFAULT_TRIAL_DURATION_MONTHS } from "@/lib/subscription-data";
+import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 
 /**
  * Phase 3G / Lot D12-P88 — logique transactionnelle PARTAGÉE entre
@@ -94,4 +95,87 @@ export async function createTrialSubscriptionAndAudit(
   });
 
   return { trialStartedAt, currentPeriodEnd };
+}
+
+/**
+ * Lot 3A — forfait payant perdu en approbation manuelle.
+ *
+ * En mode manuel, l'établissement est créé `PENDING` SANS abonnement : la demande de paiement
+ * du forfait `PAID_9900` ne peut donc pas être créée à l'inscription (elle l'est seulement si
+ * l'abonnement existe déjà, c'est-à-dire en auto-approbation). Le forfait choisi n'est conservé
+ * que dans l'audit `ESTABLISHMENT_REGISTERED` (`newValue.plan`). Cette fonction le relit à
+ * l'approbation et crée la demande `PENDING`, dans la transaction de l'appelant.
+ *
+ * À appeler UNIQUEMENT depuis l'approbation manuelle, après `createTrialSubscriptionAndAudit()`.
+ * Jamais depuis l'auto-approbation : l'inscription y crée déjà la demande (pas de doublon).
+ *
+ * Ne crée une demande que si le forfait vaut STRICTEMENT `PAID_9900`. Audit absent, forfait
+ * absent, invalide ou `FREE_TRIAL` : aucune écriture, aucune erreur. Une demande déjà en
+ * attente n'est jamais doublée. Aucun paiement existant n'est lu pour être modifié, ni modifié.
+ * Montant et durée viennent de `PricingSettings` (repli sur les valeurs par défaut du projet)
+ * et sont gelés dans la demande. La référence reste `null` : aucune règle nouvelle ici.
+ *
+ * Retourne `true` si une demande a été créée.
+ */
+export async function createPaidPlanRequestOnApproval(
+  tx: Prisma.TransactionClient,
+  establishmentId: string,
+  actorUserId: string,
+): Promise<boolean> {
+  const registration = await tx.auditLog.findFirst({
+    where: {
+      action: "ESTABLISHMENT_REGISTERED",
+      entityType: "Establishment",
+      entityId: establishmentId,
+      establishmentId,
+    },
+    orderBy: { createdAt: "asc" },
+    select: { newValue: true },
+  });
+  const registered = registration?.newValue;
+  const plan =
+    registered !== null && typeof registered === "object" && !Array.isArray(registered)
+      ? (registered as Record<string, unknown>).plan
+      : undefined;
+  if (plan !== "PAID_9900") {
+    return false;
+  }
+
+  const subscription = await tx.subscription.findUnique({
+    where: { establishmentId },
+    select: { id: true },
+  });
+  if (!subscription) {
+    return false;
+  }
+
+  const existingPending = await tx.subscriptionPayment.findFirst({
+    where: { subscriptionId: subscription.id, status: "PENDING" },
+    select: { id: true },
+  });
+  if (existingPending) {
+    return false;
+  }
+
+  const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
+  const periodMonths = pricingSettings?.periodMonths ?? DEFAULT_PERIOD_MONTHS;
+  const amount = pricingSettings?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA;
+
+  const created = await tx.subscriptionPayment.create({
+    data: { subscriptionId: subscription.id, amount, periodMonths, status: "PENDING" },
+  });
+
+  await tx.auditLog.create({
+    data: {
+      userId: actorUserId,
+      action: "SUBSCRIPTION_PAYMENT_REQUESTED",
+      entityType: "SubscriptionPayment",
+      entityId: created.id,
+      reason: null,
+      newValue: { amount: created.amount, periodMonths: created.periodMonths, status: created.status },
+      establishmentId,
+    },
+  });
+
+  return true;
 }

@@ -163,7 +163,7 @@ export function ClientForm({
       <div className="flex items-center gap-3 pt-2">
         <Link
           href={returnTo || "/clients"}
-          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-white/15 bg-surface text-sm font-bold text-fg hover:bg-white/5 active:scale-98 transition-all"
+          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-border/15 bg-surface text-sm font-bold text-fg hover:bg-fg/5 active:scale-98 transition-all"
         >
           Annuler
         </Link>

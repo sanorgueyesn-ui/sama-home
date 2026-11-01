@@ -6,6 +6,8 @@
 **Auditeur :** Antigravity Engineering & QA Lead Agent  
 **Statut Global :** ✅ **PRÊT POUR PUBLICATION (PRODUCTION READY)**
 
+> **Note de mise à jour (2026-10-25)** — Ce rapport décrit l'état du **20 octobre 2026** et n'a pas été rejoué. Depuis, le dépôt a évolué : gardes locales contre la production (commits `4563fa0`, `128a3da`, `33604ca`), lot 3B « demandes de changement d'abonnement » (migration `20261023120000`, non commité), durcissement OTP/sessions et nouveaux tests. Ces changements n'ont pas fait l'objet d'un nouvel audit ni d'un nouveau build documenté ici. Le verdict ci-dessous ne vaut donc pas autorisation de déployer l'état actuel ; l'état courant et les risques ouverts sont tenus dans `AGENT_HANDOFF.md`.
+
 ---
 
 ## 1. SYNTHÈSE EXÉCUTIVE & VERDICT

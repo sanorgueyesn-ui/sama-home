@@ -34,7 +34,7 @@ export function CashActivityList({ entries }: { entries: CashActivityEntry[] }) 
         return (
           <div
             key={`${entry.type}-${entry.id}`}
-            className="flex items-center justify-between gap-3 rounded-xl bg-surface-raised px-4 py-3 shadow-card border border-white/5 hover:border-brand-orange/20 transition-colors"
+            className="flex items-center justify-between gap-3 rounded-xl bg-surface-raised px-4 py-3 shadow-card border border-border/10 hover:border-brand-orange/20 transition-colors"
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2">

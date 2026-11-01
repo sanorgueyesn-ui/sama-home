@@ -235,7 +235,7 @@ export function ReservationForm({
       }}
     >
       {/* 0. Choix immédiat : 2 petits boutons bien visibles sans textes encombrants */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-surface-raised p-2.5 sm:p-3 shadow-sm backdrop-blur-md">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border/15 bg-surface-raised p-2.5 sm:p-3 shadow-sm backdrop-blur-md">
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -247,7 +247,7 @@ export function ReservationForm({
             className={`flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
               billingMode === "DAY"
                 ? "bg-brand-orange text-ink shadow-md font-black"
-                : "bg-surface border border-white/10 text-fg/70 hover:text-white hover:bg-white/5"
+                : "bg-surface border border-border/15 text-fg/70 hover:text-fg hover:bg-fg/5"
             }`}
           >
             <CalendarIcon className="h-4 w-4" />
@@ -265,7 +265,7 @@ export function ReservationForm({
             className={`flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
               billingMode === "HOUR"
                 ? "bg-brand-orange text-ink shadow-md font-black"
-                : "bg-surface border border-white/10 text-fg/70 hover:text-white hover:bg-white/5"
+                : "bg-surface border border-border/15 text-fg/70 hover:text-fg hover:bg-fg/5"
             }`}
           >
             <ClockIcon className="h-4 w-4" />
@@ -275,23 +275,23 @@ export function ReservationForm({
 
         {/* Sélecteur de nombre de jours (si Par Jour) : compact et ultra-simple */}
         {billingMode === "DAY" ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/10">
             <span className="text-xs font-bold text-fg/80">Nombre de jours :</span>
             <div className="flex items-center gap-2">
-              <div className="flex items-center rounded-lg border border-white/10 bg-surface overflow-hidden">
+              <div className="flex items-center rounded-lg border border-border/15 bg-surface overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => Math.max(1, d - 1))}
-                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-white/10 active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-fg/10 active:scale-95"
                   aria-label="Diminuer"
                 >
                   −
                 </button>
-                <span className="w-10 text-center text-xs font-black text-white">{numberOfDays}j</span>
+                <span className="w-10 text-center text-xs font-black text-fg">{numberOfDays}j</span>
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => d + 1)}
-                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-white/10 active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-fg/10 active:scale-95"
                   aria-label="Augmenter"
                 >
                   +
@@ -307,7 +307,7 @@ export function ReservationForm({
                     className={`rounded-md px-2 py-1 text-[11px] font-bold transition-all ${
                       numberOfDays === d
                         ? "bg-brand-orange text-ink font-black shadow-sm"
-                        : "bg-surface/80 border border-white/10 text-fg/70 hover:text-white hover:bg-white/10"
+                        : "bg-surface/80 border border-border/15 text-fg/70 hover:text-fg hover:bg-fg/10"
                     }`}
                   >
                     {d}j
@@ -322,8 +322,8 @@ export function ReservationForm({
         <input type="hidden" name="numberOfDays" value={billingMode === "DAY" ? numberOfDays : 1} />
       </div>
       {/* 1. Logement & Formule */}
-      <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-white/10">
+      <div className="relative z-10 rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-border/15">
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
             1
           </span>
@@ -346,7 +346,7 @@ export function ReservationForm({
                 const newProp = properties.find((p) => p.id === newPropId);
                 setTariffId(newProp?.tariffs?.[0]?.id ?? "");
               }}
-              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
               <option value="">Sélectionner une chambre...</option>
               {properties.map((p) => (
@@ -373,7 +373,7 @@ export function ReservationForm({
               value={effectiveTariffId}
               onChange={(e) => setTariffId(e.target.value)}
               disabled={!propertyId || activeTariffs.length === 0}
-              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
+              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
             >
               <option value="">
                 {!propertyId
@@ -398,8 +398,8 @@ export function ReservationForm({
       </div>
 
       {/* 2. Horaires & Calendrier */}
-      <div className="relative z-30 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-white/10">
+      <div className="relative z-30 rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-border/15">
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
             2
           </span>
@@ -429,12 +429,12 @@ export function ReservationForm({
         </div>
 
         {/* Live Stay Calculations & Availability Card */}
-        <div className="mt-4 rounded-xl border border-white/5 bg-surface-sunken p-3.5">
+        <div className="mt-4 rounded-xl border border-border/10 bg-surface-sunken p-3.5">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-fg/60">Libération prévue :</span>
-            <span className="font-extrabold text-white text-sm">{departurePreview ?? "—"}</span>
+            <span className="font-extrabold text-fg text-sm">{departurePreview ?? "—"}</span>
           </div>
-          <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 text-xs">
+          <div className="mt-2 flex items-center justify-between border-t border-border/10 pt-2 text-xs">
             <span className="font-bold text-fg/60">
               Montant total du séjour {billingMode === "DAY" && numberOfDays > 1 ? `(${numberOfDays} jours)` : ""} :
             </span>
@@ -474,8 +474,8 @@ export function ReservationForm({
       </div>
 
       {/* 3. Client */}
-      <div className="relative z-10 rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-white/10">
+      <div className="relative z-10 rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-border/15">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
               3
@@ -484,7 +484,7 @@ export function ReservationForm({
           </div>
 
           {/* Onglets rapides : Nouveau client direct OU Client existant */}
-          <div className="flex rounded-lg bg-surface p-1 border border-white/10">
+          <div className="flex rounded-lg bg-surface p-1 border border-border/15">
             <button
               type="button"
               onClick={() => setClientMode("EXISTING")}
@@ -537,7 +537,7 @@ export function ReservationForm({
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
                   placeholder="Ex : Moussa Diop"
-                  className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+                  className="h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-bold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
                 />
               </div>
 
@@ -552,7 +552,7 @@ export function ReservationForm({
                   value={newClientPhone}
                   onChange={(e) => setNewClientPhone(e.target.value)}
                   placeholder="Ex : +221 77 123 45 67"
-                  className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 font-mono"
+                  className="h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-bold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 font-mono"
                 />
               </div>
             </div>
@@ -573,7 +573,7 @@ export function ReservationForm({
               name="clientId"
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
               <option value="">Sélectionner dans la liste...</option>
               {clients.map((c) => (
@@ -618,7 +618,7 @@ export function ReservationForm({
                     className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                       idDocumentType === sug
                         ? "bg-brand-orange text-ink font-black shadow-sm"
-                        : "bg-surface text-fg/80 hover:bg-white/10"
+                        : "bg-surface text-fg/80 hover:bg-fg/10"
                     }`}
                   >
                     {sug}
@@ -631,7 +631,7 @@ export function ReservationForm({
                 value={idDocumentNumber}
                 onChange={(e) => setIdDocumentNumber(e.target.value)}
                 placeholder="Numéro de la pièce (CNI, Passeport ou Permis)"
-                className="h-11 w-full rounded-xl border border-white/10 bg-surface px-3 text-sm font-bold text-white outline-none focus:border-brand-orange font-mono"
+                className="h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-bold text-fg outline-none focus:border-brand-orange font-mono"
               />
             </div>
           </div>
@@ -670,7 +670,7 @@ export function ReservationForm({
       <div className="flex items-center gap-3 pt-2">
         <Link
           href="/reservations"
-          className="flex h-14 min-w-[120px] items-center justify-center rounded-2xl border border-white/15 bg-surface text-sm font-bold text-fg hover:bg-white/5 active:scale-98 transition-all"
+          className="flex h-14 min-w-[120px] items-center justify-center rounded-2xl border border-border/15 bg-surface text-sm font-bold text-fg hover:bg-fg/5 active:scale-98 transition-all"
         >
           Annuler
         </Link>

@@ -374,6 +374,38 @@ export const ExpenseCategoryNameSchema = z
  * téléphone inventée (Bloc 16 : "format téléphone si une validation existe
  * déjà").
  */
+/**
+ * Texte EFFAÇABLE : un champ envoyé vide (« ») devient `null` (la valeur enregistrée est effacée),
+ * un champ absent du formulaire reste `undefined` (valeur inchangée). Différent de `optionalText`,
+ * qui transforme le vide en `undefined` et empêcherait donc de retirer un mot de passe Wi-Fi.
+ */
+const clearableText = (max: number, label: string) =>
+  z
+    .union([z.string(), z.null(), z.undefined()])
+    .transform((v) => {
+      if (v == null) return undefined;
+      const trimmed = v.trim();
+      return trimmed.length === 0 ? null : trimmed;
+    })
+    .pipe(z.string().max(max, `${label} : ${max} caractères maximum.`).nullable().optional());
+
+/**
+ * Informations d'accueil du séjour (Hôtel et Résidence). Les clés portent le nom des colonnes de
+ * `Settings`, pour être écrites telles quelles. Limites : SSID 32 et mot de passe WPA 63 (norme).
+ */
+export const GuestInfoSchema = z.object({
+  guestWifiName: clearableText(32, "Nom du Wi-Fi"),
+  guestWifiPassword: clearableText(63, "Mot de passe du Wi-Fi"),
+  guestTvInstructions: clearableText(600, "Mode d'emploi de la télévision"),
+  guestAcInstructions: clearableText(600, "Mode d'emploi de la climatisation"),
+  guestHouseRules: clearableText(800, "Règles de la maison"),
+  guestExtraInfo: clearableText(600, "Autres informations"),
+  guestCheckoutTime: clearableText(40, "Heure de départ"),
+  guestIncludeEmergency: z
+    .union([z.string(), z.null(), z.undefined()])
+    .transform((v) => v === "on"),
+});
+
 export const SettingsSchema = z.object({
   establishmentName: z
     .string()
@@ -428,7 +460,8 @@ export const SettingsSchema = z.object({
 // dans `SettingsFormState` pour que le formulaire puisse afficher un refus.
 export type SettingsFormState =
   | {
-      errors?: Partial<Record<keyof z.infer<typeof SettingsSchema>, string[]>> & { logoUrl?: string[] };
+      errors?: Partial<Record<keyof z.infer<typeof SettingsSchema>, string[]>> &
+        Partial<Record<keyof z.infer<typeof GuestInfoSchema>, string[]>> & { logoUrl?: string[] };
       message?: string;
     }
   | undefined;
@@ -511,6 +544,7 @@ export const EstablishmentRegistrationSchema = z.object({
     .pipe(z.email("Adresse e-mail invalide.")),
   password: newPasswordField(),
   plan: z.enum(["FREE_TRIAL", "PAID_9900"]).default("FREE_TRIAL"),
+  activityMode: z.enum(["RESIDENCE", "HOTEL", "AGENCY"]).optional().default("RESIDENCE"),
 });
 
 export type EstablishmentRegistrationFormState =

@@ -92,6 +92,17 @@ const userActive2 = await prisma.user.create({
 results.estActive2 = { id: estActive2.id, name: estActive2.name };
 results.userActive2 = { id: userActive2.id, username: userActive2.username };
 
+// Socle multi-espaces : chaque compte d'établissement a son appartenance (sinon il n'aurait aucun espace).
+for (const [user, establishment] of [
+  [userActive, estActive],
+  [userSuspended, estSuspended],
+  [userPending, estPending],
+  [userExpired, estExpired],
+  [userActive2, estActive2],
+] as const) {
+  await prisma.membership.create({ data: { userId: user.id, establishmentId: establishment.id, role: "ADMIN" } });
+}
+
 // 6. Compte administrateur de plateforme — distinct, sans établissement.
 const platformAdmin = await prisma.user.create({
   data: { username: "p118-platform-admin", passwordHash, name: "P118 Platform Admin", isPlatformAdmin: true, role: null, establishmentId: null },

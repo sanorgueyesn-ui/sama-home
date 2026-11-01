@@ -2,10 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
-import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
+import { createTrialSubscriptionAndAudit, createPaidPlanRequestOnApproval } from "@/lib/establishment-activation";
 import { verifyPassword } from "@/lib/password";
 import { hasPlatformPermission } from "@/lib/permissions";
 import { purgeUserFromDatabase } from "@/lib/user-purge";
+import { sharedAccountsWhere } from "@/lib/membership-guards";
 import {
   ESTABLISHMENT_DELETION_DISABLED_MESSAGE,
   ESTABLISHMENT_DELETION_ENABLED,
@@ -83,6 +84,11 @@ export async function approveEstablishment(establishmentId: string): Promise<{ e
       // (voir src/lib/establishment-activation.ts). `user.id` réel transmis
       // ici (approbation humaine), jamais `null`.
       await createTrialSubscriptionAndAudit(tx, establishmentId, user.id, "ESTABLISHMENT_APPROVED");
+
+      // 6. Lot 3A — forfait payant choisi à l'inscription (conservé dans l'audit
+      // `ESTABLISHMENT_REGISTERED`) : demande de paiement `PENDING` créée dans la même
+      // transaction que l'activation ; échec = approbation annulée en entier.
+      await createPaidPlanRequestOnApproval(tx, establishmentId, user.id);
     });
   } catch (error) {
     if (error instanceof EstablishmentApprovalError) {
@@ -430,17 +436,29 @@ export async function deleteEstablishment(
         where: { user: { establishmentId } },
       });
 
-      // 8. Journaux d'audit liés à l'établissement ou à ses utilisateurs
-      await tx.auditLog.deleteMany({
-        where: {
-          OR: [
-            { establishmentId },
-            { user: { establishmentId } },
-          ],
-        },
-      });
+      // 8. Journaux d'audit : JAMAIS supprimés (document de référence v1.0, §3). Lot 1 : l'ancien
+      //    `auditLog.deleteMany` a été retiré. Conséquence voulue tant que ce chemin est gelé
+      //    (Lot 0) : si on le réactivait sans le cycle de fermeture contrôlée, la suppression des
+      //    utilisateurs ou de l'établissement échouerait sur les clés étrangères `Restrict` de
+      //    `AuditLog` et la transaction serait annulée, sans perte de données.
 
       // 9. Utilisateurs de l'établissement et purge complète de leurs jetons & OTPs
+      //
+      // Socle multi-espaces : un compte peut appartenir à plusieurs espaces. Supprimer cet
+      // établissement ne doit JAMAIS détruire un compte qui sert aussi un autre espace, ni être
+      // bloqué par l'appartenance d'un compte dont la colonne historique pointe ailleurs (clé
+      // `Restrict`). Dans ces deux cas on refuse explicitement : le détachement d'un compte
+      // multi-espaces relève du lot « création d'espace » et n'est pas décidé ici.
+      const sharedAccounts = await tx.membership.count({
+        where: sharedAccountsWhere(establishmentId), // définition : src/lib/membership-guards.ts
+      });
+      if (sharedAccounts > 0) {
+        throw new EstablishmentApprovalError(
+          "Suppression impossible : au moins un compte appartient aussi à un autre espace professionnel.",
+        );
+      }
+      await tx.membership.deleteMany({ where: { establishmentId } });
+
       const estUsers = await tx.user.findMany({
         where: { establishmentId },
         select: { id: true, email: true, username: true },
@@ -526,7 +544,7 @@ export async function deletePlatformUser(
     await prisma.$transaction(async (tx) => {
       const target = await tx.user.findUnique({
         where: { id: targetUserId },
-        select: { id: true, name: true, username: true, isPlatformAdmin: true, establishmentId: true },
+        select: { id: true, role: true, isPlatformAdmin: true, establishmentId: true },
       });
       if (!target) {
         throw new EstablishmentApprovalError("Utilisateur introuvable.");
@@ -544,8 +562,10 @@ export async function deletePlatformUser(
           action: "USER_DELETED",
           entityType: "User",
           entityId: targetUserId,
-          reason: `Suppression définitive du compte utilisateur « ${target.name} » (${target.username})`,
-          oldValue: { name: target.name, username: target.username },
+          // Minimisation (document de référence v1.0, §3/§4) : identifiant opaque (entityId) et rôle
+          // uniquement — ni nom, ni identifiant de connexion de la personne supprimée.
+          reason: `Suppression définitive d'un compte utilisateur (rôle : ${target.role ?? "inconnu"})`,
+          oldValue: { role: target.role ?? "inconnu" },
           newValue: { deleted: true },
           establishmentId: target.establishmentId,
         },

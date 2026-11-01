@@ -6,7 +6,11 @@ import type { Prisma } from "@/generated/prisma/client";
  * Déroulement :
  * 1. Délie toutes les clés étrangères optionnelles (Rental.registeredByUserId, CashSession.closedByUserId, etc.).
  * 2. Réassigne les clés étrangères NOT NULL vers un autre compte administrateur si applicable.
- * 3. Supprime les sessions actives, lectures de notifications et entrées d'audit de l'utilisateur.
+ * 3. Supprime les sessions actives et lectures de notifications de l'utilisateur, et DÉTACHE
+ *    l'auteur de ses entrées d'audit (`AuditLog.userId` -> NULL). Les entrées d'audit ne sont
+ *    JAMAIS supprimées (document de référence v1.0, §3) : seul le lien vers la personne est
+ *    retiré. Limite connue : les champs libres (`reason`, `oldValue`, `newValue`) d'anciennes
+ *    entrées peuvent encore contenir des identités ; ils ne sont pas réécrits ici.
  * 4. Supprime TOUS les jetons de mot de passe oublié (PasswordResetToken) et codes OTP (OtpVerification)
  *    associés à l'adresse e-mail et à l'identifiant.
  * 5. Supprime définitivement la ligne `User`.
@@ -32,6 +36,16 @@ export async function purgeUserFromDatabase(
 
   if (!target) {
     throw new Error("Utilisateur introuvable.");
+  }
+
+  // Socle multi-espaces : un compte qui sert plusieurs espaces ne se purge pas d'un seul coup.
+  // Le remplaçant des clés NOT NULL ci-dessous est choisi dans UN espace ; il réattribuerait à
+  // un administrateur d'un autre espace les caisses et virements créés dans les autres. Refus
+  // explicite (transaction annulée, rien n'est modifié) tant que le détachement par espace
+  // n'est pas conçu (lot « création d'espace »).
+  const membershipCount = await tx.membership.count({ where: { userId: targetUserId } });
+  if (membershipCount > 1) {
+    throw new Error("Suppression impossible : ce compte appartient à plusieurs espaces professionnels.");
   }
 
   const emailsToPurge = Array.from(
@@ -64,11 +78,19 @@ export async function purgeUserFromDatabase(
     where: {
       id: { not: targetUserId },
       OR: [
-        ...(target.establishmentId ? [{ establishmentId: target.establishmentId, role: "ADMIN" as const }] : []),
+        ...(target.establishmentId
+          ? [
+              { establishmentId: target.establishmentId, role: "ADMIN" as const },
+              // Socle multi-espaces : un ADMIN de l'espace par appartenance (même tenant).
+              { memberships: { some: { establishmentId: target.establishmentId, role: "ADMIN" as const } } },
+            ]
+          : []),
         { isPlatformAdmin: true },
       ],
     },
     select: { id: true },
+    // Déterministe : toujours le plus ancien compte qualifié (sinon le choix variait d'un appel à l'autre).
+    orderBy: { createdAt: "asc" },
   });
 
   if (substituteUser) {
@@ -97,7 +119,9 @@ export async function purgeUserFromDatabase(
   // 3. Supprimer les éléments directement rattachés à l'utilisateur
   await tx.session.deleteMany({ where: { userId: targetUserId } });
   await tx.notificationRead.deleteMany({ where: { userId: targetUserId } });
-  await tx.auditLog.deleteMany({ where: { userId: targetUserId } });
+  // Conservation de l'audit : `AuditLog.userId` est nullable (migration 20261014150000), aucune
+  // migration requise. Doit précéder `user.delete` (clé étrangère Restrict).
+  await tx.auditLog.updateMany({ where: { userId: targetUserId }, data: { userId: null } });
 
   // Lot 3B — demandes de paiement manuel / prolongation encore en attente du demandeur supprimé :
   // elles ne pourraient plus être approuvées (`requestedByUserId` passe à NULL, clé étrangère

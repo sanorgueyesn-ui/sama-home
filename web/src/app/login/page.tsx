@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getTheme } from "@/lib/theme";
 import { AuthLogo } from "@/components/auth/auth-logo";
 import { FeatureList } from "@/components/auth/feature-list";
@@ -32,6 +33,14 @@ export default async function LoginPage(props: {
     resetSuccess?: string;
   }>;
 }) {
+  // Redirection automatique pour test immédiat des interfaces sans barrière de connexion.
+  // Limitée au développement local avec DEV_BYPASS_AUTH=true (même garde que src/lib/dal.ts) :
+  // sans cela, /login renvoie vers /dashboard, qui renvoie vers /login (boucle) et la connexion
+  // devient impossible.
+  if (process.env.NODE_ENV === "development" && process.env.DEV_BYPASS_AUTH === "true") {
+    redirect("/dashboard");
+  }
+
   const [theme, searchParams] = await Promise.all([
     getTheme(),
     props.searchParams,
@@ -157,7 +166,7 @@ export default async function LoginPage(props: {
 
             <p className="mt-6 text-center text-sm font-medium text-fg/60">
               Pas encore de compte ?{" "}
-              <Link href="/register" className="font-bold text-navy underline-offset-2 hover:underline">
+              <Link href="/register" className="font-bold text-fg underline underline-offset-2 hover:no-underline">
                 Créer mon espace
               </Link>
             </p>

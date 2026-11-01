@@ -1,6 +1,18 @@
 import "dotenv/config";
+import "./lib/safe-env.mjs";
+import { assertTestDatabaseMarker } from "./lib/db-marker.mjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
+// ⛔ SCRIPT NEUTRALISÉ (phase 0.4). Ce script supprime définitivement un
+// compte réel codé en dur (e-mail) et l'établissement « Touba » avec toutes
+// ses données. Contenu conservé tel quel pour audit. Pour le réactiver (base
+// locale de test UNIQUEMENT), passer NEUTRALIZED à false APRÈS relecture et
+// autorisation du propriétaire ; la garde de cible locale reste appliquée.
+const NEUTRALIZED = true as boolean;
+if (NEUTRALIZED) {
+  throw new Error("SCRIPT NEUTRALISÉ : purge-test-users.mts ne doit jamais être exécuté. Aucune connexion ouverte.");
+}
 
 const connectionString = process.env.DATABASE_URL!;
 const adapter = new PrismaPg({ connectionString });
@@ -88,6 +100,7 @@ async function purgeEmailAndEstablishment(emailToPurge: string, establishmentNam
 }
 
 async function main() {
+  await assertTestDatabaseMarker(process.env.DATABASE_URL, "purge de comptes");
   // Purge test account gsanor5@gmail.com and Touba
   await purgeEmailAndEstablishment("gsanor5@gmail.com", "Touba");
 

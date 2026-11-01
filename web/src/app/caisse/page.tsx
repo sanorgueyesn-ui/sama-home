@@ -221,14 +221,14 @@ export default async function CaissePage() {
 
             <Link
               href="/locations/new"
-              className="flex items-center gap-2 rounded-xl border border-white/15 bg-surface-raised px-4 py-2.5 text-xs font-bold text-fg hover:bg-surface-sunken transition-colors"
+              className="flex items-center gap-2 rounded-xl border border-border/15 bg-surface-raised px-4 py-2.5 text-xs font-bold text-fg hover:bg-surface-sunken transition-colors"
             >
               <span>+ Nouvel Encaissement (Séjour)</span>
             </Link>
 
             <Link
               href="/caisse/virements"
-              className="flex items-center gap-2 rounded-xl border border-white/15 bg-surface-raised px-4 py-2.5 text-xs font-bold text-fg hover:bg-surface-sunken transition-colors"
+              className="flex items-center gap-2 rounded-xl border border-border/15 bg-surface-raised px-4 py-2.5 text-xs font-bold text-fg hover:bg-surface-sunken transition-colors"
             >
               <span>Virements bancaires</span>
             </Link>

@@ -10,6 +10,7 @@ import { SubscriptionsTable } from "./subscriptions-table";
 import { SubscriptionChangeRequestsSection } from "./subscription-change-section";
 import { SubscriptionChangeRequestsLoading } from "./subscription-change-view";
 import { requirePlatformPermission } from "@/lib/dal";
+import { getPublicPricingSettings, resolvePricingView, type PricingSettingsView } from "@/lib/platform-settings-data";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -48,10 +49,15 @@ function PaymentRequestCard({ payment }: { payment: PendingSubscriptionPaymentVi
 export default async function PlatformSubscriptionPaymentsPage() {
   await requirePlatformPermission("PLATFORM_SUBSCRIPTIONS");
   let overview: PlatformSubscriptionsOverview | null = null;
+  // Lecture seule : tarif configuré, ou valeurs de repli du système si aucune ligne n'est enregistrée
+  // (mêmes valeurs qu'avant : 9 900 FCFA / 3 mois) — sert uniquement à préremplir le formulaire de paiement manuel.
+  let pricing: PricingSettingsView = resolvePricingView(null);
   let loadError: string | null = null;
 
   try {
     overview = await getPlatformSubscriptionsOverview();
+    // Un échec de lecture du tarif ne doit jamais empêcher l'affichage de la page : repli sur les valeurs de repli.
+    pricing = await getPublicPricingSettings().catch(() => resolvePricingView(null));
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error && typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
       throw error;
@@ -207,7 +213,11 @@ export default async function PlatformSubscriptionPaymentsPage() {
             </div>
 
             <div className="mt-4">
-              <SubscriptionsTable establishments={overview.establishments} />
+              <SubscriptionsTable
+                establishments={overview.establishments}
+                defaultAmountFcfa={pricing.periodPriceFcfa}
+                defaultPeriodMonths={pricing.periodMonths}
+              />
             </div>
           </div>
 

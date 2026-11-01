@@ -40,6 +40,9 @@ if (process.platform === "win32") {
 }
 
 const nextConfig: NextConfig = {
+  // Pastille « N » de développement : retirée, elle masquait la barre d'onglets mobile. Les erreurs
+  // de compilation restent affichées. N'existe qu'en développement local, jamais en production.
+  devIndicators: false,
   // Pin the workspace root to this app: avoids Turbopack picking up an
   // unrelated package-lock.json higher up in the user's home directory.
   turbopack: {

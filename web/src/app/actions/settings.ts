@@ -7,7 +7,9 @@ import { Prisma } from "@/generated/prisma/client";
 import { verifySession, requireActiveEstablishment } from "@/lib/dal";
 import { getSessionCookiePayload } from "@/lib/session-token";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { SettingsSchema, ChangePasswordSchema, type SettingsFormState, type ChangePasswordFormState } from "@/lib/definitions";
+import type { z } from "zod";
+import { SettingsSchema, GuestInfoSchema, ChangePasswordSchema, type SettingsFormState, type ChangePasswordFormState } from "@/lib/definitions";
+import { isGuestInfoMode } from "@/lib/guest-info";
 import { readImageUploadFromFormData } from "@/lib/image-upload";
 import { uploadImageObject, deleteImageObject } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
@@ -72,6 +74,29 @@ export async function updateSettings(
   // modifiable depuis ce formulaire. `user.establishmentId` transmis pour
   // que chaque nouveau logo reçoive une clé tenant-aware
   // (logos/<establishmentId>/<uuid>.ext).
+  // Informations d'accueil du séjour : seulement pour un espace Hôtel ou Résidence, décidé ICI par le
+  // mode réel de l'espace de la session. Le formulaire ne fait que les masquer ailleurs : une requête
+  // forgée pour une Agence est ignorée (aucune de ces colonnes n'est écrite).
+  const space = await prisma.establishment.findUnique({
+    where: { id: user.establishmentId },
+    select: { businessMode: true },
+  });
+  let guestData: z.infer<typeof GuestInfoSchema> | Record<string, never> = {};
+  if (formData.get("guestInfoSection") === "1" && isGuestInfoMode(space?.businessMode)) {
+    const guest = GuestInfoSchema.safeParse({
+      guestWifiName: formData.get("guestWifiName"),
+      guestWifiPassword: formData.get("guestWifiPassword"),
+      guestTvInstructions: formData.get("guestTvInstructions"),
+      guestAcInstructions: formData.get("guestAcInstructions"),
+      guestHouseRules: formData.get("guestHouseRules"),
+      guestExtraInfo: formData.get("guestExtraInfo"),
+      guestCheckoutTime: formData.get("guestCheckoutTime"),
+      guestIncludeEmergency: formData.get("guestIncludeEmergency"),
+    });
+    if (!guest.success) return { errors: guest.error.flatten().fieldErrors };
+    guestData = guest.data;
+  }
+
   const upload = await readImageUploadFromFormData(formData, "logo", LOGO_KEY_PREFIX, user.establishmentId);
   if (upload && "error" in upload) {
     return { errors: { logoUrl: [upload.error] } };
@@ -108,7 +133,7 @@ export async function updateSettings(
     try {
       result = await prisma.settings.updateMany({
         where: { establishmentId: user.establishmentId, updatedAt: existing.updatedAt },
-        data: { ...parsed.data, logoUrl: nextLogoUrl },
+        data: { ...parsed.data, ...guestData, logoUrl: nextLogoUrl },
       });
     } catch (error) {
       console.error("updateSettings() — échec inattendu de l'enregistrement :", error);
@@ -130,7 +155,7 @@ export async function updateSettings(
     // établissement.
     try {
       await prisma.settings.create({
-        data: { establishmentId: user.establishmentId, ...parsed.data, logoUrl: nextLogoUrl },
+        data: { establishmentId: user.establishmentId, ...parsed.data, ...guestData, logoUrl: nextLogoUrl },
       });
     } catch (error) {
       // Phase 3G / Lot D12-P44 — collision de création concurrente :
@@ -160,7 +185,8 @@ export async function updateSettings(
   }
 
   revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  revalidatePath("/settings/etablissement");
+  redirect("/settings/etablissement?saved=1");
 }
 
 /**
@@ -227,5 +253,5 @@ export async function changePassword(
     await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   }
 
-  redirect("/settings?passwordChanged=1");
+  redirect("/settings/password?passwordChanged=1");
 }

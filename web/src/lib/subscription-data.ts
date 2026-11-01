@@ -13,9 +13,10 @@ import { requirePlatformAdmin } from "@/lib/dal";
  * même avant toute création de cette ligne singleton, sans jamais écrire en
  * base depuis une page de lecture.
  */
-export const DEFAULT_TRIAL_DURATION_MONTHS = 2;
-export const DEFAULT_PERIOD_MONTHS = 3;
-export const DEFAULT_PERIOD_PRICE_FCFA = 9900;
+// Définies dans src/lib/pricing-defaults.ts (module pur, partageable avec les
+// composants client) ; mêmes valeurs, réexportées pour les imports existants.
+import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
+export { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA };
 
 export type SubscriptionStatusView = {
   establishmentStatus: EstablishmentStatus | null;

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAMA HOME — Maquette Tableau de Bord (Logiciel de Gestion)</title>
+  <meta name="description" content="Maquette professionnelle du tableau de bord d'exploitation hôtelière et immobilière SAMA HOME.">
+  <link rel="stylesheet" href="./dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Overlay d'assombrissement pour navigation mobile -->
+  <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="app-layout">
+
+    <!-- ====================================================================
+         1. BARRE LATÉRALE (SIDEBAR)
+         ==================================================================== -->
+    <aside id="appSidebar" class="app-sidebar" aria-label="Navigation principale">
+      
+      <!-- En-tête de la sidebar -->
+      <div class="sidebar-header">
+        <div class="brand-badge">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <div class="brand-title">
+            <span class="brand-name">SAMA <span>HOME</span></span>
+            <span class="brand-sub">Gestion d'hébergement</span>
+          </div>
+        </div>
+
+        <button id="sidebarCloseBtn" class="sidebar-close-btn" aria-label="Fermer le menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation principale -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Exploitation</div>
+
+        <a href="#dashboard" class="nav-item active">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"/>
+            <rect width="7" height="5" x="14" y="3" rx="1"/>
+            <rect width="7" height="9" x="14" y="12" rx="1"/>
+            <rect width="7" height="5" x="3" y="16" rx="1"/>
+          </svg>
+          <span>Tableau de bord</span>
+        </a>
+
+        <a href="#chambres" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4v16"/>
+            <path d="M2 8h18a2 2 0 0 1 2 2v10"/>
+            <path d="M2 17h20"/>
+            <path d="M6 8v9"/>
+          </svg>
+          <span>Logements & Chambres</span>
+          <span class="nav-item-badge">24</span>
+        </a>
+
+        <a href="#reservations" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v4"/>
+            <path d="M16 2v4"/>
+            <rect width="18" height="18" x="3" y="4" rx="2"/>
+            <path d="M3 10h18"/>
+            <path d="m9 16 2 2 4-4"/>
+          </svg>
+          <span>Réservations</span>
+          <span class="nav-item-badge">17</span>
+        </a>
+
+        <a href="#clients" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Clients & Voyageurs</span>
+        </a>
+
+        <a href="#paiements" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="5" rx="2"/>
+            <line x1="2" x2="22" y1="10" y2="10"/>
+          </svg>
+          <span>Paiements & Caisse</span>
+        </a>
+
+        <div class="nav-section-label">Gestion & Contrôle</div>
+
+        <a href="#rapports" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" x2="18" y1="20" y2="10"/>
+            <line x1="12" x2="12" y1="20" y2="4"/>
+            <line x1="6" x2="6" y1="20" y2="14"/>
+          </svg>
+          <span>Rapports & Clôtures</span>
+        </a>
+
+        <a href="#parametres" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>Paramètres & Tarifs</span>
+        </a>
+
+        <a href="#support" class="nav-item">
+          <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <path d="M12 17h.01"/>
+          </svg>
+          <span>Assistance & Support</span>
+        </a>
+      </nav>
+
+      <!-- Fiche établissement & Profil utilisateur au bas -->
+      <div class="sidebar-footer">
+        <div class="establishment-card">
+          <div class="establishment-avatar">HA</div>
+          <div class="establishment-info">
+            <div class="establishment-name">Hôtel Atlantique</div>
+            <div class="establishment-meta">18 ch. • 6 apparts</div>
+          </div>
+        </div>
+
+        <div class="user-profile-bar">
+          <div class="user-avatar">MD</div>
+          <div class="user-details">
+            <div class="user-name">Moussa Diop</div>
+            <div class="user-role">Gérant principal</div>
+          </div>
+          <button class="logout-icon-btn" title="Déconnexion" aria-label="Déconnexion">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" x2="9" y1="12" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         2. CONTENEUR PRINCIPAL & BARRE SUPÉRIEURE
+         ==================================================================== -->
+    <div class="app-main">
+
+      <!-- Header supérieur -->
+      <header class="app-header">
+        <div class="header-left">
+          <button id="mobileToggleBtn" class="mobile-menu-btn" aria-label="Ouvrir le menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"/>
+              <line x1="4" x2="20" y1="6" y2="6"/>
+              <line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
+          </button>
+
+          <div class="page-headline">
+            <h1 class="page-title">Tableau de bord</h1>
+            <span class="page-breadcrumb">Hôtel & Résidence Atlantique · Dakar</span>
+          </div>
+        </div>
+
+        <!-- Recherche globale -->
+        <div class="header-center">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-input" placeholder="Rechercher une chambre, un client, un reçu...">
+            <span class="search-shortcut">Ctrl+K</span>
+          </div>
+        </div>
+
+        <!-- Outils d'en-tête & Actions -->
+        <div class="header-right">
+          <!-- Pilule de date -->
+          <div class="date-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2"/>
+              <line x1="16" x2="16" y1="2" y2="6"/>
+              <line x1="8" x2="8" y1="2" y2="6"/>
+              <line x1="3" x2="21" y1="10" y2="10"/>
+            </svg>
+            <span>Aujourd'hui · 26 Octobre 2026</span>
+          </div>
+
+          <!-- Basculeur thème clair/sombre -->
+          <button id="themeToggleBtn" class="header-action-btn" title="Changer de thème (Clair / Sombre)" aria-label="Changer de thème">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          </button>
+
+          <!-- Notifications -->
+          <button class="header-action-btn" title="3 nouvelles notifications" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            <span class="notification-dot"></span>
+          </button>
+
+          <!-- Bouton création rapide -->
+          <button class="btn-primary-action">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" x2="12" y1="5" y2="19"/>
+              <line x1="5" x2="19" y1="12" y2="12"/>
+            </svg>
+            <span>Nouvelle réservation</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ====================================================================
+           3. CONTENU PRINCIPAL
+           ==================================================================== -->
+      <main class="dashboard-content">
+
+        <!-- Bannière de bienvenue & Actions rapides -->
+        <section class="welcome-banner">
+          <div>
+            <h2 class="welcome-title">Bonjour, Moussa</h2>
+            <p class="welcome-subtitle">Voici l'état opérationnel et financier de votre établissement en temps réel.</p>
+          </div>
+
+          <div class="quick-actions-bar">
+            <button class="quick-action-chip">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" x2="3" y1="12" y2="12"/>
+              </svg>
+              <span>Arrivée directe (Check-in)</span>
+            </button>
+
+            <button class="quick-action-chip">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" x2="12" y1="8" y2="12"/>
+                <line x1="12" x2="12.01" y1="16" y2="16"/>
+              </svg>
+              <span>Dépense de caisse</span>
+            </button>
+
+            <button class="quick-action-chip">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" x2="8" y1="13" y2="13"/>
+                <line x1="16" x2="8" y1="17" y2="17"/>
+              </svg>
+              <span>Quittance PDF</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             4. CARTES STATISTIQUES (KPIs)
+             ================================================================== -->
+        <section class="kpi-grid">
+          
+          <!-- KPI 1 : Logements disponibles -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Logements disponibles</span>
+              <div class="kpi-icon-wrap green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 4v16"/>
+                  <path d="M2 8h18a2 2 0 0 1 2 2v10"/>
+                  <path d="M2 17h20"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-main-number">7</span>
+              <span class="kpi-unit">/ 24 total</span>
+              <span class="kpi-badge" style="background: var(--sh-status-occupe-bg); color: var(--sh-status-occupe-text); margin-left: auto;">
+                71% occupé
+              </span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill emerald" style="width: 71%;"></div>
+            </div>
+            <div class="kpi-footer">
+              <span>16 occupés</span>
+              <span>1 en nettoyage</span>
+            </div>
+          </div>
+
+          <!-- KPI 2 : Réservations Actives -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Séjours en cours</span>
+              <div class="kpi-icon-wrap blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2"/>
+                  <line x1="16" x2="16" y1="2" y2="6"/>
+                  <line x1="8" x2="8" y1="2" y2="6"/>
+                  <line x1="3" x2="21" y1="10" y2="10"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-main-number">17</span>
+              <span class="kpi-unit">clients logés</span>
+            </div>
+            <div class="kpi-footer">
+              <span style="color: #059669; font-weight: 600;">5 arrivées prévues</span>
+              <span>3 départs</span>
+            </div>
+          </div>
+
+          <!-- KPI 3 : Recettes encaissées du jour -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Recettes encaissées (Aujourd'hui)</span>
+              <div class="kpi-icon-wrap amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="14" x="2" y="5" rx="2"/>
+                  <line x1="2" x2="22" y1="10" y2="10"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-main-number">285 000</span>
+              <span class="kpi-unit">FCFA</span>
+            </div>
+            <div class="kpi-footer">
+              <span>Mois : 3 450 000 FCFA</span>
+              <span style="color: #059669; font-weight: 700;">+12%</span>
+            </div>
+          </div>
+
+          <!-- KPI 4 : Caisse nette en direct -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Solde net de caisse</span>
+              <div class="kpi-icon-wrap slate">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-main-number" style="color: #059669;">245 000</span>
+              <span class="kpi-unit">FCFA</span>
+            </div>
+            <div class="kpi-footer">
+              <span>Dépenses : 40 000 FCFA</span>
+              <span style="color: var(--sh-accent); font-weight: 600;">Étanche</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==================================================================
+             5. GRILLE 2 COLONNES (CORE DASHBOARD)
+             ================================================================== -->
+        <div class="dashboard-split-grid">
+
+          <!-- COLONNE PRINCIPALE GAUCHE -->
+          <div class="dashboard-main-col">
+
+            <!-- RACK EN DIRECT DES CHAMBRES & LOGEMENTS -->
+            <section class="section-card">
+              <div class="section-card-header">
+                <div class="section-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="7" height="7" x="3" y="3" rx="1"/>
+                    <rect width="7" height="7" x="14" y="3" rx="1"/>
+                    <rect width="7" height="7" x="14" y="14" rx="1"/>
+                    <rect width="7" height="7" x="3" y="14" rx="1"/>
+                  </svg>
+                  <span>Plan des chambres & logements</span>
+                </div>
+                <div class="section-card-actions">
+                  <button class="btn-card-text">
+                    <span>Voir tout le rack</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Filtres du rack -->
+              <div class="room-rack-filters">
+                <button class="filter-tab active" data-filter="all">Tous (24)</button>
+                <button class="filter-tab" data-filter="dispo">Disponibles (7)</button>
+                <button class="filter-tab" data-filter="occupe">Occupés (16)</button>
+                <button class="filter-tab" data-filter="entretien">Entretien (1)</button>
+              </div>
+
+              <!-- Grille visuelle des lots -->
+              <div class="room-rack-grid">
+                
+                <div class="room-tile dispo">
+                  <div class="room-tile-top">
+                    <span class="room-number">101</span>
+                    <span class="room-type">Chambre</span>
+                  </div>
+                  <div class="room-guest">Prête / Libre</div>
+                  <div class="room-time-left">15 000 FCFA / j</div>
+                </div>
+
+                <div class="room-tile occupe">
+                  <div class="room-tile-top">
+                    <span class="room-number">102</span>
+                    <span class="room-type">Chambre</span>
+                  </div>
+                  <div class="room-guest">Amadou Fall</div>
+                  <div class="room-time-left">Sortie : 14h00</div>
+                </div>
+
+                <div class="room-tile occupe">
+                  <div class="room-tile-top">
+                    <span class="room-number">103</span>
+                    <span class="room-type">Chambre</span>
+                  </div>
+                  <div class="room-guest">Sarah Gomez</div>
+                  <div class="room-time-left">En cours · J-2</div>
+                </div>
+
+                <div class="room-tile dispo">
+                  <div class="room-tile-top">
+                    <span class="room-number">104</span>
+                    <span class="room-type">Chambre</span>
+                  </div>
+                  <div class="room-guest">Prête / Libre</div>
+                  <div class="room-time-left">18 000 FCFA / j</div>
+                </div>
+
+                <div class="room-tile occupe">
+                  <div class="room-tile-top">
+                    <span class="room-number">201</span>
+                    <span class="room-type">Suite VIP</span>
+                  </div>
+                  <div class="room-guest">M. Diallo</div>
+                  <div class="room-time-left">35 000 FCFA · Payé</div>
+                </div>
+
+                <div class="room-tile occupe">
+                  <div class="room-tile-top">
+                    <span class="room-number">202</span>
+                    <span class="room-type">Suite</span>
+                  </div>
+                  <div class="room-guest">Fatou Ndiaye</div>
+                  <div class="room-time-left">Sortie : 11h30</div>
+                </div>
+
+                <div class="room-tile entretien">
+                  <div class="room-tile-top">
+                    <span class="room-number">203</span>
+                    <span class="room-type">Chambre</span>
+                  </div>
+                  <div class="room-guest">Nettoyage</div>
+                  <div class="room-time-left">Libéré à 10:00</div>
+                </div>
+
+                <div class="room-tile dispo">
+                  <div class="room-tile-top">
+                    <span class="room-number">204</span>
+                    <span class="room-type">Chambre</span>
+                  </div>
+                  <div class="room-guest">Prête / Libre</div>
+                  <div class="room-time-left">18 000 FCFA / j</div>
+                </div>
+
+                <div class="room-tile occupe">
+                  <div class="room-tile-top">
+                    <span class="room-number">A1</span>
+                    <span class="room-type">Appart F3</span>
+                  </div>
+                  <div class="room-guest">Famille Sylla</div>
+                  <div class="room-time-left">Séjour semaine</div>
+                </div>
+
+                <div class="room-tile occupe">
+                  <div class="room-tile-top">
+                    <span class="room-number">A2</span>
+                    <span class="room-type">Appart F2</span>
+                  </div>
+                  <div class="room-guest">Ousmane Wade</div>
+                  <div class="room-time-left">Payé Wave</div>
+                </div>
+
+                <div class="room-tile dispo">
+                  <div class="room-tile-top">
+                    <span class="room-number">A3</span>
+                    <span class="room-type">Studio</span>
+                  </div>
+                  <div class="room-guest">Prête / Libre</div>
+                  <div class="room-time-left">25 000 FCFA / j</div>
+                </div>
+
+                <div class="room-tile dispo">
+                  <div class="room-tile-top">
+                    <span class="room-number">A4</span>
+                    <span class="room-type">Studio</span>
+                  </div>
+                  <div class="room-guest">Prête / Libre</div>
+                  <div class="room-time-left">25 000 FCFA / j</div>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- TABLEAU DES DERNIÈRES RÉSERVATIONS -->
+            <section class="section-card">
+              <div class="section-card-header">
+                <div class="section-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v4"/>
+                    <path d="M16 2v4"/>
+                    <rect width="18" height="18" x="3" y="4" rx="2"/>
+                    <path d="M3 10h18"/>
+                  </svg>
+                  <span>Dernières réservations & séjours</span>
+                </div>
+                <div class="section-card-actions">
+                  <button class="btn-card-text">
+                    <span>Toutes les réservations</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Client / Voyageur</th>
+                      <th>Logement</th>
+                      <th>Période & Durée</th>
+                      <th>Montant (FCFA)</th>
+                      <th>Statut</th>
+                      <th style="text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="client-cell">
+                          <div class="client-mini-avatar">AF</div>
+                          <div>
+                            <div class="client-name">Amadou Fall</div>
+                            <div class="client-phone">+221 77 450 12 34</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><strong>Chambre 102</strong><br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">Standard Climatisée</span></td>
+                      <td>25 Oct — 27 Oct<br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">2 nuits</span></td>
+                      <td><span class="amount-text">30 000</span></td>
+                      <td><span class="status-badge encours">En cours</span></td>
+                      <td style="text-align: right;">
+                        <button class="btn-table-action">Détails</button>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="client-cell">
+                          <div class="client-mini-avatar">FN</div>
+                          <div>
+                            <div class="client-name">Fatou Ndiaye</div>
+                            <div class="client-phone">+221 78 120 88 90</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><strong>Suite 202</strong><br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">Balcon Mer</span></td>
+                      <td>24 Oct — 26 Oct<br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">2 nuits</span></td>
+                      <td><span class="amount-text">60 000</span></td>
+                      <td><span class="status-badge confirme">Payé intégral</span></td>
+                      <td style="text-align: right;">
+                        <button class="btn-table-action">Reçu PDF</button>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="client-cell">
+                          <div class="client-mini-avatar">MD</div>
+                          <div>
+                            <div class="client-name">Mouhamadou Diallo</div>
+                            <div class="client-phone">+221 77 623 00 11</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><strong>Suite VIP 201</strong><br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">Grand Confort</span></td>
+                      <td>26 Oct — 30 Oct<br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">4 nuits</span></td>
+                      <td><span class="amount-text">140 000</span></td>
+                      <td><span class="status-badge encours">En cours</span></td>
+                      <td style="text-align: right;">
+                        <button class="btn-table-action">Détails</button>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="client-cell">
+                          <div class="client-mini-avatar">FS</div>
+                          <div>
+                            <div class="client-name">Famille Sylla</div>
+                            <div class="client-phone">+221 76 890 44 22</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><strong>Appartement A1</strong><br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">F3 Meublé</span></td>
+                      <td>20 Oct — 27 Oct<br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">7 nuits</span></td>
+                      <td><span class="amount-text">245 000</span></td>
+                      <td><span class="status-badge attente">Acompte 50%</span></td>
+                      <td style="text-align: right;">
+                        <button class="btn-table-action">Régler solde</button>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div class="client-cell">
+                          <div class="client-mini-avatar">OW</div>
+                          <div>
+                            <div class="client-name">Ousmane Wade</div>
+                            <div class="client-phone">+221 77 334 19 80</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><strong>Appartement A2</strong><br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">F2 Standing</span></td>
+                      <td>26 Oct — 28 Oct<br><span style="font-size: 0.6875rem; color: var(--sh-text-muted);">2 nuits</span></td>
+                      <td><span class="amount-text">70 000</span></td>
+                      <td><span class="status-badge confirme">Payé Wave</span></td>
+                      <td style="text-align: right;">
+                        <button class="btn-table-action">Quittance</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+          </div>
+
+          <!-- COLONNE LATÉRALE DROITE -->
+          <div class="dashboard-side-col">
+
+            <!-- POINT DE CAISSE EN DIRECT (RÉSUMÉ FINANCIER ÉTANCHE) -->
+            <section class="section-card">
+              <div class="section-card-header">
+                <div class="section-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="14" x="2" y="5" rx="2"/>
+                    <line x1="2" x2="22" y1="10" y2="10"/>
+                  </svg>
+                  <span>Caisse du jour (Dakar)</span>
+                </div>
+                <span class="status-badge confirme" style="font-size: 0.625rem;">Ouverte</span>
+              </div>
+
+              <div class="caisse-box">
+                <div class="caisse-row">
+                  <span class="caisse-label">Recettes encaissées</span>
+                  <span class="caisse-val green">+285 000 FCFA</span>
+                </div>
+
+                <div class="caisse-row">
+                  <span class="caisse-label">Dépenses justifiées</span>
+                  <span class="caisse-val red">-40 000 FCFA</span>
+                </div>
+
+                <div class="caisse-row">
+                  <span class="caisse-label">Dont Wave & Orange M.</span>
+                  <span class="caisse-val">175 000 FCFA</span>
+                </div>
+
+                <div class="caisse-row">
+                  <span class="caisse-label">Dont Espèces en coffre</span>
+                  <span class="caisse-val">110 000 FCFA</span>
+                </div>
+
+                <div class="caisse-total-box">
+                  <span class="caisse-total-label">Solde net disponible</span>
+                  <span class="caisse-total-number">245 000 FCFA</span>
+                </div>
+
+                <button class="btn-primary-action" style="width: 100%; justify-content: center; height: 36px; background-color: var(--sh-bg-subtle); color: var(--sh-text-primary); border: 1px solid var(--sh-border);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span>Clôturer la caisse du soir</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- CHECK-IN DIRECT RAPIDE (FORMULAIRE EXPRESS) -->
+            <section class="section-card">
+              <div class="section-card-header">
+                <div class="section-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" x2="19" y1="8" y2="14"/>
+                    <line x1="22" x2="16" y1="11" y2="11"/>
+                  </svg>
+                  <span>Enregistrer une arrivée</span>
+                </div>
+              </div>
+
+              <form id="quickCheckinForm" class="checkin-form">
+                <div class="form-group">
+                  <label class="form-label" for="checkinRoomSelect">Chambre ou logement libre</label>
+                  <select id="checkinRoomSelect" class="form-select">
+                    <option value="101" data-price="15 000">Chambre 101 — Standard (15 000 FCFA)</option>
+                    <option value="104" data-price="18 000">Chambre 104 — Confort (18 000 FCFA)</option>
+                    <option value="204" data-price="18 000">Chambre 204 — Étage 2 (18 000 FCFA)</option>
+                    <option value="A3" data-price="25 000">Studio A3 — Meublé (25 000 FCFA)</option>
+                    <option value="A4" data-price="25 000">Studio A4 — Meublé (25 000 FCFA)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Nom du client / Voyageur</label>
+                  <input type="text" class="form-input" placeholder="Ex: M. Ba" required>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Durée</label>
+                    <select class="form-select">
+                      <option>1 nuitée</option>
+                      <option>2 nuits</option>
+                      <option>3 nuits</option>
+                      <option>1 semaine</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Tarif calculé</label>
+                    <input id="checkinTariffInput" type="text" class="form-input" value="15 000 FCFA" readonly>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Mode d'encaissement</label>
+                  <select class="form-select">
+                    <option>Espèces (Caisse)</option>
+                    <option>Wave Sénégal</option>
+                    <option>Orange Money</option>
+                    <option>Virement / Carte</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn-submit-checkin">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Valider le check-in direct</span>
+                </button>
+              </form>
+            </section>
+
+            <!-- FLUX D'ACTIVITÉ EN DIRECT -->
+            <section class="section-card">
+              <div class="section-card-header">
+                <div class="section-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  <span>Journal des opérations</span>
+                </div>
+              </div>
+
+              <div class="activity-feed">
+                <div class="activity-item">
+                  <div class="activity-bullet green"></div>
+                  <div class="activity-body">
+                    <div class="activity-desc">Paiement Wave reçu : 70 000 FCFA (A2)</div>
+                    <div class="activity-time">Il y a 15 min · par Réceptionniste Awa</div>
+                  </div>
+                </div>
+
+                <div class="activity-item">
+                  <div class="activity-bullet"></div>
+                  <div class="activity-body">
+                    <div class="activity-desc">Check-in direct validé : Chambre 103</div>
+                    <div class="activity-time">Il y a 42 min · Client Sarah Gomez</div>
+                  </div>
+                </div>
+
+                <div class="activity-item">
+                  <div class="activity-bullet amber"></div>
+                  <div class="activity-body">
+                    <div class="activity-desc">Chambre 203 libérée (Ménage en cours)</div>
+                    <div class="activity-time">Il y a 1 h · Clés remises au comptoir</div>
+                  </div>
+                </div>
+
+                <div class="activity-item">
+                  <div class="activity-bullet"></div>
+                  <div class="activity-body">
+                    <div class="activity-desc">Dépense de caisse : 15 000 FCFA (Pressing draps)</div>
+                    <div class="activity-time">Il y a 2 h · Justificatif n°084</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <script src="./dashboard.js"></script>
+</body>
+</html>

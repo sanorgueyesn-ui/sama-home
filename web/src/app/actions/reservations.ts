@@ -528,12 +528,19 @@ export async function cancelReservation(id: string): Promise<{ error?: string }>
     };
   }
 
+  // Écriture conditionnée au statut : si une arrivée (ou une autre annulation)
+  // est enregistrée entre la lecture ci-dessus et cette écriture, rien n'est
+  // modifié et le gestionnaire en est informé — une réservation ARRIVED ne
+  // devient jamais CANCELLED. Aucun paiement n'est touché (aucune règle de
+  // remboursement n'est définie : décision métier à valider).
   const result = await prisma.reservation.updateMany({
-    where: { id, establishmentId: user.establishmentId },
+    where: { id, establishmentId: user.establishmentId, status: "CONFIRMED" },
     data: { status: "CANCELLED" },
   });
   if (result.count === 0) {
-    return { error: "Réservation introuvable." };
+    return {
+      error: "Cette réservation vient d'être traitée (arrivée ou annulation) : actualisez la page pour voir son état actuel.",
+    };
   }
 
   revalidatePath("/reservations");

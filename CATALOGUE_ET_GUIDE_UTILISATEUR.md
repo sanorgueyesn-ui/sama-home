@@ -28,7 +28,7 @@
 
 ---
 
-## 3. Les 6 Modules Clés de l'Application
+## 3. Les Modules Clés de l'Application
 
 ### 🛏️ 1. Gestion du Parc de Logements
 * Fiches complètes des logements (Nom, type, nombre de pièces, équipements, statut disponible/occupé/entretien).
@@ -65,6 +65,22 @@
 ### 📊 6. Suivi des Dépenses & Bilan Financier
 * Saisie des frais d'exploitation : électricité (Woyofal / Senelec), eau (Sen'Eau), produits de ménage, réparations, blanchisserie.
 * Bilan clair entre le total des entrées et des sorties pour connaître le bénéfice réel en FCFA.
+
+### 🧾 7. Abonnement de l'Établissement
+* Page **Abonnement** : consultation de la formule en cours, de sa date d'expiration et demande de renouvellement.
+* Demandes de **changement de formule** examinées par l'équipe SAMA HOME (acceptation ou refus motivé, historique conservé).
+* À l'expiration, les données restent conservées ; seules les opérations commerciales concernées sont bloquées.
+
+### 🔐 8. Comptes, Rôles & Sécurité
+* Inscription d'un établissement validée par la plateforme (approbation manuelle ou automatique selon le réglage).
+* Rôles et permissions par collaborateur ; chaque établissement est strictement isolé des autres.
+* Mot de passe oublié par code à usage unique (OTP) envoyé par e-mail ; connexion limitée en cas d'essais répétés.
+* Sessions sécurisées et déconnexion réelle sur tous les appareils concernés.
+
+### 🛰️ 9. Administration de la Plateforme (équipe SAMA HOME)
+* Validation des établissements, suivi des abonnements et des paiements, paramètres de tarification.
+* Historique d'audit des actions sensibles.
+* Réservé aux comptes administrateurs de plateforme, distincts des administrateurs d'établissement.
 
 ---
 

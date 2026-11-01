@@ -35,7 +35,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default async function ReservationDetailPage(props: PageProps<"/reservations/[id]">) {
   const { id } = await props.params;
-  const { created, updated, paid, clientId: resumedClientId } = await props.searchParams;
+  const { created, updated, paid, cancelled, clientId: resumedClientId } = await props.searchParams;
 
   const reservation = await getReservationById(id);
   if (!reservation) {
@@ -95,6 +95,11 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
       {created ? (
         <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
           Réservation créée avec succès.
+        </p>
+      ) : null}
+      {cancelled ? (
+        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          Réservation annulée. Le créneau est de nouveau disponible ; les paiements éventuels n&apos;ont pas été modifiés.
         </p>
       ) : null}
       {updated ? (
@@ -160,6 +165,13 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
             ) : null}
             <CheckInButton
               id={reservation.id}
+              summary={{
+                clientName: reservation.client?.name ?? null,
+                propertyName: reservation.property.name,
+                plannedArrivalIso: reservation.arrivalTime.toISOString(),
+                durationValue: reservation.durationValue,
+                durationUnit: reservation.durationUnit,
+              }}
               needsClient={needsClientForCheckIn}
               clients={checkInClients}
               initialClientId={typeof resumedClientId === "string" ? resumedClientId : undefined}
@@ -170,7 +182,7 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
             >
               Modifier
             </Link>
-            <CancelButton id={reservation.id} />
+            <CancelButton id={reservation.id} summary={`${reservation.client?.name ?? "Sans client"} — ${reservation.property.name}`} />
           </div>
         ) : (
           <p className="mt-5 text-center text-xs font-medium text-fg/40 lg:[grid-area:actions]">

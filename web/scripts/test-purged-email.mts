@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./lib/safe-env.mjs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 

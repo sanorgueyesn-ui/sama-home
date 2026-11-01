@@ -7,9 +7,14 @@ import { prolongSubscriptionAction, recordManualSubscriptionPaymentAction } from
 export function SubscriptionActions({
   establishmentId,
   establishmentName,
+  defaultAmountFcfa,
+  defaultPeriodMonths,
 }: {
   establishmentId: string;
   establishmentName: string;
+  /** Tarif de la période (configuré, ou valeur de repli du système si rien n'est enregistré) — simple préremplissage modifiable. */
+  defaultAmountFcfa: number;
+  defaultPeriodMonths: number;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -17,8 +22,8 @@ export function SubscriptionActions({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [amount, setAmount] = useState("9900");
-  const [months, setMonths] = useState("3");
+  const [amount, setAmount] = useState(String(defaultAmountFcfa));
+  const [months, setMonths] = useState(String(defaultPeriodMonths));
   const [reference, setReference] = useState("");
 
   function handleQuickProlong(days: number) {

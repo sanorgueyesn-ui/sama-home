@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { fromShellMode } from "@/lib/business-mode";
 import { Prisma } from "@/generated/prisma/client";
 import { hashPassword } from "@/lib/password";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
@@ -12,12 +13,26 @@ import {
   type VerifyOtpFormState,
 } from "@/lib/definitions";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { sendOtpEmail } from "@/lib/mail";
+import { sendAccountExistsEmail, sendOtpEmail } from "@/lib/mail";
+import { resolveOtpDispatch } from "@/lib/test-otp";
+import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
+import { OTP_MAX_ATTEMPTS, generateOtpCode, isWellFormedOtp, safeEqualOtp } from "@/lib/otp";
 
 class EstablishmentRegistrationError extends Error {}
 
+// Messages explicites d'existence : UNIQUEMENT pour le parcours Google (adresse prouvée par Google) et
+// pour un conflit détecté dans la transaction par la personne qui détient le code valide.
 const DUPLICATE_EMAIL_MESSAGE = "Un compte existe déjà avec cette adresse e-mail.";
+
+// Étape 2c-2 — messages publics GÉNÉRIQUES (identiques que l'adresse soit libre, déjà inscrite ou
+// sans inscription en cours) : aucun ne permet de déduire l'existence d'un compte.
+const GENERIC_CODE_ERROR = "Code invalide ou expiré. Vérifiez le code reçu ou demandez-en un nouveau.";
+const GENERIC_RESEND_MESSAGE =
+  "Si votre demande est toujours en cours, un nouveau code vient d'être envoyé. Pensez à vérifier vos courriers indésirables.";
+const OTP_SEND_FAILURE_MESSAGE =
+  "Nous n'avons pas pu envoyer le code de vérification à votre adresse e-mail. Aucune inscription n'a été enregistrée : veuillez réessayer dans quelques instants ou contacter le support.";
+const OTP_SEND_ERROR_MESSAGE = "Une erreur est survenue lors de l'envoi du code. Veuillez réessayer.";
 
 /**
  * Étape 1 : Initialisation de l'inscription et envoi du code OTP
@@ -38,28 +53,46 @@ export async function registerEstablishment(
     email: formData.get("email"),
     password: formData.get("password"),
     plan: formData.get("plan") || "FREE_TRIAL",
+    activityMode: formData.get("activityMode") || "RESIDENCE",
   });
 
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
   }
 
-  const { establishmentName, managerName, email, password, plan } = parsed.data;
+  const { establishmentName, managerName, email, password, plan, activityMode } = parsed.data;
 
-  // Vérifier si un compte existe déjà avec cette adresse e-mail
+  // Inscription validée par Google OAuth ? (adresse prouvée par Google : le parcours Google garde
+  // son comportement explicite, décision D8.)
+  const cookieStore = await cookies();
+  const googleToken = formData.get("googleToken")?.toString() || cookieStore.get("google_auth_token")?.value;
+  const verifiedGoogleForGate = googleToken ? await verifyGoogleAuthToken(googleToken) : null;
+  const isGoogleVerified = Boolean(verifiedGoogleForGate && verifiedGoogleForGate.email.toLowerCase() === email.toLowerCase());
+
+  // Étape 2c-2 (D7) — plafond d'ÉMISSIONS de code par adresse : 5 / 15 min, partagé avec le renvoi
+  // (même clé `otp-issue:`). Appliqué AVANT la recherche du compte, donc de façon identique que
+  // l'adresse soit libre ou déjà inscrite. Le parcours Google n'émet aucun code et ne le consomme pas.
+  // Limitation en mémoire du processus : locale, non distribuée entre instances.
+  if (!isGoogleVerified) {
+    const issueRate = checkRateLimit(`otp-issue:${email.trim().toLowerCase()}`, 5, 15 * 60);
+    if (!issueRate.allowed) {
+      return { message: "Trop de tentatives d'inscription pour cette adresse. Veuillez patienter avant de réessayer." };
+    }
+  }
+
+  // Un compte existe-t-il déjà avec cette adresse e-mail ?
   const existingUser = await prisma.user.findFirst({
     where: { OR: [{ username: email }, { email: email }] },
     select: { id: true },
   });
-  if (existingUser) {
+  if (existingUser && isGoogleVerified) {
     return { errors: { email: [DUPLICATE_EMAIL_MESSAGE] } };
   }
 
+  // Hachage exécuté dans TOUTES les branches (adresse libre ou déjà inscrite) : plus de différence
+  // manifeste de travail (bcrypt, coût 12) entre les deux réponses.
   const passwordHash = await hashPassword(password);
 
-  // Vérification si l'inscription est validée par Google OAuth
-  const cookieStore = await cookies();
-  const googleToken = formData.get("googleToken")?.toString() || cookieStore.get("google_auth_token")?.value;
   if (googleToken) {
     const verifiedGoogle = await verifyGoogleAuthToken(googleToken);
     if (verifiedGoogle && verifiedGoogle.email.toLowerCase() === email.toLowerCase()) {
@@ -87,10 +120,11 @@ export async function registerEstablishment(
             data: {
               name: establishmentName,
               status,
+              businessMode: fromShellMode(activityMode),
             },
           });
 
-          await tx.user.create({
+          const adminUser = await tx.user.create({
             data: {
               username: email,
               email,
@@ -100,6 +134,11 @@ export async function registerEstablishment(
               establishmentId: establishment.id,
               isPlatformAdmin: false,
             },
+            select: { id: true },
+          });
+          // Socle multi-espaces : sans appartenance, le compte n'aurait aucun espace (dal.ts).
+          await tx.membership.create({
+            data: { userId: adminUser.id, establishmentId: establishment.id, role: "ADMIN" },
           });
 
           if (shouldAutoApprove) {
@@ -129,8 +168,8 @@ export async function registerEstablishment(
 
           if (plan === "PAID_9900") {
             const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
-            const periodMonths = pricingSettings?.periodMonths ?? 3;
-            const periodPrice = pricingSettings?.periodPriceFcfa ?? 9900;
+            const periodMonths = pricingSettings?.periodMonths ?? DEFAULT_PERIOD_MONTHS;
+            const periodPrice = pricingSettings?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA;
 
             const sub = await tx.subscription.findUnique({ where: { establishmentId: establishment.id } });
             if (sub) {
@@ -171,8 +210,26 @@ export async function registerEstablishment(
   }
 
 
-  // Générer un code OTP à 6 chiffres
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // Adresse déjà inscrite (hors parcours Google) : MÊME réponse publique que pour une adresse libre.
+  // Aucun compte, aucun OTP créé ; un message informatif SANS code est envoyé au titulaire de
+  // l'adresse (envoi synchrone, même traitement d'échec que la branche « adresse libre »).
+  if (existingUser) {
+    try {
+      const infoMail = await sendAccountExistsEmail({ to: email });
+      const infoDispatch = resolveOtpDispatch({ mailSent: infoMail.success, code: "", env: process.env });
+      if (!infoDispatch.delivered) {
+        console.error("registerEstablishment() — e-mail d'information non envoyé.");
+        return { message: OTP_SEND_FAILURE_MESSAGE };
+      }
+    } catch (error) {
+      console.error("registerEstablishment() — échec de l'envoi de l'e-mail d'information :", error);
+      return { message: OTP_SEND_ERROR_MESSAGE };
+    }
+    return { success: true, requiresOtp: true, email, plan };
+  }
+
+  // Générer un code OTP à 6 chiffres (crypto.randomInt, format 100000-999999 inchangé)
+  const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
   try {
@@ -188,28 +245,40 @@ export async function registerEstablishment(
         managerName,
         passwordHash,
         plan,
+        // Conservé côté serveur jusqu'à la validation du code : jamais relu depuis le navigateur.
+        businessMode: fromShellMode(activityMode),
         expiresAt,
       },
     });
 
-    // Envoyer le code par e-mail (et console)
-    await sendOtpEmail({
+    // Envoyer le code par e-mail
+    const mail = await sendOtpEmail({
       to: email,
       code,
       establishmentName,
     });
+
+    // Décision unique (src/lib/test-otp.ts) : le code n'est JAMAIS renvoyé au
+    // navigateur hors environnement local explicitement autorisé. Hors local,
+    // l'inscription n'avance que si l'e-mail est réellement parti.
+    const dispatch = resolveOtpDispatch({ mailSent: mail.success, code, env: process.env });
+    if (!dispatch.delivered) {
+      console.error("registerEstablishment() — e-mail OTP non envoyé, demande annulée.");
+      await prisma.otpVerification.deleteMany({ where: { email } });
+      return { message: OTP_SEND_FAILURE_MESSAGE };
+    }
 
     return {
       success: true,
       requiresOtp: true,
       email,
       plan,
-      // Fourni en mode dev / test local pour faciliter les tests sans bloquer
-      testCode: code,
+      // Parcours de test local uniquement (absent en production).
+      ...(dispatch.testCode ? { testCode: dispatch.testCode } : {}),
     };
   } catch (error) {
     console.error("registerEstablishment() — échec de l'envoi de l'OTP :", error);
-    return { message: "Une erreur est survenue lors de l'envoi du code. Veuillez réessayer." };
+    return { message: OTP_SEND_ERROR_MESSAGE };
   }
 }
 
@@ -237,38 +306,53 @@ export async function verifyOtpAndRegister(
 
   const { email, code } = parsed.data;
 
+  // Format strict (6 chiffres) : une entrée mal formée ne peut jamais correspondre et ne consomme
+  // aucun essai.
+  if (!isWellFormedOtp(code)) {
+    return { errors: { code: ["Le code doit comporter exactement 6 chiffres."] } };
+  }
+
   // Rechercher l'enregistrement OTP le plus récent
   const otpRecord = await prisma.otpVerification.findFirst({
     where: { email },
     orderBy: { createdAt: "desc" },
   });
 
+  // Étape 2c-2 (D3) — message UNIQUE pour : demande absente, code expiré, code épuisé, code déjà
+  // consommé, code faux. Aucun détail ne permet de deviner l'état d'une inscription en cours.
   if (!otpRecord) {
-    return {
-      message: "Aucune demande de vérification en cours pour cette adresse e-mail. Veuillez recommencer l'inscription.",
-    };
+    return { errors: { code: [GENERIC_CODE_ERROR] } };
   }
 
   if (otpRecord.expiresAt.getTime() < Date.now()) {
-    await prisma.otpVerification.delete({ where: { id: otpRecord.id } });
-    return {
-      message: "Ce code de vérification a expiré (durée maximale : 15 minutes). Veuillez demander un nouveau code.",
-    };
+    // deleteMany (et non delete) : ne lève rien si une requête concurrente a déjà supprimé la ligne.
+    await prisma.otpVerification.deleteMany({ where: { id: otpRecord.id } });
+    return { errors: { code: [GENERIC_CODE_ERROR] } };
   }
 
-  if (otpRecord.code !== code) {
-    const updatedAttempts = otpRecord.attempts + 1;
-    if (updatedAttempts >= 5) {
-      await prisma.otpVerification.delete({ where: { id: otpRecord.id } });
-      return {
-        message: "Trop de codes erronés saisis. Votre demande a été réinitialisée par sécurité.",
-      };
-    }
-    await prisma.otpVerification.update({
-      where: { id: otpRecord.id },
-      data: { attempts: updatedAttempts },
+  // Étape 2c-1 — RÉSERVATION ATOMIQUE d'un essai AVANT toute comparaison. L'ancien calcul
+  // « attempts + 1 » écrit en absolu depuis une lecture périmée laissait des requêtes parallèles
+  // écrire toutes la même valeur : le compteur n'atteignait jamais la limite. Ici une seule
+  // instruction conditionnelle (`attempts < 5` ET non expiré) incrémente : au plus
+  // OTP_MAX_ATTEMPTS requêtes obtiennent un essai par code, quelle que soit la concurrence.
+  const claim = await prisma.otpVerification.updateMany({
+    where: { id: otpRecord.id, attempts: { lt: OTP_MAX_ATTEMPTS }, expiresAt: { gt: new Date() } },
+    data: { attempts: { increment: 1 } },
+  });
+  if (claim.count !== 1) {
+    // Code épuisé (on le retire) ou déjà consommé / supprimé par une requête concurrente.
+    await prisma.otpVerification.deleteMany({
+      where: { id: otpRecord.id, attempts: { gte: OTP_MAX_ATTEMPTS } },
     });
-    return { errors: { code: ["Code de vérification incorrect."] } };
+    return { errors: { code: [GENERIC_CODE_ERROR] } };
+  }
+
+  // Comparaison en temps constant (format déjà validé).
+  if (!safeEqualOtp(otpRecord.code, code)) {
+    if (otpRecord.attempts + 1 >= OTP_MAX_ATTEMPTS) {
+      await prisma.otpVerification.deleteMany({ where: { id: otpRecord.id } });
+    }
+    return { errors: { code: [GENERIC_CODE_ERROR] } };
   }
 
   // Le code est valide ! Création de l'établissement et de l'utilisateur
@@ -278,6 +362,14 @@ export async function verifyOtpAndRegister(
 
   try {
     await prisma.$transaction(async (tx) => {
+      // 0. USAGE UNIQUE : le code est consommé en premier, par identifiant. Deux requêtes
+      //    parallèles avec le bon code : une seule obtient `count === 1`, l'autre est refusée
+      //    (la transaction est annulée, rien n'est créé).
+      const consumed = await tx.otpVerification.deleteMany({ where: { id: otpRecord.id } });
+      if (consumed.count !== 1) {
+        throw new EstablishmentRegistrationError(GENERIC_CODE_ERROR);
+      }
+
       // 1. Double vérification d'unicité
       const existing = await tx.user.findUnique({
         where: { username: otpRecord.email },
@@ -297,11 +389,12 @@ export async function verifyOtpAndRegister(
         data: {
           name: otpRecord.establishmentName,
           status,
+          businessMode: otpRecord.businessMode,
         },
       });
 
       // 3. Création du compte administrateur
-      await tx.user.create({
+      const adminUser = await tx.user.create({
         data: {
           username: otpRecord.email,
           email: otpRecord.email,
@@ -311,6 +404,11 @@ export async function verifyOtpAndRegister(
           establishmentId: establishment.id,
           isPlatformAdmin: false,
         },
+        select: { id: true },
+      });
+      // Socle multi-espaces : sans appartenance, le compte n'aurait aucun espace (dal.ts).
+      await tx.membership.create({
+        data: { userId: adminUser.id, establishmentId: establishment.id, role: "ADMIN" },
       });
 
       // 4. Activation d'essai si auto-approuvé, ou journal d'enregistrement si modération manuelle
@@ -342,8 +440,8 @@ export async function verifyOtpAndRegister(
       // Si l'utilisateur a choisi l'Offre Payante (9 900 FCFA / 3 mois), enregistrer la demande de paiement
       if (otpRecord.plan === "PAID_9900") {
         const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
-        const periodMonths = pricingSettings?.periodMonths ?? 3;
-        const periodPrice = pricingSettings?.periodPriceFcfa ?? 9900;
+        const periodMonths = pricingSettings?.periodMonths ?? DEFAULT_PERIOD_MONTHS;
+        const periodPrice = pricingSettings?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA;
 
         const sub = await tx.subscription.findUnique({ where: { establishmentId: establishment.id } });
         if (sub) {
@@ -361,8 +459,7 @@ export async function verifyOtpAndRegister(
         }
       }
 
-      // 6. Nettoyage de l'OTP consommé
-      await tx.otpVerification.delete({ where: { id: otpRecord.id } });
+      // 6. L'OTP a déjà été consommé à l'étape 0 (usage unique, atomique).
     });
   } catch (error) {
     if (error instanceof EstablishmentRegistrationError) {
@@ -394,19 +491,60 @@ export async function resendOtpCode(email: string): Promise<{ success: boolean; 
     return { success: false, message: "Veuillez patienter avant de demander un nouveau code." };
   }
 
+  // Action publique : l'argument n'est pas typé à l'exécution. Une valeur non textuelle (par
+  // exemple un objet utilisé comme filtre Prisma) est refusée avant tout accès à la base.
+  // Étape 2c-2 : réponse publique GÉNÉRIQUE, identique à celle d'une demande absente ou en cours.
+  if (typeof email !== "string" || !email.trim()) {
+    return { success: true, message: GENERIC_RESEND_MESSAGE };
+  }
+
+  // Étape 2c-2 (D7) — plafond d'ÉMISSIONS par adresse : 5 / 15 min, PARTAGÉ avec l'émission initiale
+  // du code d'inscription (même clé `otp-issue:`), en plus du plafond IP. Clé normalisée (casse et
+  // espaces), appliquée avant toute recherche. Limitation en mémoire du processus : locale,
+  // non distribuée entre instances.
+  const addressRate = checkRateLimit(`otp-issue:${email.trim().toLowerCase()}`, 5, 15 * 60);
+  if (!addressRate.allowed) {
+    return { success: false, message: "Veuillez patienter avant de demander un nouveau code." };
+  }
+
   const existingOtp = await prisma.otpVerification.findFirst({
     where: { email },
     orderBy: { createdAt: "desc" },
   });
 
   if (!existingOtp) {
-    return { success: false, message: "Aucune inscription en cours pour cet email." };
+    return { success: true, message: GENERIC_RESEND_MESSAGE };
   }
 
-  const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const newCode = generateOtpCode();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-  await prisma.otpVerification.update({
+  // Envoi AVANT remplacement : si l'e-mail ne part pas (hors environnement local
+  // de test), l'ancien code reste le seul valide et aucun code n'est divulgué.
+  let mailSent = false;
+  try {
+    const mail = await sendOtpEmail({
+      to: email,
+      code: newCode,
+      establishmentName: existingOtp.establishmentName,
+    });
+    mailSent = mail.success;
+  } catch (error) {
+    // Une exception du service d'e-mail ne doit pas distinguer une demande en cours d'une demande absente.
+    console.error("resendOtpCode() — exception lors de l'envoi de l'e-mail :", error instanceof Error ? error.name : "erreur inconnue");
+  }
+  const dispatch = resolveOtpDispatch({ mailSent, code: newCode, env: process.env });
+  if (!dispatch.delivered) {
+    // Réponse générique identique à celle d'une demande absente (aucun oracle) ; l'ancien code reste valide.
+    console.error("resendOtpCode() — e-mail OTP non envoyé.");
+    return { success: true, message: GENERIC_RESEND_MESSAGE };
+  }
+
+  // REMPLACEMENT du code : le nouveau code, sa validité et le compteur d'essais (0) changent dans UNE
+  // seule instruction, sur la ligne identifiée. L'ancien code cesse d'être valide au même instant ;
+  // les essais ne sont jamais remis à zéro pour un code conservé. Le volume total d'essais est borné
+  // par les plafonds de renvoi (IP et adresse) ci-dessus, pas par ce compteur.
+  const replaced = await prisma.otpVerification.updateMany({
     where: { id: existingOtp.id },
     data: {
       code: newCode,
@@ -414,12 +552,10 @@ export async function resendOtpCode(email: string): Promise<{ success: boolean; 
       attempts: 0,
     },
   });
+  if (replaced.count !== 1) {
+    // Ligne consommée ou supprimée par une requête concurrente entre-temps : réponse générique.
+    return { success: true, message: GENERIC_RESEND_MESSAGE };
+  }
 
-  await sendOtpEmail({
-    to: email,
-    code: newCode,
-    establishmentName: existingOtp.establishmentName,
-  });
-
-  return { success: true, testCode: newCode };
+  return { success: true, message: GENERIC_RESEND_MESSAGE, ...(dispatch.testCode ? { testCode: dispatch.testCode } : {}) };
 }

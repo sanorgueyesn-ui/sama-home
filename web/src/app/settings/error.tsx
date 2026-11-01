@@ -14,7 +14,7 @@ export default function SettingsError({
   }, [error]);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center px-6 text-center">
+    <div className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center px-6 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-danger-bg text-danger">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 9v4.5" />

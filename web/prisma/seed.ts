@@ -39,6 +39,9 @@ async function seedAdmin() {
     return;
   }
 
+  // Socle multi-espaces : ce compte n'a NI établissement NI appartenance : il ne donne accès à
+  // aucun espace (`getCurrentUser()` renvoie un rôle nul). Historique du premier lancement ; pour
+  // un administrateur de plateforme, utiliser `npm run bootstrap:platform-admin`.
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
     data: { username, passwordHash, name, role: "ADMIN" },

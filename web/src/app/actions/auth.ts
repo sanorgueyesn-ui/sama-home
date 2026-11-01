@@ -9,6 +9,7 @@ import { LoginSchema, type LoginFormState } from "@/lib/definitions";
 import { checkRateLimit, resetRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
 import { getFirstAuthorizedPlatformUrl } from "@/lib/permissions";
+import { blockingStatus } from "@/lib/login-gate";
 
 const GENERIC_ERROR = "Identifiant ou mot de passe incorrect.";
 
@@ -41,6 +42,15 @@ export async function login(
     where: {
       OR: [{ username }, { email: username }],
     },
+    select: {
+      id: true,
+      username: true,
+      passwordHash: true,
+      name: true,
+      role: true,
+      isPlatformAdmin: true,
+      permissions: true,
+    },
   });
 
   // verifyPassword always runs, even when `user` is null (falls back to a
@@ -52,31 +62,28 @@ export async function login(
     return { error: GENERIC_ERROR };
   }
 
-  // Vérifier le statut de l'établissement si l'utilisateur est rattaché à un établissement
-  if (user.establishmentId) {
-    const establishment = await prisma.establishment.findUnique({
-      where: { id: user.establishmentId },
-      select: { status: true },
-    });
-
-    if (establishment?.status === "PENDING") {
-      return {
-        error:
-          "Votre établissement est en attente d'approbation par l'administrateur de SAMA HOME. Vous aurez accès dès sa validation.",
-      };
-    }
-
-    if (establishment?.status === "REJECTED") {
-      return {
-        error: "La demande d'inscription pour cet établissement a été refusée par l'administrateur.",
-      };
-    }
-
-    if (establishment?.status === "SUSPENDED") {
-      return {
-        error: "L'accès pour cet établissement est actuellement suspendu. Veuillez contacter le support.",
-      };
-    }
+  // Statut des espaces du compte (appartenances) : refus seulement si AUCUN n'est utilisable.
+  // Règle et priorité des messages : src/lib/login-gate.ts (un seul espace = comportement d'avant).
+  const spaces = await prisma.membership.findMany({
+    where: { userId: user.id },
+    select: { establishment: { select: { status: true } } },
+  });
+  const blocked = blockingStatus(spaces.map((m) => m.establishment.status));
+  if (blocked === "PENDING") {
+    return {
+      error:
+        "Votre établissement est en attente d'approbation par l'administrateur de SAMA HOME. Vous aurez accès dès sa validation.",
+    };
+  }
+  if (blocked === "REJECTED") {
+    return {
+      error: "La demande d'inscription pour cet établissement a été refusée par l'administrateur.",
+    };
+  }
+  if (blocked === "SUSPENDED") {
+    return {
+      error: "L'accès pour cet établissement est actuellement suspendu. Veuillez contacter le support.",
+    };
   }
 
   resetRateLimit(rateLimitKey);
@@ -128,7 +135,8 @@ export async function setPasswordWithGoogleToken(
   // Nettoyer le jeton à usage unique
   cookieStore.delete("google_auth_token");
 
-  await createSession(user.id, true);
+  // Étape 2a : session NON persistante (plus de cookie de 30 jours après un parcours Google).
+  await createSession(user.id, false);
   if (user.isPlatformAdmin) {
     const target = getFirstAuthorizedPlatformUrl(user.permissions);
     redirect(target);

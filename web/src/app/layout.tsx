@@ -6,7 +6,8 @@ import { getSessionCookiePayload } from "@/lib/session-token";
 import { getCurrentUserOrNull } from "@/lib/dal";
 import { getSettings } from "@/lib/settings-data";
 import { getTheme } from "@/lib/theme";
-import { resolveBrandColors, DEFAULT_BRAND_COLORS } from "@/lib/brand-colors";
+import { listMySpaces } from "@/lib/spaces-data";
+import { resolveBrandColors, DEFAULT_BRAND_COLORS, displayAccentText, displayPrimary } from "@/lib/brand-colors";
 import { ShellSwitcher } from "@/components/shell-switcher";
 
 // Reconstruction UI (Nocturne Opulence) — Plus Jakarta Sans remplace Manrope
@@ -40,7 +41,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     getTheme(),
     getCurrentUserOrNull(),
   ]);
-  const showChrome = Boolean(payload?.sessionId);
+  const isLocalDevBypass =
+    process.env.NODE_ENV === "development" &&
+    process.env.DEV_BYPASS_AUTH === "true";
+  const showChrome = Boolean(payload?.sessionId) || isLocalDevBypass;
 
   // Lot "Personnalisation des couleurs" / Phase 3F Lot D12-E — contrairement
   // à `showChrome` ci-dessus (cookie seul, cosmétique), les paramètres ne
@@ -59,10 +63,17 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const brandColors = currentUser?.establishmentId
     ? resolveBrandColors(await getSettings())
     : DEFAULT_BRAND_COLORS;
+  // Socle multi-espaces — espaces du compte pour le sélecteur (appartenances de la SESSION, jamais
+  // une liste globale). Seulement pour une session valide avec un espace actif.
+  const spaces = currentUser?.establishmentId ? await listMySpaces(currentUser.id) : [];
   const brandColorVars = {
-    "--color-navy": brandColors.primary,
+    // Couleurs ENREGISTRÉES, adaptées seulement à l'affichage : un noir devient un gris profond en
+    // thème sombre (sinon invisible), un accent clair devient plus foncé quand il sert de texte
+    // sur fond clair. Les valeurs enregistrées et le contrat PDF gardent les vraies couleurs.
+    "--color-navy": displayPrimary(brandColors.primary, theme),
     "--color-coral": brandColors.secondary,
     "--color-brand-orange": brandColors.accent,
+    "--color-accent-text": displayAccentText(brandColors.accent, theme),
   } as CSSProperties;
 
   return (
@@ -89,6 +100,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}
           userPermissions={currentUser?.permissions ?? null}
           userRole={currentUser?.role ?? null}
+          userName={currentUser?.name ?? null}
+          spaces={spaces}
+          activeSpaceId={currentUser?.establishmentId ?? null}
         >
           {children}
         </ShellSwitcher>

@@ -28,7 +28,7 @@ export function AuthLogo({
       <div>
         <p className="text-base font-extrabold leading-tight tracking-wide sm:text-lg">
           <span className="text-brand-orange">SAMA</span>{" "}
-          <span className={variant === "dark" ? "text-white" : "text-navy"}>HOME</span>
+          <span className={variant === "dark" ? "text-white" : "text-fg"}>HOME</span>
         </p>
         {withTagline ? (
           <p className={`text-[10px] font-semibold tracking-wide ${variant === "dark" ? "text-white/60" : "text-fg/50"}`}>

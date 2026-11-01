@@ -216,3 +216,17 @@ export function buildDirectWhatsAppLink(phone: string | null | undefined, text?:
   const query = text ? `?text=${encodeURIComponent(text)}` : "";
   return { ok: true, url: `https://wa.me/${digits}${query}` };
 }
+
+/**
+ * Lien WhatsApp de TEST : ouvre une conversation avec `phone` (en pratique le numéro du gérant lui-même)
+ * avec le message prêt à envoyer, précédé d'une mention « TEST » pour le reconnaître. N'envoie rien :
+ * le gérant valide l'envoi dans WhatsApp. Utilise le message tel qu'affiché à l'écran, même non enregistré.
+ */
+export function buildTestWhatsAppLink(phone: string | null | undefined, message: string): WhatsAppLinkResult {
+  const raw = phone?.trim();
+  if (!raw) return { ok: false, reason: "Saisissez le numéro WhatsApp sur lequel recevoir le test." };
+  const digits = normalizeWhatsAppDigits(raw);
+  if (!/^[0-9]{9,15}$/.test(digits)) return { ok: false, reason: "Numéro invalide : 9 à 15 chiffres, « + » initial possible." };
+  if (!message.trim()) return { ok: false, reason: "Il n'y a pas encore de message à tester." };
+  return { ok: true, url: `https://wa.me/${digits}?text=${encodeURIComponent(`🧪 TEST SAMA HOME\n\n${message}`)}` };
+}

@@ -10,6 +10,7 @@ import {
 import { AuthField } from "@/components/auth/auth-field";
 import type { VerifyOtpFormState } from "@/lib/definitions";
 import type { PricingSettingsView } from "@/lib/platform-settings-data";
+import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 
 export function RegisterForm({
   pricing,
@@ -17,16 +18,18 @@ export function RegisterForm({
   initialEmail = "",
   initialName = "",
   googleToken = "",
+  initialMode = "RESIDENCE",
 }: {
   pricing?: PricingSettingsView;
   isGoogle?: boolean;
   initialEmail?: string;
   initialName?: string;
   googleToken?: string;
+  initialMode?: string;
 }) {
-  const trialMonths = pricing?.trialDurationMonths ?? 2;
-  const periodMonths = pricing?.periodMonths ?? 3;
-  const periodPrice = pricing?.periodPriceFcfa ?? 9900;
+  const trialMonths = pricing?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS;
+  const periodMonths = pricing?.periodMonths ?? DEFAULT_PERIOD_MONTHS;
+  const periodPrice = pricing?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA;
   const formattedPrice = periodPrice.toLocaleString("fr-FR");
 
   const [registerState, registerAction, isRegisterPending] = useActionState(
@@ -35,6 +38,12 @@ export function RegisterForm({
   );
   const [accepted, setAccepted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"FREE_TRIAL" | "PAID_9900">("FREE_TRIAL");
+  const [selectedMode, setSelectedMode] = useState<"RESIDENCE" | "HOTEL" | "AGENCY">(() => {
+    const m = (initialMode || "").toUpperCase();
+    if (m === "HOTEL") return "HOTEL";
+    if (m === "AGENCY" || m === "IMMOBILIER") return "AGENCY";
+    return "RESIDENCE";
+  });
 
   // État OTP
   const [otpCode, setOtpCode] = useState("");
@@ -43,8 +52,12 @@ export function RegisterForm({
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [localTestCode, setLocalTestCode] = useState<string | null>(null);
 
+  // « Modifier l'adresse » : on mémorise la réponse du serveur qui a été écartée pour revenir au
+  // formulaire ; une nouvelle soumission produit une nouvelle réponse et rouvre l'étape du code.
+  const [dismissedState, setDismissedState] = useState<typeof registerState>(undefined);
+
   const errors = registerState?.errors;
-  const isOtpStep = registerState?.requiresOtp && !otpState?.success;
+  const isOtpStep = registerState?.requiresOtp && !otpState?.success && registerState !== dismissedState;
   const targetEmail = registerState?.email || initialEmail || "";
   const currentTestCode = localTestCode || registerState?.testCode;
 
@@ -325,17 +338,23 @@ export function RegisterForm({
     const handleResend = async () => {
       setResendStatus("Envoi en cours...");
       const res = await resendOtpCode(targetEmail);
-      if (res.success) {
-        setResendStatus("Nouveau code envoyé avec succès !");
-        if (res.testCode) setLocalTestCode(res.testCode);
-      } else {
-        setResendStatus(res.message || "Erreur lors du renvoi.");
-      }
+      // Message générique du serveur (identique que la demande soit en cours ou non) : jamais
+      // d'affirmation « envoyé avec succès » qui confirmerait une inscription en cours.
+      setResendStatus(res.message || "Veuillez patienter avant de demander un nouveau code.");
+      if (res.success && res.testCode) setLocalTestCode(res.testCode);
+    };
+
+    const handleEditAddress = () => {
+      setDismissedState(registerState);
+      setOtpCode("");
+      setOtpState(undefined);
+      setResendStatus(null);
+      setLocalTestCode(null);
     };
 
     return (
       <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 py-1 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/10 text-navy dark:bg-white/10 dark:text-white">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-fg/10 text-fg">
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
@@ -349,10 +368,20 @@ export function RegisterForm({
         <div>
           <h3 className="text-lg font-extrabold text-fg">Vérifiez votre boîte e-mail</h3>
           <p className="mt-1 text-xs font-medium text-fg/60">
-            Nous avons envoyé un code de vérification à 6 chiffres à{" "}
-            <strong className="text-fg">{targetEmail}</strong>.
+            Si l&apos;adresse saisie peut être utilisée pour une inscription, un message contenant les instructions
+            nécessaires vient de vous être envoyé. Le message peut mettre quelques minutes à arriver. Pensez à
+            vérifier vos courriers indésirables.
+          </p>
+          <p className="mt-2 text-xs font-medium text-fg/60">
+            Adresse saisie : <strong className="break-all text-fg">{targetEmail}</strong>
           </p>
         </div>
+
+        <p className="text-left text-[11px] leading-relaxed text-fg/60">
+          <strong className="text-fg/80">Pas de message ?</strong> Vérifiez l&apos;orthographe de l&apos;adresse saisie
+          ci-dessus et vos courriers indésirables. L&apos;envoi peut prendre quelques minutes. Si l&apos;adresse est
+          incorrecte, utilisez « Modifier l&apos;adresse ».
+        </p>
 
         {/* Aide au test local */}
         {currentTestCode && (
@@ -405,11 +434,18 @@ export function RegisterForm({
           <button
             type="button"
             onClick={handleResend}
-            className="text-xs font-bold text-navy hover:underline"
+            className="text-xs font-bold text-fg hover:underline"
           >
             Je n&apos;ai pas reçu le code (Renvoyer)
           </button>
           {resendStatus && <p className="text-[11px] font-medium text-fg/60">{resendStatus}</p>}
+          <button
+            type="button"
+            onClick={handleEditAddress}
+            className="mt-1 text-xs font-medium text-fg/50 transition-colors hover:text-fg hover:underline"
+          >
+            ← Modifier l&apos;adresse
+          </button>
         </div>
       </form>
     );
@@ -420,6 +456,78 @@ export function RegisterForm({
   // -------------------------------------------------------------
   return (
     <form action={registerAction} className="flex flex-col gap-4">
+      {/* 1. Sélecteur d'Activité Métier (Résidence, Hôtel, Agence - Étape 2 du Guide) */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-extrabold text-fg">Votre activité principale :</label>
+          <Link href="/#activites" className="text-[11px] font-semibold text-brand-orange hover:underline">
+            Changer d&apos;activité
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {/* Mode 1: Résidence */}
+          <button
+            type="button"
+            onClick={() => setSelectedMode("RESIDENCE")}
+            className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition-all ${
+              selectedMode === "RESIDENCE"
+                ? "border-navy bg-navy/10 text-fg shadow-sm ring-2 ring-navy dark:bg-white/10 dark:ring-white"
+                : "border-border/20 bg-surface text-muted hover:border-border/50 hover:text-fg"
+            }`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised mb-1.5 shadow-2xs">
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <rect width="18" height="18" x="3" y="4" rx="2" />
+                <path d="M3 10h18" />
+              </svg>
+            </span>
+            <span className="text-xs font-black leading-tight">Résidence</span>
+            <span className="text-[10px] text-muted">Meublée</span>
+          </button>
+
+          {/* Mode 2: Hôtel */}
+          <button
+            type="button"
+            onClick={() => setSelectedMode("HOTEL")}
+            className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition-all ${
+              selectedMode === "HOTEL"
+                ? "border-navy bg-navy/10 text-fg shadow-sm ring-2 ring-navy dark:bg-white/10 dark:ring-white"
+                : "border-border/20 bg-surface text-muted hover:border-border/50 hover:text-fg"
+            }`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised mb-1.5 shadow-2xs">
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M2 4v16" />
+                <path d="M2 8h18a2 2 0 0 1 2 2v10" />
+                <path d="M2 17h20" />
+              </svg>
+            </span>
+            <span className="text-xs font-black leading-tight">Hôtel</span>
+            <span className="text-[10px] text-muted">Nuitée</span>
+          </button>
+
+          {/* Mode 3: Agence */}
+          <button
+            type="button"
+            onClick={() => setSelectedMode("AGENCY")}
+            className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition-all ${
+              selectedMode === "AGENCY"
+                ? "border-navy bg-navy/10 text-fg shadow-sm ring-2 ring-navy dark:bg-white/10 dark:ring-white"
+                : "border-border/20 bg-surface text-muted hover:border-border/50 hover:text-fg"
+            }`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised mb-1.5 shadow-2xs">
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </span>
+            <span className="text-xs font-black leading-tight">Agence</span>
+            <span className="text-[10px] text-muted">Immobilière</span>
+          </button>
+        </div>
+      </div>
+
       {/* Sélecteur des 2 Offres */}
       <div className="flex flex-col gap-2">
         <label className="text-xs font-extrabold text-fg">Choisissez votre offre de démarrage :</label>
@@ -500,15 +608,28 @@ export function RegisterForm({
         </div>
       )}
 
-      {/* Champ caché pour le plan */}
+      {/* Champs cachés pour le plan et le mode */}
       <input type="hidden" name="plan" value={selectedPlan} />
+      <input type="hidden" name="activityMode" value={selectedMode} />
       {isGoogle && <input type="hidden" name="googleToken" value={googleToken} />}
 
       <AuthField
         id="establishmentName"
-        label="Nom de l'établissement"
+        label={
+          selectedMode === "RESIDENCE"
+            ? "Nom de la résidence"
+            : selectedMode === "HOTEL"
+              ? "Nom de l'hôtel"
+              : "Nom de l'agence immobilière"
+        }
         icon="building"
-        hint="Ex. Résidence Atlantique"
+        hint={
+          selectedMode === "RESIDENCE"
+            ? "Ex. Résidence Atlantique"
+            : selectedMode === "HOTEL"
+              ? "Ex. Hôtel Le Saphir"
+              : "Ex. Agence Immobilière Teranga"
+        }
         required
         autoFocus
         errors={errors?.establishmentName}
@@ -550,6 +671,7 @@ export function RegisterForm({
           type="email"
           hint="Ex. votre@email.com"
           autoComplete="email"
+          defaultValue={targetEmail}
           required
           errors={errors?.email}
         />
@@ -575,7 +697,7 @@ export function RegisterForm({
         />
         <span>
           J&apos;accepte les{" "}
-          <span className="font-bold text-navy underline-offset-2">conditions d&apos;utilisation</span>
+          <span className="font-bold text-fg underline-offset-2">conditions d&apos;utilisation</span>
         </span>
       </label>
 

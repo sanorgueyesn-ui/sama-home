@@ -85,8 +85,10 @@ export async function setAutoApprovalEnabled(enabled: boolean): Promise<{ error?
  * ce lot : 1-12 mois, 500-1 000 000 FCFA) — jamais uniquement la validation
  * côté interface, qui reste un confort, jamais l'autorité.
  *
- * Écriture inutile évitée : si les 3 valeurs demandées sont STRICTEMENT
- * identiques aux valeurs actuelles, rien n'est écrit ni journalisé — lu et
+ * Écriture inutile évitée : si une ligne existe déjà et que les 3 valeurs demandées
+ * lui sont STRICTEMENT identiques, rien n'est écrit ni journalisé — sans ligne en
+ * base, la première sauvegarde crée toujours la ligne, même avec les valeurs par
+ * défaut (audit avec `reason` explicite, Lot 3A) — lu et
  * comparé à l'intérieur de la même transaction que l'écriture éventuelle,
  * même principe que setAutoApprovalEnabled().
  *
@@ -129,14 +131,18 @@ export async function setPricingSettings(
         periodPriceFcfa: existing?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA,
       };
 
-      if (
+      const sameAsCurrent =
         currentValue.trialDurationMonths === trialDurationMonths &&
         currentValue.periodMonths === periodMonths &&
-        currentValue.periodPriceFcfa === periodPriceFcfa
-      ) {
-        // Valeurs inchangées — aucune écriture, aucun journal, par conception.
+        currentValue.periodPriceFcfa === periodPriceFcfa;
+
+      // Valeurs identiques à une ligne DÉJÀ enregistrée — aucune écriture, aucun journal.
+      // Sans ligne en base, `currentValue` n'est que le repli du système : la première
+      // sauvegarde crée la ligne même si les valeurs soumises sont les valeurs par défaut.
+      if (existing && sameAsCurrent) {
         return;
       }
+      const defaultsSavedExplicitly = !existing && sameAsCurrent;
 
       await tx.pricingSettings.upsert({
         where: { id: "singleton" },
@@ -150,7 +156,7 @@ export async function setPricingSettings(
           action: "PRICING_SETTINGS_UPDATED",
           entityType: "PricingSettings",
           entityId: "singleton",
-          reason: null,
+          reason: defaultsSavedExplicitly ? "Valeurs par défaut enregistrées explicitement" : null,
           oldValue: currentValue,
           newValue: { trialDurationMonths, periodMonths, periodPriceFcfa },
           establishmentId: null,

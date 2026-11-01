@@ -1,0 +1,176 @@
+/* Couleur d'accent de la landing (ambre, couleur de la marque), en clair et en sombre.
+   Les composants de la landing, le sélecteur de langue et le bouton flottant utilisent ces noms
+   (--accent, --accent-hover, --accent-ink, --accent-text).
+   Les palettes Bleu, Vert et Rouge se choisissent via l'attribut [data-palette="blue|emerald|ruby"]. */
+
+.landing-scope {
+  --th-focus: #f59e0b;
+  --accent: #f59e0b;
+  --accent-hover: #d98a06;
+  --accent-ink: #1c1405;
+  --accent-text: #b45309;
+  --accent-focus: var(--th-focus);
+}
+
+:root[data-theme="dark"] .landing-scope {
+  --accent-hover: #fbbf24;
+  --accent-text: #fbbf24;
+}
+
+/* ==========================================================================
+   PALETTE 1 : BLEU ROYAL (SaaS Moderne, Confiance, Statutaire)
+   ========================================================================== */
+.landing-scope[data-palette="blue"] {
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-ink: #ffffff;
+  --accent-text: #1d4ed8;
+  --accent-focus: #3b82f6;
+}
+
+:root[data-theme="dark"] .landing-scope[data-palette="blue"] {
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-ink: #0a101d;
+  --accent-text: #60a5fa;
+  --accent-focus: #60a5fa;
+}
+
+/* ==========================================================================
+   PALETTE 2 : VERT ÉMERAUDE (Hospitalité, Sérénité, Prestige Immobilier)
+   ========================================================================== */
+.landing-scope[data-palette="emerald"] {
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-ink: #ffffff;
+  --accent-text: #065f46;
+  --accent-focus: #10b981;
+}
+
+:root[data-theme="dark"] .landing-scope[data-palette="emerald"] {
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-ink: #041a12;
+  --accent-text: #34d399;
+  --accent-focus: #34d399;
+}
+
+/* ==========================================================================
+   PALETTE 3 : ROUGE RUBIS (Énergie, Promotion, Prestige Hôtelier)
+   ========================================================================== */
+.landing-scope[data-palette="ruby"] {
+  --accent: #dc2626;
+  --accent-hover: #b91c1c;
+  --accent-ink: #ffffff;
+  --accent-text: #991b1b;
+  --accent-focus: #ef4444;
+}
+
+:root[data-theme="dark"] .landing-scope[data-palette="ruby"] {
+  --accent: #ef4444;
+  --accent-hover: #f87171;
+  --accent-ink: #1a0505;
+  --accent-text: #f87171;
+  --accent-focus: #f87171;
+}
+
+/* ==========================================================================
+   ANIMATIONS & MICRO-INTERACTIONS HAUT DE GAMME (STYLE STRIPE & LINEAR)
+   ========================================================================== */
+
+/* 1. Halo lumineux d'ambiance en arrière-plan (Hero) */
+@keyframes ambientGlow {
+  0%, 100% {
+    opacity: 0.25;
+    transform: translate(-50%, -10%) scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: translate(-50%, -6%) scale(1.08);
+  }
+}
+
+.animate-ambient-glow {
+  animation: ambientGlow 7s ease-in-out infinite;
+}
+
+/* 2. Effet d'élévation fluide et dynamique sur toutes les cartes */
+.hover-card-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
+}
+
+.hover-card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.12),
+              0 0 0 1px var(--th-border-hover, rgba(255, 255, 255, 0.12));
+}
+
+/* 3. Brillance subtile sur le bouton d'action principal (Shimmer) */
+@keyframes buttonShimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  animation: buttonShimmer 5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* 4. Apparition fluide progressive (Staggered Fade-in) */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+/* 5. Flottement subtil et doux */
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-subtle {
+  animation: gentleFloat 4s ease-in-out infinite;
+}

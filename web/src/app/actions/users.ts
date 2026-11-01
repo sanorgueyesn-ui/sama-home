@@ -3,10 +3,12 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import { requireAdmin, requireActiveEstablishment } from "@/lib/dal";
 import { hashPassword } from "@/lib/password";
 import { hasEstablishmentPermission } from "@/lib/permissions";
 import { purgeUserFromDatabase } from "@/lib/user-purge";
+import { findSpaceUser } from "@/lib/users-data";
 import {
   CreateUserSchema,
   UpdateUserSchema,
@@ -25,6 +27,10 @@ import {
  */
 
 class UserActionError extends Error {}
+
+/** Un compte partagé entre plusieurs espaces ne se gère pas depuis un seul (colonnes User globales). */
+const SHARED_ACCOUNT_MESSAGE =
+  "Ce compte appartient à plusieurs espaces professionnels : il ne peut pas être géré depuis un seul espace.";
 
 const LAST_ADMIN_MESSAGE =
   "Impossible de rétrograder ce compte : c'est le dernier administrateur du système. Promouvez d'abord un autre utilisateur en administrateur.";
@@ -90,15 +96,23 @@ export async function createUser(
   }
 
   try {
-    await prisma.user.create({
-      data: {
-        username,
-        name,
-        passwordHash,
-        role,
-        permissions: permissionsJson,
-        establishmentId: admin.establishmentId,
-      },
+    // Socle multi-espaces : le compte ET son appartenance sont créés ensemble, sinon le compte
+    // n'aurait aucun espace (voir src/lib/dal.ts). `establishmentId` vient de la session serveur.
+    await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          username,
+          name,
+          passwordHash,
+          role,
+          permissions: permissionsJson,
+          establishmentId: admin.establishmentId,
+        },
+        select: { id: true },
+      });
+      await tx.membership.create({
+        data: { userId: created.id, establishmentId: admin.establishmentId!, role },
+      });
     });
   } catch (error) {
     console.error("createUser() — échec inattendu de la création de l'utilisateur :", error);
@@ -145,9 +159,12 @@ export async function updateUser(
   // Un utilisateur d'un autre établissement doit être indistinguable d'un
   // id inexistant — même message, même chemin de code, aucune confirmation
   // de l'existence d'un compte extérieur.
-  const existing = await prisma.user.findFirst({ where: { id, establishmentId: admin.establishmentId } });
+  const existing = await findSpaceUser(id, admin.establishmentId);
   if (!existing) {
     return { message: "Utilisateur introuvable." };
+  }
+  if (existing.spaceCount > 1) {
+    return { message: SHARED_ACCOUNT_MESSAGE };
   }
 
   const parsed = UpdateUserSchema.safeParse({
@@ -178,8 +195,9 @@ export async function updateUser(
     await prisma.$transaction(
       async (tx) => {
         if (isDemotingFromAdmin) {
-          const otherAdmins = await tx.user.count({
-            where: { role: "ADMIN", id: { not: id }, establishmentId: admin.establishmentId },
+          // Socle multi-espaces : « au moins un ADMIN » se compte sur les appartenances de CET espace.
+          const otherAdmins = await tx.membership.count({
+            where: { establishmentId: admin.establishmentId!, role: "ADMIN", userId: { not: id } },
           });
           if (otherAdmins === 0) {
             throw new UserActionError(LAST_ADMIN_MESSAGE);
@@ -197,13 +215,23 @@ export async function updateUser(
         }
 
         const result = await tx.user.updateMany({
-          where: { id, establishmentId: admin.establishmentId },
+          where: { id, memberships: { some: { establishmentId: admin.establishmentId! } } },
           data: {
             ...parsed.data,
             permissions: permissionsJson,
           },
         });
         if (result.count !== 1) {
+          throw new UserActionError("Utilisateur introuvable.");
+        }
+        // Le rôle vit désormais dans l'appartenance : même transaction, sinon un rôle
+        // rétrogradé ici resterait ADMIN dans l'espace (voir src/lib/dal.ts).
+        const membershipResult = await tx.membership.updateMany({
+          where: { userId: id, establishmentId: admin.establishmentId! },
+          data: { role: parsed.data.role },
+        });
+        if (membershipResult.count !== 1) {
+          // Compte sans appartenance : on n'écrit pas un rôle à moitié (transaction annulée).
           throw new UserActionError("Utilisateur introuvable.");
         }
       },
@@ -245,9 +273,14 @@ export async function resetUserPassword(
     return { message: "Votre compte n'est rattaché à aucun établissement — impossible de réinitialiser ce mot de passe." };
   }
 
-  const existing = await prisma.user.findFirst({ where: { id, establishmentId: admin.establishmentId } });
+  const existing = await findSpaceUser(id, admin.establishmentId);
   if (!existing) {
     return { message: "Utilisateur introuvable." };
+  }
+  // Un mot de passe est GLOBAL au compte : le réinitialiser (et fermer toutes ses sessions)
+  // depuis un seul espace toucherait aussi les autres.
+  if (existing.spaceCount > 1) {
+    return { message: SHARED_ACCOUNT_MESSAGE };
   }
 
   const parsed = ResetPasswordSchema.safeParse({
@@ -273,7 +306,7 @@ export async function resetUserPassword(
   try {
     await prisma.$transaction(async (tx) => {
       const result = await tx.user.updateMany({
-        where: { id, establishmentId: admin.establishmentId },
+        where: { id, memberships: { some: { establishmentId: admin.establishmentId! } } },
         data: { passwordHash },
       });
       if (result.count !== 1) {
@@ -312,20 +345,21 @@ export async function deleteEstablishmentUser(userId: string): Promise<{ error?:
     return { error: "Impossible de supprimer votre propre compte administrateur actuellement connecté." };
   }
 
-  const target = await prisma.user.findFirst({
-    where: { id: userId, establishmentId: admin.establishmentId },
-  });
+  const target = await findSpaceUser(userId, admin.establishmentId);
   if (!target) {
     return { error: "Utilisateur introuvable." };
   }
+  if (target.spaceCount > 1) {
+    return { error: SHARED_ACCOUNT_MESSAGE };
+  }
 
-  // Vérifier qu'on ne supprime pas le dernier ADMIN de l'établissement
+  // Vérifier qu'on ne supprime pas le dernier ADMIN de l'établissement (appartenances de CET espace)
   if (target.role === "ADMIN") {
-    const otherAdmins = await prisma.user.count({
+    const otherAdmins = await prisma.membership.count({
       where: {
-        role: "ADMIN",
         establishmentId: admin.establishmentId,
-        id: { not: userId },
+        role: "ADMIN",
+        userId: { not: userId },
       },
     });
     if (otherAdmins === 0) {
@@ -334,7 +368,7 @@ export async function deleteEstablishmentUser(userId: string): Promise<{ error?:
   }
 
   try {
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await purgeUserFromDatabase(tx, userId);
 
       await tx.auditLog.create({
@@ -343,8 +377,10 @@ export async function deleteEstablishmentUser(userId: string): Promise<{ error?:
           action: "USER_DELETED",
           entityType: "User",
           entityId: userId,
-          reason: `Suppression définitive du collaborateur « ${target.name} » (${target.username})`,
-          oldValue: { name: target.name, username: target.username },
+          // Minimisation (document de référence v1.0, §3/§4) : identifiant opaque (entityId) et rôle
+          // uniquement — ni nom, ni identifiant de connexion de la personne supprimée.
+          reason: `Suppression définitive d'un compte utilisateur (rôle : ${target.role ?? "inconnu"})`,
+          oldValue: { role: target.role ?? "inconnu" },
           newValue: { deleted: true },
           establishmentId: admin.establishmentId,
         },

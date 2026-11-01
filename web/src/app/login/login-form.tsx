@@ -102,7 +102,7 @@ export function LoginForm({
 
       <div className="flex flex-col gap-2">
         <label className="flex items-center gap-2 text-sm text-fg">
-          <input type="checkbox" name="remember" defaultChecked className="h-4 w-4 accent-navy" />
+          <input type="checkbox" name="remember" className="h-4 w-4 accent-navy" />
           Se souvenir de moi
         </label>
 
@@ -110,7 +110,7 @@ export function LoginForm({
           <button
             type="button"
             onClick={() => setShowSetPassword(true)}
-            className="text-left text-xs font-bold text-navy hover:underline"
+            className="text-left text-xs font-bold text-fg hover:underline"
           >
             Première connexion ou mot de passe non défini ? Définir mon mot de passe
           </button>

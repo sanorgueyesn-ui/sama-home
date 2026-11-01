@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { Prisma, type TransferFrequency } from "@/generated/prisma/client";
-import { getCurrentUser, verifySession, requireActiveEstablishment } from "@/lib/dal";
+import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
 import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cash-data";
 import { catchUpSchedule, isSerializationConflict, isBankTransferScheduleDateUniqueViolation } from "@/lib/transfer-schedule-engine";
 import { resolveAnchorDayOnCreate, resolveAnchorDayOnUpdate } from "@/lib/transfer-frequency";
@@ -889,4 +889,6 @@ export async function generateDueScheduledTransfers(): Promise<{ generated: numb
   }
 
   return { generated };
+}
+generated };
 }

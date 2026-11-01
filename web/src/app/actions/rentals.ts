@@ -9,6 +9,7 @@ import { computeDepartureTime } from "@/lib/duration";
 import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/availability";
 import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
 import { checkRetroactiveArrival } from "@/lib/retroactive-checkin";
+import { classifyArrivalTiming, describeTransactionFailure } from "@/lib/reservation-filters";
 import { PHONE_REGEX } from "@/lib/phone";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 import { hasEstablishmentPermission } from "@/lib/permissions";
@@ -571,9 +572,13 @@ export async function checkInReservation(
     if (error instanceof RentalActionError) {
       return { error: error.message };
     }
+    // Journal serveur uniquement : le détail technique n'est jamais renvoyé au navigateur.
+    console.error("checkInReservation() — échec de transaction :", error);
     return {
-      error:
-        "Le logement vient peut-être d'être occupé à l'instant. Veuillez vérifier la disponibilité et réessayer.",
+      error: describeTransactionFailure(
+        error,
+        "L'arrivée n'a pas pu être enregistrée (le logement vient peut-être d'être occupé). Rien n'a été enregistré : vérifiez la disponibilité puis réessayez.",
+      ),
     };
   }
 
@@ -581,7 +586,8 @@ export async function checkInReservation(
   revalidatePath(`/reservations/${reservationId}`);
   revalidatePath("/locations");
   revalidatePath(`/logements/${reservation.propertyId}`);
-  redirect(`/locations/${rentalId}?created=1`);
+  const timing = classifyArrivalTiming(reservation.arrivalTime, actualArrival);
+  redirect(`/locations/${rentalId}?created=1${timing === "ON_TIME" ? "" : `&timing=${timing.toLowerCase()}`}`);
 }
 
 /**

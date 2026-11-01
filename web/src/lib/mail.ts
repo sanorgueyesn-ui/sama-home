@@ -1,5 +1,6 @@
 import "server-only";
 import nodemailer, { type SendMailOptions, type Transporter } from "nodemailer";
+import { canExposeTestOtp } from "@/lib/test-otp";
 
 interface SendOtpEmailParams {
   to: string;
@@ -30,9 +31,12 @@ function getSmtpConfig() {
 async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ success: boolean; error?: string }> {
   // 1. Relais prioritaire HTTPS (Google Apps Script Web App sur port 443)
   // Indispensable pour Railway qui bloque les ports SMTP sortants (25, 465, 587)
-  const relayUrl =
-    process.env.GMAIL_RELAY_URL?.trim() ||
-    "https://script.google.com/macros/s/AKfycbxIR3ZRv7uumTVguH8f0SKxiXhJaHkQqc3dLgXUAEdT1Siu8-CHOapy1VTwBMmDyz3U/exec";
+  // Aucune URL de relais n'est codée en dur : le relais n'est utilisé que s'il est
+  // explicitement configuré par l'environnement (GMAIL_RELAY_URL).
+  const relayUrl = process.env.GMAIL_RELAY_URL?.trim();
+  if (!relayUrl) {
+    console.warn("[SAMA HOME MAIL] GMAIL_RELAY_URL non configuré : relais HTTPS ignoré.");
+  }
   if (relayUrl) {
     try {
       const res = await fetch(relayUrl, {
@@ -55,7 +59,10 @@ async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ suc
         // ignore
       }
 
-      if (data.success || text.includes('"success":true') || res.ok) {
+      // Un échec explicitement signalé par le relais n'est jamais compté comme un envoi
+      // réussi, même avec un statut HTTP 200.
+      const explicitFailure = data.success === false || text.includes('"success":false');
+      if (!explicitFailure && (data.success || text.includes('"success":true') || res.ok)) {
         console.log(`[SAMA HOME MAIL] E-mail envoyé avec succès via le relais HTTPS Google Apps Script à ${mailOptions.to}`);
         return { success: true };
       } else {
@@ -71,7 +78,8 @@ async function sendMailWithFallback(mailOptions: SendMailOptions): Promise<{ suc
 
   if (!pass) {
     console.warn("[SAMA HOME MAIL] SMTP_PASS non configuré.");
-    return { success: false, error: "SMTP_PASS_NOT_CONFIGURED" };
+    // Ni relais ni SMTP configurés : échec explicite et sûr (aucun envoi, aucun secours codé en dur).
+    return { success: false, error: relayUrl ? "SMTP_PASS_NOT_CONFIGURED" : "MAIL_NOT_CONFIGURED" };
   }
 
   const portsToTry = [
@@ -135,7 +143,8 @@ export async function sendOtpEmail({
   console.log(`📬 [SAMA HOME] CODE DE VÉRIFICATION OTP`);
   console.log(`   Destinataire : ${to}`);
   console.log(`   Établissement : ${establishmentName}`);
-  console.log(`   👉 CODE OTP : ${code}`);
+  // Le code n'est journalisé qu'en environnement local explicitement autorisé.
+  console.log(`   👉 CODE OTP : ${canExposeTestOtp(process.env) ? code : "<masqué>"}`);
   console.log(`========================================================\n`);
 
   const htmlContent = `
@@ -191,6 +200,62 @@ export async function sendOtpEmail({
   return { success: result.success, simulated: !result.success, error: result.error };
 }
 
+/**
+ * Étape 2c-2 — message INFORMATIF (jamais de code) envoyé à une adresse déjà inscrite lorsque
+ * quelqu'un tente de s'inscrire avec elle. La réponse publique de l'inscription reste identique
+ * pour une adresse libre ou déjà utilisée : c'est ce message qui renseigne le titulaire de l'adresse.
+ * Le destinataire n'est volontairement PAS journalisé par cette fonction.
+ */
+export async function sendAccountExistsEmail({
+  to,
+}: {
+  to: string;
+}): Promise<{ success: boolean; simulated: boolean; error?: string }> {
+  const { user } = getSmtpConfig();
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; }
+          .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+          .logo { font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+          .orange { color: #f97316; }
+          .title { font-size: 20px; font-weight: 800; margin: 20px 0 8px 0; color: #0f172a; }
+          .text { font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 20px 0; }
+          .footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #94a3b8; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="logo">SAMA<span class="orange"> HOME</span></div>
+          <h1 class="title">Tentative d'inscription avec votre adresse</h1>
+          <p class="text">
+            Une inscription a été demandée avec cette adresse, mais un compte SAMA HOME existe déjà.
+            Si c'était vous, connectez-vous ou réinitialisez votre mot de passe depuis la page de connexion.
+            Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.
+          </p>
+          <div class="footer">
+            Cet e-mail a été envoyé automatiquement par SAMA HOME (<a href="mailto:${user}">${user}</a>).
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const result = await sendMailWithFallback({
+    from: `"SAMA HOME" <${user}>`,
+    to,
+    subject: "Tentative d'inscription avec votre adresse – SAMA HOME",
+    text: "Une inscription a été demandée avec cette adresse, mais un compte SAMA HOME existe déjà. Si c'était vous, connectez-vous ou réinitialisez votre mot de passe depuis la page de connexion. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.",
+    html: htmlContent,
+  });
+
+  return { success: result.success, simulated: !result.success, error: result.error };
+}
+
 export async function sendPasswordResetEmail({
   to,
   code,
@@ -203,7 +268,7 @@ export async function sendPasswordResetEmail({
   console.log(`🔑 [SAMA HOME] CODE DE RÉINITIALISATION DU MOT DE PASSE`);
   console.log(`   Destinataire : ${to}`);
   console.log(`   Utilisateur  : ${name || "Utilisateur"}`);
-  console.log(`   👉 CODE OTP  : ${code}`);
+  console.log(`   👉 CODE OTP  : ${canExposeTestOtp(process.env) ? code : "<masqué>"}`);
   console.log(`========================================================\n`);
 
   const displayName = name ? `Bonjour ${name},` : "Bonjour,";

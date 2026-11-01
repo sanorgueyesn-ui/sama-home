@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getTheme } from "@/lib/theme";
 import { AuthLogo } from "@/components/auth/auth-logo";
 import { FeatureList } from "@/components/auth/feature-list";
@@ -15,12 +16,22 @@ export default async function RegisterPage(props: {
     email?: string;
     name?: string;
     token?: string;
+    category?: string;
+    mode?: string;
   }>;
 }) {
-  const [theme, pricing, searchParams] = await Promise.all([
+  const searchParams = await props.searchParams;
+  const initialMode = searchParams?.mode || searchParams?.category || "RESIDENCE";
+
+  // Test local des tableaux de bord sans barrière d'inscription : uniquement en développement
+  // avec DEV_BYPASS_AUTH=true (même garde que src/lib/dal.ts et la page de connexion).
+  if (process.env.NODE_ENV === "development" && process.env.DEV_BYPASS_AUTH === "true") {
+    redirect(`/dashboard?mode=${initialMode}`);
+  }
+
+  const [theme, pricing] = await Promise.all([
     getTheme(),
     getPublicPricingSettings(),
-    props.searchParams,
   ]);
 
   const isGoogle = searchParams?.google === "1";
@@ -92,6 +103,7 @@ export default async function RegisterPage(props: {
               initialEmail={initialEmail}
               initialName={initialName}
               googleToken={googleToken}
+              initialMode={initialMode}
             />
 
             {!isGoogle && (
@@ -102,7 +114,7 @@ export default async function RegisterPage(props: {
 
             <p className="mt-6 text-center text-sm font-medium text-fg/60">
               Déjà un compte ?{" "}
-              <Link href="/login" className="font-bold text-navy underline-offset-2 hover:underline">
+              <Link href="/login" className="font-bold text-fg underline underline-offset-2 hover:no-underline">
                 Se connecter
               </Link>
             </p>

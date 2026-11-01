@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/navigation/app-shell";
 import { PlatformShell } from "@/components/platform/platform-shell";
+import type { SpaceOption } from "@/lib/business-mode";
 
 /**
  * D12-P206 — remplace la sélection de coquille auparavant faite dans
@@ -24,12 +25,18 @@ export function ShellSwitcher({
   isPlatformAdmin,
   userPermissions,
   userRole,
+  userName = null,
+  spaces = [],
+  activeSpaceId = null,
 }: {
   children: ReactNode;
   showChrome: boolean;
   isPlatformAdmin: boolean;
   userPermissions?: string | null;
   userRole?: string | null;
+  userName?: string | null;
+  spaces?: SpaceOption[];
+  activeSpaceId?: string | null;
 }) {
   const pathname = usePathname();
   const isPlatformConsole = pathname === "/plateforme" || pathname.startsWith("/plateforme/");
@@ -42,6 +49,7 @@ export function ShellSwitcher({
     pathname === "/forgot-password" ||
     pathname.startsWith("/forgot-password/") ||
     pathname === "/verify-otp" ||
+    pathname === "/espaces" || // choix d'espace : page autonome, sans la navigation d'un espace
     pathname === "/";
 
   if (isStandalonePublic) return <>{children}</>;
@@ -52,6 +60,9 @@ export function ShellSwitcher({
         isPlatformAdmin={isPlatformAdmin}
         userPermissions={userPermissions}
         userRole={userRole}
+        userName={userName}
+        spaces={spaces}
+        activeSpaceId={activeSpaceId}
       >
         {children}
       </AppShell>

@@ -1,7 +1,9 @@
 import type { ComponentType, SVGProps } from "react";
-import { Card } from "@/components/ui/card";
 
-/** Small reusable stat tile — used for the financial and logements sections. */
+/**
+ * StatCard — Composant de tuile statistique inspiré des maquettes M.N.D.
+ * Chiffres tabulaires, icônes vectorielles en boîte arrondie et badge de sous-titre.
+ */
 export function StatCard({
   label,
   value,
@@ -14,44 +16,51 @@ export function StatCard({
 }: {
   label: string;
   value: string;
-  /** Petite annotation sous la valeur (maquette Stitch) — ex. un
-   * pourcentage calculé localement à partir de compteurs réels déjà
-   * chargés, ou un libellé comme "Total gérés". Jamais un chiffre inventé. */
   sub?: string;
   color?: string;
   bg?: string;
-  /** Optional pictogram, shown inside a small pastel badge (`iconBg`) next
-   * to the label. Same instance on every breakpoint — only its size changes
-   * responsively via CSS (color stays the card's own functional color on
-   * all 3 widths, per the validated badge direction). */
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
-  /** Badge background — a light/pastel tone, reusing existing tokens
-   * (e.g. the same hex as --color-success-bg/--color-danger-bg/--color-info-bg). */
   iconBg?: string;
-  /** Extra classes on the outer Card — e.g. `col-span-2` to let one tile
-   * span a wider slot in a grid (Reconstruction UI, Accueil mobile). */
   className?: string;
 }) {
   return (
-    <Card
-      className={`border border-border/10 px-4 py-3.5 ${className}`}
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-border/15 bg-surface-raised/95 p-4 shadow-sm backdrop-blur-md transition-all hover:border-border/20 hover:shadow-md ${className}`}
       style={bg ? { background: bg } : undefined}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-extrabold uppercase tracking-wider text-fg/60">
+          {label}
+        </p>
         {Icon ? (
           <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg md:h-6 md:w-6 md:rounded-md"
-            style={iconBg ? { background: iconBg } : undefined}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-xs"
+            style={{
+              background: iconBg ?? "rgba(255, 255, 255, 0.05)",
+            }}
           >
-            <Icon className="h-4 w-4 md:h-3.5 md:w-3.5" style={color ? { color } : undefined} />
+            <Icon className="h-4 w-4" style={color ? { color } : undefined} />
           </span>
         ) : null}
-        <p className="text-[11px] font-bold text-fg/50">{label}</p>
       </div>
-      <p className={`mt-1 text-xl font-extrabold ${color ? "" : "text-fg"}`} style={color ? { color } : undefined}>
-        {value}
-      </p>
-      {sub ? <p className="mt-0.5 text-[11px] font-semibold text-fg/50">{sub}</p> : null}
-    </Card>
+
+      <div className="mt-2 flex items-baseline justify-between gap-2">
+        <p
+          className={`text-2xl font-black tracking-tight ${color ? "" : "text-fg"}`}
+          style={color ? { color } : undefined}
+        >
+          {value}
+        </p>
+      </div>
+
+      {sub ? (
+        <p
+          className="mt-1 text-[11px] font-bold text-fg/50 flex items-center gap-1"
+          style={color ? { color } : undefined}
+        >
+          {sub}
+        </p>
+      ) : null}
+    </div>
   );
 }

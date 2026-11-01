@@ -25,7 +25,29 @@ export type PricingSettingsView = {
   trialDurationMonths: number;
   periodMonths: number;
   periodPriceFcfa: number;
+  /**
+   * Vrai UNIQUEMENT si une ligne `PricingSettings` existe réellement en base.
+   * Faux : les valeurs ci-dessus sont les valeurs de repli du système
+   * (src/lib/pricing-defaults.ts), jamais une tarification enregistrée.
+   */
+  isConfigured: boolean;
 };
+
+type PricingRow = { trialDurationMonths: number; periodMonths: number; periodPriceFcfa: number };
+
+/**
+ * Transforme la ligne lue en base (ou son absence) en vue de tarification, en
+ * distinguant explicitement une ligne présente de valeurs de repli. Pure : aucune
+ * lecture ni écriture.
+ */
+export function resolvePricingView(row: PricingRow | null): PricingSettingsView {
+  return {
+    trialDurationMonths: row?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS,
+    periodMonths: row?.periodMonths ?? DEFAULT_PERIOD_MONTHS,
+    periodPriceFcfa: row?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA,
+    isConfigured: row !== null,
+  };
+}
 
 /**
  * Phase 3G / Lot D12-P103 — lecture des réglages tarifaires globaux
@@ -52,9 +74,5 @@ export async function getPricingSettings(): Promise<PricingSettingsView> {
  */
 export async function getPublicPricingSettings(): Promise<PricingSettingsView> {
   const settings = await prisma.pricingSettings.findUnique({ where: { id: "singleton" } });
-  return {
-    trialDurationMonths: settings?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS,
-    periodMonths: settings?.periodMonths ?? DEFAULT_PERIOD_MONTHS,
-    periodPriceFcfa: settings?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA,
-  };
+  return resolvePricingView(settings);
 }

@@ -1,28 +1,40 @@
-import Link from "next/link";
-import { verifySession } from "@/lib/dal";
+import { SettingsNotice, SettingsPageHeader, SettingsSection } from "../settings-ui";
+import { getCurrentUser } from "@/lib/dal";
 import { ChangePasswordForm } from "./change-password-form";
 
-export default async function ChangePasswordPage() {
-  await verifySession();
+export const metadata = { title: "Mon compte — SAMA HOME" };
+
+const ROLE_LABELS: Record<string, string> = { ADMIN: "Administrateur", GESTIONNAIRE: "Gestionnaire" };
+
+export default async function ChangePasswordPage(props: { searchParams: Promise<{ passwordChanged?: string }> }) {
+  const { passwordChanged } = await props.searchParams;
+  const user = await getCurrentUser();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
-      <div className="mb-5 flex items-center gap-3 lg:mx-auto lg:w-full lg:max-w-2xl">
-        <Link
-          href="/settings"
-          aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 5 8 12l7 7" />
-          </svg>
-        </Link>
-        <h1 className="text-xl font-extrabold text-fg">Modifier mon mot de passe</h1>
+    <>
+      <SettingsPageHeader title="Mon compte" description="Vos informations de connexion et votre mot de passe." />
+      {passwordChanged ? <SettingsNotice>Mot de passe modifié.</SettingsNotice> : null}
+      <div className="flex flex-col gap-5">
+        <SettingsSection title="Informations">
+          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <dt className="text-xs font-bold uppercase tracking-wide text-fg/45">Nom</dt>
+              <dd className="mt-1 text-sm font-semibold text-fg">{user.name}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-bold uppercase tracking-wide text-fg/45">Identifiant</dt>
+              <dd className="mt-1 break-all text-sm font-semibold text-fg">{user.username}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-bold uppercase tracking-wide text-fg/45">Rôle</dt>
+              <dd className="mt-1 text-sm font-semibold text-fg">{(user.role && ROLE_LABELS[user.role]) || "Plateforme"}</dd>
+            </div>
+          </dl>
+        </SettingsSection>
+        <SettingsSection title="Modifier mon mot de passe" description="Saisissez votre mot de passe actuel, puis le nouveau.">
+          <ChangePasswordForm />
+        </SettingsSection>
       </div>
-
-      <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
-        <ChangePasswordForm />
-      </div>
-    </div>
+    </>
   );
 }

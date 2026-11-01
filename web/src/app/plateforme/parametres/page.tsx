@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getPlatformSettings, getPricingSettings } from "@/lib/platform-settings-data";
+import { getPlatformSettings, getPricingSettings, type PricingSettingsView } from "@/lib/platform-settings-data";
+import { getEnvironmentLabel, type EnvironmentKind } from "@/lib/environment-label";
+import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS } from "@/lib/pricing-defaults";
 import { getCurrentUser, requirePlatformPermission } from "@/lib/dal";
 import { AutoApprovalToggle } from "../auto-approval-toggle";
 import { PricingSettingsForm } from "../pricing-settings-form";
@@ -11,10 +13,18 @@ function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 
+const ENVIRONMENT_STYLES: Record<EnvironmentKind, { badge: string; dot: string }> = {
+  production: { badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400", dot: "bg-emerald-400" },
+  local: { badge: "border-amber-500/40 bg-amber-500/10 text-amber-300", dot: "bg-amber-300" },
+  inconsistent: { badge: "border-red-500/40 bg-red-500/10 text-red-300", dot: "bg-red-400" },
+  unknown: { badge: "border-red-500/40 bg-red-500/10 text-red-300", dot: "bg-red-400" },
+};
+
 export default async function PlatformSettingsPage() {
   await requirePlatformPermission("PLATFORM_SETTINGS");
+  const environment = getEnvironmentLabel(process.env);
   let autoApproveEstablishments = false;
-  let pricing: { trialDurationMonths: number; periodMonths: number; periodPriceFcfa: number } | null = null;
+  let pricing: PricingSettingsView | null = null;
   let loadError: string | null = null;
   let currentUser: { username: string; name: string } | null = null;
 
@@ -52,9 +62,14 @@ export default async function PlatformSettingsPage() {
 
         {/* Badges d'état système */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-            Production Active
+          {/* Environnement déclaré par la configuration serveur (aucune valeur de configuration affichée). */}
+          <span
+            title={environment.hint}
+            data-environment={environment.kind}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${ENVIRONMENT_STYLES[environment.kind].badge}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${ENVIRONMENT_STYLES[environment.kind].dot}`}></span>
+            {environment.label}
           </span>
           <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold text-white/70">
             Multi-Tenant Isolé
@@ -83,6 +98,18 @@ export default async function PlatformSettingsPage() {
               </span>
             </div>
 
+            {pricing && !pricing.isConfigured ? (
+              <p
+                role="status"
+                data-pricing-configured="false"
+                className="mt-5 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200"
+              >
+                Aucun tarif n&apos;est enregistré : les valeurs affichées ({pricing.trialDurationMonths} mois d&apos;essai,{" "}
+                {pricing.periodMonths} mois par période, {fmtFcfa(pricing.periodPriceFcfa)}) sont les valeurs par défaut du système.
+                Elles s&apos;appliquent aux inscriptions et aux demandes de paiement tant que des tarifs ne sont pas enregistrés.
+              </p>
+            ) : null}
+
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
               {/* Formulaire à gauche */}
               <div className="lg:col-span-7">
@@ -110,7 +137,7 @@ export default async function PlatformSettingsPage() {
                     <div className="flex items-center justify-between rounded-xl bg-white/5 p-3">
                       <span className="text-xs text-white/70">Période d&apos;essai gratuit</span>
                       <span className="text-xs font-bold text-sky-400">
-                        {pricing?.trialDurationMonths ?? 2} mois offerts
+                        {pricing?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS} mois offerts
                       </span>
                     </div>
 
@@ -124,7 +151,7 @@ export default async function PlatformSettingsPage() {
                     <div className="flex items-center justify-between rounded-xl bg-white/5 p-3">
                       <span className="text-xs text-white/70">Périodicité</span>
                       <span className="text-xs font-bold text-white">
-                        {pricing?.periodMonths ?? 3} mois
+                        {pricing?.periodMonths ?? DEFAULT_PERIOD_MONTHS} mois
                       </span>
                     </div>
 

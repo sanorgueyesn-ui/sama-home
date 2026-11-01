@@ -51,8 +51,9 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
   const tariffs = await listTariffsForProperty(property.id);
   const activeRental = status === "OCCUPIED" ? await getActiveRentalForProperty(property.id) : null;
   // AT-4 — "Prochaines réservations" : listReservations() existe déjà et
-  // supporte déjà propertyId + timeFilter:"upcoming" (arrivalTime >= now,
-  // status != CANCELLED construit dans la fonction elle-même) — aucune
+  // supporte déjà propertyId + timeFilter:"upcoming" (non annulées dont
+  // l'arrivée est à venir, OU encore CONFIRMÉES avec arrivée dépassée mais
+  // départ non dépassé — voir lib/reservation-filters.ts) — aucune
   // nouvelle requête, aucune nouvelle Server Action, aucun nouveau statut.
   const upcomingReservations = await listReservations({ propertyId: property.id, timeFilter: "upcoming" });
 
@@ -171,12 +172,12 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                       {canEditTariffs ? (
                         <Link
                           href={`/logements/${property.id}/tariffs/${tariff.id}/edit`}
-                          className="truncate text-sm font-black text-white hover:text-brand-orange transition-colors"
+                          className="truncate text-sm font-black text-fg hover:text-brand-orange transition-colors"
                         >
                           {tariff.label}
                         </Link>
                       ) : (
-                        <span className="truncate text-sm font-black text-white">
+                        <span className="truncate text-sm font-black text-fg">
                           {tariff.label}
                         </span>
                       )}

@@ -1,5 +1,12 @@
 import "server-only";
 import { cookies } from "next/headers";
+import {
+  DEFAULT_THEME,
+  THEME_COOKIE_NAME,
+  THEME_VALUES,
+  isTheme,
+  type Theme,
+} from "@/lib/theme-constants";
 
 /**
  * Lot "Apparence" — préférence d'affichage sombre/clair, persistée dans un
@@ -12,15 +19,7 @@ import { cookies } from "next/headers";
  * `User`/`Settings` n'a été ajoutée pour ce lot, cohérent avec "ne pas créer
  * de nouvelle structure sans nécessité démontrée".
  */
-export const THEME_COOKIE_NAME = "sama_theme";
-export const THEME_VALUES = ["dark", "light"] as const;
-export type Theme = (typeof THEME_VALUES)[number];
-/** Comportement par défaut inchangé depuis la reconstruction UI (dark premium). */
-export const DEFAULT_THEME: Theme = "dark";
-
-function isTheme(value: string | undefined): value is Theme {
-  return value !== undefined && (THEME_VALUES as readonly string[]).includes(value);
-}
+export { THEME_COOKIE_NAME, THEME_VALUES, DEFAULT_THEME, type Theme };
 
 export async function getTheme(): Promise<Theme> {
   const cookieStore = await cookies();

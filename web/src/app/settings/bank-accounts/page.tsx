@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SettingsPageHeader } from "@/app/settings/settings-ui";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireAdmin } from "@/lib/dal";
@@ -23,28 +24,8 @@ export default async function BankAccountsPage(props: PageProps<"/settings/bank-
   const accounts = await listBankAccounts();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
-      <div className="mb-2 flex items-center gap-3">
-        <Link
-          href="/settings"
-          aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 5 8 12l7 7" />
-          </svg>
-        </Link>
-        <h1 className="flex-1 text-xl font-extrabold text-fg">Comptes bancaires</h1>
-        <Link
-          href="/settings/bank-accounts/new"
-          className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
-        >
-          + Nouveau
-        </Link>
-      </div>
-      <p className="mb-4 text-xs font-medium text-fg/50">
-        Comptes utilisés pour les versements effectués depuis la caisse.
-      </p>
+    <>
+      <SettingsPageHeader title="Comptes bancaires" backHref={"/settings"} description="Comptes utilisés pour les versements effectués depuis la caisse." action={{ href: "/settings/bank-accounts/new", label: "+ Nouveau" }} />
 
       {typeof done === "string" && FEEDBACK_MESSAGES[done] ? (
         <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
@@ -99,6 +80,6 @@ export default async function BankAccountsPage(props: PageProps<"/settings/bank-
           ))}
         </Card>
       )}
-    </div>
+    </>
   );
 }

@@ -8,24 +8,33 @@ import {
   getSessionCookiePayload,
 } from "@/lib/session-token";
 
-export { getSessionCookiePayload };
+import { SESSION_IDLE_MS, getSessionAbsoluteEnd } from "@/lib/session-policy";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export { getSessionCookiePayload };
 
 /**
  * Creates a database-backed session (source of truth) and stores a signed
  * reference to it in an httpOnly cookie (the cookie only proves *which*
  * session to look up — it carries no session data itself).
+ *
+ * Lot 2 / étape 2a — durées fixées par src/lib/session-policy.ts : inactivité 30 min
+ * (`expiresAt`, glissante, prolongée par verifySession()) et durée absolue 12 h depuis
+ * `createdAt`. `remember` n'influence PLUS aucune durée : il ne décide que du caractère
+ * persistant du cookie (au plus jusqu'à la fin absolue). `createdAt` est posé ici, avec
+ * la même horloge que `expiresAt` et le JWT.
  */
 export async function createSession(userId: string, remember: boolean) {
-  const durationMs = remember ? 30 * DAY_MS : 1 * DAY_MS;
-  const expiresAt = new Date(Date.now() + durationMs);
+  const now = new Date(Date.now()); // même source d'horloge que la validation (dal.ts)
+  const createdAt = now;
+  const expiresAt = new Date(now.getTime() + SESSION_IDLE_MS);
+  const absoluteEnd = getSessionAbsoluteEnd(createdAt);
 
   const session = await prisma.session.create({
-    data: { userId, expiresAt },
+    data: { userId, createdAt, expiresAt },
   });
 
-  const token = await encryptSessionCookie({ sessionId: session.id }, expiresAt);
+  // Le JWT porte la fin ABSOLUE (12 h) : la base, plus stricte, gouverne l'inactivité.
+  const token = await encryptSessionCookie({ sessionId: session.id }, absoluteEnd);
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
@@ -35,9 +44,9 @@ export async function createSession(userId: string, remember: boolean) {
     sameSite: "lax",
     path: "/",
     // "Se souvenir de moi" décoché: pas de `expires` -> cookie de session de
-    // navigateur (effacé à la fermeture), la ligne en base expire quand même
-    // après 24h comme filet de sécurité.
-    ...(remember ? { expires: expiresAt } : {}),
+    // navigateur (effacé à la fermeture). Coché: persistant, mais jamais au-delà de la
+    // fin absolue de 12 h ; la base expire de toute façon après 30 min d'inactivité.
+    ...(remember ? { expires: absoluteEnd } : {}),
   });
 
   return { token, expiresAt, sessionId: session.id };

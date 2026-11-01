@@ -2,7 +2,9 @@
 ## Projet : SAMA HOME (Plateforme SaaS Multi-Tenant de Gestion Hôtelière & Immobilière)
 **Date :** 18 Octobre 2026  
 **Auditeur :** Ingénieur Senior Principal / Architecte & Expert Sécurité Applicative  
-**Statut :** Conforme & Sécurisé (Validé — 0 erreur ESLint / TypeScript)
+**Statut :** Conforme & Sécurisé (Validé — 0 erreur ESLint / TypeScript) — état au 18 octobre 2026
+
+> **Note de mise à jour (2026-10-25)** — Rapport historique, non rejoué. Les évolutions postérieures (gardes anti-production, lot 3B abonnements, OTP/sessions) ne sont pas couvertes ; voir `RAPPORT_AUDIT_FINAL.md` et `AGENT_HANDOFF.md`.
 
 ---
 

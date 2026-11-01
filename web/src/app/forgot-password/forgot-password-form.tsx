@@ -16,8 +16,8 @@ export function ForgotPasswordForm() {
   // Étape actuelle
   const [activeStep, setActiveStep] = useState<"REQUEST" | "CODE" | "SUCCESS">("REQUEST");
   const [identifierInput, setIdentifierInput] = useState<string>("");
+  // Valeur SAISIE par l'utilisateur (jamais une adresse issue du compte en base).
   const [currentEmail, setCurrentEmail] = useState<string>("");
-  const [maskedEmail, setMaskedEmail] = useState<string>("");
   const [countdown, setCountdown] = useState<number>(0);
 
   // Synchronisation avec les retours serveur pour confirmation
@@ -34,7 +34,6 @@ export function ForgotPasswordForm() {
     if (requestState?.step === "CODE" && requestState.email) {
       setActiveStep("CODE");
       setCurrentEmail(requestState.email);
-      setMaskedEmail(requestState.maskedEmail || requestState.email);
       setCountdown(60); // 60s cooldown pour renvoi
     }
   }, [requestState]);
@@ -81,24 +80,32 @@ export function ForgotPasswordForm() {
   // ÉTAPE 2 : CODE DE VÉRIFICATION & NOUVEAU MOT DE PASSE
   // =========================================================================
   if (activeStep === "CODE") {
-    const displayTarget = maskedEmail || currentEmail || "votre boîte e-mail";
+    // Message générique du serveur (identique pour tout identifiant) ; texte neutre si l'utilisateur
+    // arrive ici avec « J'ai déjà reçu mon code », sans demande préalable.
+    const bannerText =
+      requestState?.message ??
+      "Saisissez le code de sécurité à 6 chiffres reçu par e-mail pour définir votre nouveau mot de passe.";
 
     return (
       <div className="flex flex-col gap-4 animate-in fade-in duration-300">
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-left">
           <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-xs font-black uppercase tracking-wider">
-            <span>✉️</span> Code de confirmation envoyé
+            <span>✉️</span> Vérifiez votre boîte e-mail
           </div>
-          <p className="mt-1 text-xs text-fg/80 leading-relaxed">
-            Consultez votre boîte à l&apos;adresse <strong className="text-fg">{displayTarget}</strong>. Saisissez le code de sécurité à 6 chiffres pour définir votre nouveau mot de passe.
-          </p>
+          <p className="mt-1 text-xs text-fg/80 leading-relaxed">{bannerText}</p>
+          {currentEmail && (
+            <p className="mt-2 text-xs text-fg/80">
+              Saisie : <strong className="break-all text-fg">{currentEmail}</strong>
+            </p>
+          )}
         </div>
 
-        {requestState?.message && (
-          <p className="text-xs text-brand-orange/90 font-semibold text-left">
-            ℹ️ {requestState.message}
-          </p>
-        )}
+        <p className="text-left text-[11px] leading-relaxed text-fg/60">
+          <strong className="text-fg/80">Pas de message ?</strong> Vérifiez l&apos;orthographe de l&apos;adresse saisie
+          ci-dessus et vos courriers indésirables. L&apos;envoi peut prendre quelques minutes. Si l&apos;adresse est
+          incorrecte, utilisez « Modifier l&apos;adresse ». Si votre compte n&apos;a pas d&apos;adresse e-mail
+          enregistrée, contactez l&apos;administrateur de votre établissement.
+        </p>
 
         <form action={confirmAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5 text-left">
@@ -200,7 +207,7 @@ export function ForgotPasswordForm() {
             onClick={() => setActiveStep("REQUEST")}
             className="text-xs font-medium text-fg/50 hover:text-fg hover:underline transition-colors"
           >
-            ← Modifier l&apos;adresse e-mail / Retour
+            ← Modifier l&apos;adresse / Retour
           </button>
         </div>
       </div>
@@ -214,7 +221,7 @@ export function ForgotPasswordForm() {
     <form action={requestAction} className="flex flex-col gap-4 animate-in fade-in duration-300">
       <div className="text-left">
         <p className="text-xs text-fg/70 leading-relaxed">
-          Saisissez l&apos;adresse e-mail ou l&apos;identifiant associé à votre compte. Nous vous enverrons immédiatement un code de confirmation sécurisé par e-mail.
+          Saisissez l&apos;adresse e-mail ou l&apos;identifiant associé à votre compte. Si un compte correspond, un code de confirmation sécurisé vous sera envoyé par e-mail.
         </p>
       </div>
 
@@ -233,65 +240,14 @@ export function ForgotPasswordForm() {
         />
       </div>
 
+      {/* Étape 2c-2 : message d'erreur neutre (limitation, saisie invalide…) — aucun état « compte
+          introuvable » ni « compte identifié » n'existe plus. */}
       {requestState?.error && (
         <div
           role="alert"
-          className={`rounded-2xl border p-4 text-left animate-in fade-in ${
-            requestState.accountNotFound
-              ? "border-danger/30 bg-danger-bg text-danger"
-              : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200"
-          }`}
+          className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left text-amber-900 animate-in fade-in dark:text-amber-200"
         >
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider">
-            {requestState.accountNotFound ? (
-              <>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <span>Adresse e-mail introuvable</span>
-              </>
-            ) : (
-              <>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-[11px] font-bold">
-                  ✓
-                </span>
-                <span>Compte identifié</span>
-              </>
-            )}
-          </div>
-
-          <p className="mt-1.5 text-xs font-semibold leading-relaxed">
-            {requestState.error}
-          </p>
-
-          {requestState.accountNotFound && (
-            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-danger/20 pt-2.5 text-xs">
-              <Link
-                href="/register"
-                className="font-extrabold text-brand-orange underline hover:no-underline"
-              >
-                Créer un compte SAMA HOME →
-              </Link>
-              <span className="text-fg/30">•</span>
-              <Link
-                href="/login"
-                className="font-bold text-fg/70 hover:text-fg hover:underline"
-              >
-                Se connecter
-              </Link>
-            </div>
-          )}
+          <p className="text-xs font-semibold leading-relaxed">{requestState.error}</p>
         </div>
       )}
 
@@ -321,7 +277,6 @@ export function ForgotPasswordForm() {
           onClick={() => {
             if (identifierInput) {
               setCurrentEmail(identifierInput);
-              setMaskedEmail(identifierInput);
             }
             setActiveStep("CODE");
           }}
@@ -342,6 +297,14 @@ export function ForgotPasswordForm() {
           </svg>
           Retour à la page de connexion
         </Link>
+
+        {/* Lien statique, affiché pour tout le monde (ne dépend d'aucune réponse du serveur). */}
+        <p className="text-xs font-medium text-fg/60">
+          Pas encore de compte ?{" "}
+          <Link href="/register" className="font-extrabold text-brand-orange underline hover:no-underline">
+            Créer un compte SAMA HOME →
+          </Link>
+        </p>
       </div>
     </form>
   );

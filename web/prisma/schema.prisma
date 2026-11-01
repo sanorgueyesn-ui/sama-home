@@ -48,10 +48,16 @@ model Establishment {
   id        String              @id @default(cuid())
   name      String
   status    EstablishmentStatus @default(PENDING)
+  /// Socle multi-espaces (lot A) — mode métier. Défaut RESIDENCE : les
+  /// établissements existants sont des logements meublés (voir décision n° 3).
+  /// Valeur corrigeable par simple UPDATE, sans migration de structure.
+  businessMode BusinessMode @default(RESIDENCE)
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
 
   users    User[]
+  memberships    Membership[]
+  activeSessions Session[] @relation("SessionActiveEstablishment")
   settings Settings?
 
   clients           Client[]
@@ -160,6 +166,42 @@ model User {
   subscriptionChangesRequested SubscriptionChangeRequest[] @relation("SubscriptionChangeRequestedBy")
   subscriptionChangesDecided   SubscriptionChangeRequest[] @relation("SubscriptionChangeDecidedBy")
 
+  /// Socle multi-espaces (lot A) — appartenances de ce compte à des espaces
+  /// professionnels. `establishmentId`/`role` ci-dessus restent la source de
+  /// vérité tant que le DAL n'est pas migré (lot B) : ils ne sont ni retirés
+  /// ni modifiés ici.
+  memberships Membership[]
+
+  @@index([establishmentId])
+}
+
+/// Socle multi-espaces (lot A) — mode métier d'un espace professionnel.
+/// Décision produit (voir NOUVEAUS GUIDE SAMA HOME/04-decisions-ouvertes.md) :
+/// Hôtel et Résidence partagent le même moteur d'hébergement ; le mode pilote
+/// vocabulaire, navigation et modules. L'Agence immobilière a ses propres données.
+enum BusinessMode {
+  HOTEL
+  RESIDENCE
+  REAL_ESTATE
+}
+
+/// Appartenance d'un compte à un espace professionnel, avec son rôle DANS cet
+/// espace (un ADMIN de l'espace A n'a aucun droit dans l'espace B). Lot A :
+/// table alimentée (rétro-remplissage) mais pas encore lue par l'application.
+///
+/// `userId` : `Cascade` — une ligne d'appartenance n'a aucun sens sans son
+/// compte (purge d'un utilisateur, voir src/lib/user-purge.ts).
+/// `establishmentId` : `Restrict`, comme tout le reste du schéma.
+model Membership {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  establishmentId String
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+  role            UserRole
+  createdAt       DateTime      @default(now())
+
+  @@unique([userId, establishmentId])
   @@index([establishmentId])
 }
 
@@ -172,8 +214,18 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  /// Socle multi-espaces (lot A) — espace actif de la session. Nullable : les
+  /// sessions existantes n'en ont pas (le DAL, au lot B, se repliera sur
+  /// l'unique appartenance du compte). `SetNull` : une session est éphémère,
+  /// la disparition d'un espace ne doit jamais bloquer ni supprimer la session.
+  /// Jamais lu depuis le navigateur : uniquement écrit par une action serveur
+  /// après vérification de l'appartenance.
+  activeEstablishmentId String?
+  activeEstablishment   Establishment? @relation("SessionActiveEstablishment", fields: [activeEstablishmentId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([expiresAt])
+  @@index([activeEstablishmentId])
 }
 
 // ---------------------------------------------------------------------------
@@ -789,6 +841,19 @@ model Settings {
   whatsappTemplate      String?
   /// Seuil de jours à partir duquel le contrat PDF et la pièce d'identité sont exigés (par défaut 1 jour)
   contractThresholdDays Int?     @default(1)
+
+  /// Informations d'accueil du séjour, envoyées au client par WhatsApp. Réservées aux espaces
+  /// Hôtel et Résidence (jamais lues ni écrites pour une Agence : voir lib/guest-info.ts).
+  /// Le mot de passe Wi-Fi est destiné à être transmis aux clients : il n'est visible que des
+  /// membres de l'établissement (lecture toujours filtrée par `establishmentId` de la session).
+  guestWifiName         String?
+  guestWifiPassword     String?
+  guestTvInstructions   String?
+  guestAcInstructions   String?
+  guestHouseRules       String?
+  guestExtraInfo        String?
+  guestCheckoutTime     String?
+  guestIncludeEmergency Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1446,6 +1511,8 @@ model OtpVerification {
   managerName       String
   passwordHash      String
   plan              String   @default("FREE_TRIAL")
+  /// Socle multi-espaces (lot E) — mode choisi à l'inscription, conservé jusqu'à la création de l'espace.
+  businessMode      BusinessMode @default(RESIDENCE)
   expiresAt         DateTime
   attempts          Int      @default(0)
   createdAt         DateTime @default(now())

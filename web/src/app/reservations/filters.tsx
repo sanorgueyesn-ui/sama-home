@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 const TIME_CHIPS: { value: string; label: string }[] = [
   { value: "upcoming", label: "À venir" },
+  { value: "pending", label: "En attente d'arrivée" },
   { value: "today", label: "Aujourd'hui" },
   { value: "past", label: "Passées" },
   { value: "cancelled", label: "Annulées" },

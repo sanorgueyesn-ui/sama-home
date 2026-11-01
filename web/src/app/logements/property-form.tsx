@@ -72,7 +72,7 @@ export function PropertyForm({
   return (
     <form action={formAction} className="flex flex-col gap-5" encType="multipart/form-data">
       {/* 1. Type de Logement */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm">
+      <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-fg/70">
           Type d&apos;hébergement
         </label>
@@ -85,7 +85,7 @@ export function PropertyForm({
             className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3.5 transition-all ${
               type === "ROOM"
                 ? "border-brand-orange bg-brand-orange/15 text-brand-orange font-black shadow-md shadow-brand-orange/10"
-                : "border-white/10 bg-surface text-fg/80 hover:bg-white/5"
+                : "border-border/15 bg-surface text-fg/80 hover:bg-fg/5"
             }`}
           >
             <BedIcon className="h-6 w-6" />
@@ -98,7 +98,7 @@ export function PropertyForm({
             className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3.5 transition-all ${
               type === "APARTMENT"
                 ? "border-brand-orange bg-brand-orange/15 text-brand-orange font-black shadow-md shadow-brand-orange/10"
-                : "border-white/10 bg-surface text-fg/80 hover:bg-white/5"
+                : "border-border/15 bg-surface text-fg/80 hover:bg-fg/5"
             }`}
           >
             <BuildingIcon className="h-6 w-6" />
@@ -113,7 +113,7 @@ export function PropertyForm({
       </div>
 
       {/* 2. Nom & Capacité */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm">
+      <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
         <label htmlFor="name" className="mb-1.5 block text-xs font-bold text-fg">
           Nom ou numéro du logement <span className="text-rose-400">*</span>
         </label>
@@ -124,7 +124,7 @@ export function PropertyForm({
           required
           defaultValue={defaultValues?.name}
           placeholder="Ex : Chambre 01, Suite Palmeraie..."
-          className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3.5 text-sm font-bold text-white outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3.5 text-sm font-bold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
         />
         {errors?.name?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -165,7 +165,7 @@ export function PropertyForm({
                 className={`flex-1 h-11 rounded-xl text-xs font-bold border transition-all ${
                   capacity === cap
                     ? "border-brand-orange bg-brand-orange text-ink font-black"
-                    : "border-white/10 bg-surface text-fg hover:bg-white/5"
+                    : "border-border/15 bg-surface text-fg hover:bg-fg/5"
                 }`}
               >
                 {cap} pers.
@@ -183,8 +183,8 @@ export function PropertyForm({
 
       {/* 3. Tarif initial (créé automatiquement pour pouvoir louer dès validation) */}
       {isCreate ? (
-        <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+        <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/15">
             <div className="flex items-center gap-2">
               <CashIcon className="h-4 w-4 text-brand-orange" />
               <h3 className="text-xs font-black uppercase tracking-wider text-fg">Tarif de départ (Prêt à louer)</h3>
@@ -208,14 +208,14 @@ export function PropertyForm({
                 step={500}
                 value={initialAmount}
                 onChange={(e) => setInitialAmount(Number(e.target.value))}
-                className="h-12 w-full rounded-xl border border-white/10 bg-surface px-3.5 text-base font-extrabold text-brand-orange font-mono outline-none focus:border-brand-orange"
+                className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3.5 text-base font-extrabold text-brand-orange font-mono outline-none focus:border-brand-orange"
               />
             </div>
 
             <div>
               <label className="mb-1.5 block text-xs font-bold text-fg">Formule</label>
               <input type="hidden" name="initialTariffType" value={initialType} />
-              <div className="flex h-12 gap-1.5 rounded-xl border border-white/10 bg-surface p-1">
+              <div className="flex h-12 gap-1.5 rounded-xl border border-border/15 bg-surface p-1">
                 {(
                   [
                     { key: "JOUR", label: "24h / Jour" },
@@ -251,7 +251,7 @@ export function PropertyForm({
                 className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
                   initialAmount === p
                     ? "bg-brand-orange/30 border border-brand-orange text-brand-orange font-black"
-                    : "bg-surface-sunken text-fg/70 hover:bg-white/10"
+                    : "bg-surface-sunken text-fg/70 hover:bg-fg/10"
                 }`}
               >
                 {p.toLocaleString("fr-FR")} F
@@ -262,7 +262,7 @@ export function PropertyForm({
       ) : null}
 
       {/* 4. Options complémentaires (Description & Photo) */}
-      <div className="rounded-2xl border border-white/10 bg-surface-raised p-4 sm:p-5 shadow-sm">
+      <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
         <TextAreaField
           id="description"
           label="Description & détails"
@@ -281,7 +281,7 @@ export function PropertyForm({
             <img
               src={previewToShow}
               alt="Aperçu de la photo"
-              className="mb-2 h-36 w-full rounded-xl border border-white/10 object-cover"
+              className="mb-2 h-36 w-full rounded-xl border border-border/15 object-cover"
             />
           ) : null}
 
@@ -291,7 +291,7 @@ export function PropertyForm({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={handleFileChange}
-            className="block w-full text-xs text-fg file:mr-3 file:h-10 file:rounded-xl file:border-0 file:bg-surface-sunken file:px-4 file:text-xs file:font-bold file:text-fg hover:file:bg-white/10"
+            className="block w-full text-xs text-fg file:mr-3 file:h-10 file:rounded-xl file:border-0 file:bg-surface-sunken file:px-4 file:text-xs file:font-bold file:text-fg hover:file:bg-fg/10"
           />
           <p className="mt-1 text-[11px] text-fg/50">JPEG, PNG ou WebP, 5 Mo max.</p>
 
@@ -339,7 +339,7 @@ export function PropertyForm({
       <div className="flex items-center gap-3 pt-2">
         <Link
           href="/logements"
-          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-white/15 bg-surface text-sm font-bold text-fg hover:bg-white/5 active:scale-98 transition-all"
+          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-border/15 bg-surface text-sm font-bold text-fg hover:bg-fg/5 active:scale-98 transition-all"
         >
           Annuler
         </Link>

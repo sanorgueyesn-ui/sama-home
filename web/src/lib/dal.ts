@@ -3,6 +3,48 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionCookiePayload } from "@/lib/session-token";
+import { evaluateSession } from "@/lib/session-policy";
+import { needsSpaceSelection, resolveEstablishmentIdentity } from "@/lib/active-space";
+
+// Garde stricte de développement local : actif UNIQUEMENT si NODE_ENV === 'development'
+// et que le flag DEV_BYPASS_AUTH === 'true' est explicitement positionné.
+// Strictement inactif en production (NODE_ENV !== 'development').
+const isLocalDevBypass =
+  process.env.NODE_ENV === "development" &&
+  process.env.DEV_BYPASS_AUTH === "true";
+
+async function getLocalDevSession() {
+  const localUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: "sanorgueye221@gmail.com" },
+        { role: "ADMIN" },
+      ],
+      establishment: {
+        status: "ACTIVE",
+      },
+    },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      role: true,
+      establishmentId: true,
+      isPlatformAdmin: true,
+      permissions: true,
+    },
+    orderBy: { createdAt: "asc" }, // déterministe : toujours le même compte de développement
+  });
+  if (!localUser) return null;
+  // Pas de vraie session : ni identifiant ni espace actif. Le DAL se replie alors sur l'unique
+  // appartenance du compte (voir src/lib/active-space.ts) ; sans appartenance, aucun accès.
+  return {
+    isAuth: true as const,
+    userId: localUser.id,
+    sessionId: null as string | null,
+    activeEstablishmentId: null as string | null,
+  };
+}
 
 /**
  * Data Access Layer entry point: the ONE place session validity is checked
@@ -17,20 +59,70 @@ import { getSessionCookiePayload } from "@/lib/session-token";
 export const verifySession = cache(async () => {
   const payload = await getSessionCookiePayload();
   if (!payload?.sessionId) {
+    if (isLocalDevBypass) {
+      const devSession = await getLocalDevSession();
+      if (devSession) return devSession;
+    }
     redirect("/login");
   }
 
-  const session = await prisma.session.findUnique({
-    where: { id: payload.sessionId },
-    select: { userId: true, expiresAt: true },
-  });
-
-  if (!session || session.expiresAt.getTime() < Date.now()) {
+  const session = await readSession(payload.sessionId, { extend: true });
+  if (!session) {
+    if (isLocalDevBypass) {
+      const devSession = await getLocalDevSession();
+      if (devSession) return devSession;
+    }
     redirect("/login");
   }
 
-  return { isAuth: true as const, userId: session.userId };
+  return session;
 });
+
+/**
+ * Lot 2 / étape 2a — validation unique d'une session (politique : src/lib/session-policy.ts,
+ * 30 min d'inactivité, 12 h depuis `createdAt`). Seul `extend: true` peut écrire, et
+ * UNIQUEMENT `verifySession()` le demande : la variante non redirigeante utilisée par le
+ * layout sur toutes les pages (dont /login) ne prolonge jamais une session.
+ *
+ * Écriture : `updateMany` conditionné par la valeur d'`expiresAt` lue (jamais `update`, qui
+ * lèverait P2025 si la session a été supprimée entre-temps par une déconnexion ou un
+ * changement de mot de passe). Deux requêtes concurrentes : une seule écriture aboutit,
+ * l'autre ne modifie rien. Un échec d'écriture est journalisé (nom de l'erreur seul) sans
+ * faire échouer la requête : la session lue est valide.
+ */
+async function readSession(sessionId: string, options: { extend: boolean }) {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { userId: true, createdAt: true, expiresAt: true, activeEstablishmentId: true },
+  });
+  if (!session) return null;
+
+  const evaluation = evaluateSession(session, Date.now());
+  if (!evaluation.valid) return null;
+
+  if (options.extend && evaluation.shouldWrite) {
+    try {
+      await prisma.session.updateMany({
+        where: { id: sessionId, expiresAt: session.expiresAt },
+        data: { expiresAt: evaluation.nextExpiresAt },
+      });
+    } catch (error: unknown) {
+      console.error(
+        "readSession() — échec de la prolongation de la session :",
+        error instanceof Error ? error.name : "erreur inconnue",
+      );
+    }
+  }
+
+  // `activeEstablishmentId` n'est PAS une autorisation : c'est un simple candidat, revalidé
+  // contre les appartenances réelles du compte (voir getCurrentUser / active-space.ts).
+  return {
+    isAuth: true as const,
+    userId: session.userId,
+    sessionId: sessionId as string | null,
+    activeEstablishmentId: (session.activeEstablishmentId ?? null) as string | null,
+  };
+}
 
 /**
  * Lot "Personnalisation des couleurs" — variante non redirigeante de
@@ -45,16 +137,19 @@ export const verifySession = cache(async () => {
  */
 export const getVerifiedSessionOrNull = cache(async () => {
   const payload = await getSessionCookiePayload();
-  if (!payload?.sessionId) return null;
+  if (!payload?.sessionId) {
+    if (isLocalDevBypass) {
+      return getLocalDevSession();
+    }
+    return null;
+  }
 
-  const session = await prisma.session.findUnique({
-    where: { id: payload.sessionId },
-    select: { userId: true, expiresAt: true },
-  });
-
-  if (!session || session.expiresAt.getTime() < Date.now()) return null;
-
-  return { isAuth: true as const, userId: session.userId };
+  // Lecture seule : ne prolonge JAMAIS la session (voir readSession()).
+  const session = await readSession(payload.sessionId, { extend: false });
+  if (!session && isLocalDevBypass) {
+    return getLocalDevSession();
+  }
+  return session;
 });
 
 /**
@@ -73,9 +168,19 @@ export const getVerifiedSessionOrNull = cache(async () => {
  */
 import { hasPlatformPermission, getFirstAuthorizedPlatformUrl, type PlatformPermissionId } from "@/lib/permissions";
 
-export const getCurrentUser = cache(async () => {
-  const { userId } = await verifySession();
-
+/**
+ * Socle multi-espaces (lot B) — SEUL endroit où l'identité d'établissement est résolue.
+ * `getCurrentUser()` et `getCurrentUserOrNull()` passent tous deux par ici : sinon le layout
+ * afficherait un espace pendant que les actions écriraient dans un autre.
+ *
+ * `establishmentId` et `role` renvoyés sont ceux de l'espace ACTIF, issus d'une appartenance
+ * (`Membership`) relue en base à chaque requête, jamais de `User.establishmentId` (colonne
+ * historique, plus lue ici) ni d'une valeur du navigateur. `User.role` n'est lu que comme repli
+ * pour un compte de PLATEFORME sans appartenance (voir resolveEstablishmentIdentity). Les ~327
+ * usages de `user.establishmentId` dans l'application restent donc valables sans modification.
+ * Règles de choix : src/lib/active-space.ts (testé seul).
+ */
+async function loadCurrentUser(userId: string, activeEstablishmentId: string | null) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -83,14 +188,42 @@ export const getCurrentUser = cache(async () => {
       username: true,
       name: true,
       role: true,
-      establishmentId: true,
       isPlatformAdmin: true,
       permissions: true,
+      memberships: { select: { establishmentId: true, role: true } },
     },
   });
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    isPlatformAdmin: user.isPlatformAdmin,
+    permissions: user.permissions,
+    needsSpaceSelection: needsSpaceSelection(user.memberships, activeEstablishmentId),
+    ...resolveEstablishmentIdentity({
+      isPlatformAdmin: user.isPlatformAdmin,
+      legacyRole: user.role,
+      memberships: user.memberships,
+      activeEstablishmentId,
+    }),
+  };
+}
+
+export const getCurrentUser = cache(async () => {
+  const { userId, activeEstablishmentId } = await verifySession();
+
+  const user = await loadCurrentUser(userId, activeEstablishmentId);
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Plusieurs espaces et aucun choix valide : aucune donnée métier n'est servie avant que le
+  // compte ait choisi (page /espaces, qui n'utilise PAS getCurrentUser pour éviter une boucle).
+  if (user.needsSpaceSelection) {
+    redirect("/espaces");
   }
 
   return user;
@@ -173,20 +306,7 @@ export const getCurrentUserOrNull = cache(async () => {
   const session = await getVerifiedSessionOrNull();
   if (!session) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      id: true,
-      username: true,
-      name: true,
-      role: true,
-      establishmentId: true,
-      isPlatformAdmin: true,
-      permissions: true,
-    },
-  });
-
-  return user;
+  return loadCurrentUser(session.userId, session.activeEstablishmentId);
 });
 
 /**

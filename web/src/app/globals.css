@@ -118,3 +118,103 @@ body {
   color: var(--color-fg);
   font-family: var(--font-sans), -apple-system, sans-serif;
 }
+
+
+/* ==========================================================================
+   Palette du cadre de l'application (menu, en-tête, barre du bas) et des
+   tableaux de bord. Une seule source : clair par défaut, sombre quand
+   <html data-theme="dark">. Aucune couleur de cadre n'est plus écrite en dur
+   dans les composants : tout passe par ces variables (classes bg-app-*,
+   text-app-*, border-app-*), pour que le thème change TOUT l'écran à la fois.
+   ========================================================================== */
+:root {
+  --app-sidebar: #f8f6f0;
+  --app-page: var(--color-surface);
+  --app-panel: #f3f0e8;
+  --app-panel-2: #eae7de;
+  --app-panel-hi: #f8f6f0;
+  --app-hover: #e7e4da;
+  --app-track: #d9d6cb;
+  --app-line: #d9d6cb;
+  --app-line-soft: #e4e1d7;
+  --app-line-strong: #c9c5b8;
+  --app-line-hover: #b6b2a4;
+  --app-text: #1c2823;
+  --app-text-2: #33423b;
+  --app-muted: #55645d;
+  --app-faint: #6f7c76;
+  --app-focus: #2563eb;
+  --app-good: #047857;
+  --app-warn: #b45309;
+  --app-bad: #b91c1c;
+  --app-rose: #be123c;
+  --app-sky: #0369a1;
+  --app-violet: #6d28d9;
+}
+
+:root[data-theme="dark"] {
+  --app-sidebar: #0a0f16;
+  --app-page: #0b111a;
+  --app-panel: #111923;
+  --app-panel-2: #0f1620;
+  --app-panel-hi: #17212f;
+  --app-hover: #162130;
+  --app-track: #1d2a3b;
+  --app-line: #1b2736;
+  --app-line-soft: #1b2838;
+  --app-line-strong: #26374d;
+  --app-line-hover: #2d3f57;
+  --app-text: #ffffff;
+  --app-text-2: #cbd5e1;
+  --app-muted: #94a3b8;
+  --app-faint: #64748b;
+  --app-focus: #60a5fa;
+  --app-good: #34d399;
+  --app-warn: #fcd34d;
+  --app-bad: #fca5a5;
+  --app-rose: #fda4af;
+  --app-sky: #7dd3fc;
+  --app-violet: #c4b5fd;
+}
+
+@theme inline {
+  --color-app-sidebar: var(--app-sidebar);
+  --color-app-page: var(--app-page);
+  --color-app-panel: var(--app-panel);
+  --color-app-panel-2: var(--app-panel-2);
+  --color-app-panel-hi: var(--app-panel-hi);
+  --color-app-hover: var(--app-hover);
+  --color-app-track: var(--app-track);
+  --color-app-line: var(--app-line);
+  --color-app-line-soft: var(--app-line-soft);
+  --color-app-line-strong: var(--app-line-strong);
+  --color-app-line-hover: var(--app-line-hover);
+  --color-app-text: var(--app-text);
+  --color-app-text-2: var(--app-text-2);
+  --color-app-muted: var(--app-muted);
+  --color-app-faint: var(--app-faint);
+  --color-app-focus: var(--app-focus);
+  --color-app-good: var(--app-good);
+  --color-app-warn: var(--app-warn);
+  --color-app-bad: var(--app-bad);
+  --color-app-rose: var(--app-rose);
+  --color-app-sky: var(--app-sky);
+  --color-app-violet: var(--app-violet);
+}
+
+
+/* Couleur d'accent utilisée comme TEXTE ou icône (classe text-brand-orange). Elle suit la couleur
+   d'accent de l'établissement, mais assombrie ou éclaircie selon le thème pour rester lisible (voir
+   displayAccentText dans lib/brand-colors.ts, qui la recalcule dans layout.tsx). Le fond des
+   boutons d'accent (bg-brand-orange) garde, lui, la vraie couleur. */
+:root {
+  --color-accent-text: #a8580a;
+}
+
+:root[data-theme="dark"] {
+  --color-accent-text: #f59e0b;
+}
+
+.text-brand-orange {
+  color: var(--color-accent-text);
+}

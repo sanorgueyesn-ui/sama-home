@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAMA HOME — Agence Immobilière (Tableau de bord officiel)</title>
+  <link rel="stylesheet" href="./mnd-style.css">
+  <style>
+    /* STYLES SPÉCIFIQUES 100% IDENTIQUES À L'IMAGE DE RÉFÉRENCE IMMOBILIER */
+    .agency-hero-card {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #193354;
+      background-image: linear-gradient(to right, rgba(11, 17, 26, 0.95) 0%, rgba(11, 17, 26, 0.75) 45%, transparent 100%), url('./images/agence-hero-building.png');
+      background-size: cover;
+      background-position: center right;
+      padding: 1.75rem 2rem;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .agency-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    @media (max-width: 1024px) {
+      .agency-actions-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .agency-actions-grid { grid-template-columns: 1fr; }
+    }
+    .agency-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    }
+    .agency-action-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+    .agency-action-btn.green { background: linear-gradient(135deg, #059669, #047857); }
+    .agency-action-btn.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .agency-action-btn.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
+    .agency-action-btn.red { background: linear-gradient(135deg, #e11d48, #be123c); }
+
+    .agency-action-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+      margin-right: 0.85rem;
+    }
+
+    /* 5 KPIS ROW */
+    .agency-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    @media (max-width: 1280px) {
+      .agency-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 800px) {
+      .agency-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .agency-kpi-grid { grid-template-columns: 1fr; }
+    }
+    .agency-kpi-card {
+      background: #0c182b;
+      border: 1px solid #193354;
+      border-radius: 16px;
+      padding: 1.15rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .agency-kpi-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      color: #34d399;
+      font-size: 0.8125rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .agency-kpi-circle.orange {
+      border-color: #fb923c;
+      background: rgba(251, 146, 60, 0.1);
+      color: #fb923c;
+    }
+    .agency-kpi-circle.slate {
+      border-color: #64748b;
+      background: rgba(100, 116, 139, 0.1);
+      color: #94a3b8;
+    }
+
+    /* 3 COLONNES CENTRALES */
+    .agency-3col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    @media (max-width: 1024px) {
+      .agency-3col-grid { grid-template-columns: 1fr; }
+    }
+    .agency-table-col {
+      background: #0c182b;
+      border: 1px solid #193354;
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ACCÈS RAPIDES (BARRE INFÉRIEURE 8 BOUTONS) */
+    .agency-quick-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.65rem;
+      margin-top: 0.75rem;
+    }
+    @media (max-width: 1200px) {
+      .agency-quick-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .agency-quick-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .agency-quick-btn {
+      background: #0c182b;
+      border: 1px solid #193354;
+      border-radius: 12px;
+      padding: 0.65rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .agency-quick-btn:hover {
+      border-color: #38bdf8;
+      background: #13243d;
+    }
+    .agency-quick-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BANDEAU DE COMMUTATION DES 3 MAQUETTES M.N.D -->
+  <div class="mnd-top-switcher">
+    <div class="mnd-switcher-label">
+      <span>● SAMA HOME</span> · Références M.N.D
+    </div>
+    <div class="mnd-switcher-tabs">
+      <a href="./residence.html" class="mnd-tab-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span>1. Résidence Atlantique</span>
+      </a>
+      <a href="./hotel.html" class="mnd-tab-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/></svg>
+        <span>2. Hôtel Le Saphir</span>
+      </a>
+      <a href="./immobilier.html" class="mnd-tab-btn active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+        <span>3. Agence Immobilière</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="mnd-layout">
+
+    <!-- 1. SIDEBAR (100% IDENTIQUE À L'IMAGE DU GUIDE IMMOBILIER) -->
+    <aside class="mnd-sidebar">
+      <div class="mnd-brand">
+        <svg class="mnd-brand-logo" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L4 17V36H36V17L20 4Z" fill="#ea580c"/>
+          <path d="M20 12L10 20V32H30V20L20 12Z" fill="#2563eb"/>
+          <circle cx="20" cy="22" r="3" fill="#fdba74"/>
+          <path d="M20 24v5h2" stroke="#fdba74" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="mnd-brand-text">
+          <div class="mnd-brand-name" style="color: #ff5a5f; font-weight: 900; font-size: 1.15rem;">SAMA HOME</div>
+          <div class="mnd-brand-sub" style="color: #94a3b8; font-size: 0.6875rem;">Agence immobilière</div>
+        </div>
+      </div>
+
+      <nav class="mnd-menu">
+        <!-- 1. Accueil (actif) -->
+        <a href="./immobilier.html" class="mnd-menu-link active-blue" style="background: #1e60f0; color: #fff; border-radius: 12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span style="font-weight: 700;">Accueil</span>
+        </a>
+
+        <!-- 2. Biens -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+          <span>Biens</span>
+        </a>
+
+        <!-- 3. Locations -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 8-8"/><path d="m16 4 3 3"/></svg>
+          <span>Locations</span>
+        </a>
+
+        <!-- 4. Clients -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          <span>Clients</span>
+        </a>
+
+        <!-- 5. Paiements -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          <span>Paiements</span>
+        </a>
+
+        <!-- 6. Dépenses -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/></svg>
+          <span>Dépenses</span>
+        </a>
+
+        <!-- 7. Contrats -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+          <span>Contrats</span>
+        </a>
+
+        <!-- 8. Échéances -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/><circle cx="17" cy="17" r="3"/><line x1="17" x2="17" y1="16" y2="17"/></svg>
+          <span>Échéances</span>
+        </a>
+
+        <!-- 9. Rapports -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+          <span>Rapports</span>
+        </a>
+
+        <!-- 10. Paramètres -->
+        <a href="#" class="mnd-menu-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Paramètres</span>
+        </a>
+      </nav>
+
+      <!-- Fiche établissement avec vignette 100% conforme Agence Atlantique -->
+      <div class="mnd-sidebar-bottom">
+        <div class="mnd-establishment-card">
+          <div class="mnd-establishment-thumb" style="background-image: url('./images/agence-atlantique-thumb.png'); background-size: cover; background-position: center;"></div>
+          <div class="mnd-establishment-info">
+            <div class="mnd-establishment-title">Agence Atlantique</div>
+            <div class="mnd-establishment-count">28 biens • 16 loués</div>
+            <button class="mnd-establishment-btn">
+              <span>Voir l'agence</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="mnd-user-row">
+          <div class="mnd-user-avatar" style="background: #8b5cf6;">M</div>
+          <div class="mnd-user-text">
+            <div class="mnd-user-name">Moussa</div>
+            <div class="mnd-user-role">Administrateur</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #64748b;"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 2. MAIN APP -->
+    <div class="mnd-main">
+
+      <!-- TOP BAR -->
+      <header class="mnd-header">
+        <div class="mnd-header-left">
+          <button class="mnd-burger-btn" aria-label="Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+          </button>
+          <div class="mnd-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+            <input type="text" class="mnd-search-input" placeholder="Rechercher un bien, un locataire, un contrat...">
+          </div>
+        </div>
+
+        <div class="mnd-header-right">
+          <!-- Dropdown Agence Atlantique (Vert) -->
+          <div style="display: flex; align-items: center; gap: 0.5rem; background: #0c182b; border: 1px solid #193354; border-radius: 12px; padding: 0.4rem 0.75rem; color: #fff; font-size: 0.75rem; font-weight: 700;">
+            <div style="width: 20px; height: 20px; border-radius: 6px; background: #059669; display: flex; align-items: center; justify-content: center; color: #fff;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+            </div>
+            <span>Agence Atlantique</span>
+            <span style="font-size: 0.65rem; color: #64748b;">▾</span>
+          </div>
+
+          <!-- Date Badge -->
+          <div class="mnd-date-badge">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
+            <div style="display: flex; flex-direction: column; line-height: 1.1;">
+              <span style="font-size: 0.6875rem; color: #fff;">Mardi 20 mai 2025</span>
+              <span style="font-size: 0.625rem; color: #94a3b8;">10:24</span>
+            </div>
+          </div>
+
+          <!-- Notification Bell -->
+          <button class="mnd-notif-btn" aria-label="Notifications">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            <span class="mnd-notif-badge">3</span>
+          </button>
+
+          <!-- Avatar Utilisateur -->
+          <div class="mnd-user-avatar blue" style="background: #0284c7;">M</div>
+        </div>
+      </header>
+
+      <!-- CONTENU DASHBOARD IMMOBILIER -->
+      <main class="mnd-content">
+
+        <!-- 1. HERO BANNER AGENCE IMMOBILIÈRE -->
+        <div class="agency-hero-card">
+          <div style="position: relative; z-index: 10;">
+            <div style="font-size: 0.6875rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem;">
+              SAMA HOME
+            </div>
+            <h1 style="font-size: 1.85rem; font-weight: 900; color: #fff; margin: 0; line-height: 1.2;">
+              Bonjour, Moussa 👋
+            </h1>
+            <p style="margin: 0.35rem 0 0; color: #e2e8f0; font-size: 0.875rem; font-weight: 500;">
+              Agence Atlantique • Tout est sous contrôle aujourd'hui.
+            </p>
+          </div>
+        </div>
+
+        <!-- 2. RANGÉE DE 4 CARTES D'ACTIONS (VERT • BLEU • ORANGE • ROUGE) -->
+        <div class="agency-actions-grid">
+          <!-- 1. Nouvelle location -->
+          <a href="#" class="agency-action-btn green">
+            <div style="display: flex; align-items: center;">
+              <div class="agency-action-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 8-8"/><path d="m16 4 3 3"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.9375rem; font-weight: 800; line-height: 1.2;">Nouvelle location</div>
+                <div style="font-size: 0.75rem; opacity: 0.85; margin-top: 0.15rem;">Enregistrer un locataire</div>
+              </div>
+            </div>
+            <span style="font-size: 0.85rem; opacity: 0.8;">&gt;</span>
+          </a>
+
+          <!-- 2. Nouveau contrat -->
+          <a href="#" class="agency-action-btn blue">
+            <div style="display: flex; align-items: center;">
+              <div class="agency-action-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.9375rem; font-weight: 800; line-height: 1.2;">Nouveau contrat</div>
+                <div style="font-size: 0.75rem; opacity: 0.85; margin-top: 0.15rem;">Créer un contrat de location</div>
+              </div>
+            </div>
+            <span style="font-size: 0.85rem; opacity: 0.8;">&gt;</span>
+          </a>
+
+          <!-- 3. Enregistrer un paiement -->
+          <a href="#" class="agency-action-btn orange">
+            <div style="display: flex; align-items: center;">
+              <div class="agency-action-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.9375rem; font-weight: 800; line-height: 1.2;">Enregistrer un paiement</div>
+                <div style="font-size: 0.75rem; opacity: 0.85; margin-top: 0.15rem;">Loyer ou autre paiement</div>
+              </div>
+            </div>
+            <span style="font-size: 0.85rem; opacity: 0.8;">&gt;</span>
+          </a>
+
+          <!-- 4. Ajouter une dépense -->
+          <a href="#" class="agency-action-btn red">
+            <div style="display: flex; align-items: center;">
+              <div class="agency-action-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.9375rem; font-weight: 800; line-height: 1.2;">Ajouter une dépense</div>
+                <div style="font-size: 0.75rem; opacity: 0.85; margin-top: 0.15rem;">Suivre vos dépenses</div>
+              </div>
+            </div>
+            <span style="font-size: 0.85rem; opacity: 0.8;">&gt;</span>
+          </a>
+        </div>
+
+        <!-- 3. RANGÉE DE 5 KPIS -->
+        <div class="agency-kpi-grid">
+          <!-- KPI 1 : Total des biens -->
+          <div class="agency-kpi-card">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #0284c7; display: flex; align-items: center; justify-content: center; color: #fff;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Total des biens</div>
+                  <div style="font-size: 1.35rem; font-weight: 900; color: #fff; line-height: 1.1;">28</div>
+                </div>
+              </div>
+              <span style="color: #64748b; font-size: 0.85rem; font-weight: 700;">&gt;</span>
+            </div>
+            <!-- Sous-répartition -->
+            <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.6875rem; margin-top: 0.65rem; border-top: 1px solid rgba(25, 51, 84, 0.4); pt-2;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 0.35rem; color: #94a3b8;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                  Appartements
+                </span>
+                <span style="color: #fff; font-weight: 700;">18</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 0.35rem; color: #94a3b8;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6;"></span>
+                  Maisons
+                </span>
+                <span style="color: #fff; font-weight: 700;">6</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 0.35rem; color: #94a3b8;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #a855f7;"></span>
+                  Locaux
+                </span>
+                <span style="color: #fff; font-weight: 700;">4</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI 2 : Biens disponibles -->
+          <div class="agency-kpi-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #059669; display: flex; align-items: center; justify-content: center; color: #fff;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Biens disponibles</div>
+                  <div style="font-size: 1.35rem; font-weight: 900; color: #fff; line-height: 1.1;">12</div>
+                </div>
+              </div>
+              <div class="agency-kpi-circle">43%</div>
+            </div>
+            <div style="font-size: 0.6875rem; color: #64748b; margin-top: 0.65rem;">Prêts à louer</div>
+          </div>
+
+          <!-- KPI 3 : Biens loués -->
+          <div class="agency-kpi-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #047857; display: flex; align-items: center; justify-content: center; color: #fff;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 8-8"/></svg>
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Biens loués</div>
+                  <div style="font-size: 1.35rem; font-weight: 900; color: #fff; line-height: 1.1;">16</div>
+                </div>
+              </div>
+              <div class="agency-kpi-circle orange">57%</div>
+            </div>
+            <div style="font-size: 0.6875rem; color: #64748b; margin-top: 0.65rem;">Baux en cours</div>
+          </div>
+
+          <!-- KPI 4 : Biens indisponibles -->
+          <div class="agency-kpi-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: #dc2626; display: flex; align-items: center; justify-content: center; color: #fff;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Biens indisponibles</div>
+                  <div style="font-size: 1.35rem; font-weight: 900; color: #fff; line-height: 1.1;">0</div>
+                </div>
+              </div>
+              <div class="agency-kpi-circle slate">0%</div>
+            </div>
+            <div style="font-size: 0.6875rem; color: #64748b; margin-top: 0.65rem;">En travaux / Réserve</div>
+          </div>
+
+          <!-- KPI 5 : Recettes -->
+          <div class="agency-kpi-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: #ea580c; display: flex; align-items: center; justify-content: center; color: #fff;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.6875rem; color: #94a3b8; background: #111e33; padding: 0.2rem 0.5rem; border-radius: 8px;">
+                <span>Ce mois</span>
+                <span style="font-size: 0.6rem;">▾</span>
+              </div>
+            </div>
+            <div style="margin-top: 0.4rem;">
+              <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Recettes</div>
+              <div style="font-size: 1.25rem; font-weight: 900; color: #fff; line-height: 1.1;">3 450 000 <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8;">FCFA</span></div>
+              <div style="font-size: 0.6875rem; color: #34d399; font-weight: 700; margin-top: 0.35rem; display: flex; align-items: center; gap: 0.25rem;">
+                <span>▲ +12%</span>
+                <span style="color: #64748b; font-weight: 400;">par rapport au mois dernier</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 3 COLONNES CENTRALES (DERNIÈRES LOCATIONS • DERNIERS BIENS • ÉCHÉANCES À VENIR) -->
+        <div class="agency-3col-grid">
+          <!-- Colonne 1 : Dernières locations -->
+          <div class="agency-table-col">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid #193354;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #94a3b8;"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 8-8"/></svg>
+                <h3 style="font-size: 0.875rem; font-weight: 800; color: #fff; margin: 0;">Dernières locations</h3>
+              </div>
+              <a href="#" style="color: #38bdf8; font-size: 0.6875rem; text-decoration: none; font-weight: 700;">Voir toutes →</a>
+            </div>
+
+            <!-- Header Tableau -->
+            <div style="display: grid; grid-template-columns: 45px 95px 75px 75px 55px 15px; gap: 0.35rem; font-size: 0.6875rem; color: #64748b; font-weight: 700; padding: 0.65rem 0 0.4rem; border-bottom: 1px solid rgba(25, 51, 84, 0.4);">
+              <span>N°</span>
+              <span>Bien</span>
+              <span>Type</span>
+              <span>Depuis le</span>
+              <span style="text-align: center;">Statut</span>
+              <span></span>
+            </div>
+
+            <!-- Lignes -->
+            <div style="font-size: 0.75rem;">
+              <div style="display: grid; grid-template-columns: 45px 95px 75px 75px 55px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">L-001</span>
+                <span style="color: #fff; font-weight: 700;">Appartement A2</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Appartement</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">20 mai 2025</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 9999px;">En cours</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 95px 75px 75px 55px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">L-002</span>
+                <span style="color: #fff; font-weight: 700;">Maison M1</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Maison</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">18 mai 2025</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 9999px;">En cours</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 95px 75px 75px 55px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">L-003</span>
+                <span style="color: #fff; font-weight: 700;">Local C1</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Local</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">15 mai 2025</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 9999px;">En cours</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 95px 75px 75px 55px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">L-004</span>
+                <span style="color: #fff; font-weight: 700;">Appartement B3</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Appartement</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">12 mai 2025</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 9999px;">En cours</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 95px 75px 75px 55px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0;">
+                <span style="color: #fff; font-weight: 800;">L-005</span>
+                <span style="color: #fff; font-weight: 700;">Maison M2</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Maison</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">10 mai 2025</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 9999px;">En cours</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne 2 : Derniers biens ajoutés -->
+          <div class="agency-table-col">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid #193354;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #94a3b8;"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+                <h3 style="font-size: 0.875rem; font-weight: 800; color: #fff; margin: 0;">Derniers biens ajoutés</h3>
+              </div>
+              <a href="#" style="color: #38bdf8; font-size: 0.6875rem; text-decoration: none; font-weight: 700;">Voir toutes →</a>
+            </div>
+
+            <!-- Header Tableau -->
+            <div style="display: grid; grid-template-columns: 45px 105px 85px 65px 15px; gap: 0.35rem; font-size: 0.6875rem; color: #64748b; font-weight: 700; padding: 0.65rem 0 0.4rem; border-bottom: 1px solid rgba(25, 51, 84, 0.4);">
+              <span>N°</span>
+              <span>Bien</span>
+              <span>Type</span>
+              <span style="text-align: center;">Statut</span>
+              <span></span>
+            </div>
+
+            <!-- Lignes -->
+            <div style="font-size: 0.75rem;">
+              <div style="display: grid; grid-template-columns: 45px 105px 85px 65px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">B-028</span>
+                <span style="color: #fff; font-weight: 700;">Appartement C4</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Appartement</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 9999px;">Disponible</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 105px 85px 65px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">B-027</span>
+                <span style="color: #fff; font-weight: 700;">Maison M4</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Maison</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 9999px;">Disponible</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 105px 85px 65px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">B-026</span>
+                <span style="color: #fff; font-weight: 700;">Local C3</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Local</span>
+                <div style="text-align: center;"><span style="background: #059669; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 9999px;">Disponible</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 105px 85px 65px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(25, 51, 84, 0.3);">
+                <span style="color: #fff; font-weight: 800;">B-025</span>
+                <span style="color: #fff; font-weight: 700;">Appartement B4</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Appartement</span>
+                <div style="text-align: center;"><span style="background: #2563eb; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 9999px;">Loué</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 45px 105px 85px 65px 15px; gap: 0.35rem; align-items: center; padding: 0.6rem 0;">
+                <span style="color: #fff; font-weight: 800;">B-024</span>
+                <span style="color: #fff; font-weight: 700;">Maison M3</span>
+                <span style="color: #94a3b8; font-size: 0.6875rem;">Maison</span>
+                <div style="text-align: center;"><span style="background: #2563eb; color: #fff; font-size: 0.625rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 9999px;">Loué</span></div>
+                <span style="color: #64748b; font-weight: 700; text-align: right;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne 3 : Échéances à venir (Badge 5) -->
+          <div class="agency-table-col">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid #193354;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #94a3b8;"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
+                <h3 style="font-size: 0.875rem; font-weight: 800; color: #fff; margin: 0;">Échéances à venir</h3>
+                <span style="background: #ef4444; color: #fff; font-size: 0.625rem; font-weight: 900; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">5</span>
+              </div>
+              <a href="#" style="color: #38bdf8; font-size: 0.6875rem; text-decoration: none; font-weight: 700;">Voir toutes →</a>
+            </div>
+
+            <!-- Liste des échéances -->
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.85rem;">
+              <!-- Échéance 1 -->
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.85rem; border-radius: 12px; background: #111c2a; border: 1px solid rgba(25, 51, 84, 0.6);">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 32px; height: 32px; border-radius: 8px; background: #ea580c; display: flex; align-items: center; justify-content: center; color: #fff; shrink-0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #fff;">3 contrats à renouveler</div>
+                  </div>
+                </div>
+                <span style="font-size: 0.6875rem; color: #94a3b8; font-weight: 600;">Dans 7 jours</span>
+              </div>
+
+              <!-- Échéance 2 -->
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.85rem; border-radius: 12px; background: #111c2a; border: 1px solid rgba(25, 51, 84, 0.6);">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 32px; height: 32px; border-radius: 8px; background: #ef4444; display: flex; align-items: center; justify-content: center; color: #fff; shrink-0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #fff;">2 loyers en retard</div>
+                  </div>
+                </div>
+                <span style="font-size: 0.6875rem; color: #ef4444; font-weight: 800;">En retard</span>
+              </div>
+
+              <!-- Échéance 3 -->
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.85rem; border-radius: 12px; background: #111c2a; border: 1px solid rgba(25, 51, 84, 0.6);">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 32px; height: 32px; border-radius: 8px; background: #0284c7; display: flex; align-items: center; justify-content: center; color: #fff; shrink-0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #fff;">4 loyers à encaisser</div>
+                  </div>
+                </div>
+                <span style="font-size: 0.6875rem; color: #94a3b8; font-weight: 600;">Cette semaine</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. ACCÈS RAPIDES (BARRE INFÉRIEURE 8 BOUTONS) -->
+        <div style="margin-top: 1.5rem;">
+          <h2 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem;">Accès rapides</h2>
+          <div class="agency-quick-grid">
+            <!-- 1. Biens -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #059669;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Biens</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 2. Locations -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #0284c7;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 8-8"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Locations</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 3. Contrats -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #7c3aed;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Contrats</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 4. Paiements -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #ea580c;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Paiements</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 5. Dépenses -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #dc2626;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Dépenses</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 6. Clients -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #334155;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Clients</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 7. Rapports -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #9333ea;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Rapports</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+
+            <!-- 8. Paramètres -->
+            <a href="#" class="agency-quick-btn">
+              <div style="display: flex; align-items: center; min-width: 0;">
+                <div class="agency-quick-icon" style="background: #1e293b;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </div>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Paramètres</span>
+              </div>
+              <span style="color: #64748b; font-size: 0.75rem; font-weight: 700;">&gt;</span>
+            </a>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+</body>
+</html>

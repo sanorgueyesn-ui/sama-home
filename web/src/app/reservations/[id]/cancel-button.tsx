@@ -1,18 +1,34 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { cancelReservation } from "@/app/actions/reservations";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { isNextRedirectError } from "@/lib/reservation-filters";
 
-export function CancelButton({ id }: { id: string }) {
+export function CancelButton({ id, summary }: { id: string; summary: string }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   function handleCancel() {
-    if (!confirm("Annuler cette réservation ? Le créneau redeviendra disponible.")) return;
     setError(null);
     startTransition(async () => {
-      const result = await cancelReservation(id);
-      if (result.error) setError(result.error);
+      try {
+        const result = await cancelReservation(id);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setConfirming(false);
+          router.replace(`/reservations/${id}?cancelled=1`);
+          router.refresh();
+        }
+      } catch (caught) {
+        // Une redirection (arrivée réussie, session expirée) n'est pas un échec.
+        if (isNextRedirectError(caught)) throw caught;
+        setError("La connexion avec le serveur a échoué. Rien n'a été modifié : vérifiez votre connexion puis réessayez.");
+      }
     });
   }
 
@@ -21,12 +37,34 @@ export function CancelButton({ id }: { id: string }) {
       <button
         type="button"
         disabled={pending}
-        onClick={handleCancel}
+        onClick={() => {
+          setError(null);
+          setConfirming(true);
+        }}
         className="flex h-14 w-full items-center justify-center rounded-2xl border border-danger/30 text-sm font-extrabold text-danger disabled:opacity-60"
       >
-        {pending ? "..." : "Annuler la réservation"}
+        Annuler la réservation
       </button>
-      {error ? <p className="mt-1.5 text-center text-xs font-medium text-danger">{error}</p> : null}
+      <ConfirmDialog
+        open={confirming}
+        title="Annuler cette réservation ?"
+        confirmLabel="Oui, annuler"
+        cancelLabel="Non, la conserver"
+        danger
+        pending={pending}
+        error={error}
+        onCancel={() => {
+          setConfirming(false);
+          setError(null);
+        }}
+        onConfirm={handleCancel}
+      >
+        <p>{summary}</p>
+        <p className="mt-2 text-xs text-fg/60">
+          Le créneau redeviendra disponible. Les paiements déjà encaissés (acompte) ne sont ni supprimés ni remboursés
+          automatiquement.
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }

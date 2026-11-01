@@ -25,12 +25,7 @@ const SUN_ICON = (
  */
 export function ThemeSection({ current }: { current: Theme }) {
   return (
-    <section className="mt-6">
-      <h2 className="mb-2.5 text-sm font-extrabold text-fg">Apparence</h2>
-      <p className="mb-2 text-xs font-medium text-fg/50">
-        Choisissez l&apos;apparence de SAMA HOME sur cet appareil. Le choix est conservé même après
-        déconnexion ou redémarrage.
-      </p>
+    <section>
       <div className="flex gap-2">
         <form
           action={async () => {

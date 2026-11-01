@@ -12,6 +12,8 @@ import { listPaymentsForRental } from "@/lib/payments-data";
 import { getSettings } from "@/lib/settings-data";
 import { formatDuration } from "@/lib/duration";
 import { buildRentalWhatsAppLink } from "@/lib/whatsapp";
+import { buildGuestInfoWhatsAppLink } from "@/lib/guest-info";
+import { getGuestInfoContext } from "@/lib/guest-info-data";
 import { prisma } from "@/lib/prisma";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
@@ -34,7 +36,7 @@ function fmtDateTime(d: Date) {
 
 export default async function RentalDetailPage(props: PageProps<"/locations/[id]">) {
   const { id } = await props.params;
-  const { created, extended, paid } = await props.searchParams;
+  const { created, extended, paid, timing } = await props.searchParams;
 
   const [rental, settings, summary, payments] = await Promise.all([
     getRentalById(id),
@@ -57,6 +59,19 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
   const isContractStay = stayDays >= thresholdDays;
   const isLongStay = rental.plannedDepartureAt.getTime() - rental.arrivalAt.getTime() >= 240 * 3600_000;
 
+  // Infos d'accueil du séjour (Wi-Fi, télévision, climatisation) : Hôtel et Résidence seulement.
+  const guestContext = await getGuestInfoContext();
+  const guestLink = guestContext.enabled
+    ? buildGuestInfoWhatsAppLink({
+        clientName: rental.client.name,
+        clientPhone: rental.client.phone,
+        establishmentName: guestContext.establishmentName,
+        propertyName: rental.property.name,
+        receptionPhone: guestContext.receptionPhone,
+        settings: guestContext.settings,
+      })
+    : null;
+
   const whatsapp = buildRentalWhatsAppLink({
     clientName: rental.client.name,
     clientPhone: rental.client.phone,
@@ -78,7 +93,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           <Link
             href="/locations"
             aria-label="Retour"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-raised text-fg hover:bg-surface-sunken transition-all active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/15 bg-surface-raised text-fg hover:bg-surface-sunken transition-all active:scale-95"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 5 8 12l7 7" />
@@ -86,7 +101,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-black text-white md:text-xl">{rental.property.name}</h1>
+              <h1 className="text-lg font-black text-fg md:text-xl">{rental.property.name}</h1>
               <RentalStatusBadge status={rental.status} />
             </div>
             <p className="text-xs font-medium text-fg/60">
@@ -114,6 +129,12 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
             <p className="text-xs font-medium text-emerald-300/80">
               La chambre est occupée. Vous pouvez envoyer la confirmation sur WhatsApp au client ou télécharger son contrat.
             </p>
+            {timing === "early" || timing === "late" ? (
+              <p className="mt-1 text-xs font-bold text-emerald-300">
+                {timing === "early" ? "Arrivée anticipée" : "Arrivée tardive"} : la durée du séjour est comptée depuis l&apos;arrivée réelle ;
+                tarif et acompte inchangés.
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -152,7 +173,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
             <span>Envoyer sur WhatsApp</span>
           </a>
         ) : (
-          <div className="flex h-14 items-center justify-center rounded-2xl border border-white/10 bg-surface px-4 text-xs font-semibold text-fg/50">
+          <div className="flex h-14 items-center justify-center rounded-2xl border border-border/15 bg-surface px-4 text-xs font-semibold text-fg/50">
             {whatsapp.reason}
           </div>
         )}
@@ -169,15 +190,39 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         </a>
       </div>
 
+      {/* Infos du séjour : Wi-Fi, télévision, climatisation. Hôtel et Résidence, séjour en cours. */}
+      {guestLink && isActive ? (
+        <div className="mb-5">
+          {guestLink.ok ? (
+            <a
+              href={guestLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-12 items-center justify-center gap-2.5 rounded-2xl border border-[#25D366]/50 bg-surface-raised px-4 text-sm font-extrabold text-fg transition-colors hover:bg-[#25D366]/10 focus-visible:outline-2 focus-visible:outline-brand-orange"
+            >
+              <span aria-hidden className="h-2 w-2 rounded-full bg-[#25D366]" />
+              Envoyer les infos du séjour (Wi-Fi, télévision, climatisation)
+            </a>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-border/25 px-4 py-3 text-xs font-medium text-fg/60">
+              Infos du séjour : {guestLink.reason}{" "}
+              <Link href="/settings/etablissement" className="font-bold text-fg underline underline-offset-2">
+                Ouvrir les paramètres
+              </Link>
+            </p>
+          )}
+        </div>
+      ) : null}
+
       {/* RÉCAPITULATIF ÉPURÉ DU SÉJOUR EN 4 CARTES LISIBLES */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Carte Client */}
-        <div className="rounded-2xl border border-white/10 bg-surface-raised p-4">
+        <div className="rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-fg/50">
             <UserIcon className="h-3.5 w-3.5 text-brand-orange" />
             <span>Locataire</span>
           </span>
-          <p className="mt-1 text-base font-extrabold text-white">{rental.client.name}</p>
+          <p className="mt-1 text-base font-extrabold text-fg">{rental.client.name}</p>
           <p className="mt-0.5 text-xs font-semibold text-fg/70 font-mono">{rental.client.phone || "Sans téléphone"}</p>
           {rental.client.idDocumentType ? (
             <p className="mt-2 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1 inline-flex items-center gap-1.5">
@@ -188,12 +233,12 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         </div>
 
         {/* Carte Logement & Formule */}
-        <div className="rounded-2xl border border-white/10 bg-surface-raised p-4">
+        <div className="rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-fg/50">
             <BedIcon className="h-3.5 w-3.5 text-brand-orange" />
             <span>Chambre &amp; Formule</span>
           </span>
-          <p className="mt-1 text-base font-extrabold text-white">{rental.property.name}</p>
+          <p className="mt-1 text-base font-extrabold text-fg">{rental.property.name}</p>
           <p className="mt-0.5 text-xs font-semibold text-fg/70">
             {rental.tariff?.label ?? formatDuration(rental.durationValue, rental.durationUnit)}
           </p>
@@ -203,7 +248,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         </div>
 
         {/* Carte Horaires */}
-        <div className="rounded-2xl border border-white/10 bg-surface-raised p-4">
+        <div className="rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-fg/50">
             <ClockIcon className="h-3.5 w-3.5 text-brand-orange" />
             <span>Horaires du séjour</span>
@@ -211,11 +256,11 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           <div className="mt-2 space-y-1.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-fg/60">Entrée :</span>
-              <span className="font-bold text-white">{fmtDateTime(rental.arrivalAt)}</span>
+              <span className="font-bold text-fg">{fmtDateTime(rental.arrivalAt)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-fg/60">Départ prévu :</span>
-              <span className="font-bold text-white">{fmtDateTime(rental.plannedDepartureAt)}</span>
+              <span className="font-bold text-fg">{fmtDateTime(rental.plannedDepartureAt)}</span>
             </div>
             {rental.actualDepartureAt ? (
               <div className="flex items-center justify-between text-emerald-400">
@@ -227,7 +272,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         </div>
 
         {/* Carte Situation Financière */}
-        <div className="rounded-2xl border border-white/10 bg-surface-raised p-4">
+        <div className="rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-fg/50">
             <CashIcon className="h-3.5 w-3.5 text-brand-orange" />
             <span>Règlement</span>
@@ -235,13 +280,13 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           <div className="mt-2 space-y-1.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-fg/60">Total du séjour :</span>
-              <span className="font-bold text-white">{fmtFcfa(summary.totalDue)}</span>
+              <span className="font-bold text-fg">{fmtFcfa(summary.totalDue)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-fg/60">Montant réglé :</span>
               <span className="font-bold text-emerald-400">{fmtFcfa(summary.totalPaid)}</span>
             </div>
-            <div className="flex items-center justify-between border-t border-white/10 pt-1.5">
+            <div className="flex items-center justify-between border-t border-border/15 pt-1.5">
               <span className="font-bold text-fg/70">Solde restant :</span>
               <span className={`font-black ${summary.remaining > 0 ? "text-rose-400 text-sm" : "text-emerald-400"}`}>
                 {summary.remaining > 0 ? fmtFcfa(summary.remaining) : "0 FCFA (Soldé)"}
@@ -278,7 +323,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
       {/* Note éventuelle */}
       {rental.note ? (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-surface-raised p-4">
+        <div className="mt-4 rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-fg/50">Note</span>
           <p className="mt-1 text-xs text-fg/80">{rental.note}</p>
         </div>
@@ -309,7 +354,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           {isActive ? (
             <Link
               href={`/locations/${rental.id}/extend`}
-              className="flex-1 min-w-[140px] flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-surface text-sm font-extrabold text-fg hover:bg-white/5 active:scale-98 transition-all"
+              className="flex-1 min-w-[140px] flex h-13 items-center justify-center gap-2 rounded-2xl border border-border/15 bg-surface text-sm font-extrabold text-fg hover:bg-fg/5 active:scale-98 transition-all"
             >
               <ClockIcon className="h-4 w-4 text-brand-orange" />
               <span>Prolonger</span>

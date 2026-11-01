@@ -70,30 +70,30 @@ export function DeleteEstablishmentUserButton({
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-danger/40 bg-[#0e1a22] p-5 shadow-2xl sm:p-7">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="w-full max-w-md rounded-3xl border border-danger/40 bg-surface-sunken p-5 shadow-2xl sm:p-7">
+            <div className="flex items-center justify-between border-b border-border/15 pb-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger/20 text-danger font-bold">
                   <AlertCircleIcon className="h-5 w-5" />
                 </span>
                 <div>
-                  <h3 className="text-base font-extrabold text-white">Supprimer ce compte</h3>
-                  <p className="text-xs text-white/50">Action irréversible</p>
+                  <h3 className="text-base font-extrabold text-fg">Supprimer ce compte</h3>
+                  <p className="text-xs text-fg/50">Action irréversible</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="rounded-xl p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
+                className="rounded-xl p-1.5 text-fg/50 hover:bg-fg/10 hover:text-fg"
               >
                 ✕
               </button>
             </div>
 
             <div className="mt-4 flex flex-col gap-4">
-              <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3.5 text-xs leading-relaxed text-white/80">
+              <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3.5 text-xs leading-relaxed text-fg/80">
                 Vous êtes sur le point de supprimer définitivement le compte de{" "}
-                <strong className="text-white">« {userName} »</strong> ({userLogin}).
+                <strong className="text-fg">« {userName} »</strong> ({userLogin}).
                 <p className="mt-2 text-danger font-semibold">
                   Ce compte ainsi que son adresse e-mail quitteront complètement la plateforme.
                   Toutes les sessions seront révoquées et l&apos;utilisateur ne pourra plus réinitialiser de mot de passe ni se connecter.
@@ -110,7 +110,7 @@ export function DeleteEstablishmentUserButton({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-white/70 hover:bg-white/10 hover:text-white"
+                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-fg/70 hover:bg-fg/10 hover:text-fg"
                 >
                   Annuler
                 </button>

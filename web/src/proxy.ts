@@ -25,14 +25,32 @@ const isPublicRoutePath = (pathname: string) =>
   pathname === "/landing" ||
   pathname.startsWith("/landing/") ||
   pathname === "/affiches" ||
-  pathname === "/affiches.html";
+  pathname === "/affiches.html" ||
+  pathname.startsWith("/maquette") ||
+  pathname.startsWith("/maquette-mnd");
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublicRoute = isPublicRoutePath(pathname);
 
+  const isLocalDevBypass =
+    process.env.NODE_ENV === "development" &&
+    process.env.DEV_BYPASS_AUTH === "true";
+
+  // En mode test local sans authentification, désactiver les pages de connexion et d'inscription
+  // pour diriger directement l'utilisateur sur le tableau de bord et les interfaces
+  if (isLocalDevBypass) {
+    if (pathname === "/register" || pathname.startsWith("/register/")) {
+      const mode = request.nextUrl.searchParams.get("mode") || request.nextUrl.searchParams.get("category") || "RESIDENCE";
+      return NextResponse.redirect(new URL(`/dashboard?mode=${mode}`, request.url));
+    }
+    if (pathname === "/login") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
   const session = await getSessionCookiePayload();
-  const isAuthenticated = Boolean(session?.sessionId);
+  const isAuthenticated = Boolean(session?.sessionId) || isLocalDevBypass;
 
   if (!isPublicRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -60,5 +78,5 @@ export const config = {
   // provoquant une erreur "isn't a valid image" pour toute photo locale
   // utilisée sur une page publique (/login, /register) avant connexion —
   // confirmé dans les logs serveur pendant la vérification de cette page.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|brand/|images/).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|brand/|images/|maquette/|maquette-mnd/).*)"],
 };

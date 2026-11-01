@@ -10,8 +10,12 @@ function fmtDate(d: Date) {
 
 export function SubscriptionsTable({
   establishments,
+  defaultAmountFcfa,
+  defaultPeriodMonths,
 }: {
   establishments: PlatformSubscriptionEstablishmentView[];
+  defaultAmountFcfa: number;
+  defaultPeriodMonths: number;
 }) {
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "ACTIVE" | "TRIAL" | "EXPIRED" | "NONE">("ALL");
@@ -161,7 +165,12 @@ export function SubscriptionsTable({
 
                 {/* Actions administratives */}
                 <div className="w-full shrink-0 border-t border-white/5 pt-3 sm:w-auto sm:border-t-0 sm:pt-0">
-                  <SubscriptionActions establishmentId={est.id} establishmentName={est.name} />
+                  <SubscriptionActions
+                    establishmentId={est.id}
+                    establishmentName={est.name}
+                    defaultAmountFcfa={defaultAmountFcfa}
+                    defaultPeriodMonths={defaultPeriodMonths}
+                  />
                 </div>
               </div>
             );

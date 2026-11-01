@@ -3,10 +3,10 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReservationFilters } from "./filters";
 import { ReservationStatusBadge } from "./status-badge";
-import { listReservations, type ReservationTimeFilter } from "@/lib/reservations-data";
+import { listReservations } from "@/lib/reservations-data";
+import { RESERVATION_TIME_FILTERS, isArrivalOverdue, type ReservationTimeFilter } from "@/lib/reservation-filters";
 import { listAllPropertiesForSelect } from "@/lib/properties-data";
 
-const TIME_VALUES: ReservationTimeFilter[] = ["today", "upcoming", "past", "cancelled", "all"];
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -23,10 +23,12 @@ function fmtTime(d: Date) {
 export default async function ReservationsPage(props: PageProps<"/reservations">) {
   const { q, time, propertyId } = await props.searchParams;
   const query = typeof q === "string" ? q : undefined;
-  const timeFilter = TIME_VALUES.includes(time as ReservationTimeFilter)
+  const timeFilter = RESERVATION_TIME_FILTERS.includes(time as ReservationTimeFilter)
     ? (time as ReservationTimeFilter)
     : "upcoming";
   const propertyFilter = typeof propertyId === "string" ? propertyId : undefined;
+
+  const now = new Date();
 
   const [{ items, truncated }, properties] = await Promise.all([
     listReservations({ timeFilter, propertyId: propertyFilter, query }),
@@ -83,7 +85,14 @@ export default async function ReservationsPage(props: PageProps<"/reservations">
                     <p className="text-sm font-extrabold text-fg">{r.client?.name ?? "Sans client"}</p>
                     <p className="mt-0.5 text-xs font-semibold text-fg/60">{r.property.name}</p>
                   </div>
-                  <ReservationStatusBadge status={r.status} />
+                  <div className="flex flex-col items-end gap-1">
+                    <ReservationStatusBadge status={r.status} />
+                    {isArrivalOverdue(r.status, r.arrivalTime, now) ? (
+                      <span className="rounded-full bg-danger-bg px-2.5 py-1 text-[10.5px] font-bold text-danger">
+                        Arrivée à enregistrer
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="mt-2.5 flex items-center gap-4 text-xs font-semibold text-fg">
                   <span>{fmtDate(r.date)}</span>
