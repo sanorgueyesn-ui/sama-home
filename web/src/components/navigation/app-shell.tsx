@@ -23,7 +23,7 @@ const MODE_ACCENT = {
   AGENCY: { bar: "bg-[#7c3aed]", text: "text-app-violet" },
 } as const;
 
-const SOON_ROUTES = new Set(["/contrats", "/echeances", "/rapports"]);
+const SOON_ROUTES = new Set(["/contrats", "/echeances"]);
 
 /** Horloge réelle, rafraîchie chaque minute. Rendu serveur neutre (pas d'heure inventée). */
 function subscribeMinute(notify: () => void) {
