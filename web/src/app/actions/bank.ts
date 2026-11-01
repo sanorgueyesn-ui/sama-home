@@ -890,5 +890,3 @@ export async function generateDueScheduledTransfers(): Promise<{ generated: numb
 
   return { generated };
 }
-generated };
-}
