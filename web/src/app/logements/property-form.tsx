@@ -72,8 +72,8 @@ export function PropertyForm({
   return (
     <form action={formAction} className="flex flex-col gap-5" encType="multipart/form-data">
       {/* 1. Type de Logement */}
-      <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-fg/70">
+      <div className="rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 ">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-app-text-2">
           Type d&apos;hébergement
         </label>
         <input type="hidden" name="type" value={type} />
@@ -84,8 +84,8 @@ export function PropertyForm({
             aria-pressed={type === "ROOM"}
             className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3.5 transition-all ${
               type === "ROOM"
-                ? "border-brand-orange bg-brand-orange/15 text-brand-orange font-black shadow-md shadow-brand-orange/10"
-                : "border-border/15 bg-surface text-fg/80 hover:bg-fg/5"
+                ? "border-brand-orange bg-brand-orange/15 text-brand-orange font-black "
+                : "border-app-line-strong bg-app-panel-2 text-app-text-2 hover:bg-fg/5"
             }`}
           >
             <BedIcon className="h-6 w-6" />
@@ -97,8 +97,8 @@ export function PropertyForm({
             aria-pressed={type === "APARTMENT"}
             className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3.5 transition-all ${
               type === "APARTMENT"
-                ? "border-brand-orange bg-brand-orange/15 text-brand-orange font-black shadow-md shadow-brand-orange/10"
-                : "border-border/15 bg-surface text-fg/80 hover:bg-fg/5"
+                ? "border-brand-orange bg-brand-orange/15 text-brand-orange font-black "
+                : "border-app-line-strong bg-app-panel-2 text-app-text-2 hover:bg-fg/5"
             }`}
           >
             <BuildingIcon className="h-6 w-6" />
@@ -113,8 +113,8 @@ export function PropertyForm({
       </div>
 
       {/* 2. Nom & Capacité */}
-      <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
-        <label htmlFor="name" className="mb-1.5 block text-xs font-bold text-fg">
+      <div className="rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 ">
+        <label htmlFor="name" className="mb-1.5 block text-xs font-bold text-app-text">
           Nom ou numéro du logement <span className="text-app-bad">*</span>
         </label>
         <input
@@ -124,7 +124,7 @@ export function PropertyForm({
           required
           defaultValue={defaultValues?.name}
           placeholder="Ex : Chambre 01, Suite Palmeraie..."
-          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3.5 text-sm font-bold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+          className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3.5 text-sm font-bold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
         />
         {errors?.name?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -134,7 +134,7 @@ export function PropertyForm({
 
         {/* Suggestions rapides de nom */}
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] font-semibold text-fg/50">Suggestions :</span>
+          <span className="text-[11px] font-semibold text-app-muted">Suggestions :</span>
           {SUGGESTED_NAMES.map((sug) => (
             <button
               key={sug}
@@ -145,7 +145,7 @@ export function PropertyForm({
                   nameInputRef.current.focus();
                 }
               }}
-              className="rounded-lg bg-surface-sunken px-2.5 py-1 text-xs font-medium text-fg/80 hover:bg-brand-orange/20 hover:text-brand-orange transition-colors"
+              className="rounded-lg bg-app-panel-2 px-2.5 py-1 text-xs font-medium text-app-text-2 hover:bg-brand-orange/20 hover:text-brand-orange transition-colors"
             >
               {sug}
             </button>
@@ -153,7 +153,7 @@ export function PropertyForm({
         </div>
 
         <div className="mt-4">
-          <label htmlFor="capacity" className="mb-1.5 block text-xs font-bold text-fg">
+          <label htmlFor="capacity" className="mb-1.5 block text-xs font-bold text-app-text">
             Capacité d&apos;accueil (personnes) <span className="text-app-bad">*</span>
           </label>
           <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export function PropertyForm({
                 className={`flex-1 h-11 rounded-xl text-xs font-bold border transition-all ${
                   capacity === cap
                     ? "border-brand-orange bg-brand-orange text-ink font-black"
-                    : "border-border/15 bg-surface text-fg hover:bg-fg/5"
+                    : "border-app-line-strong bg-app-panel-2 text-app-text hover:bg-fg/5"
                 }`}
               >
                 {cap} pers.
@@ -183,24 +183,24 @@ export function PropertyForm({
 
       {/* 3. Tarif initial (créé automatiquement pour pouvoir louer dès validation) */}
       {isCreate ? (
-        <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/15">
+        <div className="rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 ">
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-app-line-strong">
             <div className="flex items-center gap-2">
               <CashIcon className="h-4 w-4 text-brand-orange" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-fg">Tarif de départ (Prêt à louer)</h3>
+              <h3 className="text-xs font-black uppercase tracking-wider text-app-text">Tarif de départ (Prêt à louer)</h3>
             </div>
             <span className="rounded-full bg-success/15 border border-success/30 px-2 py-0.5 text-[10px] font-bold text-app-good">
               Prêt immédiatement
             </span>
           </div>
 
-          <p className="text-xs text-fg/60 mb-3">
+          <p className="text-xs text-app-muted mb-3">
             Ce tarif sera configuré d&apos;office pour que ce logement soit directement disponible à la location ou réservation.
           </p>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-fg">Prix en FCFA</label>
+              <label className="mb-1.5 block text-xs font-bold text-app-text">Prix en FCFA</label>
               <input
                 type="number"
                 name="initialTariffAmount"
@@ -208,14 +208,14 @@ export function PropertyForm({
                 step={500}
                 value={initialAmount}
                 onChange={(e) => setInitialAmount(Number(e.target.value))}
-                className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3.5 text-base font-extrabold text-brand-orange font-mono outline-none focus:border-brand-orange"
+                className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3.5 text-base font-extrabold text-brand-orange font-mono outline-none focus:border-brand-orange"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-fg">Formule</label>
+              <label className="mb-1.5 block text-xs font-bold text-app-text">Formule</label>
               <input type="hidden" name="initialTariffType" value={initialType} />
-              <div className="flex h-12 gap-1.5 rounded-xl border border-border/15 bg-surface p-1">
+              <div className="flex h-12 gap-1.5 rounded-xl border border-app-line-strong bg-app-panel-2 p-1">
                 {(
                   [
                     { key: "JOUR", label: "24h / Jour" },
@@ -229,8 +229,8 @@ export function PropertyForm({
                     onClick={() => setInitialType(t.key)}
                     className={`flex-1 rounded-lg text-xs font-bold transition-all ${
                       initialType === t.key
-                        ? "bg-brand-orange text-ink font-black shadow-sm"
-                        : "text-fg/70 hover:text-fg"
+                        ? "bg-brand-orange text-ink font-black "
+                        : "text-app-text-2 hover:text-app-text"
                     }`}
                   >
                     {t.label}
@@ -242,7 +242,7 @@ export function PropertyForm({
 
           {/* Montants rapides */}
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-fg/50">Prix rapides :</span>
+            <span className="text-[11px] font-semibold text-app-muted">Prix rapides :</span>
             {SUGGESTED_PRICES.map((p) => (
               <button
                 key={p}
@@ -251,7 +251,7 @@ export function PropertyForm({
                 className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
                   initialAmount === p
                     ? "bg-brand-orange/30 border border-brand-orange text-brand-orange font-black"
-                    : "bg-surface-sunken text-fg/70 hover:bg-fg/10"
+                    : "bg-app-panel-2 text-app-text-2 hover:bg-fg/10"
                 }`}
               >
                 {p.toLocaleString("fr-FR")} F
@@ -262,7 +262,7 @@ export function PropertyForm({
       ) : null}
 
       {/* 4. Options complémentaires (Description & Photo) */}
-      <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
+      <div className="rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 ">
         <TextAreaField
           id="description"
           label="Description & détails"
@@ -272,8 +272,8 @@ export function PropertyForm({
         />
 
         <div className="mt-4">
-          <label htmlFor="photo" className="mb-1.5 block text-xs font-bold text-fg">
-            Photo <span className="font-normal text-fg/40">(optionnel)</span>
+          <label htmlFor="photo" className="mb-1.5 block text-xs font-bold text-app-text">
+            Photo <span className="font-normal text-app-faint">(optionnel)</span>
           </label>
 
           {previewToShow ? (
@@ -281,7 +281,7 @@ export function PropertyForm({
             <img
               src={previewToShow}
               alt="Aperçu de la photo"
-              className="mb-2 h-36 w-full rounded-xl border border-border/15 object-cover"
+              className="mb-2 h-36 w-full rounded-xl border border-app-line-strong object-cover"
             />
           ) : null}
 
@@ -291,12 +291,12 @@ export function PropertyForm({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={handleFileChange}
-            className="block w-full text-xs text-fg file:mr-3 file:h-10 file:rounded-xl file:border-0 file:bg-surface-sunken file:px-4 file:text-xs file:font-bold file:text-fg hover:file:bg-fg/10"
+            className="block w-full text-xs text-app-text file:mr-3 file:h-10 file:rounded-xl file:border-0 file:bg-app-panel-2 file:px-4 file:text-xs file:font-bold file:text-app-text hover:file:bg-fg/10"
           />
-          <p className="mt-1 text-[11px] text-fg/50">JPEG, PNG ou WebP, 5 Mo max.</p>
+          <p className="mt-1 text-[11px] text-app-muted">JPEG, PNG ou WebP, 5 Mo max.</p>
 
           {currentPhoto && !newPhotoPreview ? (
-            <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-fg">
+            <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-app-text">
               <input
                 type="checkbox"
                 name="removePhoto"
@@ -316,7 +316,7 @@ export function PropertyForm({
         </div>
 
         {showActiveToggle ? (
-          <label className="mt-4 flex items-center gap-2.5 text-xs font-bold text-fg">
+          <label className="mt-4 flex items-center gap-2.5 text-xs font-bold text-app-text">
             <input
               type="checkbox"
               name="active"
@@ -339,14 +339,14 @@ export function PropertyForm({
       <div className="flex items-center gap-3 pt-2">
         <Link
           href="/logements"
-          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-border/15 bg-surface text-sm font-bold text-fg hover:bg-fg/5 active:scale-98 transition-all"
+          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-app-line-strong bg-app-panel-2 text-sm font-bold text-app-text hover:bg-fg/5 active:scale-98 transition-all"
         >
           Annuler
         </Link>
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink shadow-lg shadow-brand-orange/25 hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
+          className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
         >
           {pending ? "Enregistrement..." : submitLabel}
         </button>

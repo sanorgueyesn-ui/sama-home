@@ -78,7 +78,7 @@ export function ClientForm({
       <button
         type="button"
         onClick={() => setShowMore((v) => !v)}
-        className="flex items-center gap-1.5 self-start text-xs font-bold text-fg underline"
+        className="flex items-center gap-1.5 self-start text-xs font-bold text-app-text underline"
         aria-expanded={showMore}
       >
         {showMore ? "− Masquer les informations complémentaires" : "+ Informations complémentaires"}
@@ -105,8 +105,8 @@ export function ClientForm({
         />
 
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-fg">
-            Type de pièce <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
+          <label className="mb-1.5 block text-xs font-bold text-app-text">
+            Type de pièce <span className="ml-1 font-medium text-app-faint">(optionnel)</span>
           </label>
           <div className="mb-2 flex flex-wrap gap-2">
             {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
@@ -115,7 +115,7 @@ export function ClientForm({
                 type="button"
                 onClick={() => setIdDocumentType(suggestion)}
                 className={`rounded-full px-3.5 py-2 text-xs font-bold ${
-                  idDocumentType === suggestion ? "bg-navy text-white" : "bg-surface-raised text-fg"
+                  idDocumentType === suggestion ? "bg-brand-orange text-ink" : "bg-app-panel text-app-text"
                 }`}
               >
                 {suggestion}
@@ -128,7 +128,7 @@ export function ClientForm({
             value={idDocumentType}
             onChange={(e) => setIdDocumentType(e.target.value)}
             placeholder="Ou saisir un autre type"
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+            className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel px-4 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.idDocumentType?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
@@ -163,14 +163,14 @@ export function ClientForm({
       <div className="flex items-center gap-3 pt-2">
         <Link
           href={returnTo || "/clients"}
-          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-border/15 bg-surface text-sm font-bold text-fg hover:bg-fg/5 active:scale-98 transition-all"
+          className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-app-line-strong bg-app-panel-2 text-sm font-bold text-app-text hover:bg-fg/5 active:scale-98 transition-all"
         >
           Annuler
         </Link>
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink shadow-lg shadow-brand-orange/25 hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
+          className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
         >
           {pending ? "Enregistrement..." : `👤 ${submitLabel}`}
         </button>

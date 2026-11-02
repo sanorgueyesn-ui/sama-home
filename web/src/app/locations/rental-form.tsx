@@ -233,7 +233,7 @@ export function RentalForm({
       }}
     >
       {/* 0. Choix immédiat : 2 petits boutons bien visibles sans textes encombrants */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border/15 bg-surface-raised p-2.5 sm:p-3 shadow-sm backdrop-blur-md">
+      <div className="flex flex-col gap-2 rounded-2xl border border-app-line-strong bg-app-panel p-2.5 sm:p-3 backdrop-blur-md">
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -244,8 +244,8 @@ export function RentalForm({
             }}
             className={`flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
               billingMode === "DAY"
-                ? "bg-brand-orange text-ink shadow-md font-black"
-                : "bg-surface border border-border/15 text-fg/70 hover:text-fg hover:bg-fg/5"
+                ? "bg-brand-orange text-ink  font-black"
+                : "bg-app-panel-2 border border-app-line-strong text-app-text-2 hover:text-app-text hover:bg-fg/5"
             }`}
           >
             <CalendarIcon className="h-4 w-4" />
@@ -262,8 +262,8 @@ export function RentalForm({
             }}
             className={`flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
               billingMode === "HOUR"
-                ? "bg-brand-orange text-ink shadow-md font-black"
-                : "bg-surface border border-border/15 text-fg/70 hover:text-fg hover:bg-fg/5"
+                ? "bg-brand-orange text-ink  font-black"
+                : "bg-app-panel-2 border border-app-line-strong text-app-text-2 hover:text-app-text hover:bg-fg/5"
             }`}
           >
             <ClockIcon className="h-4 w-4" />
@@ -273,23 +273,23 @@ export function RentalForm({
 
         {/* Sélecteur de nombre de jours (si Par Jour) : compact et ultra-simple */}
         {billingMode === "DAY" ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/10">
-            <span className="text-xs font-bold text-fg/80">Nombre de jours :</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-app-line">
+            <span className="text-xs font-bold text-app-text-2">Nombre de jours :</span>
             <div className="flex items-center gap-2">
-              <div className="flex items-center rounded-lg border border-border/15 bg-surface overflow-hidden">
+              <div className="flex items-center rounded-lg border border-app-line-strong bg-app-panel-2 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => Math.max(1, d - 1))}
-                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-fg/10 active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-app-text hover:bg-fg/10 active:scale-95"
                   aria-label="Diminuer"
                 >
                   −
                 </button>
-                <span className="w-10 text-center text-xs font-black text-fg">{numberOfDays}j</span>
+                <span className="w-10 text-center text-xs font-black text-app-text">{numberOfDays}j</span>
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => d + 1)}
-                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-fg hover:bg-fg/10 active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center text-sm font-bold text-app-text hover:bg-fg/10 active:scale-95"
                   aria-label="Augmenter"
                 >
                   +
@@ -304,8 +304,8 @@ export function RentalForm({
                     onClick={() => setNumberOfDays(d)}
                     className={`rounded-md px-2 py-1 text-[11px] font-bold transition-all ${
                       numberOfDays === d
-                        ? "bg-brand-orange text-ink font-black shadow-sm"
-                        : "bg-surface/80 border border-border/15 text-fg/70 hover:text-fg hover:bg-fg/10"
+                        ? "bg-brand-orange text-ink font-black "
+                        : "bg-surface/80 border border-app-line-strong text-app-text-2 hover:text-app-text hover:bg-fg/10"
                     }`}
                   >
                     {d}j
@@ -320,18 +320,18 @@ export function RentalForm({
         <input type="hidden" name="numberOfDays" value={billingMode === "DAY" ? numberOfDays : 1} />
       </div>
       {/* 1. Logement & Formule */}
-      <div className="relative z-10 rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-border/15">
+      <div className="relative z-10 rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-app-line-strong">
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
             1
           </span>
-          <h2 className="text-sm font-black uppercase tracking-wider text-fg">Chambre &amp; Formule de séjour</h2>
+          <h2 className="text-sm font-black uppercase tracking-wider text-app-text">Chambre &amp; Formule de séjour</h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Logement */}
           <div>
-            <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
+            <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-app-text">
               Chambre / Logement <span className="text-app-bad">*</span>
             </label>
             <select
@@ -344,7 +344,7 @@ export function RentalForm({
                 const newProp = properties.find((p) => p.id === newPropId);
                 setTariffId(newProp?.tariffs?.[0]?.id ?? "");
               }}
-              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+              className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-semibold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
               <option value="">Sélectionner une chambre...</option>
               {properties.map((p) => (
@@ -362,7 +362,7 @@ export function RentalForm({
 
           {/* Tarif (auto-sélectionné dès qu'une chambre est choisie) */}
           <div>
-            <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
+            <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-app-text">
               Formule / Tarif <span className="text-app-bad">*</span>
             </label>
             <select
@@ -371,7 +371,7 @@ export function RentalForm({
               value={effectiveTariffId}
               onChange={(e) => setTariffId(e.target.value)}
               disabled={!propertyId || activeTariffs.length === 0}
-              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
+              className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-semibold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 disabled:opacity-40"
             >
               <option value="">
                 {!propertyId
@@ -396,13 +396,13 @@ export function RentalForm({
       </div>
 
       {/* 2. Horaires de Check-in */}
-      <div className="relative z-30 rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-border/15">
+      <div className="relative z-30 rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-app-line-strong">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
               2
             </span>
-            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Horaires de Check-in</h2>
+            <h2 className="text-sm font-black uppercase tracking-wider text-app-text">Horaires de Check-in</h2>
           </div>
           <button
             type="button"
@@ -422,9 +422,9 @@ export function RentalForm({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Badge informatif : Date d'entrée automatique */}
-          <div className="flex flex-col justify-between rounded-xl border border-border/15 bg-surface-sunken p-3.5">
+          <div className="flex flex-col justify-between rounded-xl border border-app-line-strong bg-app-panel-2 p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-fg/50">Date d&apos;entrée</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-app-muted">Date d&apos;entrée</span>
               <span className="inline-flex items-center gap-1 rounded-full bg-success/15 border border-success/30 px-2.5 py-0.5 text-[10.5px] font-bold text-app-good">
                 <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                 Aujourd&apos;hui
@@ -433,10 +433,10 @@ export function RentalForm({
             <div className="mt-2 flex items-center gap-2.5">
               <CalendarIcon className="h-5 w-5 text-brand-orange shrink-0" />
               <div>
-                <p className="text-sm font-extrabold text-fg capitalize">
+                <p className="text-sm font-extrabold text-app-text capitalize">
                   {new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())}
                 </p>
-                <p className="text-[11px] font-medium text-fg/40">Entrée automatique en date du jour</p>
+                <p className="text-[11px] font-medium text-app-faint">Entrée automatique en date du jour</p>
               </div>
             </div>
           </div>
@@ -460,7 +460,7 @@ export function RentalForm({
               <ClockIcon className="h-3.5 w-3.5 shrink-0" />
               <span>Arrivée antérieure enregistrée ({arrivalTime.replace(":", "h")})</span>
             </div>
-            <p className="mt-1 text-[11px] text-fg/70">
+            <p className="mt-1 text-[11px] text-app-text-2">
               Le client est arrivé à {arrivalTime.replace(":", "h")}. La libération de la chambre a été calculée sur cette base.
             </p>
             <input
@@ -472,13 +472,13 @@ export function RentalForm({
         ) : null}
 
         {/* Live Stay Calculations & Availability Card */}
-        <div className="mt-4 rounded-xl border border-border/10 bg-surface-sunken p-3.5">
+        <div className="mt-4 rounded-xl border border-app-line bg-app-panel-2 p-3.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-fg/60">Sortie prévue :</span>
-            <span className="font-extrabold text-fg text-sm">{departurePreview ?? "—"}</span>
+            <span className="font-bold text-app-muted">Sortie prévue :</span>
+            <span className="font-extrabold text-app-text text-sm">{departurePreview ?? "—"}</span>
           </div>
-          <div className="mt-2 flex items-center justify-between border-t border-border/10 pt-2 text-xs">
-            <span className="font-bold text-fg/60">
+          <div className="mt-2 flex items-center justify-between border-t border-app-line pt-2 text-xs">
+            <span className="font-bold text-app-muted">
               Montant total {billingMode === "DAY" && numberOfDays > 1 ? `(${numberOfDays} jours)` : ""} :
             </span>
             <span className="font-black text-brand-orange text-base">
@@ -490,7 +490,7 @@ export function RentalForm({
         {/* Availability Badge */}
         <div className="mt-3">
           {availability.checking ? (
-            <div className="flex items-center gap-2 rounded-xl bg-surface-sunken px-4 py-2 text-xs font-semibold text-fg/60">
+            <div className="flex items-center gap-2 rounded-xl bg-app-panel-2 px-4 py-2 text-xs font-semibold text-app-muted">
               <span className="h-2 w-2 rounded-full bg-brand-orange animate-ping" />
               Vérification de la disponibilité...
             </div>
@@ -512,24 +512,24 @@ export function RentalForm({
       </div>
 
       {/* 3. Locataire & Règlement (Ultra-simplifié avec saisie rapide intégrée) */}
-      <div className="relative z-10 rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm backdrop-blur-md">
-        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-border/15">
+      <div className="relative z-10 rounded-2xl border border-app-line-strong bg-app-panel p-4 sm:p-5 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-app-line-strong">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
               3
             </span>
-            <h2 className="text-sm font-black uppercase tracking-wider text-fg">{guestWord}</h2>
+            <h2 className="text-sm font-black uppercase tracking-wider text-app-text">{guestWord}</h2>
           </div>
 
           {/* Onglets rapides : Nouveau client direct OU Client existant */}
-          <div className="flex rounded-lg bg-surface p-1 border border-border/15">
+          <div className="flex rounded-lg bg-app-panel-2 p-1 border border-app-line-strong">
             <button
               type="button"
               onClick={() => setClientMode("EXISTING")}
               className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
                 clientMode === "EXISTING"
-                  ? "bg-brand-orange text-ink font-black shadow-sm"
-                  : "text-fg/70 hover:text-fg"
+                  ? "bg-brand-orange text-ink font-black "
+                  : "text-app-text-2 hover:text-app-text"
               }`}
             >
               <span className="inline-flex items-center gap-1.5">
@@ -542,8 +542,8 @@ export function RentalForm({
               onClick={() => setClientMode("NEW")}
               className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
                 clientMode === "NEW"
-                  ? "bg-brand-orange text-ink font-black shadow-sm"
-                  : "text-fg/70 hover:text-fg"
+                  ? "bg-brand-orange text-ink font-black "
+                  : "text-app-text-2 hover:text-app-text"
               }`}
             >
               <span className="inline-flex items-center gap-1.5">
@@ -561,12 +561,12 @@ export function RentalForm({
           <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-3.5 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-brand-orange uppercase">Enregistrement rapide du client</span>
-              <span className="text-[11px] font-medium text-fg/50">Sera enregistré automatiquement</span>
+              <span className="text-[11px] font-medium text-app-muted">Sera enregistré automatiquement</span>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-fg">
+                <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-app-text">
                   Nom complet du {guestWord} <span className="text-app-bad">*</span>
                 </label>
                 <input
@@ -575,12 +575,12 @@ export function RentalForm({
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
                   placeholder="Ex : Moussa Diop"
-                  className="h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-bold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+                  className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-bold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
                 />
               </div>
 
               <div>
-                <label htmlFor="newClientPhone" className="mb-1 block text-xs font-bold text-fg">
+                <label htmlFor="newClientPhone" className="mb-1 block text-xs font-bold text-app-text">
                   Téléphone (WhatsApp) <span className="text-app-bad">*</span>
                 </label>
                 <input
@@ -590,7 +590,7 @@ export function RentalForm({
                   value={newClientPhone}
                   onChange={(e) => setNewClientPhone(e.target.value)}
                   placeholder="Ex : +221 77 123 45 67"
-                  className="h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-bold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 font-mono"
+                  className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-bold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 font-mono"
                 />
               </div>
             </div>
@@ -603,7 +603,7 @@ export function RentalForm({
         ) : (
           /* Option B : Sélection client existant */
           <div>
-            <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
+            <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-app-text">
               Sélectionner le {guestWord} existant <span className="text-app-bad">*</span>
             </label>
             <select
@@ -611,7 +611,7 @@ export function RentalForm({
               name="clientId"
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-semibold text-fg outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
+              className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-semibold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
               <option value="">Sélectionner dans la liste...</option>
               {clients.map((c) => (
@@ -642,7 +642,7 @@ export function RentalForm({
                 Séjour de {numberOfDays} jours — Pièce d&apos;identité obligatoire pour le contrat
               </p>
             </div>
-            <p className="mt-1 text-xs text-fg/70">
+            <p className="mt-1 text-xs text-app-text-2">
               Pour des raisons légales et la génération du contrat de bail officiel imprimable, renseignez la pièce d&apos;identité du client.
             </p>
             <div className="mt-3">
@@ -655,8 +655,8 @@ export function RentalForm({
                     onClick={() => setIdDocumentType(sug)}
                     className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                       idDocumentType === sug
-                        ? "bg-brand-orange text-ink font-black shadow-sm"
-                        : "bg-surface text-fg/80 hover:bg-fg/10"
+                        ? "bg-brand-orange text-ink font-black "
+                        : "bg-app-panel-2 text-app-text-2 hover:bg-fg/10"
                     }`}
                   >
                     {sug}
@@ -669,7 +669,7 @@ export function RentalForm({
                 value={idDocumentNumber}
                 onChange={(e) => setIdDocumentNumber(e.target.value)}
                 placeholder="Numéro de la pièce (CNI, Passeport ou Permis)"
-                className="h-11 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm font-bold text-fg outline-none focus:border-brand-orange font-mono"
+                className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-bold text-app-text outline-none focus:border-brand-orange font-mono"
               />
             </div>
           </div>
@@ -681,8 +681,8 @@ export function RentalForm({
             </span>
           </div>
         ) : (
-          <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-sunken p-2.5 text-xs text-fg/60">
-            <ClockIcon className="h-3.5 w-3.5 shrink-0 text-fg/50" />
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-app-panel-2 p-2.5 text-xs text-app-muted">
+            <ClockIcon className="h-3.5 w-3.5 shrink-0 text-app-muted" />
             <span>Check-in express : sans contrat ni pièce d&apos;identité exigée.</span>
           </div>
         )}
@@ -708,7 +708,7 @@ export function RentalForm({
       <div className="flex items-center gap-3 pt-2">
         <Link
           href="/locations"
-          className="flex h-14 min-w-[120px] items-center justify-center rounded-2xl border border-border/15 bg-surface text-sm font-bold text-fg hover:bg-fg/5 active:scale-98 transition-all"
+          className="flex h-14 min-w-[120px] items-center justify-center rounded-2xl border border-app-line-strong bg-app-panel-2 text-sm font-bold text-app-text hover:bg-fg/5 active:scale-98 transition-all"
         >
           Annuler
         </Link>
@@ -720,10 +720,10 @@ export function RentalForm({
             }
           }}
           disabled={pending}
-          className={`flex-1 h-14 rounded-2xl text-base font-black tracking-wide shadow-lg transition-all ${
+          className={`flex-1 h-14 rounded-2xl text-base font-black tracking-wide  transition-all ${
             canSubmit
               ? "bg-brand-orange text-ink shadow-brand-orange/25 hover:brightness-110 active:scale-98 cursor-pointer"
-              : "bg-surface-raised border border-brand-orange/40 text-brand-orange hover:bg-brand-orange/10 cursor-pointer"
+              : "bg-app-panel border border-brand-orange/40 text-brand-orange hover:bg-brand-orange/10 cursor-pointer"
           } disabled:opacity-50`}
         >
           {pending
