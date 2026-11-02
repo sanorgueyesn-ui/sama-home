@@ -116,8 +116,8 @@ const DEFAULTS_FORM = () =>
     String(defaults.DEFAULT_PERIOD_PRICE_FCFA),
   );
 
-test("les valeurs par défaut du projet sont bien 2 mois, 3 mois, 9 900 FCFA", () => {
-  assert.deepEqual(DEFAULT_ROW, { trialDurationMonths: 2, periodMonths: 3, periodPriceFcfa: 9900 });
+test("les valeurs par défaut du projet sont bien 1 mois, 3 mois, 9 900 FCFA", () => {
+  assert.deepEqual(DEFAULT_ROW, { trialDurationMonths: 1, periodMonths: 3, periodPriceFcfa: 9900 });
 });
 
 test("première sauvegarde des valeurs par défaut : ligne créée, audit avec reason, statut configuré", async () => {

@@ -9,6 +9,7 @@ import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { DecorativeBlobs } from "@/components/auth/decorative-blobs";
 import { getPublicPricingSettings } from "@/lib/platform-settings-data";
 import { RegisterForm } from "./register-form";
+import { isBillingCycle, isPlanTier, planOffer } from "@/lib/subscription-plans";
 import { T } from "@/components/i18n/i18n-provider";
 
 export default async function RegisterPage(props: {
@@ -19,6 +20,8 @@ export default async function RegisterPage(props: {
     token?: string;
     category?: string;
     mode?: string;
+    plan?: string;
+    billing?: string;
   }>;
 }) {
   const searchParams = await props.searchParams;
@@ -34,6 +37,14 @@ export default async function RegisterPage(props: {
     getTheme(),
     getPublicPricingSettings(),
   ]);
+
+  // Formule choisie sur la page d'accueil (?category=…&plan=…&billing=…) : prix lus dans la grille, jamais dans l'adresse.
+  const modeName = initialMode.toUpperCase() === "HOTEL" ? "HOTEL" : "RESIDENCE";
+  const tierName = (searchParams?.plan ?? "essential").toUpperCase();
+  const tier = isPlanTier(tierName) ? tierName : "ESSENTIAL";
+  const cycle = isBillingCycle(searchParams?.billing) ? searchParams.billing : "monthly";
+  const offer = planOffer(modeName, tier, cycle);
+  const chosenPlan = offer ? { name: offer.name, amountFcfa: offer.amountFcfa, periodMonths: offer.periodMonths } : null;
 
   const isGoogle = searchParams?.google === "1";
   const initialEmail = searchParams?.email ?? "";
@@ -105,6 +116,7 @@ export default async function RegisterPage(props: {
               initialName={initialName}
               googleToken={googleToken}
               initialMode={initialMode}
+              chosenPlan={chosenPlan}
             />
 
             {!isGoogle && (

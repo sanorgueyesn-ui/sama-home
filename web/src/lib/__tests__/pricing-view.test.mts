@@ -38,8 +38,8 @@ moduleInternals._load = function (request: string, parent: unknown, isMain: bool
 const defaults = await import("../pricing-defaults");
 const data = await import("../platform-settings-data");
 
-test("valeurs de repli inchangées : 2 mois d'essai, 3 mois par période, 9 900 FCFA", () => {
-  assert.equal(defaults.DEFAULT_TRIAL_DURATION_MONTHS, 2);
+test("valeurs de repli inchangées : 1 mois d'essai, 3 mois par période, 9 900 FCFA", () => {
+  assert.equal(defaults.DEFAULT_TRIAL_DURATION_MONTHS, 1);
   assert.equal(defaults.DEFAULT_PERIOD_MONTHS, 3);
   assert.equal(defaults.DEFAULT_PERIOD_PRICE_FCFA, 9900);
 });
@@ -60,7 +60,7 @@ test("subscription-data réexporte exactement les mêmes constantes (source uniq
 
 test("resolvePricingView : aucune ligne → valeurs de repli, isConfigured=false", () => {
   assert.deepEqual(data.resolvePricingView(null), {
-    trialDurationMonths: 2,
+    trialDurationMonths: 1,
     periodMonths: 3,
     periodPriceFcfa: 9900,
     isConfigured: false,

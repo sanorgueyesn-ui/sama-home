@@ -11,6 +11,6 @@
  * Définies ici (et réexportées par src/lib/subscription-data.ts) pour qu'une
  * seule source existe, sans changer aucune valeur.
  */
-export const DEFAULT_TRIAL_DURATION_MONTHS = 2;
+export const DEFAULT_TRIAL_DURATION_MONTHS = 1; // règle confirmée : 1 mois d'essai gratuit (comme la grille et la page d'accueil)
 export const DEFAULT_PERIOD_MONTHS = 3;
 export const DEFAULT_PERIOD_PRICE_FCFA = 9900;

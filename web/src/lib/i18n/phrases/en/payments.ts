@@ -2,6 +2,10 @@
 import type { PhraseBook } from "../../translate";
 
 export const enPayments: PhraseBook = {
+  "Formule choisie": "Chosen plan",
+  "an": "year",
+  "mois": "month",
+  "Vous la réglerez en ligne depuis la page Abonnement, après votre essai gratuit.": "You will pay for it online from the Subscription page, after your free trial.",
   "Formule actuelle": "Current plan",
   "Aucune formule choisie : votre établissement n'a pas de limite pour le moment. Choisissez une formule ci-dessous pour continuer après l'échéance.": "No plan chosen: your establishment has no limit for now. Choose a plan below to continue after the due date.",
   "Les rapports financiers sont inclus à partir de la formule Pro. Passez à la formule Pro ou Premium pour y accéder ; vos données restent conservées.": "Financial reports are included from the Pro plan. Upgrade to Pro or Premium to access them; your data is kept.",

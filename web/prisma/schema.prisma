@@ -1571,7 +1571,7 @@ model SubscriptionChangeRequest {
 /// primaire déjà existante.
 model PricingSettings {
   id                  String   @id @default("singleton")
-  trialDurationMonths Int      @default(2)
+  trialDurationMonths Int      @default(1)
   periodMonths        Int      @default(3)
   periodPriceFcfa     Int      @default(9900)
   updatedAt           DateTime @updatedAt

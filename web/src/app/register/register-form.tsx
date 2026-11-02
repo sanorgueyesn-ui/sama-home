@@ -21,6 +21,7 @@ export function RegisterForm({
   initialName = "",
   googleToken = "",
   initialMode = "RESIDENCE",
+  chosenPlan = null,
 }: {
   pricing?: PricingSettingsView;
   isGoogle?: boolean;
@@ -28,9 +29,10 @@ export function RegisterForm({
   initialName?: string;
   googleToken?: string;
   initialMode?: string;
+  chosenPlan?: { name: string; amountFcfa: number; periodMonths: number } | null;
 }) {
   const t = useT();
-  const trialMonths = pricing?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS;
+  const trialMonths = DEFAULT_TRIAL_DURATION_MONTHS; // règle confirmée : 1 mois d'essai gratuit
   const periodMonths = pricing?.periodMonths ?? DEFAULT_PERIOD_MONTHS;
   const periodPrice = pricing?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA;
   const formattedPrice = periodPrice.toLocaleString("fr-FR");
@@ -40,7 +42,7 @@ export function RegisterForm({
     undefined,
   );
   const [accepted, setAccepted] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<"FREE_TRIAL" | "PAID_9900">("FREE_TRIAL");
+  const selectedPlan = "FREE_TRIAL" as const; // l'ancienne offre à 9 900 FCFA n'est plus proposée
   const [selectedMode, setSelectedMode] = useState<"RESIDENCE" | "HOTEL" | "AGENCY">(() => {
     const m = (initialMode || "").toUpperCase();
     if (m === "HOTEL") return "HOTEL";
@@ -534,69 +536,31 @@ export function RegisterForm({
         </div>
       </div>
 
-      {/* Sélecteur des 2 Offres */}
+      {/* Essai gratuit + formule choisie (le paiement se fait en ligne depuis la page Abonnement, après connexion) */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-extrabold text-fg"><T>Choisissez votre offre de démarrage :</T></label>
-
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          {/* Offre 1 : Gratuite */}
-          <button
-            type="button"
-            onClick={() => setSelectedPlan("FREE_TRIAL")}
-            className={`flex flex-col rounded-2xl border p-3.5 text-left transition-all ${
-              selectedPlan === "FREE_TRIAL"
-                ? "border-navy bg-navy/5 shadow-sm ring-1 ring-navy dark:bg-white/5 dark:ring-white"
-                : "border-border/15 bg-surface hover:border-border/40"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">
-                <T>Essai Gratuit</T>
-              </span>
-              <input
-                type="radio"
-                name="plan_radio"
-                checked={selectedPlan === "FREE_TRIAL"}
-                onChange={() => setSelectedPlan("FREE_TRIAL")}
-                className="accent-navy"
-              />
-            </div>
-            <p className="mt-2 text-base font-black text-fg">{trialMonths} <T>MOIS OFFERTS</T></p>
-            <p className="text-[11px] font-semibold text-fg/60"><T>0 FCFA — Sans engagement</T></p>
-            <p className="mt-1 text-[11px] leading-tight text-fg/70">
-              <T>Idéal pour découvrir toutes les fonctionnalités librement.</T>
-            </p>
-          </button>
-
-          {/* Offre 2 : Payante */}
-          <button
-            type="button"
-            onClick={() => setSelectedPlan("PAID_9900")}
-            className={`flex flex-col rounded-2xl border p-3.5 text-left transition-all ${
-              selectedPlan === "PAID_9900"
-                ? "border-brand-orange bg-brand-orange/5 shadow-sm ring-1 ring-brand-orange"
-                : "border-border/15 bg-surface hover:border-border/40"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="rounded-md bg-brand-orange/15 px-2 py-0.5 text-[10px] font-black text-brand-orange uppercase">
-                <T>Prioritaire</T>
-              </span>
-              <input
-                type="radio"
-                name="plan_radio"
-                checked={selectedPlan === "PAID_9900"}
-                onChange={() => setSelectedPlan("PAID_9900")}
-                className="accent-brand-orange"
-              />
-            </div>
-            <p className="mt-2 text-base font-black text-brand-orange">{formattedPrice} FCFA</p>
-            <p className="text-[11px] font-semibold text-fg/60"><T>Pour</T> {periodMonths} <T>mois de gestion</T></p>
-            <p className="mt-1 text-[11px] leading-tight text-fg/70">
-              <T>Activation prioritaire et assistance dédiée pour votre hôtel.</T>
-            </p>
-          </button>
+        <div className="rounded-2xl border border-navy bg-navy/5 p-3.5 ring-1 ring-navy dark:bg-white/5 dark:ring-white">
+          <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400">
+            <T>Essai Gratuit</T>
+          </span>
+          <p className="mt-2 text-base font-black text-fg">{trialMonths} <T>MOIS OFFERTS</T></p>
+          <p className="text-[11px] font-semibold text-fg/60"><T>0 FCFA — Sans engagement</T></p>
+          <p className="mt-1 text-[11px] leading-tight text-fg/70">
+            <T>Idéal pour découvrir toutes les fonctionnalités librement.</T>
+          </p>
         </div>
+        {chosenPlan ? (
+          <div className="rounded-2xl border border-border/15 bg-surface p-3.5">
+            <p className="text-[11px] font-bold uppercase text-fg/50"><T>Formule choisie</T></p>
+            <p className="mt-1 text-base font-black text-fg">
+              <T>{chosenPlan.name}</T> · {chosenPlan.amountFcfa.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA
+              {" / "}
+              {chosenPlan.periodMonths === 12 ? <T>an</T> : <T>mois</T>}
+            </p>
+            <p className="mt-1 text-[11px] leading-tight text-fg/70">
+              <T>Vous la réglerez en ligne depuis la page Abonnement, après votre essai gratuit.</T>
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {/* Google verified banner */}
