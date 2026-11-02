@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
-import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cash-data";
+import { resolveDefaultCashRegister, computeTheoreticalBalance, computeExpectedCashBalance } from "@/lib/cash-data";
+import { cashVariance, nextOpeningBalance, varianceBase } from "@/lib/cash-rules";
 
 /**
  * Bloc 17.2, Étape D — services métier Caisse. Toutes les permissions sont
@@ -100,8 +101,9 @@ export async function openCashSession(
               "Aucune session précédente — la première ouverture doit être effectuée manuellement par un administrateur.",
             );
           }
-          // Bloc 17.2 section 3.3 : comptage physique s'il existe, sinon solde théorique.
-          openingBalance = previous.physicalCount ?? previous.closingTheoreticalBalance!;
+          // Règle actuelle : solde théorique + écart d'espèces (le mobile money reste dans le solde).
+          // Sessions clôturées avant cette règle : comptage physique s'il existe, sinon solde théorique.
+          openingBalance = nextOpeningBalance(previous)!;
         }
 
         const created = await tx.cashSession.create({
@@ -190,11 +192,13 @@ export async function closeCashSession(input: {
 
         const closedAt = new Date();
         const closingTheoreticalBalance = await computeTheoreticalBalance(tx, { ...session, closedAt });
+        // L'écart se mesure sur les ESPÈCES du tiroir : Wave et Orange Money ne se comptent pas.
+        const closingExpectedCash = await computeExpectedCashBalance(tx, { ...session, closedAt });
 
         let variance: number | null = null;
         let varianceReason: string | null = null;
         if (physicalCount !== null) {
-          variance = physicalCount - closingTheoreticalBalance;
+          variance = cashVariance(physicalCount, closingExpectedCash);
           if (variance !== 0) {
             varianceReason = input.varianceReason?.trim() || null;
             if (!varianceReason) {
@@ -211,6 +215,7 @@ export async function closeCashSession(input: {
           data: {
             status: "CLOSED",
             closingTheoreticalBalance,
+            closingExpectedCash,
             physicalCount,
             variance,
             varianceReason,
@@ -231,7 +236,7 @@ export async function closeCashSession(input: {
             entityId: session.id,
             reason: varianceReason,
             oldValue: Prisma.DbNull,
-            newValue: { closingTheoreticalBalance, physicalCount, variance },
+            newValue: { closingTheoreticalBalance, closingExpectedCash, physicalCount, variance },
             establishmentId: user.establishmentId,
           },
         });
@@ -322,7 +327,7 @@ export async function modifyClosedCashSession(
         const nextPhysicalCount =
           changes.physicalCount !== undefined ? changes.physicalCount : existing.physicalCount;
         const nextVariance =
-          nextPhysicalCount !== null ? nextPhysicalCount - existing.closingTheoreticalBalance! : null;
+          cashVariance(nextPhysicalCount, varianceBase(existing));
 
         let nextVarianceReason =
           changes.varianceReason !== undefined

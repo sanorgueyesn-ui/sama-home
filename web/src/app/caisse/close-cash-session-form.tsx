@@ -38,7 +38,7 @@ export function CloseCashSessionForm({
   const hasCount = physicalCount.trim().length > 0;
   const parsedCount = hasCount ? Number(physicalCount) : null;
   const countValid = !hasCount || (Number.isInteger(parsedCount) && parsedCount! >= 0);
-  const variance = hasCount && countValid ? parsedCount! - theoreticalBalance : null;
+  const variance = hasCount && countValid ? parsedCount! - expectedCash : null;
 
   function handleClose() {
     if (!countValid) {
@@ -87,11 +87,11 @@ export function CloseCashSessionForm({
       </div>
 
       <div className="rounded-xl bg-app-panel-2 px-4 py-3">
-        <p className="text-xs font-bold text-app-muted">SOLDE THÉORIQUE (ce qui sert à calculer l&apos;écart)</p>
+        <p className="text-xs font-bold text-app-muted">SOLDE THÉORIQUE TOTAL</p>
         <p className="mt-1 text-xl font-extrabold text-app-text">{fmtFcfa(theoreticalBalance)}</p>
         <dl className="mt-2 space-y-1 border-t border-app-line-strong pt-2 text-xs text-app-muted">
           <div className="flex justify-between gap-3">
-            <dt>dont espèces attendues au tiroir</dt>
+            <dt className="font-bold text-app-text">dont espèces attendues au tiroir</dt>
             <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(expectedCash)}</dd>
           </div>
           <div className="flex justify-between gap-3">
@@ -108,7 +108,7 @@ export function CloseCashSessionForm({
       <div>
         <label htmlFor="physicalCount" className="mb-1.5 block text-xs font-bold text-app-text">
           Comptage physique <span className="font-medium text-app-faint">(facultatif)</span>
-          <span className="mt-0.5 block text-[11px] font-medium text-app-muted">Il est comparé au solde théorique total ci-dessus.</span>
+          <span className="mt-0.5 block text-[11px] font-medium text-app-muted">Comptez uniquement les espèces du tiroir : elles sont comparées aux espèces attendues ({fmtFcfa(expectedCash)}). Wave et Orange Money ne créent pas d&apos;écart.</span>
         </label>
         <input
           id="physicalCount"

@@ -21,12 +21,17 @@ export function ModifyClosureForm({
   currentVarianceReason,
   currentCloseNote,
   closingTheoreticalBalance,
+  varianceBase,
+  varianceBaseLabel,
 }: {
   sessionId: string;
   currentPhysicalCount: number | null;
   currentVarianceReason: string | null;
   currentCloseNote: string | null;
   closingTheoreticalBalance: number;
+  /** Ce à quoi le comptage est comparé : espèces attendues, ou solde total pour une ancienne clôture. */
+  varianceBase: number;
+  varianceBaseLabel: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -42,7 +47,7 @@ export function ModifyClosureForm({
   const hasCount = physicalCount.trim().length > 0;
   const parsedCount = hasCount ? Number(physicalCount) : null;
   const countValid = !hasCount || (Number.isInteger(parsedCount) && parsedCount! >= 0);
-  const variance = hasCount && countValid ? parsedCount! - closingTheoreticalBalance : null;
+  const variance = hasCount && countValid ? parsedCount! - varianceBase : null;
 
   function handleSubmit() {
     if (!countValid) {
@@ -99,8 +104,9 @@ export function ModifyClosureForm({
       </p>
 
       <div className="rounded-xl bg-surface-sunken px-4 py-3">
-        <p className="text-xs font-bold text-fg/50">SOLDE THÉORIQUE (non modifiable)</p>
-        <p className="mt-1 text-lg font-extrabold text-fg">{fmtFcfa(closingTheoreticalBalance)}</p>
+        <p className="text-xs font-bold text-fg/50">{varianceBaseLabel} (non modifiable)</p>
+        <p className="mt-1 text-lg font-extrabold text-fg">{fmtFcfa(varianceBase)}</p>
+        <p className="mt-1 text-[11px] text-fg/50">Solde théorique total : {fmtFcfa(closingTheoreticalBalance)}</p>
       </div>
 
       <div>

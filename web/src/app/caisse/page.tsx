@@ -12,6 +12,7 @@ import { CashActivityList } from "./cash-activity-list";
 import { MachineConnectedBadge } from "@/components/ui/icons";
 import { PageHeader, PageShell, StatTile, Surface, SectionTitle } from "@/components/ui/page-kit";
 import { getActiveSpace } from "@/lib/active-mode";
+import { nextOpeningBalance, varianceBase } from "@/lib/cash-rules";
 
 function fmtFcfa(amount: number) {
   const sign = amount < 0 ? "-" : "";
@@ -53,14 +54,13 @@ export default async function CaissePage() {
     let proposedBalance: number | null = null;
     let proposedOriginLabel: string | null = null;
     if (last) {
-      if (last.physicalCount !== null) {
-        proposedBalance = last.physicalCount;
-        proposedOriginLabel = "Origine : dernier comptage physique.";
-      } else {
-        proposedBalance = last.closingTheoreticalBalance;
-        proposedOriginLabel =
-          "Origine : dernier solde théorique de clôture (aucun comptage physique n'avait été renseigné).";
-      }
+      proposedBalance = nextOpeningBalance(last);
+      proposedOriginLabel =
+        last.physicalCount === null
+          ? "Origine : dernier solde théorique de clôture (aucun comptage physique n'avait été renseigné)."
+          : last.closingExpectedCash !== null
+            ? "Origine : dernier solde théorique, corrigé de l'écart d'espèces constaté au comptage."
+            : "Origine : dernier comptage physique.";
     }
 
     return (
@@ -115,6 +115,8 @@ export default async function CaissePage() {
                     currentVarianceReason={last.varianceReason}
                     currentCloseNote={last.closeNote}
                     closingTheoreticalBalance={last.closingTheoreticalBalance}
+                    varianceBase={varianceBase(last) ?? last.closingTheoreticalBalance}
+                    varianceBaseLabel={last.closingExpectedCash !== null ? "ESPÈCES ATTENDUES AU TIROIR" : "SOLDE THÉORIQUE TOTAL (ancienne règle)"}
                   />
                 </div>
               ) : null}

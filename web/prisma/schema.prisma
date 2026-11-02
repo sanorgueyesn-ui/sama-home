@@ -1055,6 +1055,10 @@ model CashSession {
   /// si une correction est ajoutée plus tard (voir modification de clôture,
   /// Bloc 17.2 section 14, qui ne touche jamais ce champ).
   closingTheoreticalBalance Int?
+  /// Espèces attendues au tiroir à la clôture (sans Wave ni Orange Money), figées avec le reste.
+  /// NULL = session clôturée sous l'ancienne règle (écart calculé contre le solde total) : ces
+  /// sessions gardent leur calcul d'origine, jamais recalculé après coup.
+  closingExpectedCash       Int?
   /// Comptage physique — facultatif (Bloc 17.1 décision D).
   physicalCount             Int?
   /// `physicalCount - closingTheoreticalBalance`, renseigné seulement si

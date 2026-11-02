@@ -102,6 +102,38 @@ export async function computeTheoreticalBalance(
 }
 
 /**
+ * Espèces attendues dans le tiroir : ouverture + paiements EN ESPÈCES − dépenses EN ESPÈCES − versements
+ * à la banque + corrections. Wave et Orange Money n'y entrent jamais (ils ne se comptent pas dans un
+ * tiroir). Même fenêtre et mêmes filtres d'établissement que `computeTheoreticalBalance`.
+ */
+export async function computeExpectedCashBalance(
+  client: DbClient,
+  session: Pick<CashSession, "id" | "openingBalance" | "openedAt" | "closedAt" | "establishmentId">,
+): Promise<number> {
+  const windowEnd = session.closedAt ?? new Date();
+  const establishmentFilter = session.establishmentId ? { establishmentId: session.establishmentId } : {};
+  const [cashIn, cashOut, transfersOut, corrections] = await Promise.all([
+    client.payment.aggregate({
+      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      _sum: { amount: true },
+    }),
+    client.expense.aggregate({
+      where: { method: "CASH", paidAt: { gte: session.openedAt, lt: windowEnd }, ...establishmentFilter },
+      _sum: { amount: true },
+    }),
+    client.bankTransfer.aggregate({ where: { status: "EFFECTED", cashSessionId: session.id }, _sum: { amount: true } }),
+    client.cashCorrection.aggregate({ where: { cashSessionId: session.id }, _sum: { amount: true } }),
+  ]);
+  return (
+    session.openingBalance +
+    (cashIn._sum.amount ?? 0) -
+    (cashOut._sum.amount ?? 0) -
+    (transfersOut._sum.amount ?? 0) +
+    (corrections._sum.amount ?? 0)
+  );
+}
+
+/**
  * Session OPEN de la caisse unique, avec son solde théorique courant (ou
  * `null` si aucune session n'est ouverte). Phase 3C / Lot C1 —
  * getCurrentUser() pour résoudre l'établissement, propagé à la fois à la
