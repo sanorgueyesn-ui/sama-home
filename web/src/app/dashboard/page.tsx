@@ -7,18 +7,31 @@ import { MODE_THEME } from "@/components/dashboard/dashboard-ui";
 import { getCurrentUser } from "@/lib/dal";
 import { getDashboardOverview } from "@/lib/dashboard-overview";
 import { listMySpaces } from "@/lib/spaces-data";
-import { toShellMode, type ShellMode } from "@/lib/business-mode";
+import { AGENCY_MODE_ENABLED, selectableShellModes, toShellMode, type ShellMode } from "@/lib/business-mode";
 
 export const metadata = { title: "Tableau de bord — SAMA HOME" };
 
-const MODES: ShellMode[] = ["RESIDENCE", "HOTEL", "AGENCY"];
+// Modes proposés à l'aperçu : sans l'Agence tant qu'elle est suspendue (AGENCY_MODE_ENABLED).
+const MODES: ShellMode[] = selectableShellModes();
 const MODE_SHORT_LABEL: Record<ShellMode, string> = { RESIDENCE: "Résidence", HOTEL: "Hôtel", AGENCY: "Agence" };
 
 function parseMode(raw: string | undefined): ShellMode | null {
   const value = (raw ?? "").toUpperCase();
   if (value === "RESIDENCE" || value === "HOTEL") return value;
-  if (value === "AGENCY" || value === "IMMOBILIER") return "AGENCY";
+  if (AGENCY_MODE_ENABLED && (value === "AGENCY" || value === "IMMOBILIER")) return "AGENCY";
   return null;
+}
+
+/** Un espace Agence déjà créé n'est pas supprimé : il attend simplement la réouverture du mode. */
+function AgencySuspendedNotice() {
+  return (
+    <section role="status" className="rounded-2xl border border-app-line bg-app-panel p-6 sm:p-8">
+      <h1 className="text-lg font-extrabold text-app-text">Le mode Agence immobilière est suspendu pour le moment</h1>
+      <p className="mt-2 max-w-xl text-sm text-app-muted">
+        Nous nous concentrons sur les hôtels et les résidences. Vos données sont conservées : le mode reviendra tel que vous l&apos;avez laissé.
+      </p>
+    </section>
+  );
 }
 
 /**
@@ -47,7 +60,7 @@ export default async function DashboardPage(props: { searchParams?: Promise<{ mo
         {isPreviewAllowed ? (
           <nav aria-label="Aperçu des modes (développement local)" className="flex items-center gap-3">
             <span className="hidden whitespace-nowrap text-xs font-semibold text-app-faint lg:inline">Aperçu développement</span>
-            <div className="grid w-full grid-cols-3 gap-1 rounded-xl border border-app-line bg-app-panel-2 p-1 lg:w-auto">
+            <div className={`grid w-full gap-1 rounded-xl border border-app-line bg-app-panel-2 p-1 lg:w-auto ${MODES.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
               {MODES.map((item) => (
                 <Link
                   key={item}
@@ -68,7 +81,7 @@ export default async function DashboardPage(props: { searchParams?: Promise<{ mo
         {mode === "HOTEL" ? (
           <DashboardHotelView overview={overview} />
         ) : mode === "AGENCY" ? (
-          <DashboardAgencyView overview={overview} />
+          AGENCY_MODE_ENABLED ? <DashboardAgencyView overview={overview} /> : <AgencySuspendedNotice />
         ) : (
           <DashboardResidenceView overview={overview} />
         )}

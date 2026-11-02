@@ -9,6 +9,7 @@ import {
 } from "@/app/actions/establishment-registration";
 import { AuthField } from "@/components/auth/auth-field";
 import type { VerifyOtpFormState } from "@/lib/definitions";
+import { AGENCY_MODE_ENABLED } from "@/lib/business-mode";
 import type { PricingSettingsView } from "@/lib/platform-settings-data";
 import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 
@@ -41,7 +42,8 @@ export function RegisterForm({
   const [selectedMode, setSelectedMode] = useState<"RESIDENCE" | "HOTEL" | "AGENCY">(() => {
     const m = (initialMode || "").toUpperCase();
     if (m === "HOTEL") return "HOTEL";
-    if (m === "AGENCY" || m === "IMMOBILIER") return "AGENCY";
+    // Agence immobilière suspendue : un lien `?mode=AGENCY` retombe sur la Résidence.
+    if (AGENCY_MODE_ENABLED && (m === "AGENCY" || m === "IMMOBILIER")) return "AGENCY";
     return "RESIDENCE";
   });
 
@@ -465,7 +467,7 @@ export function RegisterForm({
           </Link>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className={`grid gap-2 ${AGENCY_MODE_ENABLED ? "grid-cols-3" : "grid-cols-2"}`}>
           {/* Mode 1: Résidence */}
           <button
             type="button"
@@ -473,7 +475,7 @@ export function RegisterForm({
             className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition-all ${
               selectedMode === "RESIDENCE"
                 ? "border-navy bg-navy/10 text-fg shadow-sm ring-2 ring-navy dark:bg-white/10 dark:ring-white"
-                : "border-border/20 bg-surface text-muted hover:border-border/50 hover:text-fg"
+                : "border-border/20 bg-surface text-fg/60 hover:border-border/50 hover:text-fg"
             }`}
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised mb-1.5 shadow-2xs">
@@ -483,7 +485,7 @@ export function RegisterForm({
               </svg>
             </span>
             <span className="text-xs font-black leading-tight">Résidence</span>
-            <span className="text-[10px] text-muted">Meublée</span>
+            <span className="text-[10px] text-fg/60">Meublée</span>
           </button>
 
           {/* Mode 2: Hôtel */}
@@ -493,7 +495,7 @@ export function RegisterForm({
             className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition-all ${
               selectedMode === "HOTEL"
                 ? "border-navy bg-navy/10 text-fg shadow-sm ring-2 ring-navy dark:bg-white/10 dark:ring-white"
-                : "border-border/20 bg-surface text-muted hover:border-border/50 hover:text-fg"
+                : "border-border/20 bg-surface text-fg/60 hover:border-border/50 hover:text-fg"
             }`}
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised mb-1.5 shadow-2xs">
@@ -504,17 +506,18 @@ export function RegisterForm({
               </svg>
             </span>
             <span className="text-xs font-black leading-tight">Hôtel</span>
-            <span className="text-[10px] text-muted">Nuitée</span>
+            <span className="text-[10px] text-fg/60">Nuitée</span>
           </button>
 
-          {/* Mode 3: Agence */}
+          {/* Mode 3: Agence — suspendue (AGENCY_MODE_ENABLED) : le choix n'est pas proposé */}
+          {AGENCY_MODE_ENABLED ? (
           <button
             type="button"
             onClick={() => setSelectedMode("AGENCY")}
             className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition-all ${
               selectedMode === "AGENCY"
                 ? "border-navy bg-navy/10 text-fg shadow-sm ring-2 ring-navy dark:bg-white/10 dark:ring-white"
-                : "border-border/20 bg-surface text-muted hover:border-border/50 hover:text-fg"
+                : "border-border/20 bg-surface text-fg/60 hover:border-border/50 hover:text-fg"
             }`}
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised mb-1.5 shadow-2xs">
@@ -523,8 +526,9 @@ export function RegisterForm({
               </svg>
             </span>
             <span className="text-xs font-black leading-tight">Agence</span>
-            <span className="text-[10px] text-muted">Immobilière</span>
+            <span className="text-[10px] text-fg/60">Immobilière</span>
           </button>
+          ) : null}
         </div>
       </div>
 

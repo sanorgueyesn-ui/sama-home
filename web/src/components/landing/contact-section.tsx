@@ -62,7 +62,7 @@ export function ContactSection() {
           >
             Nous contacter
           </h2>
-          <p className="mt-2 text-sm text-muted sm:text-base">
+          <p className="mt-2 text-sm text-fg/60 sm:text-base">
             Notre équipe basée à Dakar est à votre disposition pour toute question ou démonstration.
           </p>
         </div>
@@ -79,13 +79,13 @@ export function ContactSection() {
                 </span>
                 <div>
                   <h3 className="text-base font-bold text-fg">Téléphone &amp; WhatsApp</h3>
-                  <p className="text-xs text-muted">Lignes directes</p>
+                  <p className="text-xs text-fg/60">Lignes directes</p>
                 </div>
               </div>
 
               {/* Ligne 1 */}
               <div className="mt-6">
-                <div className="flex items-center justify-between text-xs text-muted">
+                <div className="flex items-center justify-between text-xs text-fg/60">
                   <span>Ligne principale</span>
                   <span>7j/7</span>
                 </div>
@@ -97,7 +97,7 @@ export function ContactSection() {
                     href={`tel:${COMPANY_LEGAL_INFO.phone}`}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/30 bg-surface px-3 py-2 text-xs font-semibold text-fg hover:bg-surface-sunken transition-colors"
                   >
-                    <PhoneIcon className="h-3.5 w-3.5 text-muted" />
+                    <PhoneIcon className="h-3.5 w-3.5 text-fg/60" />
                     <span>Appeler</span>
                   </a>
                   <a
@@ -116,7 +116,7 @@ export function ContactSection() {
 
               {/* Ligne 2 */}
               <div>
-                <div className="flex items-center justify-between text-xs text-muted">
+                <div className="flex items-center justify-between text-xs text-fg/60">
                   <span>Service commercial</span>
                   <span>8h – 20h</span>
                 </div>
@@ -128,7 +128,7 @@ export function ContactSection() {
                     href={`tel:${COMPANY_LEGAL_INFO.phoneSecondary}`}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/30 bg-surface px-3 py-2 text-xs font-semibold text-fg hover:bg-surface-sunken transition-colors"
                   >
-                    <PhoneIcon className="h-3.5 w-3.5 text-muted" />
+                    <PhoneIcon className="h-3.5 w-3.5 text-fg/60" />
                     <span>Appeler</span>
                   </a>
                   <a
@@ -154,13 +154,13 @@ export function ContactSection() {
                 </span>
                 <div>
                   <h3 className="text-base font-bold text-fg">Courrier électronique</h3>
-                  <p className="text-xs text-muted">Échanges écrits et devis</p>
+                  <p className="text-xs text-fg/60">Échanges écrits et devis</p>
                 </div>
               </div>
 
               {/* Email 1 : Support */}
               <div className="mt-6">
-                <div className="text-xs text-muted">Support &amp; Plateforme</div>
+                <div className="text-xs text-fg/60">Support &amp; Plateforme</div>
                 <div className="mt-1 text-sm font-bold tracking-tight text-fg break-all">
                   {COMPANY_LEGAL_INFO.supportEmail}
                 </div>
@@ -169,7 +169,7 @@ export function ContactSection() {
                     href={`mailto:${COMPANY_LEGAL_INFO.supportEmail}?subject=${encodeURIComponent("Demande de renseignements — SAMA HOME")}`}
                     className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/30 bg-surface px-3 py-2 text-xs font-semibold text-fg hover:bg-surface-sunken transition-colors"
                   >
-                    <MailIcon className="h-3.5 w-3.5 text-muted" />
+                    <MailIcon className="h-3.5 w-3.5 text-fg/60" />
                     <span>Écrire à {COMPANY_LEGAL_INFO.supportEmail}</span>
                   </a>
                 </div>
@@ -179,7 +179,7 @@ export function ContactSection() {
 
               {/* Email 2 : Projet direct */}
               <div>
-                <div className="text-xs text-muted">Courrier direct projet</div>
+                <div className="text-xs text-fg/60">Courrier direct projet</div>
                 <div className="mt-1 text-sm font-bold tracking-tight text-fg break-all">
                   {projectEmail}
                 </div>
@@ -188,7 +188,7 @@ export function ContactSection() {
                     href={`mailto:${projectEmail}?subject=${encodeURIComponent("Contact SAMA HOME")}`}
                     className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/30 bg-surface px-3 py-2 text-xs font-semibold text-fg hover:bg-surface-sunken transition-colors"
                   >
-                    <MailIcon className="h-3.5 w-3.5 text-muted" />
+                    <MailIcon className="h-3.5 w-3.5 text-fg/60" />
                     <span>Écrire à {projectEmail}</span>
                   </a>
                 </div>
@@ -205,17 +205,17 @@ export function ContactSection() {
                 </span>
                 <div>
                   <h3 className="text-base font-bold text-fg">Siège &amp; Immatriculation</h3>
-                  <p className="text-xs text-muted">Dakar, Sénégal</p>
+                  <p className="text-xs text-fg/60">Dakar, Sénégal</p>
                 </div>
               </div>
 
               {/* Adresse physique */}
               <div className="mt-6">
-                <div className="text-xs text-muted">Adresse d&apos;exploitation</div>
+                <div className="text-xs text-fg/60">Adresse d&apos;exploitation</div>
                 <p className="mt-1 text-sm font-semibold text-fg leading-relaxed">
                   {COMPANY_LEGAL_INFO.address}
                   <br />
-                  <span className="text-muted text-xs">{COMPANY_LEGAL_INFO.city}, {COMPANY_LEGAL_INFO.country}</span>
+                  <span className="text-fg/60 text-xs">{COMPANY_LEGAL_INFO.city}, {COMPANY_LEGAL_INFO.country}</span>
                 </p>
                 <div className="mt-2.5">
                   <a
@@ -235,19 +235,19 @@ export function ContactSection() {
               {/* Mentions légales sobres */}
               <div className="space-y-1.5 text-xs">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted">Éditeur :</span>
+                  <span className="text-fg/60">Éditeur :</span>
                   <span className="font-semibold text-fg text-right">{COMPANY_LEGAL_INFO.commercialName}</span>
                 </div>
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted">Gérant :</span>
+                  <span className="text-fg/60">Gérant :</span>
                   <span className="font-semibold text-fg text-right">{COMPANY_LEGAL_INFO.manager}</span>
                 </div>
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted">NINEA :</span>
+                  <span className="text-fg/60">NINEA :</span>
                   <span className="font-mono text-fg text-right">{COMPANY_LEGAL_INFO.ninea}</span>
                 </div>
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted">RCCM :</span>
+                  <span className="text-fg/60">RCCM :</span>
                   <span className="font-mono text-fg text-right">{COMPANY_LEGAL_INFO.rccm}</span>
                 </div>
               </div>

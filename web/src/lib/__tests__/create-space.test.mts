@@ -112,11 +112,32 @@ test("modération manuelle : espace PENDING, appartenance ADMIN du compte de la 
 test("approbation automatique : ACTIVE avec essai, bascule vers le nouvel espace, redirection", async () => {
   reset();
   autoApprove = true;
-  const result = await run({ name: "Agence Nord", businessMode: "REAL_ESTATE" });
+  const result = await run({ name: "Hôtel Nord", businessMode: "HOTEL" });
   assert.deepEqual(result, { redirect: "/dashboard" });
   assert.equal(created[0].data.status, "ACTIVE");
+  assert.equal(created[0].data.businessMode, "HOTEL");
   assert.deepEqual(trials, [{ establishmentId: "new-space", actor: "u1" }]);
   assert.deepEqual(sessionWrites, [{ where: { id: "sess-1", userId: "u1" }, data: { activeEstablishmentId: "new-space" } }]);
+});
+
+test("agence immobilière suspendue : refusée côté serveur même si la demande est forgée, rien n'est écrit", async () => {
+  reset();
+  autoApprove = true;
+  const result = await run({ name: "Agence Nord", businessMode: "REAL_ESTATE" });
+  assert.ok("state" in result && result.state?.errors?.businessMode, "erreur de champ attendue sur le type d'activité");
+  assert.match(String(result.state?.errors?.businessMode), /pas disponibles pour le moment/);
+  assert.equal(created.length, 0);
+  assert.equal(memberships.length, 0);
+  assert.equal(trials.length, 0);
+  assert.equal(sessionWrites.length, 0);
+});
+
+test("résidence : toujours acceptée", async () => {
+  reset();
+  autoApprove = true;
+  const result = await run({ name: "Résidence Nord", businessMode: "RESIDENCE" });
+  assert.deepEqual(result, { redirect: "/dashboard" });
+  assert.equal(created[0].data.businessMode, "RESIDENCE");
 });
 
 test("gestionnaire : refusé, rien n'est créé", async () => {

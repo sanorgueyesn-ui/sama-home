@@ -15,6 +15,56 @@ import {
   type GuestInfoSettings,
 } from "@/lib/guest-info";
 import { SettingsSection } from "./settings-ui";
+import { SettingsTabPanel, SettingsTabs, type SettingsTab } from "./settings-tabs";
+
+type TabId = "identite" | "contrats" | "messages";
+
+/** Onglet qui contient chaque champ : sert à ouvrir celui où se trouve une erreur. */
+const FIELD_TAB: Record<string, TabId> = {
+  establishmentName: "identite",
+  logoUrl: "identite",
+  phone: "identite",
+  secondaryPhone: "identite",
+  address: "identite",
+  email: "identite",
+  description: "identite",
+  contractThresholdDays: "contrats",
+  whatsappTemplate: "messages",
+  guestWifiName: "messages",
+  guestWifiPassword: "messages",
+  guestTvInstructions: "messages",
+  guestAcInstructions: "messages",
+  guestHouseRules: "messages",
+  guestExtraInfo: "messages",
+  guestCheckoutTime: "messages",
+};
+
+/** Champs rangés dans « Plus d'options » : une erreur sur l'un d'eux ouvre ce bloc. */
+const ADVANCED_FIELDS = ["guestTvInstructions", "guestAcInstructions", "guestHouseRules", "guestExtraInfo", "guestCheckoutTime"];
+
+const TAB_LABELS: Record<TabId, string> = {
+  identite: "Identité et contact",
+  contrats: "Contrats",
+  messages: "Message d'accueil",
+};
+
+/** Libellés courts, pour qu'aucun onglet ne soit coupé sur un téléphone. */
+const TAB_SHORT_LABELS: Record<TabId, string> = {
+  identite: "Identité",
+  contrats: "Contrats",
+  messages: "Message",
+};
+
+/** Onglets en erreur, dans l'ordre d'affichage. */
+function tabsWithErrors(errors: Record<string, string[] | undefined> | undefined): TabId[] {
+  if (!errors) return [];
+  const flagged = new Set<TabId>();
+  for (const [field, messages] of Object.entries(errors)) {
+    const tab = FIELD_TAB[field];
+    if (tab && messages && messages.length > 0) flagged.add(tab);
+  }
+  return (Object.keys(TAB_LABELS) as TabId[]).filter((id) => flagged.has(id));
+}
 
 type DraftKey =
   | "establishmentName"
@@ -55,7 +105,17 @@ const DRAFT_KEYS: DraftKey[] = [
 ];
 
 const DEFAULT_WHATSAPP_TEMPLATE =
-  "Bienvenue chez nous ! Merci pour votre confiance. N'hésitez pas si vous avez besoin de quoi que ce soit. Nous vous souhaitons un très agréable séjour !";
+  "Nous sommes ravis de vous accueillir. Notre équipe reste à votre disposition pour que votre séjour se déroule dans les meilleures conditions.";
+
+/** Deux modèles prêts à l'emploi : un clic remplit le texte, que l'on peut ensuite retoucher. */
+const MESSAGE_MODELS: { id: string; label: string; text: string }[] = [
+  { id: "bienvenue", label: "Bienvenue", text: DEFAULT_WHATSAPP_TEMPLATE },
+  {
+    id: "remerciement",
+    label: "Remerciement",
+    text: "Nous vous remercions de la confiance que vous nous accordez. Nous vous souhaitons un excellent séjour et restons joignables à tout moment.",
+  },
+];
 
 /** Variables acceptées par le générateur réel (src/lib/whatsapp.ts) : un clic les insère dans le message. */
 const VARIABLES: { token: string; label: string }[] = [
@@ -66,6 +126,8 @@ const VARIABLES: { token: string; label: string }[] = [
   { token: "{montant}", label: "Montant" },
   { token: "{acompte}", label: "Acompte" },
   { token: "{etablissement}", label: "Établissement" },
+  { token: "{wifi}", label: "Nom du Wi-Fi" },
+  { token: "{motdepasse}", label: "Mot de passe Wi-Fi" },
 ];
 
 type DefaultValues = {
@@ -186,9 +248,9 @@ function DocumentPreview({ draft, logo }: { draft: Draft; logo: string | null })
   const name = draft.establishmentName.trim();
   const phones = [draft.phone.trim(), draft.secondaryPhone.trim()].filter(Boolean).join(" · ");
   return (
-    <section aria-label="Aperçu de l'en-tête de vos documents" className="rounded-2xl border border-border/15 bg-surface-raised p-5 shadow-card sm:p-6">
-      <p className="mb-4 text-[11px] font-bold uppercase tracking-wider text-fg/45">Aperçu sur vos contrats</p>
-      <div className="flex items-start gap-4 rounded-xl border border-border/15 bg-surface p-4">
+    <section aria-label="Aperçu de l'en-tête de vos documents" className="rounded-2xl border border-border/15 bg-surface-raised p-5 shadow-card">
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-fg/45">Aperçu sur vos contrats</p>
+      <div className="flex flex-col items-stretch gap-3 rounded-xl border border-border/15 bg-surface p-4 sm:flex-row sm:items-start sm:gap-4 lg:flex-col lg:items-stretch lg:gap-3">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo} alt="" className="h-16 w-16 shrink-0 rounded-lg border border-border/15 bg-surface-sunken object-contain p-1.5" />
@@ -219,6 +281,34 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
   const templateRef = useRef<HTMLTextAreaElement>(null);
   const objectUrlRef = useRef<string | null>(null);
   const errors = state?.errors;
+  const [tab, setTab] = useState<TabId>("identite");
+  const errorTabs = tabsWithErrors(errors as Record<string, string[] | undefined> | undefined);
+
+  // Après une réponse du serveur avec des erreurs, on ouvre le premier onglet concerné : l'erreur ne
+  // doit jamais rester cachée dans un onglet fermé. (Ajustement d'état pendant le rendu, sans effet.)
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [seenState, setSeenState] = useState(state);
+  if (state !== seenState) {
+    setSeenState(state);
+    if (errorTabs.length > 0) setTab(errorTabs[0]);
+    // Une erreur sur un champ rangé dans « Plus d'options » ouvre ce bloc : jamais d'erreur cachée.
+    const failed = errors as Record<string, string[] | undefined> | undefined;
+    if (failed && ADVANCED_FIELDS.some((field) => (failed[field]?.length ?? 0) > 0)) setMoreOpen(true);
+  }
+
+  // Un champ invalide dans un onglet fermé : le navigateur ne peut pas le montrer. On ouvre son onglet,
+  // puis on lui rend le focus avec le message de validation.
+  function handleInvalid(e: React.FormEvent<HTMLFormElement>) {
+    const field = e.target as HTMLElement;
+    const owner = field.closest<HTMLElement>("[data-tab-panel]")?.dataset.tabPanel as TabId | undefined;
+    if (owner && owner !== tab) {
+      setTab(owner);
+      requestAnimationFrame(() => {
+        field.focus();
+        (field as HTMLInputElement).reportValidity?.();
+      });
+    }
+  }
 
   useEffect(() => {
     // L'URL créée par URL.createObjectURL() n'est révoquée qu'ici (changement de fichier ou
@@ -257,6 +347,15 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
     }
   }
 
+  /** Remplace tout le texte par un modèle ; le même événement `input` que la saisie met l'aperçu à jour. */
+  function applyModel(text: string) {
+    const el = templateRef.current;
+    if (!el) return;
+    el.value = text;
+    el.focus();
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
   function insertVariable(token: string) {
     const el = templateRef.current;
     if (!el) return;
@@ -290,6 +389,9 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
     amount: 36000,
     deposit: 10000,
     customTemplate: draft.whatsappTemplate,
+    // Le Wi-Fi saisi apparaît dans l'aperçu, comme dans le vrai message (Hôtel et Résidence seulement).
+    wifiName: guestInfo ? draft.guestWifiName : null,
+    wifiPassword: guestInfo ? draft.guestWifiPassword : null,
   });
   const usesVariables = draft.whatsappTemplate.includes("{");
 
@@ -320,10 +422,16 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
         ? "Tout est enregistré."
         : "Renseignez les informations pour commencer.";
 
-  return (
-    <form ref={formRef} action={formAction} onInput={handleInput} className="flex flex-col gap-5">
-      <DocumentPreview draft={draft} logo={previewToShow} />
+  const tabs: SettingsTab[] = (Object.keys(TAB_LABELS) as TabId[])
+    .map((id) => ({ id, label: TAB_LABELS[id], shortLabel: TAB_SHORT_LABELS[id], flagged: errorTabs.includes(id) }));
 
+  return (
+    <form ref={formRef} action={formAction} onInput={handleInput} onInvalidCapture={handleInvalid} className="flex flex-col gap-5">
+      <SettingsTabs label="Sections de l'établissement" tabs={tabs} active={tab} onChange={(id) => setTab(id as TabId)} />
+
+      <SettingsTabPanel id="identite" active={tab}>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_17rem]">
+      <div className="flex flex-col gap-5 lg:col-start-1 lg:row-start-1">
       <SettingsSection title="Identité" description="Le nom et le logo apparaissent sur vos contrats et vos documents.">
         <div className="flex flex-col gap-5">
           <Field
@@ -422,7 +530,17 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
           </div>
         </div>
       </SettingsSection>
+      </div>
+      {/* Après les champs dans le code comme à l'écran sur téléphone ; à droite, fixe, sur ordinateur. */}
+      <div className="lg:col-start-2 lg:row-start-1">
+        <div className="lg:sticky lg:top-24">
+          <DocumentPreview draft={draft} logo={previewToShow} />
+        </div>
+      </div>
+      </div>
+      </SettingsTabPanel>
 
+      <SettingsTabPanel id="contrats" active={tab} className="max-w-3xl">
       <SettingsSection title="Contrats" description="Quand le contrat de bail et la pièce d'identité sont demandés.">
         <div>
           <label htmlFor="contractThresholdDays" className="mb-1.5 block text-xs font-bold text-fg">
@@ -451,12 +569,34 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
           ))}
         </div>
       </SettingsSection>
+      </SettingsTabPanel>
 
-      <SettingsSection title="Message de confirmation WhatsApp" description="Le texte envoyé à vos clients pour confirmer une réservation.">
-        <div className="flex flex-col gap-4">
+      <SettingsTabPanel id="messages" active={tab} className="max-w-3xl">
+      <SettingsSection
+        title="Message d'accueil"
+        description="Un petit mot pour vos clients. Leur nom et les détails du séjour (logement, arrivée, départ, montant) sont ajoutés automatiquement."
+      >
+        <div className="flex flex-col gap-6">
+          <div>
+            <p className="mb-2 text-xs font-bold text-fg">1. Choisissez un modèle</p>
+            <ul className="flex flex-wrap gap-2">
+              {MESSAGE_MODELS.map((model) => (
+                <li key={model.id}>
+                  <button
+                    type="button"
+                    onClick={() => applyModel(model.text)}
+                    className="inline-flex h-11 items-center rounded-xl border border-border/20 bg-surface px-5 text-sm font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange"
+                  >
+                    {model.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div>
             <label htmlFor="whatsappTemplate" className="mb-1.5 block text-xs font-bold text-fg">
-              Votre message d&apos;accueil
+              2. Modifiez le texte si vous le souhaitez
             </label>
             <textarea
               id="whatsappTemplate"
@@ -475,8 +615,61 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
             ))}
           </div>
 
+          {guestInfo ? (
+            <fieldset className="flex flex-col gap-4">
+              <legend className="mb-1 text-xs font-bold text-fg">3. Wi-Fi de votre établissement</legend>
+              <input type="hidden" name="guestInfoSection" value="1" />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <Field
+                  id="guestWifiName"
+                  label="Nom du Wi-Fi"
+                  type="text"
+                  maxLength={GUEST_INFO_LIMITS.wifiName}
+                  autoComplete="off"
+                  placeholder="Ex : Teranga-Almadies"
+                  defaultValue={guestInfo.wifiName ?? undefined}
+                  errors={errors?.guestWifiName}
+                />
+                <Field
+                  id="guestWifiPassword"
+                  label="Mot de passe du Wi-Fi"
+                  type="text"
+                  maxLength={GUEST_INFO_LIMITS.wifiPassword}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="Ex : bienvenue2026"
+                  hint="Laissez vide si le réseau est ouvert."
+                  defaultValue={guestInfo.wifiPassword ?? undefined}
+                  errors={errors?.guestWifiPassword}
+                />
+              </div>
+            </fieldset>
+          ) : null}
+
           <div>
-            <p className="mb-2 text-xs font-bold text-fg">Insérer une information</p>
+            <p className="mb-2 text-xs font-bold text-fg">Aperçu : ce que votre client reçoit</p>
+            <div className="max-w-md rounded-2xl rounded-tl-sm border border-success/25 bg-success/10 p-4 text-sm leading-relaxed text-fg">
+              <p className="whitespace-pre-line">
+                <WhatsAppText text={whatsappPreview} />
+              </p>
+            </div>
+            <p className="mt-1.5 text-xs text-fg/45">Exemple avec un client et un séjour fictifs.</p>
+          </div>
+        </div>
+      </SettingsSection>
+
+      <details
+        open={moreOpen}
+        onToggle={(e) => setMoreOpen(e.currentTarget.open)}
+        className="mt-4 rounded-2xl border border-border/15 bg-surface-raised shadow-card"
+      >
+        <summary className="flex min-h-12 cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3 text-sm font-bold text-fg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-orange">
+          <span>Plus d&apos;options</span>
+          <span className="text-xs font-medium text-fg/50">Informations à insérer, télévision, climatisation, règles, QR code, test d&apos;envoi</span>
+        </summary>
+        <div className="flex flex-col gap-6 border-t border-border/10 p-5">
+          <div>
+            <p className="mb-2 text-xs font-bold text-fg">Insérer une information dans le texte</p>
             <ul className="flex flex-wrap gap-2">
               {VARIABLES.map((variable) => (
                 <li key={variable.token}>
@@ -495,59 +688,18 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                 ? "Vous utilisez des informations insérées : seul votre texte est envoyé, rien n'est ajouté automatiquement."
                 : "Sans information insérée, le nom du client est ajouté au début et les détails du séjour (logement, arrivée, départ, montant) à la suite."}
             </p>
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-bold text-fg">Message tel que le client le recevra</p>
-            <div className="max-w-md rounded-2xl rounded-tl-sm border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm leading-relaxed text-fg">
-              <p className="whitespace-pre-line">{whatsappPreview}</p>
-            </div>
-            <p className="mt-1.5 text-xs text-fg/45">Exemple avec un client et un séjour fictifs.</p>
             <TestSend message={whatsappPreview} defaultPhone={draft.phone} idPrefix="confirmation" />
           </div>
 
-          <p className="rounded-xl bg-surface-sunken px-4 py-3 text-xs text-fg/65">
-            Les tarifs par heure ou par jour se règlent dans chaque logement.{" "}
-            <Link href="/logements" className="font-bold text-fg underline-offset-2 hover:underline">
-              Ouvrir les logements
-            </Link>
-          </p>
-        </div>
-      </SettingsSection>
-
-      {guestInfo ? (
-        <SettingsSection
-          title="Informations pour vos clients"
-          description="Le Wi-Fi, la télévision, la climatisation : les questions que tous vos clients posent à l'arrivée. Renseignez-les une fois, puis envoyez-les par WhatsApp depuis la fiche d'une location."
-        >
-          <input type="hidden" name="guestInfoSection" value="1" />
-          <div className="flex flex-col gap-6">
-            <fieldset className="flex flex-col gap-4">
-              <legend className="mb-1 text-sm font-bold text-fg">Wi-Fi</legend>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <Field
-                  id="guestWifiName"
-                  label="Nom du réseau"
-                  type="text"
-                  maxLength={GUEST_INFO_LIMITS.wifiName}
-                  autoComplete="off"
-                  placeholder="Ex : Teranga-Almadies"
-                  defaultValue={guestInfo.wifiName ?? undefined}
-                  errors={errors?.guestWifiName}
-                />
-                <Field
-                  id="guestWifiPassword"
-                  label="Mot de passe"
-                  type="text"
-                  maxLength={GUEST_INFO_LIMITS.wifiPassword}
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder="Ex : bienvenue2026"
-                  hint="Laissez vide si le réseau est ouvert."
-                  defaultValue={guestInfo.wifiPassword ?? undefined}
-                  errors={errors?.guestWifiPassword}
-                />
+          {guestInfo ? (
+            <>
+              <div className="border-t border-border/10 pt-6">
+                <p className="text-sm font-bold text-fg">Informations pratiques pour vos clients</p>
+                <p className="mt-1 text-xs text-fg/55">
+                  Renseignez-les une fois, puis envoyez-les par WhatsApp depuis la fiche d&apos;une location. Seuls les champs remplis sont envoyés.
+                </p>
               </div>
+
               {wifiQr ? (
                 <div className="flex flex-col gap-4 rounded-xl border border-border/15 bg-surface p-4 sm:flex-row sm:items-center">
                   <svg
@@ -559,109 +711,114 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                     <path d={wifiQr.path} fill="#000000" />
                   </svg>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-fg">QR code de connexion</p>
+                    <p className="text-sm font-bold text-fg">QR code du Wi-Fi</p>
                     <p className="mt-1 text-xs leading-relaxed text-fg/60">
-                      Imprimez-le et affichez-le dans la chambre ou à la réception : le client le scanne avec son téléphone et se connecte, sans rien taper. Il se
-                      met à jour tout seul quand vous changez le nom ou le mot de passe.
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-fg/45">
-                      WhatsApp n&apos;accepte pas d&apos;image dans ce type de message : le QR code sert à l&apos;affichage, le message envoie le nom et le mot de passe.
+                      Imprimez-le et affichez-le dans la chambre ou à la réception : le client le scanne et se connecte, sans rien taper. Il se met à jour tout seul
+                      quand vous changez le nom ou le mot de passe.
                     </p>
                     <a
                       href={wifiQr.downloadHref}
                       download="wifi-qr-code.svg"
-                      className="mt-3 inline-flex h-10 items-center rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange"
+                      className="mt-3 inline-flex h-11 items-center rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange"
                     >
                       Télécharger le QR code
                     </a>
                   </div>
                 </div>
               ) : null}
-            </fieldset>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <TextAreaField
-                id="guestTvInstructions"
-                label="Télévision"
-                maxLength={GUEST_INFO_LIMITS.instructions}
-                placeholder="Ex : Allumez avec le bouton rouge de la télécommande noire, puis changez de chaîne avec ▲ et ▼."
-                hint="Comment l'allumer et changer de chaîne."
-                defaultValue={guestInfo.tvInstructions ?? undefined}
-                errors={errors?.guestTvInstructions}
-              />
-              <TextAreaField
-                id="guestAcInstructions"
-                label="Climatisation"
-                maxLength={GUEST_INFO_LIMITS.instructions}
-                placeholder="Ex : Appuyez sur ON/OFF, réglez entre 22 et 24 °C avec + et −. Pensez à fermer les fenêtres."
-                hint="Comment l'allumer et régler la température."
-                defaultValue={guestInfo.acInstructions ?? undefined}
-                errors={errors?.guestAcInstructions}
-              />
-            </div>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <TextAreaField
+                  id="guestTvInstructions"
+                  label="Télévision"
+                  maxLength={GUEST_INFO_LIMITS.instructions}
+                  placeholder="Ex : Allumez avec le bouton rouge de la télécommande noire, puis changez de chaîne avec ▲ et ▼."
+                  hint="Comment l'allumer et changer de chaîne."
+                  defaultValue={guestInfo.tvInstructions ?? undefined}
+                  errors={errors?.guestTvInstructions}
+                />
+                <TextAreaField
+                  id="guestAcInstructions"
+                  label="Climatisation"
+                  maxLength={GUEST_INFO_LIMITS.instructions}
+                  placeholder="Ex : Appuyez sur ON/OFF, réglez entre 22 et 24 °C avec + et −. Pensez à fermer les fenêtres."
+                  hint="Comment l'allumer et régler la température."
+                  defaultValue={guestInfo.acInstructions ?? undefined}
+                  errors={errors?.guestAcInstructions}
+                />
+              </div>
 
-            <Field
-              id="guestCheckoutTime"
-              label="Départ"
-              type="text"
-              maxLength={GUEST_INFO_LIMITS.checkoutTime}
-              placeholder="Ex : Départ avant 11 h, clé à la réception."
-              defaultValue={guestInfo.checkoutTime ?? undefined}
-              errors={errors?.guestCheckoutTime}
-            />
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <TextAreaField
-                id="guestHouseRules"
-                label="Règles de la maison"
-                maxLength={GUEST_INFO_LIMITS.houseRules}
-                placeholder="Ex : Pas de fête après 22 h. Non-fumeur à l'intérieur."
-                defaultValue={guestInfo.houseRules ?? undefined}
-                errors={errors?.guestHouseRules}
+              <Field
+                id="guestCheckoutTime"
+                label="Départ"
+                type="text"
+                maxLength={GUEST_INFO_LIMITS.checkoutTime}
+                placeholder="Ex : Départ avant 11 h, clé à la réception."
+                defaultValue={guestInfo.checkoutTime ?? undefined}
+                errors={errors?.guestCheckoutTime}
               />
-              <TextAreaField
-                id="guestExtraInfo"
-                label="Autres informations utiles"
-                maxLength={GUEST_INFO_LIMITS.extraInfo}
-                placeholder="Ex : En cas de coupure d'électricité ou d'eau, appelez la réception. Parking devant l'immeuble."
-                hint="Électricité, eau, parking, adresses utiles…"
-                defaultValue={guestInfo.extraInfo ?? undefined}
-                errors={errors?.guestExtraInfo}
-              />
-            </div>
 
-            <label className="flex items-start gap-3 rounded-xl bg-surface-sunken px-4 py-3 text-sm text-fg">
-              <input
-                type="checkbox"
-                name="guestIncludeEmergency"
-                defaultChecked={guestInfo.includeEmergency}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-navy"
-              />
-              <span>
-                <span className="font-bold">Ajouter les numéros d&apos;urgence du Sénégal</span>
-                <span className="mt-0.5 block text-xs text-fg/60">Police 17 · Pompiers 18 · SAMU 1515.</span>
-              </span>
-            </label>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <TextAreaField
+                  id="guestHouseRules"
+                  label="Règles de la maison"
+                  maxLength={GUEST_INFO_LIMITS.houseRules}
+                  placeholder="Ex : Pas de fête après 22 h. Non-fumeur à l'intérieur."
+                  defaultValue={guestInfo.houseRules ?? undefined}
+                  errors={errors?.guestHouseRules}
+                />
+                <TextAreaField
+                  id="guestExtraInfo"
+                  label="Autres informations utiles"
+                  maxLength={GUEST_INFO_LIMITS.extraInfo}
+                  placeholder="Ex : En cas de coupure d'électricité ou d'eau, appelez la réception. Parking devant l'immeuble."
+                  hint="Électricité, eau, parking, adresses utiles…"
+                  defaultValue={guestInfo.extraInfo ?? undefined}
+                  errors={errors?.guestExtraInfo}
+                />
+              </div>
 
-            <div>
-              <p className="mb-2 text-xs font-bold text-fg">Message tel que le client le recevra</p>
-              {hasGuestInfo(guestDraft) ? (
-                <div className="max-w-md rounded-2xl rounded-tl-sm border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm leading-relaxed text-fg">
-                  <p className="whitespace-pre-line">
-                    <WhatsAppText text={guestPreview} />
+              <label className="flex items-start gap-3 rounded-xl bg-surface-sunken px-4 py-3 text-sm text-fg">
+                <input
+                  type="checkbox"
+                  name="guestIncludeEmergency"
+                  defaultChecked={guestInfo.includeEmergency}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-navy"
+                />
+                <span>
+                  <span className="font-bold">Ajouter les numéros d&apos;urgence du Sénégal</span>
+                  <span className="mt-0.5 block text-xs text-fg/60">Police 17 · Pompiers 18 · SAMU 1515.</span>
+                </span>
+              </label>
+
+              <div>
+                <p className="mb-2 text-xs font-bold text-fg">Aperçu du message des informations pratiques</p>
+                {hasGuestInfo(guestDraft) ? (
+                  <div className="max-w-md rounded-2xl rounded-tl-sm border border-success/25 bg-success/10 p-4 text-sm leading-relaxed text-fg">
+                    <p className="whitespace-pre-line">
+                      <WhatsAppText text={guestPreview} />
+                    </p>
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-border/25 px-4 py-5 text-sm text-fg/55">
+                    Renseignez au moins une information ci-dessus (Wi-Fi compris) pour voir le message.
                   </p>
-                </div>
-              ) : (
-                <p className="rounded-xl border border-dashed border-border/25 px-4 py-5 text-sm text-fg/55">
-                  Renseignez au moins une information ci-dessus pour voir le message.
-                </p>
-              )}
-              <p className="mt-1.5 text-xs text-fg/45">Exemple avec un client fictif. Seuls les blocs renseignés sont envoyés.</p>
-              {hasGuestInfo(guestDraft) ? <TestSend message={guestPreview} defaultPhone={draft.phone} idPrefix="accueil" /> : null}
-            </div>
-          </div>
-        </SettingsSection>
-      ) : null}
+                )}
+                <p className="mt-1.5 text-xs text-fg/45">Exemple avec un client fictif.</p>
+                {hasGuestInfo(guestDraft) ? <TestSend message={guestPreview} defaultPhone={draft.phone} idPrefix="accueil" /> : null}
+              </div>
+            </>
+          ) : null}
+
+          <p className="rounded-xl bg-surface-sunken px-4 py-3 text-xs text-fg/65">
+            Les tarifs par heure ou par jour se règlent dans chaque logement.{" "}
+            <Link href="/logements" className="font-bold text-fg underline-offset-2 hover:underline">
+              Ouvrir les logements
+            </Link>
+          </p>
+        </div>
+      </details>
+      </SettingsTabPanel>
 
       {state?.message && (
         <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-sm font-medium text-danger">

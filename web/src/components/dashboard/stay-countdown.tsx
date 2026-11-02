@@ -106,47 +106,47 @@ export function StayCountdown({
   // Theme colors
   const statusTheme = isOverdue
     ? {
-        pulseBg: "bg-rose-500",
-        dotBg: "bg-rose-400",
-        text: "text-rose-400",
-        badgeBg: "bg-rose-500/15 border-rose-500/30 text-rose-300",
-        progressBar: "bg-gradient-to-r from-rose-500 to-red-600 shadow-[0_0_12px_rgba(244,63,94,0.5)]",
-        glow: "border-rose-500/30",
+        pulseBg: "bg-danger",
+        dotBg: "bg-danger",
+        text: "text-app-bad",
+        badgeBg: "bg-danger/15 border-danger/30 text-app-bad",
+        progressBar: "bg-gradient-to-r from-danger to-danger shadow-[0_0_12px_rgba(244,63,94,0.5)]",
+        glow: "border-danger/30",
         label: "Sortie dépassée",
       }
     : isUrgent
       ? {
-          pulseBg: "bg-amber-400",
-          dotBg: "bg-amber-400",
-          text: "text-amber-400",
-          badgeBg: "bg-amber-500/15 border-amber-500/30 text-amber-300",
-          progressBar: "bg-gradient-to-r from-amber-500 to-brand-orange shadow-[0_0_12px_rgba(245,158,11,0.4)]",
-          glow: "border-amber-500/30",
+          pulseBg: "bg-warning",
+          dotBg: "bg-warning",
+          text: "text-app-warn",
+          badgeBg: "bg-warning/15 border-warning/30 text-app-warn",
+          progressBar: "bg-gradient-to-r from-warning to-brand-orange shadow-[0_0_12px_rgba(245,158,11,0.4)]",
+          glow: "border-warning/30",
           label: "Départ imminent",
         }
       : {
-          pulseBg: "bg-emerald-400",
-          dotBg: "bg-emerald-400",
-          text: "text-emerald-400",
-          badgeBg: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
-          progressBar: "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]",
-          glow: "border-emerald-500/30",
+          pulseBg: "bg-success",
+          dotBg: "bg-success",
+          text: "text-app-good",
+          badgeBg: "bg-success/15 border-success/30 text-app-good",
+          progressBar: "bg-gradient-to-r from-success to-success shadow-[0_0_10px_rgba(16,185,129,0.3)]",
+          glow: "border-success/30",
           label: "Séjour en cours",
         };
 
   if (!mounted) {
     // Initial server-side / unmounted skeleton to avoid hydration mismatches
     return (
-      <div className={`rounded-xl border border-white/10 bg-surface-sunken/60 p-2.5 ${className}`}>
+      <div className={`rounded-xl border border-border/15 bg-surface-sunken/60 p-2.5 ${className}`}>
         <div className="flex items-center justify-between text-xs">
           <span className="flex items-center gap-1.5 font-bold text-fg/60">
-            <span className="h-2 w-2 rounded-full bg-white/20" />
+            <span className="h-2 w-2 rounded-full bg-fg/20" />
             <span>Calcul du décompte...</span>
           </span>
           <span className="text-[10px] font-bold text-fg/40">...%</span>
         </div>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-1/2 bg-white/20" />
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-fg/10">
+          <div className="h-full w-1/2 bg-fg/20" />
         </div>
       </div>
     );
@@ -156,7 +156,7 @@ export function StayCountdown({
   if (variant === "compact") {
     return (
       <div
-        className={`rounded-xl border ${statusTheme.glow} bg-black/40 backdrop-blur-md p-2.5 transition-all ${className}`}
+        className={`rounded-xl border ${statusTheme.glow} bg-surface-sunken/60 backdrop-blur-md p-2.5 transition-all ${className}`}
       >
         <div className="flex items-center justify-between gap-1 text-xs">
           <div className="flex min-w-0 items-center gap-1.5">
@@ -170,11 +170,11 @@ export function StayCountdown({
               {isOverdue ? `Sortie dépassée (+${countdownFormatted})` : `Sortie dans ${countdownFormatted}`}
             </span>
           </div>
-          <span className="shrink-0 text-[10.5px] font-black text-white/80">{progress}%</span>
+          <span className="shrink-0 text-[10.5px] font-black text-fg/80">{progress}%</span>
         </div>
 
         {/* Progress bar */}
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-fg/10">
           <div
             className={`h-full rounded-full transition-all duration-500 ${statusTheme.progressBar}`}
             style={{ width: `${progress}%` }}
@@ -182,8 +182,8 @@ export function StayCountdown({
         </div>
 
         {clientName ? (
-          <p className="mt-1.5 truncate text-[10px] font-medium text-white/60">
-            Occupant : <span className="font-bold text-white/90">{clientName}</span>
+          <p className="mt-1.5 truncate text-[10px] font-medium text-fg/60">
+            Occupant : <span className="font-bold text-fg/90">{clientName}</span>
           </p>
         ) : null}
       </div>
@@ -274,7 +274,7 @@ export function StayCountdown({
 
         {clientName ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-sunken px-3 py-1 text-xs font-bold text-fg">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/15 bg-surface-sunken px-3 py-1 text-xs font-bold text-fg">
               <UserIcon className="h-3.5 w-3.5 text-brand-orange" />
               <span>{clientName}</span>
             </span>
@@ -291,7 +291,7 @@ export function StayCountdown({
                   href={`https://wa.me/${clientPhone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-[#25D366]/15 px-2.5 py-1 text-xs font-bold text-[#25D366] hover:bg-[#25D366]/25 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-[#25D366]/15 px-2.5 py-1 text-xs font-bold text-[#25D366] hover:bg-[#25D366]/25 transition-colors"
                   title="Contacter sur WhatsApp"
                 >
                   <ChatIcon className="h-3 w-3" />
@@ -316,7 +316,7 @@ export function StayCountdown({
           </div>
         </div>
 
-        <div className="rounded-xl border border-white/5 bg-black/20 p-3 sm:text-right">
+        <div className="rounded-xl border border-border/10 bg-surface-sunken/50 p-3 sm:text-right">
           <p className="text-[11px] font-bold uppercase text-fg/50">Date &amp; heure de sortie prévue</p>
           <p className="mt-0.5 text-sm font-extrabold text-fg">{formatDateFr(endDate)}</p>
           <p className="mt-0.5 text-xs font-medium text-fg/60">
@@ -329,7 +329,7 @@ export function StayCountdown({
       <div className="mt-5">
         <div className="mb-1.5 flex items-center justify-between text-xs font-bold text-fg/70">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
             Check-in : {formatTimeOnlyFr(startDate)}
           </span>
           <span className="font-extrabold text-brand-orange">{progress}% du séjour écoulé</span>
@@ -338,7 +338,7 @@ export function StayCountdown({
             Check-out : {formatTimeOnlyFr(endDate)}
           </span>
         </div>
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10 p-0.5">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-fg/10 p-0.5">
           <div
             className={`h-full rounded-full transition-all duration-700 ${statusTheme.progressBar}`}
             style={{ width: `${progress}%` }}

@@ -10,32 +10,26 @@ import type { ShellMode } from "@/lib/business-mode";
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 
-/** Identité de chaque mode. Classes écrites en toutes lettres pour que Tailwind les détecte. */
+/**
+ * Identité de chaque mode : son nom. Les couleurs sont les mêmes pour tous les modes et suivent la
+ * palette de l'établissement (Paramètres > Apparence) : action principale en couleur d'accent avec du
+ * texte sombre (contraste vérifié dans l'éditeur), repères et anneaux en accent. Changer la palette
+ * change donc aussi les tableaux de bord. Classes écrites en toutes lettres pour que Tailwind les détecte.
+ */
+const MODE_COLORS = {
+  primary: "bg-brand-orange text-ink hover:brightness-110",
+  soft: "bg-brand-orange/15 text-brand-orange",
+  bar: "bg-brand-orange",
+  ring: "focus-visible:outline-app-focus",
+} as const;
+
 export const MODE_THEME: Record<
   ShellMode,
   { label: string; primary: string; soft: string; bar: string; ring: string }
 > = {
-  RESIDENCE: {
-    label: "Résidence",
-    primary: "bg-[#e11d48] text-white hover:bg-[#f43f5e]",
-    soft: "bg-[#e11d48]/15 text-app-rose",
-    bar: "bg-[#e11d48]",
-    ring: "focus-visible:outline-[#fb7185]",
-  },
-  HOTEL: {
-    label: "Hôtel",
-    primary: "bg-[#2563eb] text-white hover:bg-[#3b82f6]",
-    soft: "bg-[#2563eb]/15 text-app-sky",
-    bar: "bg-[#2563eb]",
-    ring: "focus-visible:outline-app-focus",
-  },
-  AGENCY: {
-    label: "Agence immobilière",
-    primary: "bg-[#7c3aed] text-white hover:bg-[#8b5cf6]",
-    soft: "bg-[#7c3aed]/15 text-app-violet",
-    bar: "bg-[#7c3aed]",
-    ring: "focus-visible:outline-[#a78bfa]",
-  },
+  RESIDENCE: { label: "Résidence", ...MODE_COLORS },
+  HOTEL: { label: "Hôtel", ...MODE_COLORS },
+  AGENCY: { label: "Agence immobilière", ...MODE_COLORS },
 };
 
 const PANEL = "rounded-2xl border border-app-line bg-app-panel";
@@ -153,11 +147,10 @@ export function DashboardHeader({
 }
 
 /** Anneau de progression (taux d'occupation) : SVG pur, valeur lisible en clair à côté. */
-function Ring({ percent, label, mode }: { percent: number; label: string; mode: ShellMode }) {
+function Ring({ percent, label }: { percent: number; label: string }) {
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.min(100, Math.max(0, percent));
-  const stroke = mode === "HOTEL" ? "#60a5fa" : mode === "AGENCY" ? "#a78bfa" : "#fb7185";
   return (
     <div className="relative h-[76px] w-[76px] shrink-0" role="img" aria-label={`${clamped} % ${label}`}>
       <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
@@ -167,7 +160,7 @@ function Ring({ percent, label, mode }: { percent: number; label: string; mode: 
           cy="32"
           r={radius}
           fill="none"
-          stroke={stroke}
+          className="stroke-brand-orange"
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={`${(clamped / 100) * circumference} ${circumference}`}
@@ -186,7 +179,6 @@ function Ring({ percent, label, mode }: { percent: number; label: string; mode: 
  * anneau et trois compteurs du jour. Masquée sur ordinateur, où les indicateurs ont leur grille.
  */
 export function MobileSummary({
-  mode,
   title,
   value,
   caption,
@@ -194,7 +186,8 @@ export function MobileSummary({
   percentLabel,
   stats,
 }: {
-  mode: ShellMode;
+  /** Conservé pour les appelants : l'anneau suit désormais la palette, quel que soit le mode. */
+  mode?: ShellMode;
   title: string;
   value: string;
   caption: string;
@@ -212,7 +205,7 @@ export function MobileSummary({
           </p>
           <p className="mt-2 text-xs text-app-muted">{caption}</p>
         </div>
-        <Ring percent={percent} label={percentLabel} mode={mode} />
+        <Ring percent={percent} label={percentLabel} />
       </div>
       <dl className="mt-4 grid grid-cols-3 divide-x divide-app-line border-t border-app-line pt-3">
         {stats.map((stat) => (
@@ -295,10 +288,10 @@ export function EmptyState({ text, action }: { text: string; action?: { href: st
 }
 
 const SEGMENTS = [
-  { key: "available", label: "Disponibles", bar: "bg-emerald-500", dot: "bg-emerald-500" },
-  { key: "occupied", label: "Occupés", bar: "bg-[#ef4444]", dot: "bg-[#ef4444]" },
-  { key: "reserved", label: "Réservés", bar: "bg-sky-400", dot: "bg-sky-400" },
-  { key: "unavailable", label: "Indisponibles", bar: "bg-slate-500", dot: "bg-slate-500" },
+  { key: "available", label: "Disponibles", bar: "bg-success", dot: "bg-success" },
+  { key: "occupied", label: "Occupés", bar: "bg-danger", dot: "bg-danger" },
+  { key: "reserved", label: "Réservés", bar: "bg-info", dot: "bg-info" },
+  { key: "unavailable", label: "Indisponibles", bar: "bg-neutral", dot: "bg-neutral" },
 ] as const;
 
 /** Barre empilée des statuts + légende chiffrée. `noun` : « logements », « chambres », « biens »… */
@@ -363,10 +356,10 @@ export function WeeklyBars({ data }: { data: DailyFinancialPoint[] }) {
     <figure>
       <figcaption className="mb-3 flex items-center gap-4 text-[11px] font-semibold text-app-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden /> Recettes
+          <span className="h-2 w-2 rounded-full bg-success" aria-hidden /> Recettes
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[#ef4444]" aria-hidden /> Dépenses
+          <span className="h-2 w-2 rounded-full bg-danger" aria-hidden /> Dépenses
         </span>
       </figcaption>
       {total === 0 ? (
@@ -379,11 +372,11 @@ export function WeeklyBars({ data }: { data: DailyFinancialPoint[] }) {
             <div key={point.date.toISOString()} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1">
               <div className="flex flex-1 items-end justify-center gap-0.5">
                 <span
-                  className="w-1/2 max-w-3 rounded-t bg-emerald-500"
+                  className="w-1/2 max-w-3 rounded-t bg-success"
                   style={{ height: `${Math.max(point.revenue > 0 ? 4 : 0, (point.revenue / max) * 100)}%` }}
                 />
                 <span
-                  className="w-1/2 max-w-3 rounded-t bg-[#ef4444]"
+                  className="w-1/2 max-w-3 rounded-t bg-danger"
                   style={{ height: `${Math.max(point.expense > 0 ? 4 : 0, (point.expense / max) * 100)}%` }}
                 />
               </div>
@@ -431,7 +424,7 @@ export function TodoRow({
         </span>
         <span
           className={`flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-extrabold tabular-nums ${
-            count > 0 ? "bg-amber-400/15 text-app-warn" : "bg-fg/5 text-app-faint"
+            count > 0 ? "bg-warning/15 text-app-warn" : "bg-fg/5 text-app-faint"
           }`}
         >
           {count}

@@ -6,6 +6,9 @@ export const MAX_SPACES_PER_ACCOUNT = 3;
 export const SPACE_NAME_MIN = 2;
 export const SPACE_NAME_MAX = 80;
 
+import { AGENCY_MODE_ENABLED, selectableBusinessModes } from "./business-mode";
+
+/** Tous les modes qui existent (sert au type). Ceux qu'on peut réellement créer : voir `AGENCY_MODE_ENABLED`. */
 export const CREATABLE_BUSINESS_MODES = ["HOTEL", "RESIDENCE", "REAL_ESTATE"] as const;
 export type CreatableBusinessMode = (typeof CREATABLE_BUSINESS_MODES)[number];
 
@@ -14,8 +17,12 @@ export type ParsedSpaceCreation =
   | { ok: true; name: string; businessMode: CreatableBusinessMode }
   | { ok: false; field: "name" | "businessMode"; message: string };
 
-/** Valide les champs du formulaire (venus du navigateur) : nom borné, mode dans la liste blanche. */
-export function parseSpaceCreation(input: SpaceCreationInput): ParsedSpaceCreation {
+/**
+ * Valide les champs du formulaire (venus du navigateur) : nom borné, mode dans la liste blanche. Tant
+ * que le mode Agence est suspendu, il est refusé ici, côté serveur : masquer le choix dans le
+ * formulaire ne suffirait pas. `agencyEnabled` ne sert qu'aux tests.
+ */
+export function parseSpaceCreation(input: SpaceCreationInput, agencyEnabled: boolean = AGENCY_MODE_ENABLED): ParsedSpaceCreation {
   const name = typeof input.name === "string" ? input.name.trim().replace(/\s+/g, " ") : "";
   if (name.length < SPACE_NAME_MIN || name.length > SPACE_NAME_MAX) {
     return {
@@ -24,9 +31,15 @@ export function parseSpaceCreation(input: SpaceCreationInput): ParsedSpaceCreati
       message: `Le nom doit contenir entre ${SPACE_NAME_MIN} et ${SPACE_NAME_MAX} caractères.`,
     };
   }
-  const mode = CREATABLE_BUSINESS_MODES.find((candidate) => candidate === input.businessMode);
+  const allowed = selectableBusinessModes(agencyEnabled);
+  const mode = CREATABLE_BUSINESS_MODES.find((candidate) => candidate === input.businessMode && allowed.includes(candidate));
   if (!mode) {
-    return { ok: false, field: "businessMode", message: "Choisissez un type d'activité." };
+    const suspended = input.businessMode === "REAL_ESTATE" && !agencyEnabled;
+    return {
+      ok: false,
+      field: "businessMode",
+      message: suspended ? "Les agences immobilières ne sont pas disponibles pour le moment." : "Choisissez un type d'activité.",
+    };
   }
   return { ok: true, name, businessMode: mode };
 }

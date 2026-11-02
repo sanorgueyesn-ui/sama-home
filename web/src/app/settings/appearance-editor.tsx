@@ -17,7 +17,7 @@ import {
   type BrandPalette,
   type ThemeName,
 } from "@/lib/brand-colors";
-import { SettingsSection } from "./settings-ui";
+import { SettingsBlock } from "./settings-ui";
 
 type Key = keyof BrandColors;
 const KEYS: Key[] = ["primary", "secondary", "accent"];
@@ -47,42 +47,39 @@ function CheckIcon() {
   );
 }
 
-function PaletteCard({
-  palette,
-  selected,
-  wide,
-  onSelect,
-}: {
-  palette: BrandPalette;
-  selected: boolean;
-  wide: boolean;
-  onSelect: () => void;
-}) {
+/**
+ * Une palette : trois pastilles qui se chevauchent, son nom, ses couleurs. Une ligne d'une liste, pas
+ * une carte : trois pastilles suffisent à reconnaître la palette, et la liste se lit d'un coup d'œil.
+ * Sélection exclusive : `aria-pressed`, jamais `role="radio"` (même patron que le thème).
+ */
+function PaletteOption({ palette, selected, onSelect }: { palette: BrandPalette; selected: boolean; onSelect: () => void }) {
   return (
-    <li className={wide ? "sm:col-span-2" : ""}>
+    <li>
       <button
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        className={`group relative w-full rounded-2xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange ${
-          selected ? "border-brand-orange bg-fg/[0.04] ring-2 ring-brand-orange" : "border-border/15 hover:border-border/40 hover:bg-fg/[0.03]"
+        title={palette.description}
+        className={`relative flex min-h-14 w-full items-center gap-4 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-orange ${
+          selected ? "bg-fg/[0.05]" : "hover:bg-fg/[0.03]"
         }`}
       >
+        {selected ? <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-brand-orange" /> : null}
+        <span className="flex shrink-0 -space-x-2" aria-hidden>
+          {KEYS.map((key) => (
+            <span key={key} className="h-8 w-8 rounded-full ring-2 ring-surface-raised" style={{ backgroundColor: palette.colors[key] }} />
+          ))}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-fg">{palette.label}</span>
+          <span className="block truncate text-xs text-fg/50">{KEYS.map((key) => palette.names[key]).join(" · ")}</span>
+        </span>
         {selected ? (
-          <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-brand-orange text-ink" aria-hidden>
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-ink" aria-hidden>
             <CheckIcon />
           </span>
         ) : null}
-        <span className={`flex gap-1.5 overflow-hidden rounded-xl ${wide ? "h-16" : "h-14"}`} aria-hidden>
-          {KEYS.map((key) => (
-            <span key={key} className="flex-1 first:rounded-l-xl last:rounded-r-xl" style={{ backgroundColor: palette.colors[key] }} />
-          ))}
-        </span>
-        <span className="mt-3 block pr-8 text-sm font-bold text-fg">{palette.label}</span>
-        <span className="mt-0.5 block text-xs text-fg/55">{palette.description}</span>
-        <span className="mt-2 block text-[11px] font-semibold text-fg/45">
-          {KEYS.map((key) => palette.names[key]).join(" · ")}
-        </span>
+        <span className="sr-only">{palette.description}</span>
       </button>
     </li>
   );
@@ -106,20 +103,22 @@ function ColorRow({
   const role = BRAND_ROLES[colorKey];
   const valid = normalizeHexColor(value);
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_9rem] sm:items-center">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5">
       <input
         type="color"
         aria-label={`Choisir : ${role.label}`}
         value={valid ?? "#000000"}
         onChange={(e) => onChange(e.target.value.toUpperCase())}
-        className="h-14 w-14 shrink-0 cursor-pointer rounded-xl border border-border/20 bg-transparent p-1 [&::-moz-color-swatch]:rounded-lg [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-lg [&::-webkit-color-swatch]:border-0"
+        className="h-11 w-11 shrink-0 cursor-pointer rounded-full border border-border/20 bg-transparent p-0.5 [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
       />
       <div className="min-w-0">
-        <p className="text-sm font-bold text-fg">{role.label}</p>
+        <p className="text-sm font-bold text-fg">
+          {role.label}
+          <span className="ml-2 text-xs font-medium text-fg/45">{name}</span>
+        </p>
         <p className="text-xs text-fg/55">{role.hint}</p>
-        <p className="mt-0.5 text-[11px] font-semibold text-fg/45">{name}</p>
       </div>
-      <div className="col-span-2 sm:col-span-1">
+      <div>
         <label htmlFor={`hex-${colorKey}`} className="sr-only">
           Code hexadécimal : {role.label}
         </label>
@@ -132,17 +131,17 @@ function ColorRow({
           spellCheck={false}
           autoComplete="off"
           aria-invalid={Boolean(error)}
-          className={`h-11 w-full rounded-xl border bg-surface px-3 font-mono text-sm font-semibold uppercase text-fg outline-none focus:border-brand-orange ${
+          className={`h-11 w-28 rounded-xl border bg-surface px-3 font-mono text-sm font-semibold uppercase text-fg outline-none focus:border-brand-orange ${
             error ? "border-danger" : "border-border/20"
           }`}
         />
       </div>
       {error ? (
-        <p role="alert" className="col-span-2 text-xs font-medium text-danger sm:col-span-3">
+        <p role="alert" className="col-span-3 text-xs font-medium text-danger">
           {error}
         </p>
       ) : check ? (
-        <p className={`col-span-2 flex items-center gap-1.5 text-xs font-medium sm:col-span-3 ${check.ok ? "text-success" : "text-warning"}`}>
+        <p className={`col-span-3 flex items-center gap-1.5 text-xs font-medium ${check.ok ? "text-success" : "text-warning"}`}>
           <span aria-hidden>{check.ok ? "✓" : "!"}</span>
           {check.message}
         </p>
@@ -156,7 +155,7 @@ function LivePreview({ colors, theme }: { colors: BrandColors; theme: ThemeName 
   const primary = displayPrimary(colors.primary, theme);
   const accentText = displayAccentText(colors.accent, theme);
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/15 bg-surface">
+    <div className="overflow-hidden rounded-xl border border-border/15 bg-surface">
       <div className="flex items-center justify-between px-4 py-3" style={{ backgroundColor: primary, color: "#FFFFFF" }}>
         <span className="text-sm font-extrabold tracking-wide">SAMA HOME</span>
         <span className="rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ backgroundColor: colors.secondary, color: "#FFFFFF", textShadow: "0 1px 1px rgba(0,0,0,.35)" }}>
@@ -279,11 +278,11 @@ export function AppearanceEditor({
 
   const matchedPalette = (key: Key): string => {
     const palette = BRAND_PALETTES.find((p) => p.colors[key].toUpperCase() === shown[key].toUpperCase());
-    return palette ? palette.names[key] : "Couleur personnalisée";
+    return palette ? palette.names[key] : "Personnalisée";
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-8">
       {!canSave ? (
         <p role="status" className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
           Vous pouvez essayer les palettes, mais pour les enregistrer il faut d&apos;abord renseigner votre établissement.{" "}
@@ -293,42 +292,54 @@ export function AppearanceEditor({
         </p>
       ) : null}
 
-      <SettingsSection title="Palettes" description="Cinq combinaisons prêtes à l'emploi. Un clic montre le résultat dans toute l'application, sans rien enregistrer.">
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {BRAND_PALETTES.map((palette, index) => (
-            <PaletteCard
-              key={palette.id}
-              palette={palette}
-              wide={index === 0}
-              selected={selected === palette.id}
-              onSelect={() => updateEditor({ ...palette.colors })}
-            />
-          ))}
-        </ul>
-      </SettingsSection>
+      {/* Sur ordinateur : choix à gauche, aperçu fixe à droite (on voit le résultat sans remonter). Sur
+          téléphone : palettes, aperçu, puis réglage fin, dans cet ordre. */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start lg:gap-x-12">
+        <SettingsBlock
+          title="Palette"
+          description="Cinq combinaisons prêtes à l'emploi. Un clic montre le résultat dans toute l'application, sans rien enregistrer."
+          className="lg:col-start-1 lg:row-start-1"
+        >
+          <ul className="divide-y divide-border/10 overflow-hidden rounded-xl border border-border/15 bg-surface-raised">
+            {BRAND_PALETTES.map((palette) => (
+              <PaletteOption
+                key={palette.id}
+                palette={palette}
+                selected={selected === palette.id}
+                onSelect={() => updateEditor({ ...palette.colors })}
+              />
+            ))}
+          </ul>
+        </SettingsBlock>
 
-      <SettingsSection
-        title="Personnaliser les trois couleurs"
-        description="Partez d'une palette puis ajustez, ou composez la vôtre. Le texte blanc ou sombre posé dessus est vérifié pour rester lisible."
-      >
-        <div className="flex flex-col gap-6">
-          {KEYS.map((key) => (
-            <ColorRow
-              key={key}
-              colorKey={key}
-              value={editor[key]}
-              error={fieldErrors[key]}
-              check={key === "primary" ? contrast.primary : key === "accent" ? contrast.accent : null}
-              name={matchedPalette(key)}
-              onChange={(value) => updateEditor({ ...editor, [key]: value })}
-            />
-          ))}
-        </div>
-      </SettingsSection>
+        <SettingsBlock
+          title="Aperçu"
+          description="Les mêmes boutons et couleurs que dans l'application."
+          className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:border-t-0 lg:pt-0"
+        >
+          <LivePreview colors={shown} theme={theme} />
+        </SettingsBlock>
 
-      <SettingsSection title="Aperçu" description="Les mêmes boutons et couleurs que dans l'application, avec votre sélection.">
-        <LivePreview colors={shown} theme={theme} />
-      </SettingsSection>
+        <SettingsBlock
+          title="Couleurs personnalisées"
+          description="Partez d'une palette puis ajustez, ou composez la vôtre. Le texte blanc ou sombre posé dessus est vérifié pour rester lisible."
+          className="lg:col-start-1 lg:row-start-2"
+        >
+          <div className="flex flex-col gap-6">
+            {KEYS.map((key) => (
+              <ColorRow
+                key={key}
+                colorKey={key}
+                value={editor[key]}
+                error={fieldErrors[key]}
+                check={key === "primary" ? contrast.primary : key === "accent" ? contrast.accent : null}
+                name={matchedPalette(key)}
+                onChange={(value) => updateEditor({ ...editor, [key]: value })}
+              />
+            ))}
+          </div>
+        </SettingsBlock>
+      </div>
 
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex flex-col gap-3 rounded-2xl border border-border/15 bg-surface-raised/95 p-3 shadow-card backdrop-blur sm:flex-row sm:items-center sm:justify-between lg:bottom-4">
         <p role={message?.kind === "error" ? "alert" : "status"} className={`px-1 text-sm font-medium ${message?.kind === "error" ? "text-danger" : message ? "text-success" : "text-fg/60"}`}>

@@ -35,7 +35,9 @@ test("le texte blanc n'existe plus que sur des fonds de couleur de marque", () =
     const lines = readFileSync(file, "utf8").split("\n");
     lines.forEach((line, index) => {
       if (!/(?<![\w-])text-white(?![\w-])/.test(line)) return;
-      const onBrandColor = /bg-\[#(e11d48|2563eb|7c3aed|0284c7|1e60f0)\]|iconBgClassName|primary:/.test(line);
+      // Fonds de marque : la couleur principale (`bg-navy`, texte blanc vérifié dans l'éditeur) ou les
+      // classes d'action des modes (`primary:`, `iconBgClassName`).
+      const onBrandColor = /bg-navy|iconBgClassName|primary:/.test(line);
       assert.ok(onBrandColor, `${file}:${index + 1} : text-white hors fond de marque (invisible en thème clair)`);
     });
   }
@@ -43,8 +45,11 @@ test("le texte blanc n'existe plus que sur des fonds de couleur de marque", () =
 
 test("chaque variable de palette est définie en clair ET en sombre, et déclarée au thème Tailwind", () => {
   const css = readFileSync("src/app/globals.css", "utf8");
-  const light = css.slice(css.indexOf(":root {\n  --app-sidebar"), css.indexOf(':root[data-theme="dark"] {\n  --app-sidebar'));
-  const dark = css.slice(css.indexOf(':root[data-theme="dark"] {\n  --app-sidebar'));
+  const lightStart = css.indexOf(":root {\n  /* SOURCE UNIQUE");
+  const darkStart = css.indexOf(':root[data-theme="dark"] {\n  /* Même source');
+  assert.ok(lightStart > 0 && darkStart > lightStart, "blocs de palette introuvables");
+  const light = css.slice(lightStart, darkStart);
+  const dark = css.slice(darkStart);
   const names = [...light.matchAll(/--(app-[a-z0-9-]+):/g)].map((m) => m[1]);
   assert.ok(names.length >= 20, "palette incomplète");
   for (const name of names) {
@@ -67,6 +72,82 @@ test("palette de marque : la mise en page applique les couleurs adaptées au th�
   assert.match(layout, /"--color-brand-orange": brandColors\.accent/);
   const css = readFileSync("src/app/globals.css", "utf8");
   assert.match(css, /\.text-brand-orange \{\s*color: var\(--color-accent-text\);/);
+});
+
+// ---------------------------------------------------------------------------------------------
+// Synchronisation des couleurs : UNE source (les variables de page), la palette de marque qui pilote
+// l'accent partout, et plus aucune couleur écrite en dur dans les écrans de l'application.
+// ---------------------------------------------------------------------------------------------
+
+/** Écrans et composants de l'application d'un établissement (hors pages publiques et console plateforme). */
+const APP_SCREEN_FILES = [
+  ...FRAME_FILES,
+  "src/app/caisse/page.tsx",
+  "src/app/caisse/cash-activity-list.tsx",
+  "src/app/reservations/reservation-form.tsx",
+  "src/app/locations/rental-form.tsx",
+  "src/app/locations/[id]/page.tsx",
+  "src/components/dashboard/stay-countdown.tsx",
+  "src/components/dashboard/occupancy-donut.tsx",
+  "src/app/logements/property-form.tsx",
+  "src/app/logements/[id]/page.tsx",
+  "src/app/logements/[id]/delete-property-button.tsx",
+  "src/app/logements/page.tsx",
+  "src/app/settings/users/page.tsx",
+  "src/app/settings/settings-form.tsx",
+  "src/app/espaces/nouveau/add-space-form.tsx",
+  "src/app/clients/client-form.tsx",
+];
+
+test("cadre et tableaux de bord : aucune couleur hexadécimale écrite en dur (tout suit la palette ou le thème)", () => {
+  for (const file of FRAME_FILES) {
+    const source = readFileSync(file, "utf8");
+    const hex = source.match(/\[#[0-9a-fA-F]{3,8}\]|(?:stroke|fill)="#[0-9a-fA-F]{3,8}"/g);
+    assert.equal(hex, null, `${file} contient une couleur fixe (${hex?.join(", ")}) : utiliser bg-brand-orange, bg-navy, bg-success… ou un jeton app-*`);
+  }
+});
+
+test("écrans de l'application : plus de couleur d'état fixe (emerald, rose, amber, sky…), seulement les jetons réglés pour les deux thèmes", () => {
+  const FIXED = /(?<![\w-])(?:[a-z0-9-]+:)*(?:text|bg|border|ring|outline|from|to|via|fill|stroke|divide)-(?:emerald|green|teal|rose|red|amber|orange|yellow|sky|blue|cyan)-\d{2,3}(?![\w-])/g;
+  for (const file of APP_SCREEN_FILES) {
+    const found = readFileSync(file, "utf8").match(FIXED);
+    assert.equal(found, null, `${file} : ${found?.slice(0, 3).join(", ")} → text-app-good/bad/warn/sky ou bg-success/danger/warning/info`);
+  }
+});
+
+test("le cadre et les pages partagent UNE source : les jetons app-* dérivent des variables de page", () => {
+  const css = readFileSync("src/app/globals.css", "utf8");
+  const light = css.slice(css.indexOf(":root {\n  /* SOURCE UNIQUE"), css.indexOf(':root[data-theme="dark"] {\n  /* Même source'));
+  const dark = css.slice(css.indexOf(':root[data-theme="dark"] {\n  /* Même source'), css.indexOf("@theme inline", css.indexOf(':root[data-theme="dark"] {\n  /* Même source')));
+  for (const [theme, block] of [["clair", light], ["sombre", dark]] as const) {
+    for (const name of ["app-sidebar", "app-page", "app-panel", "app-text", "app-muted", "app-line", "app-hover", "app-focus"]) {
+      const line = block.match(new RegExp(`--${name}: ([^;]+);`));
+      assert.ok(line, `--${name} manque en thème ${theme}`);
+      assert.ok(/var\(--color-/.test(line[1]), `--${name} (${theme}) doit dériver d'une variable de page, pas d'une valeur fixe : ${line[1]}`);
+    }
+  }
+  // Le focus suit l'accent choisi dans Apparence.
+  assert.match(light, /--app-focus: var\(--color-accent-text\)/);
+});
+
+test("bordures : même règle en clair et en sombre, toujours avec une opacité", () => {
+  const css = readFileSync("src/app/globals.css", "utf8");
+  assert.equal([...css.matchAll(/--color-border: var\(--color-fg\);/g)].length, 2, "clair ET sombre");
+  for (const file of ["src/app/not-found.tsx", ...APP_SCREEN_FILES, "src/app/settings/settings-ui.tsx", "src/app/settings/settings-nav.tsx"]) {
+    const bare = readFileSync(file, "utf8").match(/(?<![\w/-])(?:border|divide|ring|outline)-border(?![/\w-])/g);
+    assert.equal(bare, null, `${file} : border-border sans opacité serait de la couleur du texte, plein`);
+  }
+});
+
+test("menu et tableaux de bord : l'accent vient de la palette de l'établissement, pas d'une teinte fixe par mode", () => {
+  const shell = readFileSync("src/components/navigation/app-shell.tsx", "utf8");
+  const accent = shell.slice(shell.indexOf("const MODE_ACCENT"), shell.indexOf("const SOON_ROUTES"));
+  assert.equal([...accent.matchAll(/bg-brand-orange/g)].length, 3);
+  assert.equal([...accent.matchAll(/text-brand-orange/g)].length, 3);
+  const ui = readFileSync("src/components/dashboard/dashboard-ui.tsx", "utf8");
+  const colors = ui.slice(ui.indexOf("const MODE_COLORS"), ui.indexOf("export const MODE_THEME"));
+  assert.match(colors, /primary: "bg-brand-orange text-ink/);
+  assert.match(colors, /bar: "bg-brand-orange"/);
 });
 
 test("éditeur d'apparence : réservé à l'administrateur côté page, enregistrement par l'action sécurisée existante", () => {

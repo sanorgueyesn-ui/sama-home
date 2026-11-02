@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { BuildingIcon, ChevronIcon } from "./settings-icons";
 import { SettingsPageHeader } from "./settings-ui";
 import { visibleGroups } from "./settings-nav-config";
+import { buildSetupSteps } from "./settings-setup";
 import { getCurrentUser } from "@/lib/dal";
 import { getSettings } from "@/lib/settings-data";
 import { listProperties } from "@/lib/properties-data";
@@ -48,6 +49,7 @@ export default async function SettingsPage() {
     "/settings/etablissement": settings?.establishmentName || "À renseigner : nom, téléphone, adresse",
     "/settings/apparence": `Thème ${theme === "dark" ? "sombre" : "clair"} et couleurs de l'établissement`,
     "/settings/expense-categories": `${expenseCategories.length} ${plural(expenseCategories.length, "catégorie", "catégories")}`,
+    "/settings/documents": "Présentations des contrats, quittances et tickets de caisse",
     "/settings/users": `${users.length} ${plural(users.length, "utilisateur", "utilisateurs")}`,
     "/settings/bank-accounts":
       bankAccounts.length === 0 ? "Aucun compte bancaire" : `${activeBankAccounts} actif(s) sur ${bankAccounts.length}`,
@@ -61,6 +63,13 @@ export default async function SettingsPage() {
 
   const initial = (settings?.establishmentName || "S").trim().charAt(0).toUpperCase();
   const contact = [settings?.phone, settings?.address, settings?.email].filter(Boolean).join(" · ");
+  const setup = buildSetupSteps({
+    establishmentName: settings?.establishmentName,
+    hasLogo: Boolean(settings?.logoUrl),
+    propertiesCount: propertiesTotal,
+    expenseCategoriesCount: expenseCategories.length,
+    isAdmin,
+  });
 
   return (
     <>
@@ -87,7 +96,59 @@ export default async function SettingsPage() {
         </Link>
       </section>
 
-      <div className="flex flex-col gap-7">
+      {setup.complete ? null : (
+        <section aria-labelledby="setup-title" className="mb-8 rounded-2xl border border-border/15 bg-surface-raised p-4 shadow-card sm:p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="setup-title" className="text-base font-bold text-fg">
+              À finaliser
+            </h2>
+            <p className="text-sm font-semibold text-fg/55">
+              {setup.done} sur {setup.total} terminées
+            </p>
+          </div>
+          <div
+            role="progressbar"
+            aria-label="Avancement de la configuration"
+            aria-valuemin={0}
+            aria-valuemax={setup.total}
+            aria-valuenow={setup.done}
+            className="mt-3 h-1.5 overflow-hidden rounded-full bg-fg/10"
+          >
+            <div className="h-full rounded-full bg-brand-orange" style={{ width: `${(setup.done / setup.total) * 100}%` }} />
+          </div>
+          <ul className="mt-2 divide-y divide-border/10">
+            {setup.steps.map((step) => (
+              <li key={step.id} className="flex items-center gap-3 py-3">
+                <span
+                  aria-hidden
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-extrabold ${
+                    step.done ? "border-success bg-success-bg text-success" : "border-border/30 text-transparent"
+                  }`}
+                >
+                  ✓
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-sm font-bold ${step.done ? "text-fg/50 line-through" : "text-fg"}`}>
+                    {step.label}
+                    <span className="sr-only">{step.done ? " : terminé" : " : à faire"}</span>
+                  </span>
+                  {step.done ? null : <span className="block text-xs text-fg/55">{step.hint}</span>}
+                </span>
+                {step.done ? null : (
+                  <Link
+                    href={step.href}
+                    className="inline-flex h-11 shrink-0 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
+                  >
+                    {step.cta}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-2 lg:items-start lg:gap-x-5">
         {visibleGroups(isAdmin).map((group) => {
           // « Vue d'ensemble » est cette page et « Établissement » a sa fiche en haut : jamais en double.
           const rows: HubRow[] = group.items
@@ -120,7 +181,7 @@ export default async function SettingsPage() {
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-sunken text-brand-orange">{row.icon}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-bold text-fg">{row.title}</span>
-                        <span className="block truncate text-xs text-fg/55">{row.description}</span>
+                        <span className="block text-xs text-fg/55">{row.description}</span>
                       </span>
                       <span className="shrink-0 text-fg/30">
                         <ChevronIcon />

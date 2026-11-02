@@ -50,9 +50,9 @@ test("QR Wi-Fi : \\ ; , : \" sont échappés, la barre oblique d'abord et une se
   assert.ok(!buildWifiQrPayload("a", "b")!.endsWith("\n"), "aucune fin de ligne");
 });
 
-test("message complet : Wi-Fi en premier, puis appareils, départ, règles, urgences, réception, teranga", () => {
+test("message complet : Wi-Fi en premier, puis appareils, départ, règles, urgences, réception, politesse", () => {
   const message = buildGuestInfoMessage({ ...base, settings: full });
-  const order = ["Bonjour Awa Diop", "Résidence Teranga", "Wi-Fi", "Teranga-Almadies", "bienvenue2026", "Télévision", "Climatisation", "Départ", "À savoir", "Urgences au Sénégal", "Police 17 · Pompiers 18 · SAMU 1515", "Appelez la réception", "+221 77 338 66 60", "Teranga : faites comme chez vous"];
+  const order = ["Bonjour Awa Diop", "Résidence Teranga", "Wi-Fi", "Teranga-Almadies", "bienvenue2026", "Télévision", "Climatisation", "Départ", "À savoir", "Urgences au Sénégal", "Police 17 · Pompiers 18 · SAMU 1515", "joignez la réception", "+221 77 338 66 60", "Cordialement"];
   let cursor = -1;
   for (const part of order) {
     const found = message.indexOf(part, cursor + 1);

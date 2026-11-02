@@ -1,4 +1,4 @@
-import { SettingsPageHeader, SettingsSection } from "../settings-ui";
+import { SettingsBlock, SettingsPageHeader } from "../settings-ui";
 import { ThemeSection } from "../theme-section";
 import { AppearanceEditor } from "../appearance-editor";
 import { getSettings } from "@/lib/settings-data";
@@ -15,16 +15,16 @@ export default async function AppearanceSettingsPage() {
   return (
     <>
       <SettingsPageHeader title="Apparence" description="Le thème de l'application et la palette de couleurs de votre établissement." />
-      <div className="flex flex-col gap-5">
-        <SettingsSection title="Thème" description="Sombre ou clair, sur cet appareil. Le choix est conservé après déconnexion.">
+      <div className="flex flex-col gap-8">
+        <SettingsBlock title="Thème" description="Sombre ou clair, sur cet appareil. Le choix est conservé après déconnexion." divider={false}>
           <ThemeSection current={theme} />
-        </SettingsSection>
+        </SettingsBlock>
         {user.role === "ADMIN" ? (
           <AppearanceEditor currentColors={resolveBrandColors(settings)} theme={theme} canSave={Boolean(settings)} />
         ) : (
-          <SettingsSection title="Palette de couleurs" description="Seul un administrateur peut modifier les couleurs de l'établissement." >
+          <SettingsBlock title="Palette de couleurs" description="Seul un administrateur peut modifier les couleurs de l'établissement.">
             <p className="text-sm text-fg/60">Contactez l&apos;administrateur de votre établissement pour changer la palette.</p>
-          </SettingsSection>
+          </SettingsBlock>
         )}
       </div>
     </>

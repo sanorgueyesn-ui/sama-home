@@ -25,7 +25,7 @@ type ContractSettings = {
   secondaryPhone: string | null;
   address: string;
   email: string | null;
-} | null;
+};
 
 export type ContractData = {
   rental: {
@@ -257,7 +257,8 @@ const styles = StyleSheet.create({
 });
 
 export function RentalContractDocument({ rental, settings, summary, logoImage }: ContractData) {
-  const establishmentName = settings?.establishmentName ?? "SAMA HOME";
+  // Le bailleur est l'établissement, forcément complet (lib/contract-settings.ts) : aucune valeur de repli.
+  const establishmentName = settings.establishmentName;
   const todayDate = fmtDateOnly(new Date());
   const propertyTitle = rental.property.type === "APARTMENT" ? "D'APPARTEMENT MEUBLÉ" : "DE CHAMBRE MEUBLÉE";
 
@@ -274,7 +275,7 @@ export function RentalContractDocument({ rental, settings, summary, logoImage }:
             <View>
               <Text style={styles.establishmentName}>{establishmentName}</Text>
               <Text style={styles.establishmentMeta}>
-                {[settings?.address, settings?.phone].filter(Boolean).join(" • Tél : ")}
+                {[settings.address, settings.phone].filter(Boolean).join(" • Tél : ")}
               </Text>
             </View>
           </View>
@@ -299,11 +300,11 @@ export function RentalContractDocument({ rental, settings, summary, logoImage }:
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Adresse :</Text>
-              <Text style={styles.infoValue}>{settings?.address || "Dakar, Sénégal"}</Text>
+              <Text style={styles.infoValue}>{settings.address}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Téléphone :</Text>
-              <Text style={styles.infoValue}>{[settings?.phone, settings?.secondaryPhone].filter(Boolean).join(" / ") || "—"}</Text>
+              <Text style={styles.infoValue}>{[settings.phone, settings.secondaryPhone].filter(Boolean).join(" / ")}</Text>
             </View>
           </View>
 
@@ -331,7 +332,7 @@ export function RentalContractDocument({ rental, settings, summary, logoImage }:
           <Text style={styles.articleHeader}>ARTICLE 1 : OBJET DU CONTRAT</Text>
           <Text style={styles.articleContent}>
             Le présent contrat concerne la location du logement meublé situé à :{" "}
-            <Text style={{ fontFamily: "Helvetica-Bold" }}>{settings?.address || "Dakar"}</Text>.{"\n"}
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>{settings.address}</Text>.{"\n"}
             Désignation : <Text style={{ fontFamily: "Helvetica-Bold" }}>{rental.property.name}</Text>.{" "}
             Le logement est loué meublé avec les équipements suivants : lit, climatisation, télévision, salle d&apos;eau privée, rangements, et accessoires d&apos;accueil.
           </Text>

@@ -737,14 +737,24 @@ test("inscription (lot E) : le mode choisi est conservé dans la demande, conver
   establishmentCreates.length = 0;
   const email = uniq("mode-");
   const form = registrationForm(email);
-  form.set("activityMode", "AGENCY");
+  form.set("activityMode", "HOTEL");
   await registration.registerEstablishment(undefined as never, form);
-  assert.equal(db.otp[0]!.businessMode, "REAL_ESTATE"); // « AGENCY » (interface) → REAL_ESTATE (stocké)
+  assert.equal(db.otp[0]!.businessMode, "HOTEL"); // le choix de l'interface est conservé dans la demande
 
   const code = db.otp[0]!.code;
   const ok = await verify(email, code);
   assert.equal(ok?.success, true);
-  assert.equal(establishmentCreates[0]!.businessMode, "REAL_ESTATE"); // lu dans la demande, pas du navigateur
+  assert.equal(establishmentCreates[0]!.businessMode, "HOTEL"); // lu dans la demande, pas du navigateur
+});
+
+test("inscription : l'agence immobilière est suspendue — refusée côté serveur, même forgée, aucune demande créée", async () => {
+  resetState();
+  const form = registrationForm(uniq("agence-"));
+  form.set("activityMode", "AGENCY");
+  const refused = await registration.registerEstablishment(undefined as never, form);
+  assert.equal(db.otp.length, 0, "aucun code ne doit être émis");
+  assert.ok(refused && "errors" in refused && refused.errors?.activityMode, "erreur sur le type d'établissement");
+  assert.equal(db.establishments, 0);
 });
 
 test("inscription (lot E) : mode absent ou inconnu → refusé ou Résidence ; jamais de valeur hors liste", async () => {

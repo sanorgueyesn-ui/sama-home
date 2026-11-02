@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PHONE_REGEX } from "@/lib/phone";
+import { selectableShellModes, type ShellMode } from "@/lib/business-mode";
 
 export const LoginSchema = z.object({
   username: z.string().trim().min(1, "Identifiant requis."),
@@ -544,7 +545,11 @@ export const EstablishmentRegistrationSchema = z.object({
     .pipe(z.email("Adresse e-mail invalide.")),
   password: newPasswordField(),
   plan: z.enum(["FREE_TRIAL", "PAID_9900"]).default("FREE_TRIAL"),
-  activityMode: z.enum(["RESIDENCE", "HOTEL", "AGENCY"]).optional().default("RESIDENCE"),
+  // Le mode Agence est suspendu (AGENCY_MODE_ENABLED) : « AGENCY » n'est plus accepté du tout, même forgé.
+  activityMode: z
+    .enum(selectableShellModes() as [ShellMode, ...ShellMode[]], { error: "Ce type d'établissement n'est pas disponible pour le moment." })
+    .optional()
+    .default("RESIDENCE"),
 });
 
 export type EstablishmentRegistrationFormState =

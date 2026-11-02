@@ -38,7 +38,10 @@
   --color-surface-raised: #f3f0e8;
   --color-surface-sunken: #d9d9d0;
   --color-fg: #26332d;
-  --color-border: #d1d0c7;
+  /* Les bordures sont la couleur du texte, rendue translucide par l'opacité de la classe
+     (border-border/15…). Même règle en clair et en sombre : un trait de même force dans le cadre
+     (menu, en-tête) et dans les pages. Toujours avec une opacité : jamais `border-border` seul. */
+  --color-border: var(--color-fg);
   --shadow-card: 0 1px 2px rgba(18, 48, 74, 0.05), 0 8px 20px rgba(18, 48, 74, 0.06);
 }
 
@@ -57,7 +60,7 @@
   --color-surface-raised: #182127;
   --color-surface-sunken: #060f15;
   --color-fg: #f7f8f6;
-  --color-border: #f7f8f6;
+  --color-border: var(--color-fg);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
 
   --color-success: #10b981;
@@ -128,22 +131,25 @@ body {
    text-app-*, border-app-*), pour que le thème change TOUT l'écran à la fois.
    ========================================================================== */
 :root {
-  --app-sidebar: #f8f6f0;
+  /* SOURCE UNIQUE : surfaces, texte et traits viennent des variables de la page
+     (--color-surface*, --color-fg, --color-border). Le cadre n'a plus ses propres valeurs : il ne
+     peut plus s'écarter des pages. Le focus suit la couleur d'accent choisie dans Apparence. */
+  --app-sidebar: var(--color-surface-raised);
   --app-page: var(--color-surface);
-  --app-panel: #f3f0e8;
-  --app-panel-2: #eae7de;
-  --app-panel-hi: #f8f6f0;
-  --app-hover: #e7e4da;
-  --app-track: #d9d6cb;
-  --app-line: #d9d6cb;
-  --app-line-soft: #e4e1d7;
-  --app-line-strong: #c9c5b8;
-  --app-line-hover: #b6b2a4;
-  --app-text: #1c2823;
-  --app-text-2: #33423b;
-  --app-muted: #55645d;
-  --app-faint: #6f7c76;
-  --app-focus: #2563eb;
+  --app-panel: var(--color-surface-raised);
+  --app-panel-2: color-mix(in srgb, var(--color-surface-raised) 55%, var(--color-surface));
+  --app-panel-hi: color-mix(in srgb, var(--color-surface-raised) 60%, white);
+  --app-hover: color-mix(in srgb, var(--color-fg) 7%, transparent);
+  --app-track: color-mix(in srgb, var(--color-fg) 12%, transparent);
+  --app-line: color-mix(in srgb, var(--color-fg) 14%, transparent);
+  --app-line-soft: color-mix(in srgb, var(--color-fg) 9%, transparent);
+  --app-line-strong: color-mix(in srgb, var(--color-fg) 22%, transparent);
+  --app-line-hover: color-mix(in srgb, var(--color-fg) 32%, transparent);
+  --app-text: var(--color-fg);
+  --app-text-2: color-mix(in srgb, var(--color-fg) 88%, var(--color-surface-raised));
+  --app-muted: color-mix(in srgb, var(--color-fg) 72%, var(--color-surface-raised));
+  --app-faint: color-mix(in srgb, var(--color-fg) 64%, var(--color-surface-raised));
+  --app-focus: var(--color-accent-text);
   --app-good: #047857;
   --app-warn: #b45309;
   --app-bad: #b91c1c;
@@ -153,22 +159,24 @@ body {
 }
 
 :root[data-theme="dark"] {
-  --app-sidebar: #0a0f16;
-  --app-page: #0b111a;
-  --app-panel: #111923;
-  --app-panel-2: #0f1620;
-  --app-panel-hi: #17212f;
-  --app-hover: #162130;
-  --app-track: #1d2a3b;
-  --app-line: #1b2736;
-  --app-line-soft: #1b2838;
-  --app-line-strong: #26374d;
-  --app-line-hover: #2d3f57;
-  --app-text: #ffffff;
-  --app-text-2: #cbd5e1;
-  --app-muted: #94a3b8;
-  --app-faint: #64748b;
-  --app-focus: #60a5fa;
+  /* Même source qu'en clair ; seuls changent le menu (plus sombre que la page, comme une marge) et
+     les dosages de texte, plus bas en sombre pour garder la hiérarchie. */
+  --app-sidebar: var(--color-surface-sunken);
+  --app-page: var(--color-surface);
+  --app-panel: var(--color-surface-raised);
+  --app-panel-2: color-mix(in srgb, var(--color-surface-raised) 55%, var(--color-surface-sunken));
+  --app-panel-hi: color-mix(in srgb, var(--color-surface-raised) 92%, white);
+  --app-hover: color-mix(in srgb, var(--color-fg) 7%, transparent);
+  --app-track: color-mix(in srgb, var(--color-fg) 12%, transparent);
+  --app-line: color-mix(in srgb, var(--color-fg) 14%, transparent);
+  --app-line-soft: color-mix(in srgb, var(--color-fg) 9%, transparent);
+  --app-line-strong: color-mix(in srgb, var(--color-fg) 22%, transparent);
+  --app-line-hover: color-mix(in srgb, var(--color-fg) 32%, transparent);
+  --app-text: var(--color-fg);
+  --app-text-2: color-mix(in srgb, var(--color-fg) 85%, var(--color-surface-raised));
+  --app-muted: color-mix(in srgb, var(--color-fg) 70%, var(--color-surface-raised));
+  --app-faint: color-mix(in srgb, var(--color-fg) 52%, var(--color-surface-raised));
+  --app-focus: var(--color-accent-text);
   --app-good: #34d399;
   --app-warn: #fcd34d;
   --app-bad: #fca5a5;

@@ -2,12 +2,16 @@
 
 import { useActionState } from "react";
 import { createSpace } from "@/app/actions/space";
+import { selectableBusinessModes } from "@/lib/business-mode";
 
-const MODE_OPTIONS = [
+const ALL_MODE_OPTIONS = [
   { value: "RESIDENCE", label: "Résidence meublée", hint: "Logements meublés, locations courtes ou longues" },
   { value: "HOTEL", label: "Hôtel", hint: "Chambres, séjours, réception" },
   { value: "REAL_ESTATE", label: "Agence immobilière", hint: "Biens, mandats, locations pour des propriétaires" },
 ] as const;
+
+// L'agence immobilière est suspendue (AGENCY_MODE_ENABLED) : elle n'est plus proposée.
+const MODE_OPTIONS = ALL_MODE_OPTIONS.filter((option) => selectableBusinessModes().includes(option.value));
 
 export function AddSpaceForm() {
   const [state, formAction, pending] = useActionState(createSpace, undefined);
@@ -42,7 +46,7 @@ export function AddSpaceForm() {
           className="rounded-xl border border-fg/15 bg-transparent px-4 py-3 text-sm"
         />
         {state?.errors?.name ? (
-          <p id="space-name-error" role="alert" className="text-xs text-red-400">
+          <p id="space-name-error" role="alert" className="text-xs text-app-bad">
             {state.errors.name[0]}
           </p>
         ) : null}
@@ -63,14 +67,14 @@ export function AddSpaceForm() {
           </label>
         ))}
         {state?.errors?.businessMode ? (
-          <p role="alert" className="text-xs text-red-400">
+          <p role="alert" className="text-xs text-app-bad">
             {state.errors.businessMode[0]}
           </p>
         ) : null}
       </fieldset>
 
       {state?.message ? (
-        <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <p role="alert" className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-app-bad">
           {state.message}
         </p>
       ) : null}

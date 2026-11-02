@@ -23,6 +23,27 @@ test("mode hors liste blanche : refusé (y compris l'alias d'interface AGENCY)",
   }
 });
 
+test("agence immobilière : refusée tant qu'elle est suspendue, acceptée quand le mode est rouvert", () => {
+  const suspended = parseSpaceCreation({ name: "Mon agence", businessMode: "REAL_ESTATE" });
+  assert.equal(suspended.ok, false);
+  if (!suspended.ok) {
+    assert.equal(suspended.field, "businessMode");
+    assert.match(suspended.message, /pas disponibles pour le moment/);
+  }
+  // Même règle, interrupteur rouvert : rien d'autre à changer pour rétablir le mode.
+  assert.deepEqual(parseSpaceCreation({ name: "Mon agence", businessMode: "REAL_ESTATE" }, true), {
+    ok: true,
+    name: "Mon agence",
+    businessMode: "REAL_ESTATE",
+  });
+  // Hôtel et résidence restent possibles dans les deux cas.
+  for (const agencyEnabled of [false, true]) {
+    for (const businessMode of ["HOTEL", "RESIDENCE"] as const) {
+      assert.equal(parseSpaceCreation({ name: "Mon espace", businessMode }, agencyEnabled).ok, true);
+    }
+  }
+});
+
 test("administrateur sous le plafond : autorisé", () => {
   assert.deepEqual(canCreateSpace({ isPlatformAdmin: false, role: "ADMIN", currentSpaceCount: 1 }), { allowed: true });
 });

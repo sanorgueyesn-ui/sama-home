@@ -5,6 +5,7 @@ import { getRentalPaymentSummary } from "@/lib/payment-summary";
 import { resolveImagePdfSource } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
 import { resolveBrandColors } from "@/lib/brand-colors";
+import { resolveContractLessor, type MissingLessorField } from "@/lib/contract-settings";
 
 /**
  * Lot "Contrat de location PDF" — lecture agrégée, dédiée au contrat,
@@ -54,6 +55,11 @@ export async function getRentalContractData(rentalId: string) {
   if (!rental) return null;
   if (rental.property.establishmentId !== user.establishmentId) return null;
 
+  // Le bailleur est l'établissement lui-même. Sans nom, téléphone et adresse, le contrat n'est pas
+  // généré : jamais de coordonnées de repli (voir lib/contract-settings.ts).
+  const lessor = resolveContractLessor(settings, rental.establishment?.name);
+  if (!lessor.ok) return { missing: lessor.missing };
+
   const [summary, logoImage] = await Promise.all([
     getRentalPaymentSummary(prisma, rentalId),
     settings?.logoUrl ? resolveImagePdfSource(getS3Client(), getBucketName(), settings.logoUrl) : Promise.resolve(null),
@@ -61,14 +67,8 @@ export async function getRentalContractData(rentalId: string) {
 
   const brandColors = resolveBrandColors(settings);
 
-  // Fallback intelligent pour toujours afficher un bailleur professionnel et complet
-  const effectiveSettings = {
-    establishmentName: settings?.establishmentName || rental.establishment?.name || "SAMA HOME",
-    phone: settings?.phone || "+221 77 338 66 60",
-    secondaryPhone: settings?.secondaryPhone || null,
-    address: settings?.address || "Grand Yoff, CICES Foire, Dakar (Sénégal)",
-    email: settings?.email || "contact@samahome.sn",
-  };
-
-  return { rental, settings: effectiveSettings, summary, logoImage, brandColors };
+  return { rental, settings: lessor.lessor, summary, logoImage, brandColors };
 }
+
+/** Champs manquants pour imprimer le bailleur : le contrat est alors refusé, avec renvoi vers les Paramètres. */
+export type ContractIncomplete = { missing: MissingLessorField[] };

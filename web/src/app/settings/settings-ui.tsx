@@ -19,7 +19,8 @@ export function SettingsPageHeader({
   hideBack = false,
   action,
 }: {
-  title: string;
+  /** Texte, ou éléments quand le titre diffère selon la taille d'écran (vue d'ensemble). */
+  title: ReactNode;
   description?: string;
   backHref?: string;
   /** Vue d'ensemble : il n'y a rien au-dessus à quoi revenir. */
@@ -75,6 +76,34 @@ export function SettingsSection({
         {description ? <p className="mt-1 text-sm text-fg/55">{description}</p> : null}
       </header>
       {children}
+    </section>
+  );
+}
+
+/**
+ * Section sans cadre : un titre, une phrase d'aide, puis le contenu, séparée de la précédente par un
+ * simple trait. Pour les pages de réglage où des cartes empilées alourdissent la lecture ; la carte
+ * (`SettingsSection`) reste pour les formulaires qui regroupent des champs.
+ */
+export function SettingsBlock({
+  title,
+  description,
+  children,
+  divider = true,
+  className = "",
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+  /** Trait au-dessus de la section (faux pour la première). */
+  divider?: boolean;
+  className?: string;
+}) {
+  return (
+    <section className={`${divider ? "border-t border-border/15 pt-8" : ""} ${className}`}>
+      <h2 className="text-base font-bold text-fg">{title}</h2>
+      {description ? <p className="mt-1 max-w-xl text-sm text-fg/55">{description}</p> : null}
+      <div className="mt-5">{children}</div>
     </section>
   );
 }

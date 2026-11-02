@@ -39,11 +39,10 @@ export function OccupancyDonut({
               cy="18"
               r="15.915"
               fill="transparent"
-              stroke="#10b981"
               strokeWidth="4"
               strokeDasharray={`${pAvailable} ${100 - pAvailable}`}
               strokeDashoffset={offsetAvailable}
-              className="transition-all duration-700 ease-out"
+              className="stroke-success transition-all duration-700 ease-out"
             />
           )}
           {pOccupied > 0 && (
@@ -52,11 +51,10 @@ export function OccupancyDonut({
               cy="18"
               r="15.915"
               fill="transparent"
-              stroke="#ef4444"
               strokeWidth="4"
               strokeDasharray={`${pOccupied} ${100 - pOccupied}`}
               strokeDashoffset={offsetOccupied}
-              className="transition-all duration-700 ease-out"
+              className="stroke-danger transition-all duration-700 ease-out"
             />
           )}
           {pReserved > 0 && (
@@ -65,11 +63,10 @@ export function OccupancyDonut({
               cy="18"
               r="15.915"
               fill="transparent"
-              stroke="#38bdf8"
               strokeWidth="4"
               strokeDasharray={`${pReserved} ${100 - pReserved}`}
               strokeDashoffset={offsetReserved}
-              className="transition-all duration-700 ease-out"
+              className="stroke-info transition-all duration-700 ease-out"
             />
           )}
         </svg>
@@ -82,24 +79,24 @@ export function OccupancyDonut({
       <div className="flex flex-col gap-2.5 w-full text-xs">
         <div className="flex items-center justify-between pb-1.5 border-b border-border/10">
           <span className="flex items-center gap-2 text-fg/80 font-medium">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+            <span className="h-2 w-2 rounded-full bg-success shadow-sm shadow-emerald-500/50" />
             Disponibles
           </span>
-          <span className="font-extrabold text-fg">{available} <span className="text-[11px] font-semibold text-emerald-400">({pAvailable}%)</span></span>
+          <span className="font-extrabold text-fg">{available} <span className="text-[11px] font-semibold text-app-good">({pAvailable}%)</span></span>
         </div>
         <div className="flex items-center justify-between pb-1.5 border-b border-border/10">
           <span className="flex items-center gap-2 text-fg/80 font-medium">
-            <span className="h-2 w-2 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" />
+            <span className="h-2 w-2 rounded-full bg-danger shadow-sm shadow-rose-500/50" />
             Occupés
           </span>
-          <span className="font-extrabold text-fg">{occupied} <span className="text-[11px] font-semibold text-rose-400">({pOccupied}%)</span></span>
+          <span className="font-extrabold text-fg">{occupied} <span className="text-[11px] font-semibold text-app-bad">({pOccupied}%)</span></span>
         </div>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-fg/80 font-medium">
-            <span className="h-2 w-2 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50" />
+            <span className="h-2 w-2 rounded-full bg-info shadow-sm shadow-sky-400/50" />
             Réservés
           </span>
-          <span className="font-extrabold text-fg">{reserved} <span className="text-[11px] font-semibold text-sky-400">({pReserved}%)</span></span>
+          <span className="font-extrabold text-fg">{reserved} <span className="text-[11px] font-semibold text-app-sky">({pReserved}%)</span></span>
         </div>
       </div>
     </div>

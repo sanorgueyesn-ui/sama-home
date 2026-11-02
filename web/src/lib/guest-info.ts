@@ -87,32 +87,37 @@ export type GuestInfoMessageInput = {
  * Message d'accueil du séjour. Chaque bloc n'apparaît que s'il est renseigné ; rien n'est inventé.
  * Structure issue des bonnes pratiques d'accueil : le Wi-Fi d'abord (c'est la première question des
  * clients), puis les appareils, puis le départ et les règles, puis comment joindre l'équipe.
- * La touche de la maison : la teranga, l'hospitalité sénégalaise.
+ * Même présentation que les messages de réservation et de location (src/lib/whatsapp.ts) : en-tête
+ * au nom de l'établissement, rubriques en gras, formule de politesse, aucun emoji (ils arrivaient
+ * corrompus dans WhatsApp Web).
  */
 export function buildGuestInfoMessage(input: GuestInfoMessageInput): string {
   const { settings: s } = input;
-  const lines: string[] = [
+  const name = input.establishmentName.trim();
+  const lines: string[] = [];
+  if (name) lines.push(`*${name.toUpperCase()}*`, "");
+  lines.push(
     `Bonjour ${input.clientName},`,
     "",
-    `Bienvenue chez ${input.establishmentName} ! Voici les informations utiles pour votre séjour (${input.propertyName}).`,
-  ];
+    `Bienvenue chez ${input.establishmentName}. Voici les informations utiles pour votre séjour (${input.propertyName}).`,
+  );
 
   if (filled(s.wifiName)) {
-    lines.push("", "📶 *Wi-Fi*", `Réseau : ${s.wifiName.trim()}`);
+    lines.push("", "*Connexion Wi-Fi*", `Réseau : ${s.wifiName.trim()}`);
     if (filled(s.wifiPassword)) lines.push(`Mot de passe : ${s.wifiPassword.trim()}`);
   }
-  if (filled(s.tvInstructions)) lines.push("", "📺 *Télévision*", s.tvInstructions.trim());
-  if (filled(s.acInstructions)) lines.push("", "❄️ *Climatisation*", s.acInstructions.trim());
-  if (filled(s.checkoutTime)) lines.push("", "🕐 *Départ*", s.checkoutTime.trim());
+  if (filled(s.tvInstructions)) lines.push("", "*Télévision*", s.tvInstructions.trim());
+  if (filled(s.acInstructions)) lines.push("", "*Climatisation*", s.acInstructions.trim());
+  if (filled(s.checkoutTime)) lines.push("", "*Départ*", s.checkoutTime.trim());
   if (filled(s.houseRules) || filled(s.extraInfo)) {
-    lines.push("", "📋 *À savoir*");
+    lines.push("", "*À savoir*");
     if (filled(s.houseRules)) lines.push(s.houseRules.trim());
     if (filled(s.extraInfo)) lines.push(s.extraInfo.trim());
   }
-  if (s.includeEmergency) lines.push("", `🚨 *Urgences au Sénégal* : ${SENEGAL_EMERGENCY_LINE}`);
-  if (filled(input.receptionPhone)) lines.push("", `Besoin d'aide ? Appelez la réception : ${input.receptionPhone.trim()}`);
+  if (s.includeEmergency) lines.push("", `*Urgences au Sénégal* : ${SENEGAL_EMERGENCY_LINE}`);
+  if (filled(input.receptionPhone)) lines.push("", `Pour toute question, joignez la réception : ${input.receptionPhone.trim()}`);
 
-  lines.push("", "Teranga : faites comme chez vous. Excellent séjour !", `— L'équipe ${input.establishmentName}`);
+  lines.push("", "Nous vous souhaitons un excellent séjour.", "Cordialement,", name || "L'équipe");
   return lines.join("\n");
 }
 

@@ -124,7 +124,7 @@ export function RecentOccupiedTable({ stays, now, noun }: { stays: DashboardStay
               <td className="px-1 py-2.5 text-app-text-2">{shortDateTime(stay.arrivalAt)}</td>
               <td className="px-1 py-2.5 tabular-nums text-app-text-2">{formatElapsed(stay.arrivalAt, now)}</td>
               <td className="px-1 py-2.5 text-right">
-                <span className="rounded-full bg-[#ef4444]/15 px-2 py-0.5 text-xs font-bold text-app-bad">Occupé</span>
+                <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-bold text-app-bad">Occupé</span>
               </td>
             </tr>
           ))}
@@ -135,10 +135,10 @@ export function RecentOccupiedTable({ stays, now, noun }: { stays: DashboardStay
 }
 
 const TILE_STATUS = {
-  AVAILABLE: { label: "Disponible", tile: "border-emerald-500/30 bg-emerald-500/8", dot: "bg-emerald-500" },
-  OCCUPIED: { label: "Occupé", tile: "border-[#ef4444]/35 bg-[#ef4444]/10", dot: "bg-[#ef4444]" },
-  RESERVED: { label: "Réservé", tile: "border-sky-400/35 bg-sky-400/10", dot: "bg-sky-400" },
-  UNAVAILABLE: { label: "Indisponible", tile: "border-slate-500/30 bg-slate-500/8", dot: "bg-slate-500" },
+  AVAILABLE: { label: "Disponible", tile: "border-success/30 bg-success/10", dot: "bg-success" },
+  OCCUPIED: { label: "Occupé", tile: "border-danger/35 bg-danger/10", dot: "bg-danger" },
+  RESERVED: { label: "Réservé", tile: "border-info/35 bg-info/10", dot: "bg-info" },
+  UNAVAILABLE: { label: "Indisponible", tile: "border-neutral/30 bg-neutral/10", dot: "bg-neutral" },
 } as const;
 
 /** Rack : une tuile par unité, colorée par son statut calculé. */

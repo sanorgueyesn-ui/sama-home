@@ -6,11 +6,16 @@ import { renderRentalContractPdf } from "@/lib/contract-pdf";
 // sur le runtime Edge.
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getRentalContractData(id);
   if (!data) {
     return NextResponse.json({ error: "Location introuvable." }, { status: 404 });
+  }
+  // Coordonnées de l'établissement incomplètes : pas de contrat avec des coordonnées inventées. On
+  // renvoie vers la page où les renseigner, qui explique pourquoi.
+  if ("missing" in data) {
+    return NextResponse.redirect(new URL("/settings/etablissement?contrat=incomplet", request.url), 303);
   }
 
   const pdf = await renderRentalContractPdf({

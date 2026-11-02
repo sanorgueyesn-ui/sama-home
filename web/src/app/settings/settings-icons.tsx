@@ -123,6 +123,16 @@ export function ReceiptIcon() {
   );
 }
 
+export function DocumentIcon() {
+  return (
+    <svg {...cardIconProps()}>
+      <path d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5a1.5 1.5 0 0 1 1-1.5Z" />
+      <path d="M14 3.5V8h4" />
+      <path d="M9 12.5h6M9 15.5h6" />
+    </svg>
+  );
+}
+
 export function PeopleIcon() {
   return (
     <svg {...cardIconProps()}>

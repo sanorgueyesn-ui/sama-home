@@ -9,8 +9,8 @@ import { getGuestInfoContext } from "@/lib/guest-info-data";
 
 export const metadata = { title: "Établissement — SAMA HOME" };
 
-export default async function EstablishmentSettingsPage(props: { searchParams: Promise<{ saved?: string }> }) {
-  const { saved } = await props.searchParams;
+export default async function EstablishmentSettingsPage(props: { searchParams: Promise<{ saved?: string; contrat?: string }> }) {
+  const { saved, contrat } = await props.searchParams;
   await getCurrentUser();
   const [settings, guest] = await Promise.all([getSettings(), getGuestInfoContext()]);
   // `settings.logoUrl` est la clé brute stockée (ou un lien hérité) : résolue ici en URL
@@ -23,6 +23,11 @@ export default async function EstablishmentSettingsPage(props: { searchParams: P
     <>
       <SettingsPageHeader title="Établissement" description="Les informations affichées sur vos contrats et vos documents." />
       {saved ? <SettingsNotice>Modifications enregistrées.</SettingsNotice> : null}
+      {contrat === "incomplet" ? (
+        <p role="status" className="mb-5 rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-app-warn">
+          Pour générer le contrat, renseignez d&apos;abord le nom, le téléphone et l&apos;adresse de votre établissement : ils y figurent comme coordonnées du bailleur.
+        </p>
+      ) : null}
       {/* `key` : après un enregistrement, le formulaire repart des nouvelles valeurs (état « modifié » remis à zéro). */}
       <SettingsForm key={settings?.updatedAt.toISOString() ?? "nouveau"} defaultValues={settings ? { ...settings, logoUrl: logoDisplayUrl } : undefined} guestInfo={guest.enabled ? guest.settings : null} />
       <SettingsSection title="Logo SAMA HOME" description="Le logo de la plateforme ne se modifie pas ; il s'ajoute à côté de celui de votre établissement." className="mt-5">
