@@ -66,6 +66,8 @@ model Establishment {
   reservations      Reservation[]
   rentals           Rental[]
   rentalExtensions  RentalExtension[]
+  rentalCharges     RentalCharge[]
+  housekeepingEvents HousekeepingEvent[]
   payments          Payment[]
   expenseCategories ExpenseCategory[]
   expenses          Expense[]
@@ -277,6 +279,37 @@ enum PropertyType {
   APARTMENT
 }
 
+/// Propreté d'une unité (mode Hôtel). Indépendante de l'occupation.
+enum CleaningStatus {
+  /// À nettoyer (typiquement : le client vient de partir).
+  DIRTY
+  IN_PROGRESS
+  /// Prête à être reloué.
+  CLEAN
+}
+
+/// Historique append-only des changements de propreté (qui, quand, de quoi à quoi).
+model HousekeepingEvent {
+  id String @id @default(cuid())
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  establishmentId String
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
+  fromStatus CleaningStatus?
+  toStatus   CleaningStatus
+  /// NULL = changement automatique (départ du client).
+  userId     String?
+  note       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([propertyId, createdAt])
+  @@index([establishmentId, createdAt])
+}
+
 /// Un logement (chambre meublée ou appartement).
 ///
 /// Volontairement PAS de colonne "status" : le prompt maître interdit un
@@ -304,6 +337,12 @@ model Property {
   photo       String?
   active      Boolean      @default(true)
 
+  /// Propreté : axe DISTINCT de l'occupation (une chambre libre peut ne pas être prête). Le statut
+  /// d'occupation reste calculé (property-status.ts) ; celui-ci est saisi par le personnel et passe
+  /// automatiquement à DIRTY au départ du client. Mode Hôtel uniquement côté interface.
+  cleaningStatus    CleaningStatus @default(CLEAN)
+  cleaningUpdatedAt DateTime?
+
   /// Lot multi-tenant — nullable dans cette Phase 1 (migration additive),
   /// deviendra obligatoire après le backfill des données existantes.
   establishmentId String?
@@ -312,6 +351,7 @@ model Property {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  housekeepingEvents HousekeepingEvent[]
   tariffs      Tariff[]
   reservations Reservation[]
   rentals      Rental[]
@@ -587,6 +627,7 @@ model Rental {
   updatedAt DateTime @updatedAt
 
   extensions RentalExtension[]
+  charges    RentalCharge[]
 
   /// Paiements encaissés PENDANT que ce contexte était une location (après
   /// l'arrivée). Pour une location née d'une réservation, le total réel payé
@@ -624,6 +665,31 @@ model RentalExtension {
   amount        Int
 
   createdAt DateTime @default(now())
+
+  @@index([rentalId])
+  @@index([establishmentId])
+}
+
+/// Ligne de folio : un extra ou un ajustement imputé à un séjour (restaurant, blanchisserie,
+/// minibar, remise…). Append-only comme RentalExtension : `Rental.amount` est incrémenté du montant
+/// dans la même transaction, donc le solde (payment-summary) reste juste sans second calcul. Une
+/// erreur se corrige par une NOUVELLE ligne de montant opposé et motif, jamais par suppression.
+/// `amount` est signé et jamais nul.
+model RentalCharge {
+  id       String @id @default(cuid())
+  rentalId String
+  rental   Rental @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+
+  establishmentId String
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Restrict)
+
+  label  String
+  amount Int
+  /// Obligatoire pour une ligne négative (correction ou remise).
+  reason String?
+
+  createdByUserId String?
+  createdAt       DateTime @default(now())
 
   @@index([rentalId])
   @@index([establishmentId])

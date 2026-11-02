@@ -632,6 +632,28 @@ export async function completeRental(id: string): Promise<{ error?: string }> {
         if (result.count === 0) {
           throw new RentalActionError("Location introuvable.");
         }
+        // Hôtel : le départ du client rend l'unité « à nettoyer » (même transaction, avec trace
+        // automatique). Hors hôtel, la propreté n'est pas gérée : rien n'est écrit.
+        const establishment = await tx.establishment.findUnique({
+          where: { id: user.establishmentId! },
+          select: { businessMode: true },
+        });
+        if (establishment?.businessMode === "HOTEL") {
+          const property = await tx.property.findUnique({ where: { id: fresh.propertyId }, select: { cleaningStatus: true } });
+          if (property && property.cleaningStatus !== "DIRTY") {
+            await tx.property.update({ where: { id: fresh.propertyId }, data: { cleaningStatus: "DIRTY", cleaningUpdatedAt: new Date() } });
+            await tx.housekeepingEvent.create({
+              data: {
+                propertyId: fresh.propertyId,
+                establishmentId: user.establishmentId!,
+                fromStatus: property.cleaningStatus,
+                toStatus: "DIRTY",
+                userId: null,
+                note: "Départ du client",
+              },
+            });
+          }
+        }
       },
       { isolationLevel: "Serializable" },
     );

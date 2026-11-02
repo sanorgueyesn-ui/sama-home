@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getReport, type Report } from "@/lib/reports-data";
+import { getHotelKpis } from "@/lib/hotel-kpis-data";
 import {
   REPORT_PERIODS,
   REPORT_PERIOD_LABELS,
@@ -157,15 +158,16 @@ export default async function ReportsPage(props: {
   const period = parseReportPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod);
   const report = await getReport(period);
 
+  const hotel = await getHotelKpis(report.range, report.revenue.total, report.now);
   const stayWord = report.isAgency ? "Locations démarrées" : "Séjours démarrés";
   const revenueLabel = report.isAgency ? "Loyers encaissés" : "Recettes";
   const noActivity =
     report.revenue.count === 0 && report.expenses.count === 0 && report.startedStays === 0;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-28 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div>
-        <h1 className="text-2xl font-extrabold text-fg">Rapports</h1>
+        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Rapports</h1>
         <p className="mt-0.5 text-sm font-medium text-fg/60">
           {report.spaceName} · {periodTitle(report)}
         </p>
@@ -226,6 +228,23 @@ export default async function ReportsPage(props: {
             />
             <KpiTile label={stayWord} value={String(report.startedStays)} sub="Arrivées de la période, hors annulées" />
           </div>
+
+          {hotel ? (
+            <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+              <KpiTile label="Occupation" value={`${hotel.occupancyPercent} %`} sub={`${hotel.occupiedNights} nuits sur ${hotel.availableNights} disponibles`} />
+              <KpiTile
+                label="Recette par nuit occupée"
+                value={hotel.revenuePerOccupiedNight === null ? "—" : fmtFcfa(hotel.revenuePerOccupiedNight)}
+                sub="Recettes encaissées ÷ nuits occupées"
+              />
+              <KpiTile
+                label="Recette par chambre disponible"
+                value={hotel.revenuePerAvailableNight === null ? "—" : fmtFcfa(hotel.revenuePerAvailableNight)}
+                sub="Recettes encaissées ÷ nuits disponibles"
+              />
+              <KpiTile label="Jours comptés" value={String(hotel.elapsedDays)} sub="Depuis le début de la période" />
+            </div>
+          ) : null}
 
           <div className="mt-4">
             <TrendChart report={report} />
