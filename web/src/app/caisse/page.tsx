@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +9,9 @@ import { CloseCashSessionForm } from "./close-cash-session-form";
 import { CreateCorrectionForm } from "./create-correction-form";
 import { ModifyClosureForm } from "./modify-closure-form";
 import { CashActivityList } from "./cash-activity-list";
-import { MachineConnectedBadge, ExpenseIcon, WalletIcon } from "@/components/ui/icons";
+import { MachineConnectedBadge } from "@/components/ui/icons";
+import { PageHeader, PageShell, StatTile, Surface, SectionTitle } from "@/components/ui/page-kit";
+import { getActiveSpace } from "@/lib/active-mode";
 
 function fmtFcfa(amount: number) {
   const sign = amount < 0 ? "-" : "";
@@ -148,181 +149,116 @@ export default async function CaissePage() {
     prisma.user.findUnique({ where: { id: current.openedByUserId }, select: { name: true } }),
   ]);
   const durationMs = new Date().getTime() - current.openedAt.getTime();
+  const space = await getActiveSpace();
+
+  // Détail par moyen de paiement : une ligne par moyen réellement utilisé (« Autre » seulement s'il y en a).
+  const methodRows = [
+    { key: "cash", label: "Espèces (tiroir)", in: breakdown.cashIn, out: breakdown.cashOut },
+    { key: "wave", label: "Wave", in: breakdown.waveIn, out: breakdown.waveOut },
+    { key: "om", label: "Orange Money", in: breakdown.omIn, out: breakdown.omOut },
+    ...(breakdown.otherIn + breakdown.otherOut > 0 ? [{ key: "other", label: "Autre", in: breakdown.otherIn, out: breakdown.otherOut }] : []),
+  ];
+  const num = (n: number) => n.toLocaleString("fr-FR").replace(/\s|,/g, " ");
+  const signed = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${num(Math.abs(n))}`;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Caisse & Trésorerie</h1>
-        <div className="flex items-center gap-2">
-          <MachineConnectedBadge />
-          <CashSessionStatusBadge open={true} />
-        </div>
+    <PageShell>
+      <PageHeader
+        eyebrow={space.name}
+        title="Caisse"
+        subtitle={`Ouverte le ${fmtDateTime(current.openedAt)} par ${openedByUser?.name ?? "—"} · ${fmtDuration(durationMs)}`}
+        badge={<CashSessionStatusBadge open={true} />}
+        actions={[
+          { href: "/depenses/new", label: "+ Dépense" },
+          { href: "/caisse/virements", label: "Virements" },
+        ]}
+      />
+
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
+        <StatTile label="Solde théorique" value={fmtFcfa(breakdown.theoreticalBalance)} sub="Espèces + Wave + Orange Money" tone="good" />
+        <StatTile label="Encaissé" value={`+${fmtFcfa(breakdown.totalIn)}`} sub="Depuis l'ouverture" />
+        <StatTile label="Dépensé" value={`−${fmtFcfa(breakdown.totalOut)}`} sub="Achats et frais" tone={breakdown.totalOut > 0 ? "bad" : "default"} />
       </div>
 
-      {/* Desktop (lg+) : colonne principale + "Activité récente" en colonne latérale */}
-      <div className="lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-6 mt-4">
-        <div className="min-w-0">
-          
-          {/* Métadonnées de session */}
-          <Card className="p-4">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div>
-                <p className="text-[11px] font-bold text-fg/40">OUVERTE LE</p>
-                <p className="text-sm font-bold text-fg">{fmtDateTime(current.openedAt)}</p>
+      <div className="grid gap-5 lg:grid-cols-[1fr_360px] lg:items-start lg:gap-6">
+        <div className="flex min-w-0 flex-col gap-5">
+          <Surface title="Par moyen de paiement" subtitle="Montants en FCFA">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[20rem] text-sm">
+                <thead>
+                  <tr className="text-[11px] font-bold uppercase tracking-wide text-app-muted">
+                    <th scope="col" className="pb-2 text-left font-bold">Moyen</th>
+                    <th scope="col" className="pb-2 text-right font-bold">Encaissé</th>
+                    <th scope="col" className="pb-2 text-right font-bold">Dépensé</th>
+                    <th scope="col" className="pb-2 text-right font-bold">Net</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-app-line">
+                  {methodRows.map((row) => (
+                    <tr key={row.key}>
+                      <th scope="row" className="py-2.5 text-left font-semibold text-app-text-2">{row.label}</th>
+                      <td className="py-2.5 text-right tabular-nums text-app-text-2">{num(row.in)}</td>
+                      <td className="py-2.5 text-right tabular-nums text-app-text-2">{num(row.out)}</td>
+                      <td className="py-2.5 text-right font-bold tabular-nums text-app-text">{signed(row.in - row.out)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-app-line-strong">
+                    <th scope="row" className="pt-3 text-left font-extrabold text-app-text">Total</th>
+                    <td className="pt-3 text-right font-bold tabular-nums text-app-text">{num(breakdown.totalIn)}</td>
+                    <td className="pt-3 text-right font-bold tabular-nums text-app-text">{num(breakdown.totalOut)}</td>
+                    <td className="pt-3 text-right font-extrabold tabular-nums text-app-text">{signed(breakdown.totalIn - breakdown.totalOut)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </Surface>
+
+          <Surface title="Du solde d'ouverture au solde théorique">
+            <dl className="divide-y divide-app-line text-sm">
+              <div className="flex items-center justify-between gap-3 py-2.5">
+                <dt className="text-app-muted">Solde d&apos;ouverture{current.openingIsManual ? " (saisi à la main)" : ""}</dt>
+                <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(breakdown.openingBalance)}</dd>
               </div>
-              <div>
-                <p className="text-[11px] font-bold text-fg/40">OUVERTE PAR</p>
-                <p className="text-sm font-bold text-fg">{openedByUser?.name ?? "—"}</p>
+              <div className="flex items-center justify-between gap-3 py-2.5">
+                <dt className="text-app-muted">Encaissé moins dépensé</dt>
+                <dd className="font-semibold tabular-nums text-app-text">{breakdown.totalIn - breakdown.totalOut >= 0 ? "+" : "−"}{fmtFcfa(Math.abs(breakdown.totalIn - breakdown.totalOut))}</dd>
               </div>
-              <div>
-                <p className="text-[11px] font-bold text-fg/40">MONTANT D&apos;OUVERTURE</p>
-                <p className="text-sm font-bold text-fg">
-                  {fmtFcfa(current.openingBalance)}
-                  {current.openingIsManual ? " (manuelle)" : ""}
-                </p>
+              <div className="flex items-center justify-between gap-3 py-2.5">
+                <dt className="text-app-muted">Versements vers la banque</dt>
+                <dd className="font-semibold tabular-nums text-app-text">−{fmtFcfa(breakdown.transfersOut)}</dd>
               </div>
-              <div>
-                <p className="text-[11px] font-bold text-fg/40">DURÉE</p>
-                <p className="text-sm font-bold text-fg">{fmtDuration(durationMs)}</p>
+              <div className="flex items-center justify-between gap-3 py-2.5">
+                <dt className="text-app-muted">Ajustements et apports</dt>
+                <dd className={`font-semibold tabular-nums ${breakdown.corrections < 0 ? "text-app-bad" : "text-app-text"}`}>{breakdown.corrections >= 0 ? "+" : "−"}{fmtFcfa(Math.abs(breakdown.corrections))}</dd>
               </div>
-            </div>
-          </Card>
-
-          {/* Cartes Clés du Solde Théorique & Recettes/Dépenses */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="rounded-2xl border border-success/30 bg-success/10 p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-app-good">Solde Caisse Actuel</p>
-              <p className="mt-1 text-2xl font-black text-app-good">{fmtFcfa(breakdown.theoreticalBalance)}</p>
-              <p className="mt-1 text-[10.5px] text-app-good/70">Total net disponible</p>
-            </div>
-            
-            <div className="rounded-2xl border border-info/30 bg-info/10 p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-app-sky">Encaissé Session</p>
-              <p className="mt-1 text-2xl font-black text-app-sky">+{fmtFcfa(breakdown.totalIn)}</p>
-              <p className="mt-1 text-[10.5px] text-app-sky/70">Wave, OM & Espèces</p>
-            </div>
-
-            <div className="rounded-2xl border border-danger/30 bg-danger/10 p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-app-bad">Dépensé Session</p>
-              <p className="mt-1 text-2xl font-black text-app-bad">−{fmtFcfa(breakdown.totalOut)}</p>
-              <p className="mt-1 text-[10.5px] text-app-bad/70">Achats & Frais</p>
-            </div>
-          </div>
-
-          {/* Boutons d'Action Rapide Caisse */}
-          <div className="mt-4 flex flex-wrap gap-2.5">
-            <Link
-              href="/depenses/new"
-              className="flex items-center gap-2 rounded-xl bg-brand-orange px-4 py-2.5 text-xs font-black text-ink shadow-sm hover:brightness-110 active:scale-95 transition-all"
-            >
-              <ExpenseIcon className="h-4 w-4" />
-              <span>+ Enregistrer une Dépense</span>
-            </Link>
-
-            <Link
-              href="/locations/new"
-              className="flex items-center gap-2 rounded-xl border border-border/15 bg-surface-raised px-4 py-2.5 text-xs font-bold text-fg hover:bg-surface-sunken transition-colors"
-            >
-              <span>+ Nouvel Encaissement (Séjour)</span>
-            </Link>
-
-            <Link
-              href="/caisse/virements"
-              className="flex items-center gap-2 rounded-xl border border-border/15 bg-surface-raised px-4 py-2.5 text-xs font-bold text-fg hover:bg-surface-sunken transition-colors"
-            >
-              <span>Virements bancaires</span>
-            </Link>
-          </div>
-
-          {/* Décomposition rigoureuse du solde */}
-          <h2 className="mt-6 text-sm font-extrabold text-fg">Décomposition détaillée du solde</h2>
-          <Card className="mt-2 px-4 divide-y divide-border/10">
-            <div className="flex items-center justify-between py-2.5">
-              <span className="text-sm font-semibold text-fg">Solde d&apos;ouverture</span>
-              <span className="text-sm font-bold text-fg">{fmtFcfa(breakdown.openingBalance)}</span>
-            </div>
-
-            <div className="py-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-fg">+ Total Encaissé (Paiements)</span>
-                <span className="text-sm font-bold text-success">+{fmtFcfa(breakdown.totalIn)}</span>
+              <div className="flex items-center justify-between gap-3 py-3">
+                <dt className="font-extrabold text-app-text">Solde théorique</dt>
+                <dd className="text-base font-extrabold tabular-nums text-app-text">{fmtFcfa(breakdown.theoreticalBalance)}</dd>
               </div>
-              <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-fg/60">
-                <span className="rounded bg-info/10 px-2 py-0.5 text-app-sky font-semibold border border-info/20">
-                  Wave : {fmtFcfa(breakdown.waveIn)}
-                </span>
-                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
-                  Orange Money : {fmtFcfa(breakdown.omIn)}
-                </span>
-                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
-                  Espèces : {fmtFcfa(breakdown.cashIn)}
-                </span>
-              </div>
-            </div>
+            </dl>
+            <p className="mt-3 rounded-xl bg-app-panel-2 px-3 py-2.5 text-xs text-app-muted">
+              Espèces attendues dans le tiroir : <strong className="tabular-nums text-app-text">{fmtFcfa(breakdown.physicalCashBalance)}</strong> (sans Wave ni Orange Money).
+            </p>
+          </Surface>
 
-            <div className="py-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-fg">− Total Dépensé (Sorties)</span>
-                <span className="text-sm font-bold text-danger">−{fmtFcfa(breakdown.totalOut)}</span>
-              </div>
-              <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-fg/60">
-                <span className="rounded bg-info/10 px-2 py-0.5 text-app-sky font-semibold border border-info/20">
-                  Wave : {fmtFcfa(breakdown.waveOut)}
-                </span>
-                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
-                  Orange Money : {fmtFcfa(breakdown.omOut)}
-                </span>
-                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
-                  Espèces : {fmtFcfa(breakdown.cashOut)}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between py-2.5">
-              <span className="text-sm font-semibold text-fg">− Versements vers la banque</span>
-              <span className="text-sm font-bold text-info">−{fmtFcfa(breakdown.transfersOut)}</span>
-            </div>
-
-            <div className="flex items-center justify-between py-2.5">
-              <span className="text-sm font-semibold text-fg">± Ajustements / Apports</span>
-              <span className={`text-sm font-bold ${breakdown.corrections >= 0 ? "text-success" : "text-danger"}`}>
-                {breakdown.corrections >= 0 ? "+" : ""}
-                {fmtFcfa(breakdown.corrections)}
-              </span>
-            </div>
-
-            {/* Ligne spécifique Espèces physiques tiroir */}
-            <div className="flex items-center justify-between py-2.5 bg-surface-sunken/40 -mx-4 px-4 rounded-b-xl border-t border-border/10">
-              <div className="flex items-center gap-1.5">
-                <WalletIcon className="h-4 w-4 text-app-warn" />
-                <span className="text-xs font-extrabold text-app-warn">Solde Espèces physique (Tiroir)</span>
-              </div>
-              <span className="text-xs font-black text-app-warn">{fmtFcfa(breakdown.physicalCashBalance)}</span>
-            </div>
-          </Card>
-
-          <p className="mt-2.5 text-[11px] font-medium text-app-good/80 flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            Toutes vos recettes et dépenses (Espèces, Wave, Orange Money) sont automatiquement calculées et reliées en temps réel à votre caisse.
-          </p>
-
-          <div className="mt-6 flex flex-col gap-2.5">
-            <CloseCashSessionForm theoreticalBalance={breakdown.theoreticalBalance} />
+          <section aria-label="Clôture" className="flex flex-col gap-2.5">
+            <SectionTitle>Clôture</SectionTitle>
+            <CloseCashSessionForm
+              theoreticalBalance={breakdown.theoreticalBalance}
+              expectedCash={breakdown.physicalCashBalance}
+              mobileMoney={{ wave: breakdown.waveNet, orangeMoney: breakdown.omNet }}
+            />
             {user.role === "ADMIN" ? <CreateCorrectionForm /> : null}
-          </div>
+          </section>
         </div>
 
-        {/* Colonne latérale : Activité récente */}
-        <div className="mt-6 min-w-0 lg:mt-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-extrabold text-fg">Activité récente ({activity.length})</h2>
-            <span className="text-[10px] text-fg/40 uppercase tracking-wider font-semibold">Temps réel</span>
-          </div>
-          <div className="mt-2.5">
-            <CashActivityList entries={activity} />
-          </div>
-        </div>
+        <section aria-label="Activité récente" className="min-w-0">
+          <SectionTitle>Activité récente ({activity.length})</SectionTitle>
+          <CashActivityList entries={activity} />
+        </section>
       </div>
-    </div>
+    </PageShell>
   );
 }

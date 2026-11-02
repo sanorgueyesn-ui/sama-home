@@ -17,7 +17,16 @@ function fmtFcfa(amount: number) {
  * La fermeture n'est jamais bloquée par un écart, seule la justification
  * de cet écart est exigée.
  */
-export function CloseCashSessionForm({ theoreticalBalance }: { theoreticalBalance: number }) {
+export function CloseCashSessionForm({
+  theoreticalBalance,
+  expectedCash,
+  mobileMoney,
+}: {
+  theoreticalBalance: number;
+  /** Espèces attendues dans le tiroir (sans Wave ni Orange Money) : affichées pour aider au comptage. */
+  expectedCash: number;
+  mobileMoney: { wave: number; orangeMoney: number };
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -61,7 +70,7 @@ export function CloseCashSessionForm({ theoreticalBalance }: { theoreticalBalanc
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-14 items-center justify-center rounded-2xl border border-danger/30 bg-danger-bg text-base font-extrabold text-danger"
+        className="flex min-h-12 items-center justify-center rounded-xl border border-danger/30 bg-danger-bg text-base font-extrabold text-danger"
       >
         Fermer la caisse
       </button>
@@ -69,22 +78,37 @@ export function CloseCashSessionForm({ theoreticalBalance }: { theoreticalBalanc
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border/15 p-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-app-line-strong p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-extrabold text-fg">Clôture de caisse</p>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-fg/50 underline">
+        <p className="text-sm font-extrabold text-app-text">Clôture de caisse</p>
+        <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-app-muted underline">
           Annuler
         </button>
       </div>
 
-      <div className="rounded-xl bg-surface-sunken px-4 py-3">
-        <p className="text-xs font-bold text-fg/50">SOLDE THÉORIQUE</p>
-        <p className="mt-1 text-xl font-extrabold text-fg">{fmtFcfa(theoreticalBalance)}</p>
+      <div className="rounded-xl bg-app-panel-2 px-4 py-3">
+        <p className="text-xs font-bold text-app-muted">SOLDE THÉORIQUE (ce qui sert à calculer l&apos;écart)</p>
+        <p className="mt-1 text-xl font-extrabold text-app-text">{fmtFcfa(theoreticalBalance)}</p>
+        <dl className="mt-2 space-y-1 border-t border-app-line-strong pt-2 text-xs text-app-muted">
+          <div className="flex justify-between gap-3">
+            <dt>dont espèces attendues au tiroir</dt>
+            <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(expectedCash)}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt>dont Wave</dt>
+            <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(mobileMoney.wave)}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt>dont Orange Money</dt>
+            <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(mobileMoney.orangeMoney)}</dd>
+          </div>
+        </dl>
       </div>
 
       <div>
-        <label htmlFor="physicalCount" className="mb-1.5 block text-xs font-bold text-fg">
-          Comptage physique <span className="font-medium text-fg/40">(facultatif)</span>
+        <label htmlFor="physicalCount" className="mb-1.5 block text-xs font-bold text-app-text">
+          Comptage physique <span className="font-medium text-app-faint">(facultatif)</span>
+          <span className="mt-0.5 block text-[11px] font-medium text-app-muted">Il est comparé au solde théorique total ci-dessus.</span>
         </label>
         <input
           id="physicalCount"
@@ -93,7 +117,7 @@ export function CloseCashSessionForm({ theoreticalBalance }: { theoreticalBalanc
           value={physicalCount}
           onChange={(e) => setPhysicalCount(e.target.value)}
           placeholder="Laisser vide si aucun comptage"
-          className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-4 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
@@ -113,21 +137,21 @@ export function CloseCashSessionForm({ theoreticalBalance }: { theoreticalBalanc
               id="varianceReason"
               value={varianceReason}
               onChange={(e) => setVarianceReason(e.target.value)}
-              className="min-h-16 w-full resize-none rounded-xl border border-warning/30 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-warning focus-visible:ring-2 focus-visible:ring-warning"
+              className="min-h-16 w-full resize-none rounded-xl border border-warning/30 bg-app-panel-2 px-3 py-2 text-sm text-app-text outline-none focus:border-warning focus-visible:ring-2 focus-visible:ring-warning"
             />
           </div>
         )
       ) : null}
 
       <div>
-        <label htmlFor="closeNote" className="mb-1.5 block text-xs font-bold text-fg">
-          Note <span className="font-medium text-fg/40">(optionnel)</span>
+        <label htmlFor="closeNote" className="mb-1.5 block text-xs font-bold text-app-text">
+          Note <span className="font-medium text-app-faint">(optionnel)</span>
         </label>
         <textarea
           id="closeNote"
           value={closeNote}
           onChange={(e) => setCloseNote(e.target.value)}
-          className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          className="min-h-16 w-full resize-none rounded-xl border border-app-line-strong bg-app-panel-2 px-3 py-2 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
