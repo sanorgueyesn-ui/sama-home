@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { expectedIpnHash, getPaydunyaConfig, isValidIpnHash, readIpnToken } from "../paydunya";
-import { categoryOfMode, isBillingCycle, isOverCap, isPlanTier, planCaps, planOffer } from "../subscription-plans";
+import { categoryOfMode, isBillingCycle, isOverCap, isPlanTier, planAllows, planCaps, planFeatures, planOffer } from "../subscription-plans";
 
 test("configuration : absente sans les trois clés, test par défaut, réel seulement si demandé", () => {
   assert.equal(getPaydunyaConfig({}), null);
@@ -56,4 +56,13 @@ test("plafond atteint : seule une nouvelle création est refusée", () => {
   assert.equal(isOverCap(9, 10), false);
   assert.equal(isOverCap(10, 10), true);
   assert.equal(isOverCap(500, null), false);
+});
+
+test("avantages : les rapports demandent Pro ; sans formule, rien n'est restreint", () => {
+  assert.equal(planAllows(null, "REPORTS"), true);
+  assert.equal(planAllows(undefined, "REPORTS"), true);
+  assert.equal(planAllows("ESSENTIAL", "REPORTS"), false);
+  assert.equal(planAllows("PRO", "REPORTS"), true);
+  assert.equal(planAllows("PREMIUM", "REPORTS"), true);
+  assert.ok(planFeatures("RESIDENCE", "PRO").some((f) => f.includes("Rapports")));
 });

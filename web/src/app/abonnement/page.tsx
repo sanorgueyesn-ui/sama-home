@@ -9,7 +9,7 @@ import { RequestRenewalForm } from "./request-renewal-form";
 import { PayOnlineForm, type OnlineOffer } from "./pay-online-form";
 import { prisma } from "@/lib/prisma";
 import { getPaydunyaConfig } from "@/lib/paydunya";
-import { planOffer } from "@/lib/subscription-plans";
+import { planFeatures, planOffer } from "@/lib/subscription-plans";
 import { CATEGORY_PRICING } from "@/lib/pricing-config";
 import { categoryOfMode } from "@/lib/subscription-plans";
 import { T } from "@/components/i18n/i18n-provider";
@@ -122,20 +122,24 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
   );
 }
 
-function PricingSummary({ status }: { status: SubscriptionStatusView }) {
+function PlanSummary({ planName, features }: { planName: string | null; features: string[] }) {
   return (
     <Surface>
-      <h2 className="mb-1 text-sm font-bold text-app-text"><T>Tarification</T></h2>
-      <Row label="Essai gratuit" value={`${status.pricing.trialDurationMonths} mois`} />
-      <Row
-        label="Tarif après essai"
-        value={`${fmtFcfa(status.pricing.periodPriceFcfa)} / ${status.pricing.periodMonths} mois`}
-      />
-      {!status.pricing.isConfigured ? (
-        <p className="pt-2 text-[11px] font-medium text-app-muted">
-          <T>Tarif par défaut — aucune configuration personnalisée n&apos;a encore été enregistrée.</T>
+      <h2 className="mb-1 text-sm font-bold text-app-text"><T>Formule actuelle</T></h2>
+      {planName ? (
+        <>
+          <p className="text-sm font-extrabold text-app-text"><T>{planName}</T></p>
+          <ul className="mt-2 space-y-1 text-xs font-medium text-app-text-2">
+            {features.map((f) => (
+              <li key={f}>✓ <T>{f}</T></li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="text-sm font-semibold text-app-text-2">
+          <T>Aucune formule choisie : votre établissement n'a pas de limite pour le moment. Choisissez une formule ci-dessous pour continuer après l'échéance.</T>
         </p>
-      ) : null}
+      )}
     </Surface>
   );
 }
@@ -182,6 +186,13 @@ export default async function SubscriptionStatusPage() {
   // `role === "ADMIN"`).
   const canRequestRenewal = user.role === "ADMIN" || user.role === "GESTIONNAIRE";
 
+  let currentPlan: { name: string; features: string[] } | null = null;
+  {
+    const est = await prisma.establishment.findUnique({ where: { id: user.establishmentId }, select: { businessMode: true, subscription: { select: { planTier: true } } } });
+    const tier = est?.subscription?.planTier;
+    const offer = est && tier ? planOffer(est.businessMode, tier, "monthly") : null;
+    if (est && tier && offer) currentPlan = { name: offer.name, features: planFeatures(est.businessMode, tier) };
+  }
   // Paiement en ligne : proposé seulement si PayDunya est configuré sur le serveur.
   let onlineOffers: { offers: OnlineOffer[]; currentTier: OnlineOffer["tier"] | null } | null = null;
   if (getPaydunyaConfig() && process.env.APP_URL) {
@@ -198,7 +209,7 @@ export default async function SubscriptionStatusPage() {
         const annual = planOffer(establishment.businessMode, tier, "annual");
         const plan = category.plans.find((p) => p.name === monthly?.name);
         if (monthly && annual && plan) {
-          offers.push({ tier, name: monthly.name, monthlyFcfa: monthly.amountFcfa, annualFcfa: annual.amountFcfa, units: plan.limits.unitsMax, users: plan.limits.usersMax });
+          offers.push({ tier, name: monthly.name, monthlyFcfa: monthly.amountFcfa, annualFcfa: annual.amountFcfa, units: plan.limits.unitsMax, users: plan.limits.usersMax, features: plan.features });
         }
       }
       onlineOffers = { offers, currentTier: establishment.subscription?.planTier ?? null };
@@ -218,14 +229,14 @@ export default async function SubscriptionStatusPage() {
     <PageShell narrow>
       <PageHeader eyebrow={space.name} title="Abonnement" badge={stateBadge} />
       <SubscriptionSummary status={status} />
-      <PricingSummary status={status} />
+      <PlanSummary planName={currentPlan?.name ?? null} features={currentPlan?.features ?? []} />
       {canRequestRenewal && status.hasSubscription && onlineOffers ? (
         <Surface>
           <h2 className="mb-2 text-sm font-bold text-app-text"><T>Payer en ligne</T></h2>
           <PayOnlineForm offers={onlineOffers.offers} currentTier={onlineOffers.currentTier} />
         </Surface>
       ) : null}
-      <RenewalSection status={status} canRequestRenewal={canRequestRenewal} />
+      {status.pendingPaymentRequest ? <RenewalSection status={status} canRequestRenewal={canRequestRenewal} /> : null}
       <p className="text-[11px] font-medium text-app-muted">
         <T>Seul un administrateur de plateforme peut confirmer un paiement — aucune confirmation n&apos;est possible
         depuis cette page.</T>

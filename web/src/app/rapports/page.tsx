@@ -12,6 +12,8 @@ import {
 } from "@/lib/reports-metrics";
 import { T } from "@/components/i18n/i18n-provider";
 import { getT } from "@/lib/i18n/server";
+import { getCurrentUser } from "@/lib/dal";
+import { hasPlanFeature } from "@/lib/plan-limits";
 import { dateLocale } from "@/lib/i18n/date-locale";
 
 export const dynamic = "force-dynamic";
@@ -159,6 +161,22 @@ export default async function ReportsPage(props: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const t = await getT();
+  const user = await getCurrentUser();
+  if (user.establishmentId && !(await hasPlanFeature(user.establishmentId, "REPORTS"))) {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pt-6 sm:px-6 lg:px-8">
+        <h1 className="text-[22px] font-extrabold text-app-text sm:text-2xl lg:text-[28px]"><T>Rapports</T></h1>
+        <Card className="mt-4 p-5">
+          <p className="text-sm font-semibold text-app-text-2">
+            <T>Les rapports financiers sont inclus à partir de la formule Pro. Passez à la formule Pro ou Premium pour y accéder ; vos données restent conservées.</T>
+          </p>
+          <Link href="/abonnement" className="mt-3 inline-block text-sm font-bold text-brand-orange">
+            <T>Voir les formules</T>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
   const { period: rawPeriod } = await props.searchParams;
   const period = parseReportPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod);
   const report = await getReport(period);

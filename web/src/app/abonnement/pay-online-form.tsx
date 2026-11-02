@@ -11,6 +11,7 @@ export type OnlineOffer = {
   annualFcfa: number;
   units: string;
   users: string;
+  features: string[];
 };
 
 const fmt = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -63,6 +64,11 @@ export function PayOnlineForm({ offers, currentTier }: { offers: OnlineOffer[]; 
               <span className="ms-1 text-xs font-medium text-app-muted">{cycle === "annual" ? <T>/ an</T> : <T>/ mois</T>}</span>
             </p>
             <p className="text-[11px] font-medium text-app-muted"><T>{offer.units}</T> · <T>{offer.users}</T></p>
+            <ul className="mt-2 space-y-0.5 text-[11px] font-medium text-app-text-2">
+              {offer.features.map((f) => (
+                <li key={f}>✓ <T>{f}</T></li>
+              ))}
+            </ul>
             <button
               type="button"
               disabled={pending}

@@ -48,3 +48,24 @@ export function planCaps(mode: BusinessModeName, tier: PlanTierValue): { units: 
 export function isOverCap(existing: number, cap: number | null): boolean {
   return cap !== null && existing >= cap;
 }
+
+/**
+ * Avantages réservés à une formule. Seuls les avantages qui existent réellement dans l'application sont
+ * contrôlés ; la liste complète des avantages affichés reste celle de la grille (pricing-config.ts).
+ * Un établissement SANS formule (essai, abonnement historique) n'est jamais restreint.
+ */
+export type PlanFeature = "REPORTS";
+const FEATURE_MIN_TIER: Record<PlanFeature, readonly PlanTierValue[]> = {
+  REPORTS: ["PRO", "PREMIUM"], // « Rapports financiers & clôtures de caisse » (Pro et au-dessus)
+};
+
+export function planAllows(tier: PlanTierValue | null | undefined, feature: PlanFeature): boolean {
+  if (!tier) return true;
+  return FEATURE_MIN_TIER[feature].includes(tier);
+}
+
+/** Avantages d'une formule, tels qu'affichés sur la page tarifs. */
+export function planFeatures(mode: BusinessModeName, tier: PlanTierValue): string[] {
+  const plan = CATEGORY_PRICING[categoryOfMode(mode)].plans.find((p) => p.id === TIER_TO_PLAN[tier]);
+  return plan ? [...plan.features] : [];
+}

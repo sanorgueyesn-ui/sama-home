@@ -2,11 +2,14 @@
 import type { PhraseBook } from "../../translate";
 
 export const enPayments: PhraseBook = {
+  "Formule actuelle": "Current plan",
+  "Aucune formule choisie : votre établissement n'a pas de limite pour le moment. Choisissez une formule ci-dessous pour continuer après l'échéance.": "No plan chosen: your establishment has no limit for now. Choose a plan below to continue after the due date.",
+  "Les rapports financiers sont inclus à partir de la formule Pro. Passez à la formule Pro ou Premium pour y accéder ; vos données restent conservées.": "Financial reports are included from the Pro plan. Upgrade to Pro or Premium to access them; your data is kept.",
+  "Voir les formules": "See the plans",
   "Formule, échéance et paiement en ligne": "Plan, due date and online payment",
   "Annuel (12 mois pour le prix de 11)": "Annual (12 months for the price of 11)",
   "Ce paiement n'a pas pu être vérifié. Contactez l'assistance avec votre référence de paiement.": "This payment could not be verified. Please contact support with your payment reference.",
   "Ce module n'est pas encore disponible à la souscription.": "This module is not yet available for subscription.",
-  "Formule actuelle": "Current plan",
   "Formule inconnue.": "Unknown plan.",
   "Le paiement en ligne est momentanément indisponible. Veuillez réessayer.": "Online payment is temporarily unavailable. Please try again.",
   "Le paiement en ligne n'est pas encore activé. Contactez l'assistance SAMA HOME.": "Online payment is not enabled yet. Please contact SAMA HOME support.",

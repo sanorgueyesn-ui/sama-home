@@ -3,7 +3,7 @@
 // tarifs). Un établissement sans formule choisie (essai, abonnement historique) n'a aucun plafond.
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { isOverCap, planCaps } from "@/lib/subscription-plans";
+import { isOverCap, planAllows, planCaps, type PlanFeature } from "@/lib/subscription-plans";
 
 export type PlanLimitKind = "units" | "users";
 
@@ -33,4 +33,10 @@ export async function checkPlanLimit(establishmentId: string, kind: PlanLimitKin
     ok: false,
     message: `Votre formule est limitée à ${cap} ${what}. Passez à une formule supérieure depuis la page Abonnement pour en ajouter.`,
   };
+}
+
+/** L'avantage est-il inclus dans la formule de cet établissement ? (sans formule : oui) */
+export async function hasPlanFeature(establishmentId: string, feature: PlanFeature): Promise<boolean> {
+  const subscription = await prisma.subscription.findUnique({ where: { establishmentId }, select: { planTier: true } });
+  return planAllows(subscription?.planTier, feature);
 }
