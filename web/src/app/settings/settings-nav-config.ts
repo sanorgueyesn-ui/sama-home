@@ -41,6 +41,7 @@ export const SETTINGS_NAV: SettingsNavGroup[] = [
     items: [
       { href: "/settings/bank-accounts", label: "Comptes bancaires", shortLabel: "Banque", icon: WalletIcon, adminOnly: true },
       { href: "/settings/transfer-schedules", label: "Virements programmés", shortLabel: "Virements", icon: TransferIcon, adminOnly: true },
+      { href: "/abonnement", label: "Abonnement", icon: ReceiptIcon, adminOnly: true },
     ],
   },
   {

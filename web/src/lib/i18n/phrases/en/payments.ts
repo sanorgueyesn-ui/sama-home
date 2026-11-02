@@ -2,6 +2,7 @@
 import type { PhraseBook } from "../../translate";
 
 export const enPayments: PhraseBook = {
+  "Formule, échéance et paiement en ligne": "Plan, due date and online payment",
   "Annuel (12 mois pour le prix de 11)": "Annual (12 months for the price of 11)",
   "Ce paiement n'a pas pu être vérifié. Contactez l'assistance avec votre référence de paiement.": "This payment could not be verified. Please contact support with your payment reference.",
   "Ce module n'est pas encore disponible à la souscription.": "This module is not yet available for subscription.",

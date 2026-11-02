@@ -60,6 +60,7 @@ export default async function SettingsPage() {
       transferSchedules.length === 0
         ? "Aucune programmation"
         : `${activeSchedules} ${plural(activeSchedules, "programmation active", "programmations actives")}`,
+    "/abonnement": "Formule, échéance et paiement en ligne",
     "/settings/password": "Modifier votre mot de passe de connexion",
     "/settings/a-propos": "Version, éditeur et assistance",
   };
