@@ -10,6 +10,9 @@ export const LOCALE_COOKIE_NAME = "sama_locale";
 
 export const LOCALES = ["fr", "en", "ar"] as const;
 export type Locale = (typeof LOCALES)[number];
+/** Langues proposées dans le sélecteur. L'arabe est suspendu pour une version ultérieure : le retirer
+ * de cette liste le masque ; l'y remettre (avec sa traduction) le réactive. */
+export const OFFERED_LOCALES: readonly Locale[] = ["fr", "en"];
 export const DEFAULT_LOCALE: Locale = "fr";
 
 /** `ready` : traduction terminée. `draft` : traduction non terminée (repli sur le français). */
@@ -33,6 +36,7 @@ export function isLocale(value: unknown): value is Locale {
  * production (aperçu de la mise en page) : en production, jamais de traduction à moitié faite.
  */
 export function isSelectableLocale(locale: Locale): boolean {
+  if (!OFFERED_LOCALES.includes(locale)) return false;
   if (LOCALE_INFO[locale].status === "ready") return true;
   return process.env.NODE_ENV !== "production";
 }

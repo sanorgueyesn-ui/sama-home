@@ -1,5 +1,5 @@
 import { setLocale } from "@/app/actions/locale";
-import { LOCALES, LOCALE_INFO, isSelectableLocale, type Locale } from "@/lib/i18n/config";
+import { OFFERED_LOCALES, LOCALE_INFO, isSelectableLocale, type Locale } from "@/lib/i18n/config";
 import type { Messages } from "@/lib/i18n/messages";
 
 /**
@@ -29,7 +29,7 @@ export function LanguageSwitcher({
         aria-label={labels.language}
         className="inline-flex items-center gap-0.5 rounded-full border border-border/20 bg-surface-raised p-0.5"
       >
-        {LOCALES.map((code) => {
+        {OFFERED_LOCALES.map((code) => {
           const info = LOCALE_INFO[code];
           const current = code === locale;
           const selectable = isSelectableLocale(code);
