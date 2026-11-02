@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireActiveEstablishment } from "@/lib/dal";
 import { ClientSchema, type ClientFormState } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 function parseClientForm(formData: FormData) {
   return ClientSchema.safeParse({
@@ -50,6 +51,7 @@ export async function createClient(
   _prevState: ClientFormState,
   formData: FormData,
 ): Promise<ClientFormState> {
+  const t = await getT();
   // Re-verified here even though every /clients route is already behind
   // proxy.ts + the page's own verifySession() call: a Server Action is a
   // public endpoint in its own right and must never trust the caller.
@@ -61,13 +63,13 @@ export async function createClient(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un client." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un client.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -84,7 +86,7 @@ export async function createClient(
     clientId = client.id;
   } catch (error) {
     console.error("createClient() — échec inattendu de la création du client :", error);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/clients");
@@ -100,6 +102,7 @@ export async function updateClient(
   _prevState: ClientFormState,
   formData: FormData,
 ): Promise<ClientFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-O4 — deuxième câblage de requireActiveEstablishment()
   // après le pilote createExpense (D12-O2) : fichier à 2 fonctions, aucun
   // effet de bord (pas de S3, pas de transaction, pas de verrou optimiste),
@@ -111,13 +114,13 @@ export async function updateClient(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce client." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce client.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -145,10 +148,10 @@ export async function updateClient(
     });
   } catch (error) {
     console.error(`updateClient(${id}) — échec inattendu de la mise à jour du client :`, error);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
   if (result.count === 0) {
-    return { message: "Client introuvable." };
+    return { message: t("Client introuvable.") };
   }
 
   revalidatePath("/clients");

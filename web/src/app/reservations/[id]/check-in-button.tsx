@@ -8,6 +8,8 @@ import { checkRetroactiveArrival, RETROACTIVE_TOLERANCE_MINUTES } from "@/lib/re
 import { classifyArrivalTiming, isNextRedirectError } from "@/lib/reservation-filters";
 import { computeDepartureTime, formatDuration, type DurationUnitValue } from "@/lib/duration";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { T, useT } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 type ClientOption = { id: string; name: string; phone: string };
 
@@ -21,7 +23,7 @@ export type CheckInSummary = {
 };
 
 const fmtDateTime = (d: Date) =>
-  d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  d.toLocaleString(dateLocale(), { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 function nowDateIso() {
   const d = new Date();
@@ -65,6 +67,7 @@ export function CheckInButton({
   /** Pré-sélectionné au retour de "+ Nouveau client" (searchParam clientId). */
   initialClientId?: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
@@ -161,27 +164,27 @@ export function CheckInButton({
       onConfirm={() => confirming && runCheckIn(confirming.mode)}
     >
       <p>
-        <strong>{summary.clientName ?? selectedClient?.name ?? "Client"}</strong> — {summary.propertyName}
+        <strong>{summary.clientName ?? selectedClient?.name ?? <T>{"Client"}</T>}</strong> — {summary.propertyName}
       </p>
-      <p className="mt-1">Arrivée prévue : {fmtDateTime(plannedArrival)}</p>
-      {actualForDialog ? <p>Arrivée enregistrée : {fmtDateTime(actualForDialog)}</p> : null}
+      <p className="mt-1"><T>Arrivée prévue :</T> {fmtDateTime(plannedArrival)}</p>
+      {actualForDialog ? <p><T>Arrivée enregistrée :</T> {fmtDateTime(actualForDialog)}</p> : null}
       {timing === "EARLY" ? (
         <p className="mt-2 rounded-xl bg-warning-bg px-3 py-2 text-xs font-bold text-warning">
-          Arrivée anticipée. Le séjour ({formatDuration(summary.durationValue, summary.durationUnit)}) est compté à partir de
-          l&apos;arrivée réelle{estimatedDeparture ? `, départ prévu ${fmtDateTime(estimatedDeparture)}` : ""}. Le tarif et
-          l&apos;acompte ne changent pas.
+          <T>Arrivée anticipée. Le séjour (</T>{formatDuration(summary.durationValue, summary.durationUnit)}<T>) est compté à partir de
+          l&apos;arrivée réelle</T>{estimatedDeparture ? `, départ prévu ${fmtDateTime(estimatedDeparture)}` : ""}<T>. Le tarif et
+          l&apos;acompte ne changent pas.</T>
         </p>
       ) : null}
       {timing === "LATE" ? (
         <p className="mt-2 rounded-xl bg-warning-bg px-3 py-2 text-xs font-bold text-warning">
-          Arrivée tardive. Le séjour ({formatDuration(summary.durationValue, summary.durationUnit)}) est compté à partir de
-          l&apos;arrivée réelle{estimatedDeparture ? `, départ prévu ${fmtDateTime(estimatedDeparture)}` : ""}. Le tarif et
-          l&apos;acompte ne changent pas.
+          <T>Arrivée tardive. Le séjour (</T>{formatDuration(summary.durationValue, summary.durationUnit)}<T>) est compté à partir de
+          l&apos;arrivée réelle</T>{estimatedDeparture ? `, départ prévu ${fmtDateTime(estimatedDeparture)}` : ""}<T>. Le tarif et
+          l&apos;acompte ne changent pas.</T>
         </p>
       ) : null}
       <p className="mt-2 text-xs text-app-muted">
-        Une location sera créée si le logement est libre sur cette période ; sinon l&apos;arrivée sera refusée avec le détail
-        du conflit.
+        <T>Une location sera créée si le logement est libre sur cette période ; sinon l&apos;arrivée sera refusée avec le détail
+        du conflit.</T>
       </p>
     </ConfirmDialog>
   );
@@ -191,10 +194,10 @@ export function CheckInButton({
   if (needsClient && !clientId) {
     return (
       <div className="flex flex-col gap-3 rounded-2xl border border-app-line-strong p-4">
-        <p className="text-sm font-bold text-fg">Cette réservation n&apos;a pas encore de client.</p>
+        <p className="text-sm font-bold text-fg"><T>Cette réservation n&apos;a pas encore de client.</T></p>
         <div>
           <label htmlFor="checkin-clientId" className="mb-1.5 block text-xs font-bold text-fg">
-            Choisir un client
+            <T>Choisir un client</T>
           </label>
           <select
             id="checkin-clientId"
@@ -202,7 +205,7 @@ export function CheckInButton({
             onChange={(e) => setClientId(e.target.value)}
             className="h-12 w-full rounded-xl border border-app-line-strong bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
-            <option value="">Sélectionner un client...</option>
+            <option value=""><T>Sélectionner un client...</T></option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -211,7 +214,7 @@ export function CheckInButton({
           </select>
         </div>
         <Link href={newClientHref} className="text-center text-xs font-bold text-fg underline">
-          + Nouveau client
+          <T>+ Nouveau client</T>
         </Link>
       </div>
     );
@@ -228,7 +231,7 @@ export function CheckInButton({
             <p className="text-xs font-semibold text-app-muted">{selectedClient.phone}</p>
           </div>
           <button type="button" onClick={() => setClientId("")} className="text-xs font-bold text-fg underline">
-            Changer
+            <T>Changer</T>
           </button>
         </div>
       ) : null}
@@ -244,27 +247,27 @@ export function CheckInButton({
             }}
             className="flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-60"
           >
-            {pending ? "..." : "Faire entrer"}
+            {pending ? "..." : <T>{"Faire entrer"}</T>}
           </button>
           <button
             type="button"
             onClick={() => setShowRetroactive(true)}
             className="mt-2 w-full text-center text-xs font-bold text-fg underline"
           >
-            Heure d&apos;arrivée différente ?
+            <T>Heure d&apos;arrivée différente ?</T>
           </button>
-          {error && !confirming ? <p role="alert" className="mt-1.5 text-center text-xs font-medium text-danger">{error}</p> : null}
+          {error && !confirming ? <p role="alert" className="mt-1.5 text-center text-xs font-medium text-danger"><T>{error}</T></p> : null}
         </div>
       ) : (
         <div className="flex flex-col gap-3 rounded-2xl border border-app-line-strong p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-extrabold text-fg">Heure réelle d&apos;arrivée</p>
+            <p className="text-sm font-extrabold text-fg"><T>Heure réelle d&apos;arrivée</T></p>
             <button
               type="button"
               onClick={() => setShowRetroactive(false)}
               className="text-xs font-bold text-app-muted underline"
             >
-              Annuler
+              <T>Annuler</T>
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -285,21 +288,21 @@ export function CheckInButton({
           {isRetroactive ? (
             <>
               <div className="rounded-xl bg-warning-bg px-3 py-2.5">
-                <p className="text-xs font-extrabold text-warning">Arrivée rétroactive</p>
+                <p className="text-xs font-extrabold text-warning"><T>Arrivée rétroactive</T></p>
                 <p className="mt-0.5 text-xs font-medium text-warning">
-                  Cette arrivée sera enregistrée avec l&apos;heure réelle saisie. Maximum autorisé : 24 heures en
-                  arrière.
+                  <T>Cette arrivée sera enregistrée avec l&apos;heure réelle saisie. Maximum autorisé : 24 heures en
+                  arrière.</T>
                 </p>
               </div>
               <div>
                 <label htmlFor="checkin-reason" className="mb-1.5 block text-xs font-bold text-fg">
-                  Justification
+                  <T>Justification</T>
                 </label>
                 <textarea
                   id="checkin-reason"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="Ex. Client arrivé avant l'enregistrement."
+                  placeholder={t("Ex. Client arrivé avant l'enregistrement.")}
                   className="min-h-16 w-full resize-none rounded-xl border border-app-line-strong bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
                 />
               </div>
@@ -317,9 +320,9 @@ export function CheckInButton({
             }}
             className="flex h-12 w-full items-center justify-center rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
           >
-            {pending ? "..." : "Confirmer l'arrivée"}
+            {pending ? "..." : <T>{"Confirmer l'arrivée"}</T>}
           </button>
-          {error && !confirming ? <p role="alert" className="text-center text-xs font-medium text-danger">{error}</p> : null}
+          {error && !confirming ? <p role="alert" className="text-center text-xs font-medium text-danger"><T>{error}</T></p> : null}
         </div>
       )}
     </div>

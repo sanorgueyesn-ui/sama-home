@@ -9,6 +9,7 @@ import { PropertySchema, type PropertyFormState } from "@/lib/definitions";
 import { readImageUploadFromFormData } from "@/lib/image-upload";
 import { uploadImageObject, deleteImageObject } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
+import { getT } from "@/lib/i18n/server";
 
 const PHOTO_KEY_PREFIX = "logements";
 
@@ -35,6 +36,7 @@ export async function createProperty(
   _prevState: PropertyFormState,
   formData: FormData,
 ): Promise<PropertyFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : createProperty()
   // n'était gardée que par getCurrentUser(), jamais par
   // requireActiveEstablishment(), contrairement à updateProperty()/
@@ -46,13 +48,13 @@ export async function createProperty(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un logement." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un logement.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -63,7 +65,7 @@ export async function createProperty(
   // (NO_ESTABLISHMENT exclu ci-dessus). Message repris à l'identique de la
   // branche NO_ESTABLISHMENT ci-dessus.
   if (!user.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un logement." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un logement.") };
   }
 
   // New listings always start active — there's no reason to ask, and no
@@ -139,7 +141,7 @@ export async function createProperty(
     // La photo a été envoyée mais la ligne n'a pas pu être créée : objet
     // orphelin nettoyé immédiatement plutôt que laissé sans référence.
     if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/logements");
@@ -151,6 +153,7 @@ export async function updateProperty(
   _prevState: PropertyFormState,
   formData: FormData,
 ): Promise<PropertyFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-O5 — requireActiveEstablishment() placé en tout
   // premier, avant le parsing du formulaire, la lecture du fichier image,
   // tout upload S3 et toute écriture Prisma : un établissement inactif/sans
@@ -163,13 +166,13 @@ export async function updateProperty(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -180,7 +183,7 @@ export async function updateProperty(
   // ci-dessus) — jamais un `!` non-null, jamais une valeur supposée sans
   // vérification (même principe que partout ailleurs dans ce fichier).
   if (!user.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement.") };
   }
 
   const parsed = parsePropertyForm(formData, formData.get("active") === "on");
@@ -209,7 +212,7 @@ export async function updateProperty(
     select: { photo: true, updatedAt: true },
   });
   if (!existing) {
-    return { message: "Logement introuvable." };
+    return { message: t("Logement introuvable.") };
   }
 
   let nextPhoto = existing.photo; // par défaut : inchangé
@@ -243,7 +246,7 @@ export async function updateProperty(
     // La base n'a pas été mise à jour : le nouvel objet envoyé (s'il y en a
     // un) devient orphelin, nettoyé immédiatement.
     if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   if (result.count === 0) {
@@ -255,7 +258,7 @@ export async function updateProperty(
     // gagné la course.
     if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
     return {
-      message: "Ce logement a été modifié entre-temps par quelqu'un d'autre. Rechargez la page et réessayez.",
+      message: t("Ce logement a été modifié entre-temps par quelqu'un d'autre. Rechargez la page et réessayez."),
     };
   }
 
@@ -272,6 +275,7 @@ export async function updateProperty(
 }
 
 export async function toggleActive(id: string, nextActive: boolean): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3D / Lot D3 — même garde d'isolation multi-établissement que
   // updateProperty() ci-dessus : un id inexistant ou d'un autre établissement
   // suit le même chemin "introuvable" qu'un `update` qui ne trouve rien.
@@ -300,13 +304,13 @@ export async function toggleActive(id: string, nextActive: boolean): Promise<{ e
     if (!access.ok) {
       switch (access.reason) {
         case "NO_ESTABLISHMENT":
-          return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement." };
+          return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement.") };
         case "INACTIVE":
-          return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+          return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
         case "NO_SUBSCRIPTION":
-          return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+          return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
         case "EXPIRED":
-          return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+          return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
       }
     }
     // Narrowing explicite requis par le compilateur — même raison et même
@@ -316,13 +320,13 @@ export async function toggleActive(id: string, nextActive: boolean): Promise<{ e
     // cette ligne (NO_ESTABLISHMENT exclu ci-dessus). Message repris à
     // l'identique de la branche NO_ESTABLISHMENT ci-dessus.
     if (!access.user.establishmentId) {
-      return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement." };
+      return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement.") };
     }
     establishmentId = access.user.establishmentId;
   } else {
     const user = await getCurrentUser();
     if (!user.establishmentId) {
-      return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement." };
+      return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement.") };
     }
     establishmentId = user.establishmentId;
   }
@@ -334,7 +338,7 @@ export async function toggleActive(id: string, nextActive: boolean): Promise<{ e
   if (result.count === 0) {
     // Message repris à l'identique de updateProperty() (`"Logement
     // introuvable."`) — jamais une formulation nouvelle.
-    return { error: "Logement introuvable." };
+    return { error: t("Logement introuvable.") };
   }
 
   revalidatePath("/logements");
@@ -343,26 +347,27 @@ export async function toggleActive(id: string, nextActive: boolean): Promise<{ e
 }
 
 export async function deleteProperty(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   const access = await requireActiveEstablishment();
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce logement.") };
   }
 
   if (!hasEstablishmentPermission(user, "CAN_DELETE_PROPERTY")) {
-    return { error: "Action refusée : votre compte n'a pas l'autorisation de supprimer les logements." };
+    return { error: t("Action refusée : votre compte n'a pas l'autorisation de supprimer les logements.") };
   }
 
   const property = await prisma.property.findFirst({
@@ -374,7 +379,7 @@ export async function deleteProperty(id: string): Promise<{ error?: string }> {
   });
 
   if (!property) {
-    return { error: "Logement introuvable." };
+    return { error: t("Logement introuvable.") };
   }
 
   // Empêcher la suppression si un séjour est actuellement en cours
@@ -382,7 +387,7 @@ export async function deleteProperty(id: string): Promise<{ error?: string }> {
   if (hasActiveRental) {
     return {
       error:
-        "Impossible de supprimer ce logement car un client y séjourne actuellement. Veuillez d'abord effectuer la sortie (check-out).",
+        t("Impossible de supprimer ce logement car un client y séjourne actuellement. Veuillez d'abord effectuer la sortie (check-out)."),
     };
   }
 
@@ -445,7 +450,7 @@ export async function deleteProperty(id: string): Promise<{ error?: string }> {
     }
   } catch (error) {
     console.error(`deleteProperty(${id}) — échec inattendu de la suppression du logement :`, error);
-    return { error: "Une erreur est survenue pendant la suppression. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la suppression. Veuillez réessayer.") };
   }
 
   revalidatePath("/logements");

@@ -3,6 +3,8 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { UserIcon, PhoneIcon, ChatIcon, KeyIcon, ClockIcon } from "@/components/ui/icons";
+import { T, useT } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 export type StayCountdownProps = {
   arrivalAt: string | number | Date;
@@ -20,7 +22,7 @@ function pad(n: number): string {
 }
 
 function formatDateFr(d: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(dateLocale(), {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -30,7 +32,7 @@ function formatDateFr(d: Date): string {
 }
 
 function formatTimeOnlyFr(d: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(dateLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
@@ -69,6 +71,7 @@ export function StayCountdown({
   propertyName,
   className = "",
 }: StayCountdownProps) {
+  const t = useT();
   const now = useSyncExternalStore(subscribe, getClientNow, getServerNow);
   const mounted = now > 0;
 
@@ -151,7 +154,7 @@ export function StayCountdown({
         <div className="flex items-center justify-between text-xs">
           <span className="flex items-center gap-1.5 font-bold text-fg/60">
             <span className="h-2 w-2 rounded-full bg-fg/20" />
-            <span>Calcul du décompte...</span>
+            <span><T>Calcul du décompte...</T></span>
           </span>
           <span className="text-[10px] font-bold text-fg/40">...%</span>
         </div>
@@ -193,7 +196,7 @@ export function StayCountdown({
 
         {clientName ? (
           <p className="mt-1.5 truncate text-[10px] font-medium text-fg/60">
-            Occupant : <span className="font-bold text-fg/90">{clientName}</span>
+            <T>Occupant :</T> <span className="font-bold text-fg/90">{clientName}</span>
           </p>
         ) : null}
       </div>
@@ -215,7 +218,7 @@ export function StayCountdown({
               <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${statusTheme.dotBg}`} />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-xs font-extrabold text-fg">{propertyName ?? "Chambre"}</p>
+              <p className="truncate text-xs font-extrabold text-fg">{propertyName ?? <T>{"Chambre"}</T>}</p>
               {clientName ? (
                 <p className="truncate text-[11px] text-fg/60 flex items-center gap-1">
                   <UserIcon className="h-3 w-3 text-fg/50 shrink-0" />
@@ -225,7 +228,7 @@ export function StayCountdown({
             </div>
           </div>
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold border ${statusTheme.badgeBg}`}>
-            {statusTheme.label}
+            <T>{statusTheme.label}</T>
           </span>
         </div>
 
@@ -233,7 +236,7 @@ export function StayCountdown({
           <span className={`font-mono text-sm font-black ${statusTheme.text}`}>
             {fullDigitalTimer}
           </span>
-          <span className="text-[11px] font-bold text-fg/50">{progress}% écoulé</span>
+          <span className="text-[11px] font-bold text-fg/50">{progress}<T>% écoulé</T></span>
         </div>
 
         <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
@@ -244,13 +247,13 @@ export function StayCountdown({
         </div>
 
         <div className="mt-2 flex items-center justify-between text-[10px] text-fg/50">
-          <span>Sortie : {formatTimeOnlyFr(endDate)}</span>
+          <span><T>Sortie :</T> {formatTimeOnlyFr(endDate)}</span>
           {rentalId ? (
             <Link
               href={`/locations/${rentalId}`}
               className="font-bold text-brand-orange hover:underline"
             >
-              Gérer départ →
+              <T>Gérer départ →</T>
             </Link>
           ) : null}
         </div>
@@ -278,7 +281,7 @@ export function StayCountdown({
             <span className={`relative inline-flex rounded-full h-3 w-3 ${statusTheme.dotBg}`} />
           </span>
           <span className="text-xs font-black uppercase tracking-wider text-fg">
-            {statusTheme.label} · Décompte avant libération
+            <T>{statusTheme.label}</T> <T>· Décompte avant libération</T>
           </span>
         </div>
 
@@ -302,7 +305,7 @@ export function StayCountdown({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-[#25D366]/15 px-2.5 py-1 text-xs font-bold text-[#25D366] hover:bg-[#25D366]/25 transition-colors"
-                  title="Contacter sur WhatsApp"
+                  title={t("Contacter sur WhatsApp")}
                 >
                   <ChatIcon className="h-3 w-3" />
                   <span>WhatsApp</span>
@@ -317,7 +320,7 @@ export function StayCountdown({
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-center">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-fg/50">
-            {isOverdue ? "Dépassement de séjour constaté" : "Temps restant jusqu'au check-out"}
+            {isOverdue ? <T>{"Dépassement de séjour constaté"}</T> : <T>{"Temps restant jusqu'au check-out"}</T>}
           </p>
           <div className="mt-1 flex items-baseline gap-2">
             <span className={`font-mono text-3xl sm:text-4xl font-black tracking-tight ${statusTheme.text}`}>
@@ -327,10 +330,10 @@ export function StayCountdown({
         </div>
 
         <div className="rounded-xl border border-border/10 bg-surface-sunken/50 p-3 sm:text-right">
-          <p className="text-[11px] font-bold uppercase text-fg/50">Date &amp; heure de sortie prévue</p>
+          <p className="text-[11px] font-bold uppercase text-fg/50"><T>Date &amp; heure de sortie prévue</T></p>
           <p className="mt-0.5 text-sm font-extrabold text-fg">{formatDateFr(endDate)}</p>
           <p className="mt-0.5 text-xs font-medium text-fg/60">
-            Arrivé le {formatDateFr(startDate)}
+            <T>Arrivé le</T> {formatDateFr(startDate)}
           </p>
         </div>
       </div>
@@ -340,12 +343,12 @@ export function StayCountdown({
         <div className="mb-1.5 flex items-center justify-between text-xs font-bold text-fg/70">
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            Check-in : {formatTimeOnlyFr(startDate)}
+            <T>Check-in :</T> {formatTimeOnlyFr(startDate)}
           </span>
-          <span className="font-extrabold text-brand-orange">{progress}% du séjour écoulé</span>
+          <span className="font-extrabold text-brand-orange">{progress}<T>% du séjour écoulé</T></span>
           <span className="flex items-center gap-1">
             <span className={`h-1.5 w-1.5 rounded-full ${statusTheme.dotBg}`} />
-            Check-out : {formatTimeOnlyFr(endDate)}
+            <T>Check-out :</T> {formatTimeOnlyFr(endDate)}
           </span>
         </div>
         <div className="h-2.5 w-full overflow-hidden rounded-full bg-fg/10 p-0.5">
@@ -364,14 +367,14 @@ export function StayCountdown({
             className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink shadow-sm hover:brightness-110"
           >
             <KeyIcon className="h-3.5 w-3.5" />
-            <span>Gérer la sortie (Check-out)</span>
+            <span><T>Gérer la sortie (Check-out)</T></span>
           </Link>
           <Link
             href={`/locations/${rentalId}/extend`}
             className="inline-flex h-10 items-center gap-2 rounded-xl border border-border/15 bg-surface-sunken px-4 text-xs font-bold text-fg hover:bg-surface-raised"
           >
             <ClockIcon className="h-3.5 w-3.5 text-brand-orange" />
-            <span>Prolonger le séjour</span>
+            <span><T>Prolonger le séjour</T></span>
           </Link>
         </div>
       ) : null}

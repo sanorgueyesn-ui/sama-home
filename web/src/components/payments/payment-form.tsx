@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import type { PaymentFormState } from "@/lib/definitions";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const PAYMENT_MODES: { value: string; label: string }[] = [
   { value: "CASH", label: "Espèces" },
@@ -22,6 +23,7 @@ export function PaymentForm({
   action: (state: PaymentFormState, formData: FormData) => Promise<PaymentFormState>;
   remaining: number;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
   const [amount, setAmount] = useState(remaining);
   const [method, setMethod] = useState("CASH");
@@ -35,14 +37,14 @@ export function PaymentForm({
     <form action={formAction} className="flex flex-col gap-4">
       <div className="rounded-xl bg-surface-sunken px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-fg/60">Reste à payer</span>
+          <span className="text-xs font-bold text-fg/60"><T>Reste à payer</T></span>
           <span className="text-base font-extrabold text-fg">{fmtFcfa(remaining)}</span>
         </div>
       </div>
 
       <div>
         <label htmlFor="amount" className="mb-1.5 block text-xs font-bold text-fg">
-          Montant encaissé (FCFA)
+          <T>Montant encaissé (FCFA)</T>
         </label>
         <input
           id="amount"
@@ -56,19 +58,19 @@ export function PaymentForm({
         />
         {!amountValid ? (
           <p className="mt-1 text-xs font-medium text-danger">
-            Le montant doit être compris entre 1 et {fmtFcfa(remaining)}.
+            <T>Le montant doit être compris entre 1 et</T> {fmtFcfa(remaining)}.
           </p>
         ) : null}
         {errors?.amount?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
 
       <div>
         <label htmlFor="method" className="mb-1.5 block text-xs font-bold text-fg">
-          Mode de paiement
+          <T>Mode de paiement</T>
         </label>
         <select
           id="method"
@@ -79,20 +81,20 @@ export function PaymentForm({
         >
           {PAYMENT_MODES.map((m) => (
             <option key={m.value} value={m.value}>
-              {m.label}
+              <T>{m.label}</T>
             </option>
           ))}
         </select>
         {errors?.method?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
 
       <div>
         <label htmlFor="reference" className="mb-1.5 block text-xs font-bold text-fg">
-          Référence <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
+          <T>Référence</T> <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
         </label>
         <input
           id="reference"
@@ -100,33 +102,33 @@ export function PaymentForm({
           type="text"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
-          placeholder="Ex. identifiant de transaction Wave"
+          placeholder={t("Ex. identifiant de transaction Wave")}
           className="h-12 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {errors?.reference?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
 
       <div>
         <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-fg">
-          Note <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
+          <T>Note</T> <span className="ml-1 font-medium text-fg/40">(optionnel)</span>
         </label>
         <textarea
           id="note"
           name="note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Informations complémentaires"
+          placeholder={t("Informations complémentaires")}
           className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface-raised px-4 py-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 
@@ -135,7 +137,7 @@ export function PaymentForm({
         disabled={pending || !amountValid}
         className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
-        {pending ? "Enregistrement..." : "CONFIRMER L'ENCAISSEMENT"}
+        {pending ? "Enregistrement..." : <T>{"CONFIRMER L'ENCAISSEMENT"}</T>}
       </button>
     </form>
   );

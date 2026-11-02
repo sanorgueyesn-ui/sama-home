@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { PaymentStatusBadge } from "@/components/payments/payment-status-badge";
 import type { PaymentSummary } from "@/lib/payment-summary";
+import { T } from "@/components/i18n/i18n-provider";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -9,7 +10,7 @@ function fmtFcfa(amount: number) {
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-center justify-between border-b border-app-line py-3 last:border-0">
-      <span className="text-[11px] font-bold text-app-muted">{label}</span>
+      <span className="text-[11px] font-bold text-app-muted"><T>{label}</T></span>
       <span className={strong ? "text-base font-extrabold text-fg" : "text-sm font-semibold text-fg"}>
         {value}
       </span>
@@ -33,7 +34,7 @@ export function PaymentSummaryCard({
   return (
     <Card className="px-4">
       <div className="flex items-center justify-between pt-3">
-        <p className="text-[11px] font-bold text-app-muted">SITUATION FINANCIÈRE</p>
+        <p className="text-[11px] font-bold text-app-muted"><T>SITUATION FINANCIÈRE</T></p>
         <PaymentStatusBadge status={summary.status} />
       </div>
       {extraRows?.map((r) => <Row key={r.label} label={r.label} value={r.value} />)}

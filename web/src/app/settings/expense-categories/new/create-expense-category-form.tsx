@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createExpenseCategory } from "@/app/actions/expense-categories";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 /**
  * Bloc 16.3, section 9 — position calculée côté serveur uniquement
@@ -12,6 +13,7 @@ import { createExpenseCategory } from "@/app/actions/expense-categories";
  * ce formulaire ne fait que relayer l'erreur retournée).
  */
 export function CreateExpenseCategoryForm() {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState("");
@@ -46,10 +48,10 @@ export function CreateExpenseCategoryForm() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ex. Électricité"
+          placeholder={t("Ex. Électricité")}
           className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
-        {error ? <p className="mt-1 text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="mt-1 text-xs font-medium text-danger"><T>{error}</T></p> : null}
       </div>
 
       <div className="mt-1 flex gap-3">
@@ -59,14 +61,14 @@ export function CreateExpenseCategoryForm() {
           disabled={pending}
           className="h-14 flex-1 rounded-2xl border border-border/15 text-base font-extrabold text-fg disabled:opacity-40"
         >
-          Annuler
+          <T>Annuler</T>
         </button>
         <button
           type="submit"
           disabled={pending}
           className="h-14 flex-1 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
         >
-          {pending ? "..." : "Créer"}
+          {pending ? "..." : <T>{"Créer"}</T>}
         </button>
       </div>
     </form>

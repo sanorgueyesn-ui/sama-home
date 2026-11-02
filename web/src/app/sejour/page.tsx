@@ -16,12 +16,15 @@ import { getPropertyStatuses } from "@/lib/property-status";
 import { formatDuration } from "@/lib/duration";
 import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { hour: "2-digit", minute: "2-digit" }).format(d);
 }
 // Même logique que page.tsx (Accueil) — dupliquée plutôt que partagée,
 // cohérent avec le reste du projet (chaque page a ses propres petits
@@ -48,7 +51,7 @@ function plural(n: number, word: string) {
 function CompactStatTile({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="min-w-0 rounded-lg bg-surface-raised px-1 py-2 text-center shadow-card">
-      <p className="truncate text-[8px] font-bold uppercase tracking-wide text-fg/50">{label}</p>
+      <p className="truncate text-[8px] font-bold uppercase tracking-wide text-fg/50"><T>{label}</T></p>
       <p className="mt-0.5 text-sm font-extrabold leading-none sm:text-base" style={{ color }}>
         {value}
       </p>
@@ -57,6 +60,7 @@ function CompactStatTile({ label, value, color }: { label: string; value: number
 }
 
 export default async function SejourPage() {
+  const t = await getT();
   const now = new Date();
   const space = await getActiveSpace();
   const vocab = pageVocabulary(space.mode);
@@ -139,16 +143,16 @@ export default async function SejourPage() {
         className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-brand-orange px-4 py-4 text-ink shadow-card transition active:scale-[0.98] hover:brightness-105"
       >
         <KeyIcon className="h-6 w-6" />
-        <span className="text-sm font-extrabold">{isHotel ? vocab.newStay : "Louer"}</span>
-        <span className="text-[11px] font-medium text-ink/70">{isHotel ? "Arrivée sans réservation" : "Entrée client direct"}</span>
+        <span className="text-sm font-extrabold">{isHotel ? vocab.newStay : <T>{"Louer"}</T>}</span>
+        <span className="text-[11px] font-medium text-ink/70">{isHotel ? <T>{"Arrivée sans réservation"}</T> : <T>{"Entrée client direct"}</T>}</span>
       </Link>
       <Link
         href="/reservations/new"
         className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-brand-orange/40 bg-navy text-white shadow-card transition active:scale-[0.98] hover:bg-navy/80"
       >
         <CalendarIcon className="h-6 w-6 text-brand-orange" />
-        <span className="text-sm font-extrabold">Réserver</span>
-        <span className="text-[11px] font-medium text-white/70">Planifier un séjour</span>
+        <span className="text-sm font-extrabold"><T>Réserver</T></span>
+        <span className="text-[11px] font-medium text-white/70"><T>Planifier un séjour</T></span>
       </Link>
     </div>
   );
@@ -165,14 +169,14 @@ export default async function SejourPage() {
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg">
-          {isHotel ? "Séjours en cours" : "Locations en cours"} ({activeRentals.items.length})
+          {isHotel ? <T>{"Séjours en cours"}</T> : <T>{"Locations en cours"}</T>} ({activeRentals.items.length})
         </h2>
         <Link href="/locations" className="text-xs font-bold text-fg underline">
-          Voir tout
+          <T>Voir tout</T>
         </Link>
       </div>
       {activeRentals.items.length === 0 ? (
-        <p className="mt-2.5 text-sm font-medium text-fg/50">Aucune location en cours.</p>
+        <p className="mt-2.5 text-sm font-medium text-fg/50"><T>Aucune location en cours.</T></p>
       ) : (
         <div className="mt-2.5 flex flex-col gap-2.5">
           {activeRentals.items.map((rental) => (
@@ -191,21 +195,21 @@ export default async function SejourPage() {
                 </div>
               </div>
               <div className="mt-2 flex items-center justify-between rounded-lg bg-surface-sunken px-2.5 py-1.5 text-[11px] text-fg/60">
-                <span>Entrée : {fmtTime(rental.arrivalAt)}</span>
-                <span className="font-semibold text-danger">{formatRemaining(now, rental.plannedDepartureAt)}</span>
+                <span><T>Entrée :</T> {fmtTime(rental.arrivalAt)}</span>
+                <span className="font-semibold text-danger"><T>{formatRemaining(now, rental.plannedDepartureAt)}</T></span>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <Link
                   href={`/locations/${rental.id}`}
                   className="flex h-8 items-center justify-center rounded-lg bg-surface-sunken text-[11px] font-bold text-fg"
                 >
-                  Voir
+                  <T>Voir</T>
                 </Link>
                 <Link
                   href={`/locations/${rental.id}/extend`}
                   className="flex h-8 items-center justify-center rounded-lg border border-brand-orange/40 bg-brand-orange/15 text-[11px] font-bold text-brand-orange"
                 >
-                  Prolonger
+                  <T>Prolonger</T>
                 </Link>
               </div>
             </Card>
@@ -219,14 +223,14 @@ export default async function SejourPage() {
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg">
-          Prochaines réservations ({upcomingReservations.total})
+          <T>Prochaines réservations (</T>{upcomingReservations.total})
         </h2>
         <Link href="/reservations" className="text-xs font-bold text-fg underline">
-          Planning complet
+          <T>Planning complet</T>
         </Link>
       </div>
       {upcomingReservations.items.length === 0 ? (
-        <p className="mt-2.5 text-sm font-medium text-fg/50">Aucune réservation à venir.</p>
+        <p className="mt-2.5 text-sm font-medium text-fg/50"><T>Aucune réservation à venir.</T></p>
       ) : (
         <div className="mt-2.5 flex flex-col gap-2.5">
           {upcomingReservations.items.map((r) => (
@@ -241,7 +245,7 @@ export default async function SejourPage() {
                   <ReservationStatusBadge status={r.status} />
                 </div>
                 <p className="mt-0.5 truncate text-[11px] text-fg/60">
-                  {r.client?.name ?? "Sans client"} · {formatDuration(r.durationValue, r.durationUnit)} ·{" "}
+                  {r.client?.name ?? <T>{"Sans client"}</T>} · {formatDuration(r.durationValue, r.durationUnit)} ·{" "}
                   {fmtFcfa(r.amount)}
                 </p>
               </div>
@@ -256,7 +260,7 @@ export default async function SejourPage() {
   const quickAvailableSection =
     quickAvailable.length > 0 ? (
       <div>
-        <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg">Disponibles pour entrée rapide</h2>
+        <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg"><T>Disponibles pour entrée rapide</T></h2>
         <div className="mt-2.5 flex flex-col gap-2">
           {quickAvailable.map((p) => (
             <div
@@ -273,12 +277,12 @@ export default async function SejourPage() {
                   className="inline-flex h-7 items-center gap-1 rounded-lg bg-brand-orange px-2.5 text-[11px] font-bold text-ink hover:brightness-105"
                 >
                   <KeyIcon className="h-3 w-3" />
-                  <span>{isHotel ? vocab.newStayShort : "Louer"}</span>
+                  <span>{isHotel ? vocab.newStayShort : <T>{"Louer"}</T>}</span>
                 </Link>
                 <Link
                   href={`/reservations/new?propertyId=${p.id}`}
                   className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-sunken text-fg hover:bg-surface-raised"
-                  aria-label={`Réserver ${p.name}`}
+                  aria-label={t(`Réserver ${p.name}`)}
                 >
                   <CalendarIcon className="h-3.5 w-3.5 text-brand-orange" />
                 </Link>
@@ -291,9 +295,9 @@ export default async function SejourPage() {
 
   const planningSection = (
     <div>
-      <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg">Planning du jour</h2>
+      <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg"><T>Planning du jour</T></h2>
       {planningRows.length === 0 ? (
-        <p className="mt-2.5 text-sm font-medium text-fg/50">Rien de prévu aujourd&apos;hui.</p>
+        <p className="mt-2.5 text-sm font-medium text-fg/50"><T>Rien de prévu aujourd&apos;hui.</T></p>
       ) : (
         <div className="mt-2.5 flex flex-col gap-2">
           {planningRows.map((row) => (
@@ -308,7 +312,7 @@ export default async function SejourPage() {
               </div>
               <div className="shrink-0 text-right">
                 <p className={`text-xs font-bold ${row.kind === "arrival" ? "text-success" : "text-danger"}`}>
-                  {row.kind === "arrival" ? "Arrivée" : "Départ"}
+                  {row.kind === "arrival" ? <T>{"Arrivée"}</T> : <T>{"Départ"}</T>}
                 </p>
                 <p className="text-[11px] text-fg/50">{fmtTime(row.time)}</p>
               </div>
@@ -322,19 +326,19 @@ export default async function SejourPage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Séjour</h1>
+        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]"><T>Séjour</T></h1>
         <span className="shrink-0 rounded-full border border-success/30 bg-success-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
-          En direct
+          <T>En direct</T>
         </span>
       </div>
-      <p className="mt-0.5 text-sm font-medium text-fg/60">{isHotel ? "Gérez vos séjours et réservations en temps réel." : "Gérez vos locations et réservations en temps réel."}</p>
+      <p className="mt-0.5 text-sm font-medium text-fg/60">{isHotel ? <T>{"Gérez vos séjours et réservations en temps réel."}</T> : <T>{"Gérez vos locations et réservations en temps réel."}</T>}</p>
 
       {/* Bandeau du jour — correctif Lot 2, section 2 : mêmes 4 valeurs que
           les tuiles juste en dessous, aucune donnée supplémentaire. */}
       <div className="mt-3 rounded-lg border border-border/10 bg-surface-sunken px-3 py-2 text-[11px] text-fg/70">
-        <span className="font-semibold text-brand-orange">Aujourd&apos;hui :</span> {stats[0].value} en cours ·{" "}
-        {stats[1].value} {plural(stats[1].value, "arrivée")} · {stats[2].value} {plural(stats[2].value, "départ")} ·{" "}
-        {stats[3].value} {plural(stats[3].value, "réservée")}
+        <span className="font-semibold text-brand-orange"><T>Aujourd&apos;hui :</T></span> {stats[0].value} <T>en cours ·</T>{" "}
+        {stats[1].value} <T>{plural(stats[1].value, "arrivée")}</T> · {stats[2].value} <T>{plural(stats[2].value, "départ")}</T> ·{" "}
+        {stats[3].value} <T>{plural(stats[3].value, "réservée")}</T>
       </div>
 
       <div className="mt-4">{ctaButtons}</div>
@@ -357,7 +361,7 @@ export default async function SejourPage() {
           FCFA" si calculable) à gauche, Planning du jour à droite. */}
       <div className="mt-5 hidden lg:grid lg:grid-cols-[2fr_1fr] lg:gap-5">
         <div>
-          <h2 className="mb-2 text-xs font-extrabold uppercase tracking-wide text-fg">Logements</h2>
+          <h2 className="mb-2 text-xs font-extrabold uppercase tracking-wide text-fg"><T>Logements</T></h2>
           <SejourAvailableGrid properties={gridProperties} />
         </div>
         <div>{planningSection}</div>
@@ -367,7 +371,7 @@ export default async function SejourPage() {
           avec Accueil, pas une nouvelle donnée. */}
       <p className="mt-6 text-center text-[11px] font-medium text-fg/35">
         {propertyCounts.AVAILABLE} {plural(propertyCounts.AVAILABLE, "logement")} disponible
-        {propertyCounts.AVAILABLE > 1 ? "s" : ""} au total
+        {propertyCounts.AVAILABLE > 1 ? "s" : ""} <T>au total</T>
       </p>
     </div>
   );

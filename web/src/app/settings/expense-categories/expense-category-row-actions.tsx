@@ -8,6 +8,7 @@ import {
   deactivateExpenseCategory,
   deleteExpenseCategory,
 } from "@/app/actions/expense-categories";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 type Mode = "idle" | "rename" | "deactivate" | "delete";
 
@@ -38,6 +39,7 @@ export function ExpenseCategoryRowActions({
   active: boolean;
   usageCount: number;
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<Mode>("idle");
@@ -73,7 +75,7 @@ export function ExpenseCategoryRowActions({
   }
 
   function handleActivate() {
-    if (!confirm(`Réactiver « ${name} » ? Elle redeviendra proposée pour les nouvelles dépenses.`)) return;
+    if (!confirm(t(`Réactiver « ${name} » ? Elle redeviendra proposée pour les nouvelles dépenses.`))) return;
     setError(null);
     startTransition(async () => {
       const result = await activateExpenseCategory(id);
@@ -134,7 +136,7 @@ export function ExpenseCategoryRowActions({
           onChange={(e) => setNewName(e.target.value)}
           className={inputClass}
         />
-        {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
         <div className="flex gap-2">
           <button
             type="button"
@@ -142,7 +144,7 @@ export function ExpenseCategoryRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
-            Annuler
+            <T>Annuler</T>
           </button>
           <button
             type="button"
@@ -150,7 +152,7 @@ export function ExpenseCategoryRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
-            {pending ? "..." : "Enregistrer"}
+            {pending ? "..." : <T>{"Enregistrer"}</T>}
           </button>
         </div>
       </div>
@@ -161,20 +163,20 @@ export function ExpenseCategoryRowActions({
     return (
       <div className="flex w-full flex-col gap-2 py-1">
         <p className="text-xs font-medium text-fg/70">
-          Cette catégorie ne pourra plus être utilisée pour les nouvelles dépenses. Les dépenses existantes seront
-          conservées.
+          <T>Cette catégorie ne pourra plus être utilisée pour les nouvelles dépenses. Les dépenses existantes seront
+          conservées.</T>
         </p>
         <label htmlFor={reasonFieldId} className="text-xs font-bold text-fg">
-          Motif
+          <T>Motif</T>
         </label>
         <textarea
           id={reasonFieldId}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Ex. Catégorie remplacée par une autre."
+          placeholder={t("Ex. Catégorie remplacée par une autre.")}
           className={textareaClass}
         />
-        {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
         <div className="flex gap-2">
           <button
             type="button"
@@ -182,7 +184,7 @@ export function ExpenseCategoryRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
-            Annuler
+            <T>Annuler</T>
           </button>
           <button
             type="button"
@@ -190,7 +192,7 @@ export function ExpenseCategoryRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
-            {pending ? "..." : "Désactiver"}
+            {pending ? "..." : <T>{"Désactiver"}</T>}
           </button>
         </div>
       </div>
@@ -201,20 +203,20 @@ export function ExpenseCategoryRowActions({
     return (
       <div className="flex w-full flex-col gap-2 py-1">
         <p className="text-xs font-medium text-fg/70">
-          La suppression est définitive. Si cette catégorie est déjà utilisée par une dépense, elle ne pourra pas
-          être supprimée.
+          <T>La suppression est définitive. Si cette catégorie est déjà utilisée par une dépense, elle ne pourra pas
+          être supprimée.</T>
         </p>
         <label htmlFor={reasonFieldId} className="text-xs font-bold text-fg">
-          Motif de suppression
+          <T>Motif de suppression</T>
         </label>
         <textarea
           id={reasonFieldId}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Ex. Catégorie créée par erreur."
+          placeholder={t("Ex. Catégorie créée par erreur.")}
           className={textareaClass}
         />
-        {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
         <div className="flex gap-2">
           <button
             type="button"
@@ -222,7 +224,7 @@ export function ExpenseCategoryRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
-            Annuler
+            <T>Annuler</T>
           </button>
           <button
             type="button"
@@ -230,7 +232,7 @@ export function ExpenseCategoryRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl bg-danger text-xs font-extrabold text-white disabled:opacity-60"
           >
-            {pending ? "..." : "Supprimer"}
+            {pending ? "..." : <T>{"Supprimer"}</T>}
           </button>
         </div>
       </div>
@@ -249,7 +251,7 @@ export function ExpenseCategoryRowActions({
           }}
           className="h-8 rounded-lg border border-border/15 px-2.5 text-[11px] font-bold text-fg disabled:opacity-60"
         >
-          Renommer
+          <T>Renommer</T>
         </button>
         {active ? (
           <button
@@ -258,7 +260,7 @@ export function ExpenseCategoryRowActions({
             onClick={() => setMode("deactivate")}
             className="h-8 rounded-lg bg-surface-sunken px-2.5 text-[11px] font-bold text-fg/70 disabled:opacity-60"
           >
-            Désactiver
+            <T>Désactiver</T>
           </button>
         ) : (
           <button
@@ -267,7 +269,7 @@ export function ExpenseCategoryRowActions({
             onClick={handleActivate}
             className="h-8 rounded-lg bg-success-bg px-2.5 text-[11px] font-bold text-success disabled:opacity-60"
           >
-            {pending ? "..." : "Activer"}
+            {pending ? "..." : <T>{"Activer"}</T>}
           </button>
         )}
         {usageCount === 0 ? (
@@ -277,11 +279,11 @@ export function ExpenseCategoryRowActions({
             onClick={() => setMode("delete")}
             className="h-8 rounded-lg bg-danger-bg px-2.5 text-[11px] font-bold text-danger disabled:opacity-60"
           >
-            Supprimer
+            <T>Supprimer</T>
           </button>
         ) : null}
       </div>
-      {error ? <p className="max-w-48 text-right text-[10.5px] font-medium text-danger">{error}</p> : null}
+      {error ? <p className="max-w-48 text-right text-[10.5px] font-medium text-danger"><T>{error}</T></p> : null}
     </div>
   );
 }

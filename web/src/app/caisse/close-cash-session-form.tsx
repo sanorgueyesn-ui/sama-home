@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { closeCashSession } from "@/app/actions/cash";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 function fmtFcfa(amount: number) {
   const sign = amount < 0 ? "-" : "";
@@ -27,6 +28,7 @@ export function CloseCashSessionForm({
   expectedCash: number;
   mobileMoney: { wave: number; orangeMoney: number };
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -72,7 +74,7 @@ export function CloseCashSessionForm({
         onClick={() => setOpen(true)}
         className="flex min-h-12 items-center justify-center rounded-xl border border-danger/30 bg-danger-bg text-base font-extrabold text-danger"
       >
-        Fermer la caisse
+        <T>Fermer la caisse</T>
       </button>
     );
   }
@@ -80,26 +82,26 @@ export function CloseCashSessionForm({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-app-line-strong p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-extrabold text-app-text">Clôture de caisse</p>
+        <p className="text-sm font-extrabold text-app-text"><T>Clôture de caisse</T></p>
         <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-app-muted underline">
-          Annuler
+          <T>Annuler</T>
         </button>
       </div>
 
       <div className="rounded-xl bg-app-panel-2 px-4 py-3">
-        <p className="text-xs font-bold text-app-muted">SOLDE THÉORIQUE TOTAL</p>
+        <p className="text-xs font-bold text-app-muted"><T>SOLDE THÉORIQUE TOTAL</T></p>
         <p className="mt-1 text-xl font-extrabold text-app-text">{fmtFcfa(theoreticalBalance)}</p>
         <dl className="mt-2 space-y-1 border-t border-app-line-strong pt-2 text-xs text-app-muted">
           <div className="flex justify-between gap-3">
-            <dt className="font-bold text-app-text">dont espèces attendues au tiroir</dt>
+            <dt className="font-bold text-app-text"><T>dont espèces attendues au tiroir</T></dt>
             <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(expectedCash)}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt>dont Wave</dt>
+            <dt><T>dont Wave</T></dt>
             <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(mobileMoney.wave)}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt>dont Orange Money</dt>
+            <dt><T>dont Orange Money</T></dt>
             <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(mobileMoney.orangeMoney)}</dd>
           </div>
         </dl>
@@ -107,8 +109,8 @@ export function CloseCashSessionForm({
 
       <div>
         <label htmlFor="physicalCount" className="mb-1.5 block text-xs font-bold text-app-text">
-          Comptage physique <span className="font-medium text-app-faint">(facultatif)</span>
-          <span className="mt-0.5 block text-[11px] font-medium text-app-muted">Comptez uniquement les espèces du tiroir : elles sont comparées aux espèces attendues ({fmtFcfa(expectedCash)}). Wave et Orange Money ne créent pas d&apos;écart.</span>
+          <T>Comptage physique</T> <span className="font-medium text-app-faint">(facultatif)</span>
+          <span className="mt-0.5 block text-[11px] font-medium text-app-muted"><T>Comptez uniquement les espèces du tiroir : elles sont comparées aux espèces attendues (</T>{fmtFcfa(expectedCash)}<T>). Wave et Orange Money ne créent pas d&apos;écart.</T></span>
         </label>
         <input
           id="physicalCount"
@@ -116,22 +118,22 @@ export function CloseCashSessionForm({
           min={0}
           value={physicalCount}
           onChange={(e) => setPhysicalCount(e.target.value)}
-          placeholder="Laisser vide si aucun comptage"
+          placeholder={t("Laisser vide si aucun comptage")}
           className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-4 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
 
       {hasCount && countValid ? (
         variance === 0 ? (
-          <p className="rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">Aucun écart</p>
+          <p className="rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success"><T>Aucun écart</T></p>
         ) : (
           <div className="flex flex-col gap-2 rounded-xl bg-warning-bg px-4 py-3">
             <p className="text-sm font-extrabold text-warning">
-              Écart : {variance! > 0 ? "+" : ""}
+              <T>Écart :</T> {variance! > 0 ? "+" : ""}
               {fmtFcfa(variance!)}
             </p>
             <label htmlFor="varianceReason" className="text-xs font-bold text-warning">
-              Justification de l&apos;écart
+              <T>Justification de l&apos;écart</T>
             </label>
             <textarea
               id="varianceReason"
@@ -145,7 +147,7 @@ export function CloseCashSessionForm({
 
       <div>
         <label htmlFor="closeNote" className="mb-1.5 block text-xs font-bold text-app-text">
-          Note <span className="font-medium text-app-faint">(optionnel)</span>
+          <T>Note</T> <span className="font-medium text-app-faint">(optionnel)</span>
         </label>
         <textarea
           id="closeNote"
@@ -155,7 +157,7 @@ export function CloseCashSessionForm({
         />
       </div>
 
-      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
 
       <button
         type="button"
@@ -163,7 +165,7 @@ export function CloseCashSessionForm({
         onClick={handleClose}
         className="flex h-12 items-center justify-center rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
       >
-        {pending ? "..." : "Confirmer la fermeture"}
+        {pending ? "..." : <T>{"Confirmer la fermeture"}</T>}
       </button>
     </div>
   );

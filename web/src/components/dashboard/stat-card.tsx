@@ -1,4 +1,5 @@
 import type { ComponentType, SVGProps } from "react";
+import { T } from "@/components/i18n/i18n-provider";
 
 /**
  * StatCard — Composant de tuile statistique inspiré des maquettes M.N.D.
@@ -30,7 +31,7 @@ export function StatCard({
     >
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-extrabold uppercase tracking-wider text-fg/60">
-          {label}
+          <T>{label}</T>
         </p>
         {Icon ? (
           <span
@@ -58,7 +59,7 @@ export function StatCard({
           className="mt-1 text-[11px] font-bold text-fg/50 flex items-center gap-1"
           style={color ? { color } : undefined}
         >
-          {sub}
+          <T>{sub}</T>
         </p>
       ) : null}
     </div>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { T } from "@/components/i18n/i18n-provider";
 
 // Aperçu illustratif de l'application, dessiné en code avec les jetons du thème : net à toute
 // taille, suit le mode clair/sombre, aucune donnée réelle. Purement décoratif (aria-hidden) ;
@@ -36,7 +37,7 @@ export function DashboardPreview() {
         <span className="h-2.5 w-2.5 rounded-full bg-border/40" />
         <span className="h-2.5 w-2.5 rounded-full bg-border/40" />
         <span className="ms-3 rounded-md bg-surface px-3 py-0.5 text-[10px] font-semibold text-muted">
-          Résidence Almadies
+          <T>Résidence Almadies</T>
         </span>
       </div>
 
@@ -44,7 +45,7 @@ export function DashboardPreview() {
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {KPI.map((item) => (
             <div key={item.label} className="rounded-xl border border-border/15 bg-surface p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted">{item.label}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted"><T>{item.label}</T></p>
               <p className={`mt-1 whitespace-nowrap text-lg font-extrabold tabular-nums sm:text-2xl ${item.tone}`}>
                 {item.value}
                 {"unit" in item ? <span className="ms-1 hidden text-[10px] font-bold text-muted min-[430px]:inline">{item.unit}</span> : null}
@@ -58,9 +59,9 @@ export function DashboardPreview() {
             <li key={home.name} className="flex items-center gap-3 px-3.5 py-3">
               <StatusDot busy={home.busy} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-fg">{home.name}</p>
+                <p className="truncate text-sm font-bold text-fg"><T>{home.name}</T></p>
                 <p className="truncate text-xs text-muted">
-                  {home.meta} · <span className="font-semibold tabular-nums">{home.price} FCFA / nuit</span>
+                  <T>{home.meta}</T> · <span className="font-semibold tabular-nums">{home.price} <T>FCFA / nuit</T></span>
                 </p>
               </div>
             </li>
@@ -78,10 +79,10 @@ export function PhonePreview() {
       className="w-52 overflow-hidden rounded-[1.75rem] border-[6px] border-surface-sunken bg-surface shadow-card ring-1 ring-border/25"
     >
       <div className="space-y-3 p-3.5">
-        <p className="text-xs font-extrabold text-fg">Caisse du jour</p>
+        <p className="text-xs font-extrabold text-fg"><T>Caisse du jour</T></p>
         <div className="rounded-xl bg-(--accent) p-3 text-(--accent-ink)">
-          <p className="text-[9px] font-bold uppercase tracking-wide opacity-80">Encaissé</p>
-          <p className="text-lg font-extrabold tabular-nums">85 000 FCFA</p>
+          <p className="text-[9px] font-bold uppercase tracking-wide opacity-80"><T>Encaissé</T></p>
+          <p className="text-lg font-extrabold tabular-nums"><T>85 000 FCFA</T></p>
         </div>
         <ul className="space-y-2">
           {[
@@ -90,13 +91,13 @@ export function PhonePreview() {
           ].map((row) => (
             <li key={row.name} className="flex items-center gap-2 rounded-lg border border-border/15 px-2 py-1.5">
               <Image src={row.logo} alt="" width={20} height={20} className="h-5 w-5 rounded-md" />
-              <span className="flex-1 text-[10px] font-semibold text-fg">{row.name}</span>
+              <span className="flex-1 text-[10px] font-semibold text-fg"><T>{row.name}</T></span>
               <span className="text-[10px] font-bold tabular-nums text-fg">{row.amount}</span>
             </li>
           ))}
           <li className="flex items-center gap-2 rounded-lg border border-border/15 px-2 py-1.5">
             <span className="h-5 w-5 rounded-md bg-surface-sunken" />
-            <span className="flex-1 text-[10px] font-semibold text-fg">Espèces</span>
+            <span className="flex-1 text-[10px] font-semibold text-fg"><T>Espèces</T></span>
             <span className="text-[10px] font-bold tabular-nums text-fg">20 000</span>
           </li>
         </ul>
@@ -117,7 +118,7 @@ export function PlanningPreview() {
     <div aria-hidden="true" className="mt-5 space-y-2 rounded-xl border border-border/15 bg-surface p-3">
       {rows.map((row) => (
         <div key={row.name} className="grid grid-cols-[6.5rem_1fr] items-center gap-3 sm:grid-cols-[8rem_1fr]">
-          <span className="truncate text-[11px] font-semibold text-muted">{row.name}</span>
+          <span className="truncate text-[11px] font-semibold text-muted"><T>{row.name}</T></span>
           <div className="grid h-5 grid-cols-7 gap-0.5 rounded-md bg-surface-sunken">
             <span
               className="rounded bg-(--accent)"

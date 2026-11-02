@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function OccupancyDonut({
   total,
@@ -72,7 +73,7 @@ export function OccupancyDonut({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-black text-fg leading-none">{total}</span>
-          <span className="text-[10px] font-extrabold text-fg/50 uppercase tracking-wider mt-0.5">Biens</span>
+          <span className="text-[10px] font-extrabold text-fg/50 uppercase tracking-wider mt-0.5"><T>Biens</T></span>
         </div>
       </div>
 
@@ -80,21 +81,21 @@ export function OccupancyDonut({
         <div className="flex items-center justify-between pb-1.5 border-b border-border/10">
           <span className="flex items-center gap-2 text-fg/80 font-medium">
             <span className="h-2 w-2 rounded-full bg-success shadow-sm shadow-emerald-500/50" />
-            Disponibles
+            <T>Disponibles</T>
           </span>
           <span className="font-extrabold text-fg">{available} <span className="text-[11px] font-semibold text-app-good">({pAvailable}%)</span></span>
         </div>
         <div className="flex items-center justify-between pb-1.5 border-b border-border/10">
           <span className="flex items-center gap-2 text-fg/80 font-medium">
             <span className="h-2 w-2 rounded-full bg-danger shadow-sm shadow-rose-500/50" />
-            Occupés
+            <T>Occupés</T>
           </span>
           <span className="font-extrabold text-fg">{occupied} <span className="text-[11px] font-semibold text-app-bad">({pOccupied}%)</span></span>
         </div>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-fg/80 font-medium">
             <span className="h-2 w-2 rounded-full bg-info shadow-sm shadow-sky-400/50" />
-            Réservés
+            <T>Réservés</T>
           </span>
           <span className="font-extrabold text-fg">{reserved} <span className="text-[11px] font-semibold text-app-sky">({pReserved}%)</span></span>
         </div>

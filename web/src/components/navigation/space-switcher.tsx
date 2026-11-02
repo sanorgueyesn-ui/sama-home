@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { switchSpace } from "@/app/actions/space";
 import { BUSINESS_MODE_LABELS, SPACE_STATUS_LABELS, type SpaceOption } from "@/lib/business-mode";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 /**
  * Sélecteur d'espace professionnel du menu du compte. Menu déroulant natif (`<details>`) : aucun
@@ -22,12 +25,13 @@ export function SpaceSwitcher({
   /** Affichage seulement : `createSpace` revérifie le rôle et le plafond côté serveur. */
   canAddSpace?: boolean;
 }) {
+  const t = useT();
   const active = spaces.find((space) => space.id === activeId);
   return (
     <details className="relative">
       <summary
         className={`${triggerClassName} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}
-        aria-label="Changer d'espace professionnel"
+        aria-label={t("Changer d'espace professionnel")}
       >
         <span className={`w-5 h-5 rounded-lg ${iconBgClassName} flex items-center justify-center text-white shrink-0`}>
           <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -36,7 +40,7 @@ export function SpaceSwitcher({
           </svg>
         </span>
         <span className="max-w-[10rem] truncate" title={active?.name}>
-          {active?.name ?? "Choisir un espace"}
+          {active?.name ?? <T>{"Choisir un espace"}</T>}
         </span>
         <span className="text-app-faint text-[10px]" aria-hidden="true">▾</span>
       </summary>
@@ -58,7 +62,7 @@ export function SpaceSwitcher({
                     {space.id === activeId ? " ✓" : ""}
                   </span>
                   <span className="text-[10px] text-app-faint">
-                    {BUSINESS_MODE_LABELS[space.businessMode]}
+                    <T>{BUSINESS_MODE_LABELS[space.businessMode]}</T>
                     {space.status !== "ACTIVE" ? ` · ${SPACE_STATUS_LABELS[space.status]}` : ""}
                   </span>
                 </button>
@@ -69,7 +73,7 @@ export function SpaceSwitcher({
         {canAddSpace ? (
           <li className="mt-1 border-t border-app-line pt-1">
             <Link href="/espaces/nouveau" className="block rounded-lg px-3 py-2 text-xs font-bold text-app-text-2 hover:bg-app-hover">
-              + Ajouter un espace professionnel
+              <T>+ Ajouter un espace professionnel</T>
             </Link>
           </li>
         ) : null}

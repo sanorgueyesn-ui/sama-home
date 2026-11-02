@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 // Onglets des longs formulaires de paramètres. Tous les panneaux restent dans le DOM (seul l'attribut
 // `hidden` change) : un champ d'un onglet masqué est donc toujours envoyé avec le formulaire, et rien
@@ -33,6 +34,7 @@ export function SettingsTabs({
   active: string;
   onChange: (id: string) => void;
 }) {
+  const t = useT();
   const buttons = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // L'onglet actif doit toujours être visible, même si la liste défile (changement au clavier, ou
@@ -57,7 +59,7 @@ export function SettingsTabs({
   return (
     <div
       role="tablist"
-      aria-label={label}
+      aria-label={t(label)}
       onKeyDown={handleKeyDown}
       className="-mx-4 flex gap-0.5 overflow-x-auto border-b border-border/15 px-4 [scrollbar-width:none] sm:mx-0 sm:gap-1 sm:px-0 [&::-webkit-scrollbar]:hidden"
     >
@@ -82,8 +84,8 @@ export function SettingsTabs({
           >
             {tab.shortLabel ? (
               <>
-                <span className="sm:hidden">{tab.shortLabel}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden"><T>{tab.shortLabel}</T></span>
+                <span className="hidden sm:inline"><T>{tab.label}</T></span>
               </>
             ) : (
               tab.label
@@ -91,7 +93,7 @@ export function SettingsTabs({
             {tab.flagged ? (
               <>
                 <span aria-hidden className="h-2 w-2 rounded-full bg-danger" />
-                <span className="sr-only">, à corriger</span>
+                <span className="sr-only"><T>, à corriger</T></span>
               </>
             ) : null}
             {selected ? <span aria-hidden className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand-orange sm:inset-x-3" /> : null}

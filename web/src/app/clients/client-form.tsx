@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { ClientFormState } from "@/lib/definitions";
 import { AlertCircleIcon } from "@/components/ui/icons";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const ID_DOCUMENT_SUGGESTIONS = [
   "CNI",
@@ -35,6 +36,7 @@ export function ClientForm({
   /** Phase 12, Bloc 6 — see actions/clients.ts's safeReturnTo() for the server-side allowlist. */
   returnTo?: string;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
   const [idDocumentType, setIdDocumentType] = useState(defaultValues?.idDocumentType ?? "");
   const errors = state?.errors;
@@ -62,7 +64,7 @@ export function ClientForm({
         required
         defaultValue={defaultValues?.name}
         errors={errors?.name}
-        placeholder="Ex. Moussa Diop"
+        placeholder={t("Ex. Moussa Diop")}
       />
       <Field
         id="phone"
@@ -72,7 +74,7 @@ export function ClientForm({
         defaultValue={defaultValues?.phone}
         errors={errors?.phone}
         hint="Les espaces sont retirés automatiquement."
-        placeholder="Ex. +221 77 000 00 00"
+        placeholder={t("Ex. +221 77 000 00 00")}
       />
 
       <button
@@ -81,7 +83,7 @@ export function ClientForm({
         className="flex items-center gap-1.5 self-start text-xs font-bold text-app-text underline"
         aria-expanded={showMore}
       >
-        {showMore ? "− Masquer les informations complémentaires" : "+ Informations complémentaires"}
+        {showMore ? <T>{"− Masquer les informations complémentaires"}</T> : <T>{"+ Informations complémentaires"}</T>}
       </button>
 
       {/* Toujours montés (jamais démontés) pour qu'un champ rempli puis
@@ -94,19 +96,19 @@ export function ClientForm({
           type="email"
           defaultValue={defaultValues?.email}
           errors={errors?.email}
-          placeholder="Ex. client@exemple.com"
+          placeholder={t("Ex. client@exemple.com")}
         />
         <Field
           id="address"
           label="Adresse"
           defaultValue={defaultValues?.address}
           errors={errors?.address}
-          placeholder="Ex. Sacré-Cœur 3, Dakar"
+          placeholder={t("Ex. Sacré-Cœur 3, Dakar")}
         />
 
         <div>
           <label className="mb-1.5 block text-xs font-bold text-app-text">
-            Type de pièce <span className="ml-1 font-medium text-app-faint">(optionnel)</span>
+            <T>Type de pièce</T> <span className="ml-1 font-medium text-app-faint">(optionnel)</span>
           </label>
           <div className="mb-2 flex flex-wrap gap-2">
             {ID_DOCUMENT_SUGGESTIONS.map((suggestion) => (
@@ -127,12 +129,12 @@ export function ClientForm({
             name="idDocumentType"
             value={idDocumentType}
             onChange={(e) => setIdDocumentType(e.target.value)}
-            placeholder="Ou saisir un autre type"
+            placeholder={t("Ou saisir un autre type")}
             className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel px-4 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           {errors?.idDocumentType?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
+              <T>{error}</T>
             </p>
           ))}
         </div>
@@ -148,14 +150,14 @@ export function ClientForm({
           label="Notes"
           defaultValue={defaultValues?.notes}
           errors={errors?.notes}
-          placeholder="Informations complémentaires (facultatif)"
+          placeholder={t("Informations complémentaires (facultatif)")}
         />
       </div>
 
       {state?.message && (
         <p role="alert" className="rounded-xl border border-danger/30 bg-danger/15 p-3 text-xs font-bold text-app-bad flex items-center gap-1.5">
           <AlertCircleIcon className="h-3.5 w-3.5 shrink-0" />
-          <span>{state.message}</span>
+          <span><T>{state.message}</T></span>
         </p>
       )}
 
@@ -165,14 +167,14 @@ export function ClientForm({
           href={returnTo || "/clients"}
           className="flex h-13 min-w-[120px] items-center justify-center rounded-2xl border border-app-line-strong bg-app-panel-2 text-sm font-bold text-app-text hover:bg-fg/5 active:scale-98 transition-all"
         >
-          Annuler
+          <T>Annuler</T>
         </Link>
         <button
           type="submit"
           disabled={pending}
           className="flex-1 h-13 rounded-2xl bg-brand-orange text-sm font-black text-ink hover:brightness-110 active:scale-98 transition-all disabled:opacity-50"
         >
-          {pending ? "Enregistrement..." : `👤 ${submitLabel}`}
+          {pending ? "Enregistrement..." : `👤 ${t(submitLabel)}`}
         </button>
       </div>
     </form>

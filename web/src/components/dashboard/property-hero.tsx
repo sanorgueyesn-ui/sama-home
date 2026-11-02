@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { T } from "@/components/i18n/i18n-provider";
 
 // Audit Dashboard/Identité visuelle — bandeau "hero" en tête du tableau de
 // bord. Règle validée, inchangée : premier logement ACTIF possédant une
@@ -90,8 +91,8 @@ export function PropertyHero({ property }: { property: HeroProperty }) {
         </>
       )}
       <div className="absolute inset-x-0 bottom-0 px-4 py-3">
-        <p className="text-sm font-extrabold tracking-wide text-white">SAMA HOME</p>
-        <p className="mt-0.5 text-xs font-semibold text-white/75">Gestion de logements meublés</p>
+        <p className="text-sm font-extrabold tracking-wide text-white"><T>SAMA HOME</T></p>
+        <p className="mt-0.5 text-xs font-semibold text-white/75"><T>Gestion de logements meublés</T></p>
       </div>
     </div>
   );

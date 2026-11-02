@@ -7,6 +7,7 @@ import {
   parseUserPermissions,
 } from "@/lib/permissions";
 import { CrownIcon, ShieldIcon, KeyIcon, CashIcon } from "@/components/ui/icons";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function EstablishmentPermissionsSelector({
   defaultPermissions,
@@ -72,10 +73,10 @@ export function EstablishmentPermissionsSelector({
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-3">
         <div>
           <span className="text-xs font-black uppercase tracking-wider text-brand-orange">
-            Permissions &amp; Limites d&apos;accès
+            <T>Permissions &amp; Limites d&apos;accès</T>
           </span>
           <p className="text-[11px] text-fg/60 mt-0.5">
-            Choisissez exactement les pages et actions autorisées pour ce collaborateur.
+            <T>Choisissez exactement les pages et actions autorisées pour ce collaborateur.</T>
           </p>
         </div>
       </div>
@@ -93,9 +94,9 @@ export function EstablishmentPermissionsSelector({
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-fg">
               <CrownIcon className="h-4 w-4 text-app-good" />
-              <span>Pleins Pouvoirs (Patron / Administrateur)</span>
+              <span><T>Pleins Pouvoirs (Patron / Administrateur)</T></span>
             </span>
-            <p className="text-[11px] text-fg/50">Accès illimité à tous les modules, modification des tarifs et suppression.</p>
+            <p className="text-[11px] text-fg/50"><T>Accès illimité à tous les modules, modification des tarifs et suppression.</T></p>
           </div>
         </label>
 
@@ -111,9 +112,9 @@ export function EstablishmentPermissionsSelector({
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-fg">
               <KeyIcon className="h-4 w-4 text-app-warn" />
-              <span>Accès Limité &amp; Personnalisé (Caisse, Réception, Assistant)</span>
+              <span><T>Accès Limité &amp; Personnalisé (Caisse, Réception, Assistant)</T></span>
             </span>
-            <p className="text-[11px] text-fg/50">Seules les pages et actions cochées ci-dessous seront accessibles.</p>
+            <p className="text-[11px] text-fg/50"><T>Seules les pages et actions cochées ci-dessous seront accessibles.</T></p>
           </div>
         </label>
       </div>
@@ -122,14 +123,14 @@ export function EstablishmentPermissionsSelector({
         <div className="mt-4 pt-4 border-t border-border/10 flex flex-col gap-4 animate-in fade-in duration-150">
           {/* Raccourcis / Profils types */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-bold text-fg/50 mr-1">Profils types :</span>
+            <span className="text-[11px] font-bold text-fg/50 mr-1"><T>Profils types :</T></span>
             <button
               type="button"
               onClick={() => applyPreset("RECEPTION")}
               className="inline-flex items-center gap-1.5 rounded-lg bg-surface border border-border/15 px-2.5 py-1 text-[11px] font-bold text-fg hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
             >
               <ShieldIcon className="h-3 w-3" />
-              <span>Réceptionniste (Tarifs bloqués)</span>
+              <span><T>Réceptionniste (Tarifs bloqués)</T></span>
             </button>
             <button
               type="button"
@@ -137,14 +138,14 @@ export function EstablishmentPermissionsSelector({
               className="inline-flex items-center gap-1.5 rounded-lg bg-surface border border-border/15 px-2.5 py-1 text-[11px] font-bold text-fg hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
             >
               <CashIcon className="h-3 w-3" />
-              <span>Caissier / Caisse</span>
+              <span><T>Caissier / Caisse</T></span>
             </button>
           </div>
 
           {/* Groupe 1 : Modules accessibles */}
           <div>
             <span className="text-[11px] font-black uppercase tracking-wider text-fg/70 block mb-2">
-              1. Pages visibles dans le menu
+              <T>1. Pages visibles dans le menu</T>
             </span>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {ESTABLISHMENT_MODULE_PERMISSIONS.map((mod) => {
@@ -167,8 +168,8 @@ export function EstablishmentPermissionsSelector({
                       className="accent-brand-orange h-4 w-4 mt-0.5"
                     />
                     <div className="min-w-0">
-                      <span className="text-xs font-bold text-fg block leading-snug">{mod.label}</span>
-                      <p className="text-[10px] text-fg/50 leading-tight mt-0.5">{mod.description}</p>
+                      <span className="text-xs font-bold text-fg block leading-snug"><T>{mod.label}</T></span>
+                      <p className="text-[10px] text-fg/50 leading-tight mt-0.5"><T>{mod.description}</T></p>
                     </div>
                   </label>
                 );
@@ -179,7 +180,7 @@ export function EstablishmentPermissionsSelector({
           {/* Groupe 2 : Limites & Actions sensibles */}
           <div>
             <span className="text-[11px] font-black uppercase tracking-wider text-fg/70 block mb-2">
-              2. Limites &amp; Actions autorisées
+              <T>2. Limites &amp; Actions autorisées</T>
             </span>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {ESTABLISHMENT_ACTION_PERMISSIONS.map((action) => {
@@ -203,14 +204,14 @@ export function EstablishmentPermissionsSelector({
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-fg block leading-snug">{action.label}</span>
+                        <span className="text-xs font-bold text-fg block leading-snug"><T>{action.label}</T></span>
                         {!checked && (
                           <span className="rounded bg-danger/15 px-1 py-0.2 text-[9px] font-bold text-app-bad">
-                            Bloqué
+                            <T>Bloqué</T>
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-fg/50 leading-tight mt-0.5">{action.description}</p>
+                      <p className="text-[10px] text-fg/50 leading-tight mt-0.5"><T>{action.description}</T></p>
                     </div>
                   </label>
                 );

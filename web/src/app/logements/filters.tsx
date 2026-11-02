@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const TYPE_CHIPS: { value: "" | "ROOM" | "APARTMENT"; label: string }[] = [
   { value: "", label: "Tous" },
@@ -16,6 +17,7 @@ export function PropertyFilters({
   defaultQuery: string;
   defaultType: string;
 }) {
+  const t = useT();
   const [query, setQuery] = useState(defaultQuery);
   const router = useRouter();
   const pathname = usePathname();
@@ -46,8 +48,8 @@ export function PropertyFilters({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un logement..."
-          aria-label="Rechercher un logement"
+          placeholder={t("Rechercher un logement...")}
+          aria-label={t("Rechercher un logement")}
           className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
         />
       </div>
@@ -63,7 +65,7 @@ export function PropertyFilters({
               defaultType === chip.value ? "bg-brand-orange text-ink" : "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover"
             }`}
           >
-            {chip.label}
+            <T>{chip.label}</T>
           </button>
         ))}
       </div>

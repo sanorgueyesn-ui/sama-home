@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/settings-data";
 import { getTheme } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/dal";
 import { resolveBrandColors } from "@/lib/brand-colors";
+import { T } from "@/components/i18n/i18n-provider";
 
 export const metadata = { title: "Apparence — SAMA HOME" };
 
@@ -23,7 +24,7 @@ export default async function AppearanceSettingsPage() {
           <AppearanceEditor currentColors={resolveBrandColors(settings)} theme={theme} canSave={Boolean(settings)} />
         ) : (
           <SettingsBlock title="Palette de couleurs" description="Seul un administrateur peut modifier les couleurs de l'établissement.">
-            <p className="text-sm text-fg/60">Contactez l&apos;administrateur de votre établissement pour changer la palette.</p>
+            <p className="text-sm text-fg/60"><T>Contactez l&apos;administrateur de votre établissement pour changer la palette.</T></p>
           </SettingsBlock>
         )}
       </div>

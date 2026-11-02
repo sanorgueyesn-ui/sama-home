@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const ICONS: Record<string, ReactNode> = {
   building: (
@@ -67,13 +68,14 @@ export function AuthField({
   autoFocus?: boolean;
   readOnly?: boolean;
 }) {
+  const t = useT();
   const [showPassword, setShowPassword] = useState(false);
   const resolvedType = passwordToggle ? (showPassword ? "text" : "password") : type;
 
   return (
     <div>
       <label htmlFor={id} className="sr-only">
-        {label}
+        <T>{label}</T>
       </label>
       <div className="relative">
         <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fg/40">
@@ -83,7 +85,7 @@ export function AuthField({
           id={id}
           name={name ?? id}
           type={resolvedType}
-          placeholder={label}
+          placeholder={t(label)}
           autoComplete={autoComplete}
           required={required}
           disabled={disabled}
@@ -100,7 +102,7 @@ export function AuthField({
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            aria-label={showPassword ? t("Masquer le mot de passe") : t("Afficher le mot de passe")}
             className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-fg/50 focus-visible:ring-2 focus-visible:ring-navy"
           >
             {showPassword ? (
@@ -118,10 +120,10 @@ export function AuthField({
           </button>
         ) : null}
       </div>
-      {hint ? <p className="mt-1 pl-1 text-[11px] font-medium text-fg/40">{hint}</p> : null}
+      {hint ? <p className="mt-1 pl-1 text-[11px] font-medium text-fg/40"><T>{hint}</T></p> : null}
       {errors?.map((error) => (
         <p key={error} className="mt-1 pl-1 text-xs font-medium text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ))}
     </div>

@@ -1,13 +1,14 @@
 import { SettingsPageHeader, SettingsSection } from "../settings-ui";
 import { COMPANY_LEGAL_INFO } from "@/lib/company-info";
 import { getCurrentUser } from "@/lib/dal";
+import { T } from "@/components/i18n/i18n-provider";
 
 export const metadata = { title: "À propos — SAMA HOME" };
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5 border-b border-border/10 py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-      <dt className="text-xs font-bold uppercase tracking-wide text-fg/45">{label}</dt>
+      <dt className="text-xs font-bold uppercase tracking-wide text-fg/45"><T>{label}</T></dt>
       <dd className="text-sm font-semibold text-fg sm:text-right">{value}</dd>
     </div>
   );

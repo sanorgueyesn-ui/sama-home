@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Field } from "@/components/ui/field";
 import type { TariffFormState } from "@/lib/definitions";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const TYPE_OPTIONS: { value: "HEURE" | "NUIT" | "JOUR" | "SEMAINE" | "MOIS"; label: string }[] = [
   { value: "HEURE", label: "Heure" },
@@ -51,6 +52,7 @@ export function TariffForm({
   submitLabel: string;
   showActiveToggle?: boolean;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
   const [type, setType] = useState(defaultValues?.type ?? "HEURE");
   const [durationValue, setDurationValue] = useState(defaultValues?.durationValue ?? 2);
@@ -63,7 +65,7 @@ export function TariffForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label className="mb-1.5 block text-xs font-bold text-app-text">Type de tarif</label>
+        <label className="mb-1.5 block text-xs font-bold text-app-text"><T>Type de tarif</T></label>
         <input type="hidden" name="type" value={type} />
         <div className="flex flex-wrap gap-2">
           {TYPE_OPTIONS.map((opt) => (
@@ -76,13 +78,13 @@ export function TariffForm({
                 type === opt.value ? "bg-brand-orange text-ink" : "bg-app-panel text-app-text"
               }`}
             >
-              {opt.label}
+              <T>{opt.label}</T>
             </button>
           ))}
         </div>
         {errors?.type?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
@@ -90,7 +92,7 @@ export function TariffForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label htmlFor="durationValue" className="mb-1.5 block text-xs font-bold text-app-text">
-            Durée
+            <T>Durée</T>
           </label>
           <input
             id="durationValue"
@@ -104,12 +106,12 @@ export function TariffForm({
           />
           {errors?.durationValue?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
+              <T>{error}</T>
             </p>
           ))}
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-app-text">Unité</label>
+          <label className="mb-1.5 block text-xs font-bold text-app-text"><T>Unité</T></label>
           <select
             name="durationUnit"
             value={durationUnit}
@@ -118,7 +120,7 @@ export function TariffForm({
           >
             {UNIT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                <T>{opt.label}</T>
               </option>
             ))}
           </select>
@@ -128,14 +130,14 @@ export function TariffForm({
       <div>
         <div className="mb-1.5 flex items-center justify-between">
           <label htmlFor="label" className="text-xs font-bold text-app-text">
-            Libellé affiché
+            <T>Libellé affiché</T>
           </label>
           <button
             type="button"
             onClick={() => setLabel(suggestLabel(durationValue, currentUnit))}
             className="text-xs font-bold text-coral"
           >
-            Suggérer
+            <T>Suggérer</T>
           </button>
         </div>
         <input
@@ -143,12 +145,12 @@ export function TariffForm({
           name="label"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="Ex. 2 heures, Nuitée, Semaine..."
+          placeholder={t("Ex. 2 heures, Nuitée, Semaine...")}
           className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel px-4 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
         {errors?.label?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
@@ -161,7 +163,7 @@ export function TariffForm({
         min={1}
         defaultValue={defaultValues?.amount}
         errors={errors?.amount}
-        placeholder="Ex. 10000"
+        placeholder={t("Ex. 10000")}
       />
 
       {showActiveToggle ? (
@@ -172,13 +174,13 @@ export function TariffForm({
             defaultChecked={defaultValues?.active ?? true}
             className="h-4 w-4 accent-navy"
           />
-          Tarif actif (proposable)
+          <T>Tarif actif (proposable)</T>
         </label>
       ) : null}
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 
@@ -187,7 +189,7 @@ export function TariffForm({
         disabled={pending}
         className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-60"
       >
-        {pending ? "Enregistrement..." : submitLabel}
+        {pending ? "Enregistrement..." : t(submitLabel)}
       </button>
     </form>
   );

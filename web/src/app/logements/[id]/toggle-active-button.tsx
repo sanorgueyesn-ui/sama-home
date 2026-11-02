@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toggleActive } from "@/app/actions/properties";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function ToggleActiveButton({ id, active }: { id: string; active: boolean }) {
   const [pending, startTransition] = useTransition();
@@ -27,9 +28,9 @@ export function ToggleActiveButton({ id, active }: { id: string; active: boolean
           active ? "border border-danger/30 text-danger" : "bg-success text-white"
         }`}
       >
-        {pending ? "..." : active ? "Désactiver ce logement" : "Réactiver ce logement"}
+        {pending ? "..." : active ? <T>{"Désactiver ce logement"}</T> : <T>{"Réactiver ce logement"}</T>}
       </button>
-      {error ? <p className="text-[10.5px] font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-[10.5px] font-medium text-danger"><T>{error}</T></p> : null}
     </div>
   );
 }

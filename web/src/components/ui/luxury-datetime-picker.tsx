@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CalendarIcon, SparklesIcon, AlertCircleIcon } from "@/components/ui/icons";
+import { T, useT } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 const MONTH_NAMES = [
   "Janvier",
@@ -49,7 +51,7 @@ export function formatFrFull(iso: string): string {
   if (parts.length !== 3) return "";
   const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
   if (Number.isNaN(d.getTime())) return "";
-  const str = d.toLocaleDateString("fr-FR", {
+  const str = d.toLocaleDateString(dateLocale(), {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -171,6 +173,7 @@ export function LuxuryDatePicker({
   className = "",
   disabled = false,
 }: LuxuryDatePickerProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -298,7 +301,7 @@ export function LuxuryDatePicker({
     >
       {label && (
         <div className="mb-1.5 flex h-4 items-center justify-between">
-          <label className="text-xs font-bold text-fg">{label}</label>
+          <label className="text-xs font-bold text-fg"><T>{label}</T></label>
           {friendlyFormatted && !isPast ? (
             <span className="text-[11px] font-extrabold text-brand-orange truncate max-w-[55%] text-right">
               {friendlyFormatted}
@@ -336,8 +339,8 @@ export function LuxuryDatePicker({
           type="button"
           disabled={disabled}
           onClick={toggleOpen}
-          aria-label={open ? "Fermer le calendrier" : "Ouvrir le calendrier"}
-          title={open ? "Fermer le calendrier" : "Ouvrir le calendrier"}
+          aria-label={open ? t("Fermer le calendrier") : t("Ouvrir le calendrier")}
+          title={open ? t("Fermer le calendrier") : t("Ouvrir le calendrier")}
           className={`flex h-full w-12 shrink-0 items-center justify-center border-l border-border/15 transition-colors ${
             open
               ? "bg-brand-orange/20 text-brand-orange"
@@ -363,11 +366,11 @@ export function LuxuryDatePicker({
       </div>
 
       {error ? (
-        <p className="mt-1 text-xs font-medium text-danger">{error}</p>
+        <p className="mt-1 text-xs font-medium text-danger"><T>{error}</T></p>
       ) : isPast ? (
         <p className="mt-1 text-xs font-medium text-danger flex items-center gap-1.5">
           <AlertCircleIcon className="h-3.5 w-3.5 shrink-0" />
-          <span>Date antérieure à aujourd&apos;hui non autorisée</span>
+          <span><T>Date antérieure à aujourd&apos;hui non autorisée</T></span>
         </p>
       ) : null}
 
@@ -384,7 +387,7 @@ export function LuxuryDatePicker({
               ←
             </button>
             <span className="text-sm font-black text-fg">
-              {MONTH_NAMES[viewMonth]} {viewYear}
+              <T>{MONTH_NAMES[viewMonth]}</T> {viewYear}
             </span>
             <button
               type="button"
@@ -402,7 +405,7 @@ export function LuxuryDatePicker({
               onClick={() => handleSelectDate(today)}
               className="flex-1 rounded-lg border border-border/15 bg-surface-sunken py-1.5 text-[11px] font-bold text-fg/80 hover:bg-fg/10 hover:text-brand-orange transition-colors"
             >
-              Aujourd&apos;hui
+              <T>Aujourd&apos;hui</T>
             </button>
             <button
               type="button"
@@ -413,7 +416,7 @@ export function LuxuryDatePicker({
               }}
               className="flex-1 rounded-lg border border-border/15 bg-surface-sunken py-1.5 text-[11px] font-bold text-fg/80 hover:bg-fg/10 hover:text-brand-orange transition-colors"
             >
-              Demain
+              <T>Demain</T>
             </button>
           </div>
 
@@ -486,6 +489,7 @@ export function LuxuryTimePicker({
   className = "",
   disabled = false,
 }: LuxuryTimePickerProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -560,7 +564,7 @@ export function LuxuryTimePicker({
     >
       {label && (
         <div className="mb-1.5 flex h-4 items-center justify-between">
-          <label className="text-xs font-bold text-fg">{label}</label>
+          <label className="text-xs font-bold text-fg"><T>{label}</T></label>
           {value ? (
             <span className="font-mono text-[11px] font-extrabold text-brand-orange truncate max-w-[55%] text-right">
               {value.replace(":", "h")}
@@ -598,8 +602,8 @@ export function LuxuryTimePicker({
           type="button"
           disabled={disabled}
           onClick={() => setOpen((prev) => !prev)}
-          aria-label={open ? "Fermer les horaires" : "Choisir l'heure"}
-          title={open ? "Fermer les horaires" : "Choisir l'heure"}
+          aria-label={open ? t("Fermer les horaires") : t("Choisir l'heure")}
+          title={open ? t("Fermer les horaires") : t("Choisir l'heure")}
           className={`flex h-full w-12 shrink-0 items-center justify-center border-l border-border/15 transition-colors ${
             open
               ? "bg-brand-orange/20 text-brand-orange"
@@ -622,13 +626,13 @@ export function LuxuryTimePicker({
         </button>
       </div>
 
-      {error && <p className="mt-1 text-xs font-medium text-danger">{error}</p>}
+      {error && <p className="mt-1 text-xs font-medium text-danger"><T>{error}</T></p>}
 
       {/* Popover Sélecteur d'Heures Sombre */}
       {open && (
         <div className="absolute left-0 sm:left-auto sm:right-0 top-full z-[100] mt-2 w-72 max-w-[calc(100vw-2.5rem)] rounded-2xl border border-border/20 bg-surface-sunken p-4 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2.5 border-b border-border/15">
-            <span className="text-xs font-black uppercase tracking-wider text-fg/70">Choisir l&apos;heure</span>
+            <span className="text-xs font-black uppercase tracking-wider text-fg/70"><T>Choisir l&apos;heure</T></span>
             {isToday ? (
               <button
                 type="button"
@@ -639,14 +643,14 @@ export function LuxuryTimePicker({
                 className="inline-flex items-center gap-1 rounded-full bg-brand-orange/15 px-2.5 py-0.5 text-[11px] font-bold text-brand-orange hover:bg-brand-orange/25"
               >
                 <SparklesIcon className="h-3 w-3" />
-                <span>Maintenant</span>
+                <span><T>Maintenant</T></span>
               </button>
             ) : null}
           </div>
 
           {/* Créneaux fréquents */}
           <div className="mt-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1.5">Créneaux fréquents</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1.5"><T>Créneaux fréquents</T></p>
             <div className="grid grid-cols-4 gap-1.5">
               {COMMON_TIMES.map((t) => {
                 const [h, m] = t.split(":").map(Number);
@@ -677,7 +681,7 @@ export function LuxuryTimePicker({
           <div className="mt-3.5 pt-3 border-t border-border/15 grid grid-cols-2 gap-3 text-center">
             {/* Colonne Heures */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1">Heure</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1"><T>Heure</T></p>
               <div className="max-h-36 overflow-y-auto rounded-xl border border-border/10 bg-surface-sunken/60 p-1 space-y-1 scrollbar-thin">
                 {Array.from({ length: 24 }).map((_, i) => {
                   const hourStr = pad(i);
@@ -710,7 +714,7 @@ export function LuxuryTimePicker({
 
             {/* Colonne Minutes */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1">Minute</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-fg/40 mb-1"><T>Minute</T></p>
               <div className="max-h-36 overflow-y-auto rounded-xl border border-border/10 bg-surface-sunken/60 p-1 space-y-1 scrollbar-thin">
                 {["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"].map((minStr) => {
                   const isPast = !allowPastTimes && isToday && Number(currentHourVal) === nowHour && Number(minStr) < nowMinute;
@@ -746,7 +750,7 @@ export function LuxuryTimePicker({
             onClick={() => setOpen(false)}
             className="mt-3.5 w-full rounded-xl bg-surface py-2 text-xs font-bold text-fg hover:bg-fg/10 transition-colors"
           >
-            Valider
+            <T>Valider</T>
           </button>
         </div>
       )}

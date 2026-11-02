@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { T } from "@/components/i18n/i18n-provider";
 
 type FieldProps = {
   id: string;
@@ -22,18 +23,18 @@ export function Field({
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-xs font-bold text-app-text">
-        {label}
+        <T>{label}</T>
         {required ? null : (
           <span className="ml-1 font-medium text-app-faint">(optionnel)</span>
         )}
       </label>
       <input id={id} name={id} className={inputClass} {...props} />
       {hint && !errors?.length ? (
-        <p className="mt-1 text-xs text-app-muted">{hint}</p>
+        <p className="mt-1 text-xs text-app-muted"><T>{hint}</T></p>
       ) : null}
       {errors?.map((error) => (
         <p key={error} className="mt-1 text-xs font-medium text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ))}
     </div>
@@ -51,7 +52,7 @@ export function TextAreaField({
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-xs font-bold text-app-text">
-        {label}
+        <T>{label}</T>
         {required ? null : (
           <span className="ml-1 font-medium text-app-faint">(optionnel)</span>
         )}
@@ -63,11 +64,11 @@ export function TextAreaField({
         {...props}
       />
       {hint && !errors?.length ? (
-        <p className="mt-1 text-xs text-app-muted">{hint}</p>
+        <p className="mt-1 text-xs text-app-muted"><T>{hint}</T></p>
       ) : null}
       {errors?.map((error) => (
         <p key={error} className="mt-1 text-xs font-medium text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ))}
     </div>

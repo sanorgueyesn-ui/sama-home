@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { modifyClosedCashSession } from "@/app/actions/cash";
+import { T } from "@/components/i18n/i18n-provider";
 
 function fmtFcfa(amount: number) {
   const sign = amount < 0 ? "-" : "";
@@ -86,7 +87,7 @@ export function ModifyClosureForm({
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="text-center text-xs font-bold text-fg underline">
-        Modifier cette clôture
+        <T>Modifier cette clôture</T>
       </button>
     );
   }
@@ -94,24 +95,24 @@ export function ModifyClosureForm({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border/15 p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-extrabold text-fg">Modification d&apos;une clôture validée</p>
+        <p className="text-sm font-extrabold text-fg"><T>Modification d&apos;une clôture validée</T></p>
         <button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-fg/50 underline">
-          Annuler
+          <T>Annuler</T>
         </button>
       </div>
       <p className="rounded-xl bg-warning-bg px-3 py-2.5 text-xs font-medium text-warning">
-        Ceci modifie un historique déjà validé. L&apos;ancien et le nouvel état seront conservés (journal d&apos;audit).
+        <T>Ceci modifie un historique déjà validé. L&apos;ancien et le nouvel état seront conservés (journal d&apos;audit).</T>
       </p>
 
       <div className="rounded-xl bg-surface-sunken px-4 py-3">
-        <p className="text-xs font-bold text-fg/50">{varianceBaseLabel} (non modifiable)</p>
+        <p className="text-xs font-bold text-fg/50"><T>{varianceBaseLabel}</T> <T>(non modifiable)</T></p>
         <p className="mt-1 text-lg font-extrabold text-fg">{fmtFcfa(varianceBase)}</p>
-        <p className="mt-1 text-[11px] text-fg/50">Solde théorique total : {fmtFcfa(closingTheoreticalBalance)}</p>
+        <p className="mt-1 text-[11px] text-fg/50"><T>Solde théorique total :</T> {fmtFcfa(closingTheoreticalBalance)}</p>
       </div>
 
       <div>
         <label htmlFor="modifyPhysicalCount" className="mb-1.5 block text-xs font-bold text-fg">
-          Comptage physique
+          <T>Comptage physique</T>
         </label>
         <input
           id="modifyPhysicalCount"
@@ -126,11 +127,11 @@ export function ModifyClosureForm({
       {hasCount && countValid && variance !== 0 ? (
         <div>
           <p className="text-xs font-extrabold text-warning">
-            Écart : {variance! > 0 ? "+" : ""}
+            <T>Écart :</T> {variance! > 0 ? "+" : ""}
             {fmtFcfa(variance!)}
           </p>
           <label htmlFor="modifyVarianceReason" className="mt-1.5 mb-1.5 block text-xs font-bold text-fg">
-            Justification de l&apos;écart
+            <T>Justification de l&apos;écart</T>
           </label>
           <textarea
             id="modifyVarianceReason"
@@ -143,7 +144,7 @@ export function ModifyClosureForm({
 
       <div>
         <label htmlFor="modifyCloseNote" className="mb-1.5 block text-xs font-bold text-fg">
-          Note
+          <T>Note</T>
         </label>
         <textarea
           id="modifyCloseNote"
@@ -155,7 +156,7 @@ export function ModifyClosureForm({
 
       <div>
         <label htmlFor="modifyReason" className="mb-1.5 block text-xs font-bold text-fg">
-          Motif de la modification
+          <T>Motif de la modification</T>
         </label>
         <textarea
           id="modifyReason"
@@ -165,7 +166,7 @@ export function ModifyClosureForm({
         />
       </div>
 
-      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
 
       <button
         type="button"
@@ -173,7 +174,7 @@ export function ModifyClosureForm({
         onClick={handleSubmit}
         className="flex h-12 items-center justify-center rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
       >
-        {pending ? "..." : "Enregistrer la modification"}
+        {pending ? "..." : <T>{"Enregistrer la modification"}</T>}
       </button>
     </div>
   );

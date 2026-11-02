@@ -4,6 +4,9 @@ import { ArrowRightIcon } from "@/components/ui/icons";
 import { formatFcfa } from "@/lib/dashboard-metrics";
 import type { DailyFinancialPoint } from "@/lib/dashboard-data";
 import type { ShellMode } from "@/lib/business-mode";
+import { T } from "@/components/i18n/i18n-provider";
+import { tSync } from "@/lib/i18n/sync";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 // Éléments communs aux trois tableaux de bord. Même langage visuel que le shell de l'application
 // (fond sombre, bordures fines, un accent par mode), aucun état client : tout est rendu serveur.
@@ -51,15 +54,15 @@ export function Panel({
     <section className={`${PANEL} p-4 sm:p-5 ${className}`}>
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-bold text-app-text">{title}</h2>
-          {subtitle ? <p className="mt-0.5 text-xs text-app-muted">{subtitle}</p> : null}
+          <h2 className="text-sm font-bold text-app-text"><T>{title}</T></h2>
+          {subtitle ? <p className="mt-0.5 text-xs text-app-muted"><T>{subtitle}</T></p> : null}
         </div>
         {action ? (
           <Link
             href={action.href}
             className="inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold text-app-muted transition-colors hover:text-app-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus"
           >
-            {action.label}
+            <T>{action.label}</T>
             <ArrowRightIcon className="h-3 w-3" aria-hidden />
           </Link>
         ) : null}
@@ -88,8 +91,9 @@ export function DashboardHeader({
   now: Date;
   actions: QuickAction[];
 }) {
+  const t = tSync();
   const firstName = userName.trim().split(/\s+/)[0] || userName;
-  const longDate = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(now);
+  const longDate = new Intl.DateTimeFormat(dateLocale(), { weekday: "long", day: "numeric", month: "long" }).format(now);
   const date = longDate.charAt(0).toUpperCase() + longDate.slice(1);
   const theme = MODE_THEME[mode];
   return (
@@ -97,7 +101,7 @@ export function DashboardHeader({
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-            <span className={`rounded-full px-2.5 py-1 font-bold ${theme.soft}`}>{theme.label}</span>
+            <span className={`rounded-full px-2.5 py-1 font-bold ${theme.soft}`}><T>{theme.label}</T></span>
             <span className="truncate font-semibold text-app-text-2">{spaceName}</span>
             <span className="text-app-faint" aria-hidden>
               ·
@@ -105,16 +109,16 @@ export function DashboardHeader({
             <span className="text-app-muted">{date}</span>
           </div>
           <h1 className="mt-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">
-            Bonjour, {firstName}
+            <T>Bonjour,</T> {firstName}
           </h1>
         </div>
 
-        <nav aria-label="Actions rapides" className="hidden shrink-0 items-center gap-2 lg:flex">
+        <nav aria-label={t("Actions rapides")} className="hidden shrink-0 items-center gap-2 lg:flex">
           {actions.map((action, index) => (
             <Link
               key={action.href + action.label}
               href={action.href}
-              title={action.hint}
+              title={t(action.hint)}
               className={`inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg px-4 text-[13px] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${theme.ring} ${
                 index === 0
                   ? theme.primary
@@ -122,13 +126,13 @@ export function DashboardHeader({
               }`}
             >
               <action.icon className="h-4 w-4" aria-hidden />
-              {action.label}
+              <T>{action.label}</T>
             </Link>
           ))}
         </nav>
       </header>
 
-      <nav aria-label="Actions rapides" className="grid grid-cols-4 gap-2.5 lg:hidden">
+      <nav aria-label={t("Actions rapides")} className="grid grid-cols-4 gap-2.5 lg:hidden">
         {actions.map((action, index) => (
           <Link
             key={action.href + action.label}
@@ -138,7 +142,7 @@ export function DashboardHeader({
             }`}
           >
             <action.icon className="h-5 w-5" aria-hidden />
-            <span className="text-[11px] font-bold leading-tight">{action.shortLabel ?? action.label}</span>
+            <span className="text-[11px] font-bold leading-tight"><T>{action.shortLabel ?? action.label}</T></span>
           </Link>
         ))}
       </nav>
@@ -148,11 +152,12 @@ export function DashboardHeader({
 
 /** Anneau de progression (taux d'occupation) : SVG pur, valeur lisible en clair à côté. */
 function Ring({ percent, label }: { percent: number; label: string }) {
+  const t = tSync();
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.min(100, Math.max(0, percent));
   return (
-    <div className="relative h-[76px] w-[76px] shrink-0" role="img" aria-label={`${clamped} % ${label}`}>
+    <div className="relative h-[76px] w-[76px] shrink-0" role="img" aria-label={`${clamped} % ${t(label)}`}>
       <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
         <circle cx="32" cy="32" r={radius} fill="none" className="stroke-app-track" strokeWidth="6" />
         <circle
@@ -168,7 +173,7 @@ function Ring({ percent, label }: { percent: number; label: string }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-base font-extrabold leading-none tabular-nums text-app-text">{clamped}%</span>
-        <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-app-muted">{label}</span>
+        <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-app-muted"><T>{label}</T></span>
       </div>
     </div>
   );
@@ -195,15 +200,16 @@ export function MobileSummary({
   percentLabel: string;
   stats: { label: string; value: string; href: string }[];
 }) {
+  const t = tSync();
   return (
-    <section aria-label="Synthèse du jour" className="rounded-2xl border border-app-line bg-gradient-to-br from-app-panel-hi to-app-panel p-4 lg:hidden">
+    <section aria-label={t("Synthèse du jour")} className="rounded-2xl border border-app-line bg-gradient-to-br from-app-panel-hi to-app-panel p-4 lg:hidden">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-app-muted">{title}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-app-muted"><T>{title}</T></p>
           <p className="mt-1.5 whitespace-nowrap text-[28px] font-extrabold leading-none tabular-nums tracking-tight text-app-text">
             {value} <span className="text-xs font-bold text-app-muted">FCFA</span>
           </p>
-          <p className="mt-2 text-xs text-app-muted">{caption}</p>
+          <p className="mt-2 text-xs text-app-muted"><T>{caption}</T></p>
         </div>
         <Ring percent={percent} label={percentLabel} />
       </div>
@@ -211,7 +217,7 @@ export function MobileSummary({
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href} className="px-2 text-center first:pl-0 last:pr-0 focus-visible:outline-2 focus-visible:outline-app-focus">
             <dd className="text-lg font-extrabold tabular-nums text-app-text">{stat.value}</dd>
-            <dt className="mt-0.5 text-[10px] font-semibold text-app-muted">{stat.label}</dt>
+            <dt className="mt-0.5 text-[10px] font-semibold text-app-muted"><T>{stat.label}</T></dt>
           </Link>
         ))}
       </dl>
@@ -245,16 +251,16 @@ export function KpiTile({
   const body = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-app-muted sm:text-[11px]">{label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-app-muted sm:text-[11px]"><T>{label}</T></p>
         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${MODE_THEME[mode].soft}`}>
           <Icon className="h-4 w-4" aria-hidden />
         </span>
       </div>
       <p className={`mt-2.5 whitespace-nowrap text-xl font-extrabold sm:mt-3 sm:text-2xl tabular-nums tracking-tight ${valueTone}`}>
         {value}
-        {unit ? <span className="ms-1 text-xs font-bold text-app-muted">{unit}</span> : null}
+        {unit ? <span className="ms-1 text-xs font-bold text-app-muted"><T>{unit}</T></span> : null}
       </p>
-      {hint ? <p className="mt-1 text-xs text-app-muted">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-xs text-app-muted"><T>{hint}</T></p> : null}
     </>
   );
   const base = `${PANEL} ${display} p-3.5 sm:p-4`;
@@ -277,10 +283,10 @@ export function KpiGrid({ children }: { children: ReactNode }) {
 export function EmptyState({ text, action }: { text: string; action?: { href: string; label: string } }) {
   return (
     <div className="rounded-xl border border-dashed border-app-line-strong px-4 py-6 text-center">
-      <p className="text-sm text-app-muted">{text}</p>
+      <p className="text-sm text-app-muted"><T>{text}</T></p>
       {action ? (
         <Link href={action.href} className="mt-2 inline-block text-sm font-bold text-app-text underline-offset-4 hover:underline">
-          {action.label}
+          <T>{action.label}</T>
         </Link>
       ) : null}
     </div>
@@ -302,12 +308,13 @@ export function StatusBar({
   counts: { total: number; available: number; occupied: number; reserved: number; unavailable: number };
   noun: string;
 }) {
+  const t = tSync();
   if (counts.total === 0) return null;
   return (
     <div>
       <div
         role="img"
-        aria-label={`${counts.total} ${noun} : ${counts.available} disponibles, ${counts.occupied} occupés, ${counts.reserved} réservés, ${counts.unavailable} indisponibles`}
+        aria-label={t(`${counts.total} ${noun} : ${counts.available} disponibles, ${counts.occupied} occupés, ${counts.reserved} réservés, ${counts.unavailable} indisponibles`)}
         className="flex h-2.5 w-full overflow-hidden rounded-full bg-app-line-soft"
       >
         {SEGMENTS.map((segment) =>
@@ -325,7 +332,7 @@ export function StatusBar({
           <li key={segment.key} className="flex items-center justify-between gap-2 text-app-text-2">
             <span className="inline-flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${segment.dot}`} aria-hidden />
-              {segment.label}
+              <T>{segment.label}</T>
             </span>
             <span className="font-bold tabular-nums text-app-text">{counts[segment.key]}</span>
           </li>
@@ -339,7 +346,7 @@ export function StatusBar({
 export function MoneyRow({ label, value, strong = false }: { label: string; value: number; strong?: boolean }) {
   return (
     <div className={`flex items-baseline justify-between gap-3 py-2 ${strong ? "border-t border-app-line pt-3" : ""}`}>
-      <dt className={`text-xs ${strong ? "font-bold text-app-text" : "text-app-muted"}`}>{label}</dt>
+      <dt className={`text-xs ${strong ? "font-bold text-app-text" : "text-app-muted"}`}><T>{label}</T></dt>
       <dd className={`tabular-nums ${strong ? "text-base font-extrabold text-app-text" : "text-sm font-bold text-app-text-2"}`}>
         {formatFcfa(value)} <span className="text-[10px] font-bold text-app-muted">FCFA</span>
       </dd>
@@ -349,25 +356,26 @@ export function MoneyRow({ label, value, strong = false }: { label: string; valu
 
 /** Recettes et dépenses des 7 derniers jours : colonnes en HTML, sans bibliothèque de graphiques. */
 export function WeeklyBars({ data }: { data: DailyFinancialPoint[] }) {
+  const t = tSync();
   const max = Math.max(1, ...data.flatMap((point) => [point.revenue, point.expense]));
-  const label = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
+  const label = new Intl.DateTimeFormat(dateLocale(), { weekday: "short" });
   const total = data.reduce((sum, point) => sum + point.revenue + point.expense, 0);
   return (
     <figure>
       <figcaption className="mb-3 flex items-center gap-4 text-[11px] font-semibold text-app-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-success" aria-hidden /> Recettes
+          <span className="h-2 w-2 rounded-full bg-success" aria-hidden /> <T>Recettes</T>
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-danger" aria-hidden /> Dépenses
+          <span className="h-2 w-2 rounded-full bg-danger" aria-hidden /> <T>Dépenses</T>
         </span>
       </figcaption>
       {total === 0 ? (
         <p className="rounded-xl border border-dashed border-app-line-strong px-3 py-5 text-center text-xs text-app-muted">
-          Aucun mouvement sur les 7 derniers jours.
+          <T>Aucun mouvement sur les 7 derniers jours.</T>
         </p>
       ) : (
-        <div className="flex h-28 items-end gap-2" role="img" aria-label="Recettes et dépenses des 7 derniers jours">
+        <div className="flex h-28 items-end gap-2" role="img" aria-label={t("Recettes et dépenses des 7 derniers jours")}>
           {data.map((point) => (
             <div key={point.date.toISOString()} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1">
               <div className="flex flex-1 items-end justify-center gap-0.5">
@@ -393,9 +401,9 @@ export function WeeklyBars({ data }: { data: DailyFinancialPoint[] }) {
 export function SoonCard({ title, text }: { title: string; text: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-app-line-strong bg-app-panel-2 p-5">
-      <span className="rounded-full bg-fg/8 px-2.5 py-1 text-[11px] font-bold text-app-text-2">Bientôt disponible</span>
-      <h3 className="mt-3 text-sm font-bold text-app-text">{title}</h3>
-      <p className="mt-1.5 text-xs leading-relaxed text-app-muted">{text}</p>
+      <span className="rounded-full bg-fg/8 px-2.5 py-1 text-[11px] font-bold text-app-text-2"><T>Bientôt disponible</T></span>
+      <h3 className="mt-3 text-sm font-bold text-app-text"><T>{title}</T></h3>
+      <p className="mt-1.5 text-xs leading-relaxed text-app-muted"><T>{text}</T></p>
     </div>
   );
 }
@@ -419,7 +427,7 @@ export function TodoRow({
         className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-app-hover focus-visible:outline-2 focus-visible:outline-app-focus"
       >
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-app-text">{label}</span>
+          <span className="block text-sm font-semibold text-app-text"><T>{label}</T></span>
           {detail ? <span className="block text-xs text-app-muted">{detail}</span> : null}
         </span>
         <span
@@ -435,9 +443,9 @@ export function TodoRow({
 }
 
 export function timeLabel(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat(dateLocale(), { hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
 export function shortDateTime(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
 }

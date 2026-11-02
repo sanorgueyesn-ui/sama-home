@@ -1,4 +1,5 @@
-/** Reprend 4 fonctionnalités réellement livrées dans ce projet — jamais une promesse inventée. */
+
+import { T } from "@/components/i18n/i18n-provider";/** Reprend 4 fonctionnalités réellement livrées dans ce projet — jamais une promesse inventée. */
 const FEATURES = [
   {
     label: "Réservations en ligne",
@@ -47,7 +48,7 @@ export function FeatureList() {
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
             {feature.icon}
           </span>
-          <span className="text-sm font-semibold text-white/90">{feature.label}</span>
+          <span className="text-sm font-semibold text-white/90"><T>{feature.label}</T></span>
         </li>
       ))}
     </ul>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function CheckInDirectWidget() {
   const [tab, setTab] = useState<"chambre" | "appartement">("chambre");
@@ -39,8 +40,8 @@ export function CheckInDirectWidget() {
           </svg>
         </div>
         <div>
-          <h2 className="text-sm font-bold text-fg tracking-tight">Check-in direct</h2>
-          <p className="text-[11px] text-app-faint">Enregistrer rapidement une arrivée</p>
+          <h2 className="text-sm font-bold text-fg tracking-tight"><T>Check-in direct</T></h2>
+          <p className="text-[11px] text-app-faint"><T>Enregistrer rapidement une arrivée</T></p>
         </div>
       </div>
 
@@ -53,7 +54,7 @@ export function CheckInDirectWidget() {
             tab === "chambre" ? "bg-[#2563eb] text-white shadow-sm" : "text-app-muted hover:text-app-text"
           }`}
         >
-          Chambre
+          <T>Chambre</T>
         </button>
         <button
           type="button"
@@ -62,7 +63,7 @@ export function CheckInDirectWidget() {
             tab === "appartement" ? "bg-[#2563eb] text-white shadow-sm" : "text-app-muted hover:text-app-text"
           }`}
         >
-          Appartement
+          <T>Appartement</T>
         </button>
       </div>
 
@@ -76,19 +77,19 @@ export function CheckInDirectWidget() {
             className="w-full h-9 rounded-xl bg-app-panel-hi border border-app-line px-3 text-xs text-fg outline-none focus:border-[#2563eb]"
           >
             <option value="">
-              {tab === "chambre" ? "Sélectionner une chambre disponible" : "Sélectionner un appartement disponible"}
+              {tab === "chambre" ? <T>{"Sélectionner une chambre disponible"}</T> : <T>{"Sélectionner un appartement disponible"}</T>}
             </option>
             {tab === "chambre" ? (
               <>
-                <option value="102">Chambre 102 — RDC</option>
-                <option value="103">Chambre 103 — 1er étage</option>
-                <option value="201">Chambre 201 — 2ème étage</option>
-                <option value="204">Chambre 204 — 2ème étage</option>
+                <option value="102"><T>Chambre 102 — RDC</T></option>
+                <option value="103"><T>Chambre 103 — 1er étage</T></option>
+                <option value="201"><T>Chambre 201 — 2ème étage</T></option>
+                <option value="204"><T>Chambre 204 — 2ème étage</T></option>
               </>
             ) : (
               <>
-                <option value="A4">Appartement A4 — 1er étage</option>
-                <option value="B1">Appartement B1 — Rez-de-jardin</option>
+                <option value="A4"><T>Appartement A4 — 1er étage</T></option>
+                <option value="B1"><T>Appartement B1 — Rez-de-jardin</T></option>
               </>
             )}
           </select>
@@ -97,19 +98,19 @@ export function CheckInDirectWidget() {
         {/* Durée & Tarif */}
         <div className="grid grid-cols-2 gap-2.5">
           <div>
-            <label className="block text-[10px] font-bold text-app-faint uppercase mb-1">Durée</label>
+            <label className="block text-[10px] font-bold text-app-faint uppercase mb-1"><T>Durée</T></label>
             <select
               value={duration}
               onChange={(e) => handleDurationChange(e.target.value)}
               className="w-full h-9 rounded-xl bg-app-panel-hi border border-app-line px-3 text-xs text-fg outline-none focus:border-[#2563eb]"
             >
-              <option value="2 heures">2 heures</option>
-              <option value="Nuitée">Nuitée (24h)</option>
-              <option value="Semaine">1 Semaine</option>
+              <option value="2 heures"><T>2 heures</T></option>
+              <option value="Nuitée"><T>Nuitée (24h)</T></option>
+              <option value="Semaine"><T>1 Semaine</T></option>
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-app-faint uppercase mb-1">Tarif</label>
+            <label className="block text-[10px] font-bold text-app-faint uppercase mb-1"><T>Tarif</T></label>
             <div className="h-9 rounded-xl bg-app-panel-hi border border-app-line flex items-center justify-center font-black text-xs text-fg">
               {tariff}
             </div>
@@ -127,7 +128,7 @@ export function CheckInDirectWidget() {
               <path d="m12 5 7 7-7 7" />
             </svg>
           </div>
-          <span>Enregistrer le check-in</span>
+          <span><T>Enregistrer le check-in</T></span>
         </Link>
       </div>
     </div>

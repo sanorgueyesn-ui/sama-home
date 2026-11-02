@@ -1,4 +1,5 @@
-/**
+
+import { T } from "@/components/i18n/i18n-provider";/**
  * Bouton de connexion rapide avec Google.
  * Le bouton Apple est masqué sur demande de l'administrateur.
  * Redirige vers /api/auth/google pour initialiser le flux OAuth 2.0 sécurisé.
@@ -9,7 +10,7 @@ export function OAuthButtons() {
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border/15" aria-hidden />
         <span className="text-[11px] font-bold tracking-wide text-fg/40 uppercase">
-          ou continuer avec
+          <T>ou continuer avec</T>
         </span>
         <div className="h-px flex-1 bg-border/15" aria-hidden />
       </div>
@@ -25,7 +26,7 @@ export function OAuthButtons() {
             <path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.5C29.4 34.7 26.8 36 24 36c-5.3 0-9.6-3.1-11.3-7.5l-6.6 5.1C9.9 39.6 16.4 44 24 44z" />
             <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.5l6.5 5.5C40.5 36.5 44 31 44 24c0-1.3-.1-2.7-.4-3.5z" />
           </svg>
-          <span className="font-extrabold tracking-wide">Se connecter avec Google</span>
+          <span className="font-extrabold tracking-wide"><T>Se connecter avec Google</T></span>
         </a>
       </div>
     </div>

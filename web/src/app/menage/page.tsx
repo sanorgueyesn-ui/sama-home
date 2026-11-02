@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/dal";
 import { CLEANING_LABELS, cleaningActions, compareForHousekeeping, readiness, type CleaningStatusValue } from "@/lib/housekeeping";
 import { prisma } from "@/lib/prisma";
 import { getPropertyStatuses } from "@/lib/property-status";
+import { T } from "@/components/i18n/i18n-provider";
 
 export const metadata = { title: "Ménage — SAMA HOME" };
 export const dynamic = "force-dynamic";
@@ -67,10 +68,10 @@ export default async function HousekeepingPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-extrabold text-app-text">{row.name}</p>
                     <p className="mt-0.5 text-xs text-app-muted">
-                      {row.type === "ROOM" ? "Chambre" : "Appartement"} · {OCCUPANCY_LABEL[row.occupancy]}
+                      {row.type === "ROOM" ? <T>{"Chambre"}</T> : <T>{"Appartement"}</T>} · <T>{OCCUPANCY_LABEL[row.occupancy]}</T>
                     </p>
                   </div>
-                  <Badge tone={CLEANING_TONE[row.cleaning]}>{CLEANING_LABELS[row.cleaning]}</Badge>
+                  <Badge tone={CLEANING_TONE[row.cleaning]}><T>{CLEANING_LABELS[row.cleaning]}</T></Badge>
                 </div>
                 {since ? <p className="mt-2 text-[11px] text-app-faint">{since}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -82,7 +83,7 @@ export default async function HousekeepingPage() {
                           index === 0 ? "bg-brand-orange text-ink hover:brightness-110" : "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover"
                         }`}
                       >
-                        {action.label}
+                        <T>{action.label}</T>
                       </button>
                     </form>
                   ))}

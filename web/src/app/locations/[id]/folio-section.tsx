@@ -3,11 +3,13 @@
 import { useActionState, useState } from "react";
 import { addRentalCharge, type FolioState } from "@/app/actions/folio";
 import { FOLIO_PRESETS } from "@/lib/folio";
+import { T, useT } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 export type FolioLine = { id: string; label: string; amount: number; reason: string | null; createdAt: string };
 
 const fmt = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(n).toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
-const fmtDate = (iso: string) => new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+const fmtDate = (iso: string) => new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 
 const FIELD =
   "h-11 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none placeholder:text-app-faint focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40";
@@ -17,6 +19,7 @@ const FIELD =
  * vide, donc un second clic ne peut pas enregistrer deux fois le même extra.
  */
 function AddChargeForm({ formAction, pending, state }: { formAction: (formData: FormData) => void; pending: boolean; state: FolioState }) {
+  const t = useT();
   const [label, setLabel] = useState("");
   const [negative, setNegative] = useState(false);
 
@@ -30,7 +33,7 @@ function AddChargeForm({ formAction, pending, state }: { formAction: (formData: 
       }}
       className="mt-4 space-y-3 border-t border-app-line pt-4"
     >
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Raccourcis">
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("Raccourcis")}>
         {FOLIO_PRESETS.map((preset) => (
           <button
             key={preset}
@@ -45,18 +48,18 @@ function AddChargeForm({ formAction, pending, state }: { formAction: (formData: 
           </button>
         ))}
       </div>
-      <input name="label" value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Ce qui est facturé" aria-label="Libellé" maxLength={60} className={FIELD} required />
+      <input name="label" value={label} onChange={(event) => setLabel(event.target.value)} placeholder={t("Ce qui est facturé")} aria-label={t("Libellé")} maxLength={60} className={FIELD} required />
       <div className="grid grid-cols-[1fr_auto] gap-2">
-        <input name="amount" inputMode="numeric" placeholder="Montant en FCFA" aria-label="Montant en FCFA" className={FIELD} required />
+        <input name="amount" inputMode="numeric" placeholder={t("Montant en FCFA")} aria-label={t("Montant en FCFA")} className={FIELD} required />
         <label className="flex h-11 items-center gap-2 rounded-xl border border-app-line-strong px-3 text-xs font-bold text-app-text-2">
           <input type="checkbox" checked={negative} onChange={(event) => setNegative(event.target.checked)} className="h-4 w-4 accent-[var(--color-brand-orange)]" />
-          Remise
+          <T>Remise</T>
         </label>
       </div>
-      {negative ? <input name="reason" placeholder="Motif de la remise ou de la correction" aria-label="Motif" maxLength={200} className={FIELD} required /> : null}
+      {negative ? <input name="reason" placeholder={t("Motif de la remise ou de la correction")} aria-label={t("Motif")} maxLength={200} className={FIELD} required /> : null}
       {state?.error ? (
         <p role="alert" className="text-xs font-bold text-app-bad">
-          {state.error}
+          <T>{state.error}</T>
         </p>
       ) : null}
       <button
@@ -64,7 +67,7 @@ function AddChargeForm({ formAction, pending, state }: { formAction: (formData: 
         disabled={pending}
         className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-brand-orange text-sm font-bold text-ink transition hover:brightness-110 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus"
       >
-        {pending ? "Enregistrement…" : negative ? "Appliquer la remise" : "Ajouter l'extra"}
+        {pending ? <T>{"Enregistrement…"}</T> : negative ? <T>{"Appliquer la remise"}</T> : <T>{"Ajouter l'extra"}</T>}
       </button>
     </form>
   );
@@ -72,24 +75,25 @@ function AddChargeForm({ formAction, pending, state }: { formAction: (formData: 
 
 /** Extras du séjour (hôtel) : liste des lignes et ajout d'un extra ou d'une remise. */
 export function FolioSection({ rentalId, lines, canEdit }: { rentalId: string; lines: FolioLine[]; canEdit: boolean }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState<FolioState, FormData>(addRentalCharge.bind(null, rentalId), undefined);
   const total = lines.reduce((sum, line) => sum + line.amount, 0);
 
   return (
-    <section aria-label="Extras du séjour" className="rounded-2xl border border-app-line bg-app-panel p-4">
+    <section aria-label={t("Extras du séjour")} className="rounded-2xl border border-app-line bg-app-panel p-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[11px] font-bold uppercase tracking-wider text-app-muted">Extras et remises</h2>
+        <h2 className="text-[11px] font-bold uppercase tracking-wider text-app-muted"><T>Extras et remises</T></h2>
         {lines.length > 0 ? <span className="text-xs font-bold tabular-nums text-app-text-2">{fmt(total)}</span> : null}
       </div>
 
       {lines.length === 0 ? (
-        <p className="mt-2 text-xs text-app-muted">Aucun extra sur ce séjour.</p>
+        <p className="mt-2 text-xs text-app-muted"><T>Aucun extra sur ce séjour.</T></p>
       ) : (
         <ul className="mt-2 divide-y divide-app-line">
           {lines.map((line) => (
             <li key={line.id} className="flex items-start justify-between gap-3 py-2.5">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-app-text">{line.label}</p>
+                <p className="truncate text-sm font-semibold text-app-text"><T>{line.label}</T></p>
                 <p className="text-[11px] text-app-faint">
                   {fmtDate(line.createdAt)}
                   {line.reason ? ` · ${line.reason}` : ""}
@@ -103,7 +107,7 @@ export function FolioSection({ rentalId, lines, canEdit }: { rentalId: string; l
 
       {state?.ok ? (
         <p role="status" className="mt-3 text-xs font-bold text-app-good">
-          Enregistré.
+          <T>Enregistré.</T>
         </p>
       ) : null}
       {canEdit ? <AddChargeForm key={state?.nonce ?? "new"} formAction={formAction} pending={pending} state={state} /> : null}

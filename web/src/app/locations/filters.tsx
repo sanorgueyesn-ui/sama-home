@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const TIME_CHIPS: { value: string; label: string }[] = [
   { value: "active", label: "En cours" },
@@ -23,6 +24,7 @@ export function RentalFilters({
   properties: { id: string; name: string }[];
   allUnitsLabel?: string;
 }) {
+  const t = useT();
   const [query, setQuery] = useState(defaultQuery);
   const router = useRouter();
   const pathname = usePathname();
@@ -54,8 +56,8 @@ export function RentalFilters({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Nom ou téléphone"
-          aria-label={`Rechercher par nom ou téléphone`}
+          placeholder={t("Nom ou téléphone")}
+          aria-label={t("Rechercher par nom ou téléphone")}
           className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
         />
       </div>
@@ -71,7 +73,7 @@ export function RentalFilters({
               defaultTime === chip.value ? "bg-brand-orange text-ink" : "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover"
             }`}
           >
-            {chip.label}
+            <T>{chip.label}</T>
           </button>
         ))}
       </div>
@@ -80,10 +82,10 @@ export function RentalFilters({
         <select
           value={defaultPropertyId}
           onChange={(e) => pushParams(query, defaultTime, e.target.value)}
-          aria-label="Filtrer par logement"
+          aria-label={t("Filtrer par logement")}
           className="h-11 rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40 lg:w-60"
         >
-          <option value="">{allUnitsLabel}</option>
+          <option value=""><T>{allUnitsLabel}</T></option>
           {properties.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}

@@ -8,6 +8,8 @@ import { listRentals, type RentalTimeFilter } from "@/lib/rentals-data";
 import { listAllPropertiesForSelect } from "@/lib/properties-data";
 import { getRentalPaymentSummaries } from "@/lib/payment-summary";
 import { prisma } from "@/lib/prisma";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 const TIME_VALUES: RentalTimeFilter[] = ["active", "completed", "cancelled", "all"];
 
@@ -15,7 +17,7 @@ function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 export default async function LocationsPage(props: PageProps<"/locations">) {
@@ -95,13 +97,13 @@ export default async function LocationsPage(props: PageProps<"/locations">) {
                 <div className="mt-3 flex items-center justify-between border-t border-app-line pt-2.5 text-xs font-semibold text-app-muted">
                   <span className="tabular-nums">{fmtFcfa(r.amount)}</span>
                   <span className={`font-bold tabular-nums ${remaining > 0 ? "text-app-warn" : "text-app-good"}`}>
-                    {remaining > 0 ? `Reste ${fmtFcfa(remaining)}` : "Payé en totalité"}
+                    {remaining > 0 ? `Reste ${fmtFcfa(remaining)}` : <T>{"Payé en totalité"}</T>}
                   </span>
                 </div>
               </ListCard>
             );
           })}
-          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint">Affinez la recherche pour voir plus de résultats.</p>}
+          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint"><T>Affinez la recherche pour voir plus de résultats.</T></p>}
         </div>
       )}
     </PageShell>

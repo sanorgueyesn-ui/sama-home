@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Field } from "@/components/ui/field";
 import { createUser } from "@/app/actions/users";
 import { EstablishmentPermissionsSelector } from "../establishment-permissions-selector";
+import { T } from "@/components/i18n/i18n-provider";
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
   { value: "GESTIONNAIRE", label: "Gestionnaire" },
@@ -30,7 +31,7 @@ export function CreateUserForm() {
       />
       <div>
         <label htmlFor="role" className="mb-1.5 block text-xs font-bold text-fg">
-          Rôle
+          <T>Rôle</T>
         </label>
         <select
           id="role"
@@ -41,13 +42,13 @@ export function CreateUserForm() {
         >
           {ROLE_OPTIONS.map((r) => (
             <option key={r.value} value={r.value}>
-              {r.label}
+              <T>{r.label}</T>
             </option>
           ))}
         </select>
         {errors?.role?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
@@ -56,7 +57,7 @@ export function CreateUserForm() {
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 
@@ -65,7 +66,7 @@ export function CreateUserForm() {
         disabled={pending}
         className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
-        {pending ? "Enregistrement..." : "CRÉER L'UTILISATEUR"}
+        {pending ? "Enregistrement..." : <T>{"CRÉER L'UTILISATEUR"}</T>}
       </button>
     </form>
   );

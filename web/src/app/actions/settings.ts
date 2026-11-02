@@ -13,6 +13,7 @@ import { isGuestInfoMode } from "@/lib/guest-info";
 import { readImageUploadFromFormData } from "@/lib/image-upload";
 import { uploadImageObject, deleteImageObject } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
+import { getT } from "@/lib/i18n/server";
 
 const LOGO_KEY_PREFIX = "logos";
 
@@ -30,6 +31,7 @@ export async function updateSettings(
   _prevState: SettingsFormState,
   formData: FormData,
 ): Promise<SettingsFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : modifier les
   // paramètres de l'établissement est une mutation de ses données métier,
   // gardée au même titre que updateProperty()/updateClient().
@@ -37,21 +39,21 @@ export async function updateSettings(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer les paramètres." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer les paramètres.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer les paramètres." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer les paramètres.") };
   }
   if (user.role !== "ADMIN") {
-    return { message: "Seul un administrateur d'établissement peut modifier ces paramètres." };
+    return { message: t("Seul un administrateur d'établissement peut modifier ces paramètres.") };
   }
 
   const parsed = SettingsSchema.safeParse({
@@ -140,7 +142,7 @@ export async function updateSettings(
     } catch (error) {
       console.error("updateSettings() — échec inattendu de l'enregistrement :", error);
       if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
-      return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+      return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
     }
     if (result.count === 0) {
       // Modifiés par quelqu'un d'autre entre notre lecture et notre
@@ -148,7 +150,7 @@ export async function updateSettings(
       // ligne : orphelin, nettoyé immédiatement.
       if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
       return {
-        message: "Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez.",
+        message: t("Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez."),
       };
     }
   } else {
@@ -170,12 +172,12 @@ export async function updateSettings(
       if (isConcurrentCreation) {
         if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
         return {
-          message: "Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez.",
+          message: t("Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez."),
         };
       }
       console.error("updateSettings() — échec inattendu de la création des paramètres :", error);
       if (upload) await deleteImageObject(getS3Client(), getBucketName(), upload.key);
-      return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+      return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
     }
   }
 

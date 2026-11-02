@@ -1,5 +1,7 @@
 import { setTheme } from "@/app/actions/theme";
 import type { Theme } from "@/lib/theme";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 const MOON_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -26,9 +28,10 @@ const OFF = "text-fg/65 hover:bg-fg/[0.06] hover:text-fg";
  * directement l'action serveur `setTheme` avec sa valeur fixe — aucun état local, la revalidation
  * de layout suffit à refléter le changement.
  */
-export function ThemeSection({ current }: { current: Theme }) {
+export async function ThemeSection({ current }: { current: Theme }) {
+  const t = await getT();
   return (
-    <div role="group" aria-label="Thème de l'application" className="inline-flex rounded-full border border-border/15 bg-surface-raised p-1">
+    <div role="group" aria-label={t("Thème de l'application")} className="inline-flex rounded-full border border-border/15 bg-surface-raised p-1">
       <form
         action={async () => {
           "use server";
@@ -36,7 +39,7 @@ export function ThemeSection({ current }: { current: Theme }) {
         }}
       >
         <button type="submit" aria-pressed={current === "dark"} className={`${BASE} ${current === "dark" ? ON : OFF}`}>
-          {MOON_ICON} Sombre
+          {MOON_ICON} <T>Sombre</T>
         </button>
       </form>
       <form
@@ -46,7 +49,7 @@ export function ThemeSection({ current }: { current: Theme }) {
         }}
       >
         <button type="submit" aria-pressed={current === "light"} className={`${BASE} ${current === "light" ? ON : OFF}`}>
-          {SUN_ICON} Clair
+          {SUN_ICON} <T>Clair</T>
         </button>
       </form>
     </div>

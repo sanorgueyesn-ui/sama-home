@@ -1,4 +1,5 @@
-// Reconstruction UI — voir le commentaire équivalent dans
+
+import { T } from "@/components/i18n/i18n-provider";// Reconstruction UI — voir le commentaire équivalent dans
 // app/locations/status-badge.tsx (même pattern, même raison).
 export const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   CONFIRMED: { label: "Confirmée", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
@@ -13,7 +14,7 @@ export function ReservationStatusBadge({ status }: { status: string }) {
     <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1" style={{ background: meta.bg }}>
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
       <span className="text-[10.5px] font-bold" style={{ color: meta.color }}>
-        {meta.label}
+        <T>{meta.label}</T>
       </span>
     </div>
   );

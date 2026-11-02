@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const TIME_CHIPS: { value: string; label: string }[] = [
   { value: "upcoming", label: "À venir" },
@@ -23,6 +24,7 @@ export function ReservationFilters({
   defaultPropertyId: string;
   properties: { id: string; name: string }[];
 }) {
+  const t = useT();
   const [query, setQuery] = useState(defaultQuery);
   const router = useRouter();
   const pathname = usePathname();
@@ -54,8 +56,8 @@ export function ReservationFilters({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher par nom ou téléphone..."
-          aria-label="Rechercher une réservation par nom ou téléphone"
+          placeholder={t("Rechercher par nom ou téléphone...")}
+          aria-label={t("Rechercher une réservation par nom ou téléphone")}
           className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
         />
       </div>
@@ -64,10 +66,10 @@ export function ReservationFilters({
         <select
           value={defaultPropertyId}
           onChange={(e) => pushParams(query, defaultTime, e.target.value)}
-          aria-label="Filtrer par logement"
+          aria-label={t("Filtrer par logement")}
           className="mt-3 h-11 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40 md:order-2 md:mt-0 md:w-56 md:shrink-0"
         >
-          <option value="">Tous les logements</option>
+          <option value=""><T>Tous les logements</T></option>
           {properties.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -86,7 +88,7 @@ export function ReservationFilters({
               defaultTime === chip.value ? "bg-brand-orange text-ink" : "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover"
             }`}
           >
-            {chip.label}
+            <T>{chip.label}</T>
           </button>
         ))}
       </div>

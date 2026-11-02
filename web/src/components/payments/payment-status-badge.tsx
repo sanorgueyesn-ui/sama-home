@@ -1,4 +1,5 @@
 import type { PaymentStatus } from "@/lib/payment-summary";
+import { T } from "@/components/i18n/i18n-provider";
 
 // Mêmes 3 tokens déjà utilisés partout dans l'app (globals.css
 // --color-danger/-warning/-success), exprimés en var() pour suivre le thème
@@ -15,7 +16,7 @@ export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
     <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1" style={{ background: meta.bg }}>
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
       <span className="text-[10.5px] font-bold" style={{ color: meta.color }}>
-        {meta.label}
+        <T>{meta.label}</T>
       </span>
     </div>
   );

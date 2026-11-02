@@ -6,12 +6,14 @@ import {
   type SubscriptionStatusView,
 } from "@/lib/subscription-data";
 import { RequestRenewalForm } from "./request-renewal-form";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtDate(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "long", year: "numeric" }).format(d);
 }
 
 const ESTABLISHMENT_STATUS_LABELS: Record<string, string> = {
@@ -22,7 +24,7 @@ const ESTABLISHMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 function Row({ label, value }: { label: string; value: string }) {
-  return <InfoRow label={label}>{value}</InfoRow>;
+  return <InfoRow label={label}><T>{value}</T></InfoRow>;
 }
 
 function SubscriptionSummary({ status }: { status: SubscriptionStatusView }) {
@@ -40,7 +42,7 @@ function SubscriptionSummary({ status }: { status: SubscriptionStatusView }) {
         </>
       ) : (
         <p className="py-3 text-sm font-semibold text-app-text-2">
-          Aucun abonnement n&apos;est configuré pour cet établissement.
+          <T>Aucun abonnement n&apos;est configuré pour cet établissement.</T>
         </p>
       )}
     </Surface>
@@ -66,12 +68,12 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
     const { amount, periodMonths, createdAt } = status.pendingPaymentRequest;
     return (
       <Surface>
-        <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
+        <h2 className="mb-1 text-sm font-bold text-app-text"><T>Renouvellement</T></h2>
         <Row label="Demande envoyée le" value={fmtDate(createdAt)} />
         <Row label="Montant demandé" value={`${fmtFcfa(amount)} / ${periodMonths} mois`} />
         <p className="pt-2 text-[11px] font-medium text-app-muted">
-          Demande en attente de confirmation par un administrateur de la plateforme. Aucun paiement n&apos;est encore
-          confirmé et l&apos;abonnement n&apos;a pas été prolongé.
+          <T>Demande en attente de confirmation par un administrateur de la plateforme. Aucun paiement n&apos;est encore
+          confirmé et l&apos;abonnement n&apos;a pas été prolongé.</T>
         </p>
       </Surface>
     );
@@ -80,10 +82,10 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
   if (!status.hasSubscription) {
     return (
       <Surface>
-        <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
+        <h2 className="mb-1 text-sm font-bold text-app-text"><T>Renouvellement</T></h2>
         <p className="text-sm font-semibold text-app-text-2">
-          Aucun abonnement n&apos;est configuré pour cet établissement — contactez un administrateur de la plateforme
-          avant de pouvoir demander un renouvellement.
+          <T>Aucun abonnement n&apos;est configuré pour cet établissement — contactez un administrateur de la plateforme
+          avant de pouvoir demander un renouvellement.</T>
         </p>
       </Surface>
     );
@@ -92,9 +94,9 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
   if (!canRequestRenewal) {
     return (
       <Surface>
-        <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
+        <h2 className="mb-1 text-sm font-bold text-app-text"><T>Renouvellement</T></h2>
         <p className="text-sm font-semibold text-app-text-2">
-          Seuls un administrateur ou un gestionnaire de l&apos;établissement peuvent initier un renouvellement.
+          <T>Seuls un administrateur ou un gestionnaire de l&apos;établissement peuvent initier un renouvellement.</T>
         </p>
       </Surface>
     );
@@ -102,7 +104,7 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
 
   return (
     <Surface>
-      <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
+      <h2 className="mb-1 text-sm font-bold text-app-text"><T>Renouvellement</T></h2>
       <Row
         label="Montant qui sera demandé"
         value={`${fmtFcfa(status.pricing.periodPriceFcfa)} / ${status.pricing.periodMonths} mois`}
@@ -117,7 +119,7 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
 function PricingSummary({ status }: { status: SubscriptionStatusView }) {
   return (
     <Surface>
-      <h2 className="mb-1 text-sm font-bold text-app-text">Tarification</h2>
+      <h2 className="mb-1 text-sm font-bold text-app-text"><T>Tarification</T></h2>
       <Row label="Essai gratuit" value={`${status.pricing.trialDurationMonths} mois`} />
       <Row
         label="Tarif après essai"
@@ -125,7 +127,7 @@ function PricingSummary({ status }: { status: SubscriptionStatusView }) {
       />
       {!status.pricing.isConfigured ? (
         <p className="pt-2 text-[11px] font-medium text-app-muted">
-          Tarif par défaut — aucune configuration personnalisée n&apos;a encore été enregistrée.
+          <T>Tarif par défaut — aucune configuration personnalisée n&apos;a encore été enregistrée.</T>
         </p>
       ) : null}
     </Surface>
@@ -161,7 +163,7 @@ export default async function SubscriptionStatusPage() {
       <PageShell narrow>
         <PageHeader title="Abonnement" />
         <p className="text-sm font-semibold text-app-text-2">
-          Votre compte n&apos;est rattaché à aucun établissement — aucun statut d&apos;abonnement à afficher.
+          <T>Votre compte n&apos;est rattaché à aucun établissement — aucun statut d&apos;abonnement à afficher.</T>
         </p>
       </PageShell>
     );
@@ -176,11 +178,11 @@ export default async function SubscriptionStatusPage() {
 
   const space = await getActiveSpace();
   const stateBadge = !status.hasSubscription ? (
-    <Badge>Aucun abonnement</Badge>
+    <Badge><T>Aucun abonnement</T></Badge>
   ) : status.isExpired ? (
-    <Badge tone="bad">Expiré</Badge>
+    <Badge tone="bad"><T>Expiré</T></Badge>
   ) : (
-    <Badge tone="good">Actif</Badge>
+    <Badge tone="good"><T>Actif</T></Badge>
   );
 
   return (
@@ -190,8 +192,8 @@ export default async function SubscriptionStatusPage() {
       <PricingSummary status={status} />
       <RenewalSection status={status} canRequestRenewal={canRequestRenewal} />
       <p className="text-[11px] font-medium text-app-muted">
-        Seul un administrateur de plateforme peut confirmer un paiement — aucune confirmation n&apos;est possible
-        depuis cette page.
+        <T>Seul un administrateur de plateforme peut confirmer un paiement — aucune confirmation n&apos;est possible
+        depuis cette page.</T>
       </p>
     </PageShell>
   );

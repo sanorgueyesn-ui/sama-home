@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { T } from "@/components/i18n/i18n-provider";
 
 /**
  * Confirmation intégrée à la page (remplace `window.confirm()`, que certains
@@ -61,12 +62,12 @@ export function ConfirmDialog({
       className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-surface-raised p-5 text-fg shadow-card backdrop:bg-black/60"
     >
       <h2 id={titleId} className="text-base font-extrabold text-fg">
-        {title}
+        <T>{title}</T>
       </h2>
       <div className="mt-2 text-sm font-medium text-fg/80">{children}</div>
       {error ? (
         <p role="alert" className="mt-3 rounded-xl bg-danger-bg px-3 py-2.5 text-xs font-bold text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : null}
       <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">
@@ -79,7 +80,7 @@ export function ConfirmDialog({
             danger ? "bg-danger text-white" : "bg-brand-orange text-ink"
           }`}
         >
-          {pending ? "Traitement en cours…" : confirmLabel}
+          {pending ? <T>{"Traitement en cours…"}</T> : <T>{confirmLabel}</T>}
         </button>
         <button
           ref={cancelRef}
@@ -88,7 +89,7 @@ export function ConfirmDialog({
           onClick={onCancel}
           className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border/15 text-sm font-bold text-fg disabled:opacity-60"
         >
-          {cancelLabel}
+          <T>{cancelLabel}</T>
         </button>
       </div>
     </dialog>

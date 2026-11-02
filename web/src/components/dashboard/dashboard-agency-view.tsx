@@ -15,6 +15,7 @@ import { AGENCY_ACTIONS } from "@/components/dashboard/dashboard-actions";
 import { ReceivableList, StayList } from "@/components/dashboard/dashboard-lists";
 import { formatFcfa, occupancyRate } from "@/lib/dashboard-metrics";
 import type { DashboardOverview } from "@/lib/dashboard-overview";
+import { T } from "@/components/i18n/i18n-provider";
 
 /** Espace insécable : empêche un montant de se couper sur deux lignes (« 645 / 000 »). */
 const NBSP = "\u00a0";
@@ -121,15 +122,15 @@ export function DashboardAgencyView({ overview }: { overview: DashboardOverview 
               <StatusBar counts={counts.all} noun="biens" />
               <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-app-line pt-4 text-xs">
                 <div>
-                  <dt className="text-app-muted">Appartements</dt>
+                  <dt className="text-app-muted"><T>Appartements</T></dt>
                   <dd className="mt-0.5 text-sm font-bold text-app-text">
-                    {counts.apartments.occupied} loué(s) sur {counts.apartments.total}
+                    {counts.apartments.occupied} <T>loué(s) sur</T> {counts.apartments.total}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-app-muted">Chambres</dt>
+                  <dt className="text-app-muted"><T>Chambres</T></dt>
                   <dd className="mt-0.5 text-sm font-bold text-app-text">
-                    {counts.rooms.occupied} louée(s) sur {counts.rooms.total}
+                    {counts.rooms.occupied} <T>louée(s) sur</T> {counts.rooms.total}
                   </dd>
                 </div>
               </dl>
@@ -177,9 +178,9 @@ export function DashboardAgencyView({ overview }: { overview: DashboardOverview 
       <section aria-labelledby="agence-bientot" className="flex flex-col gap-3">
         <div>
           <h2 id="agence-bientot" className="text-sm font-bold text-app-text">
-            Prochains modules de l&apos;agence
+            <T>Prochains modules de l&apos;agence</T>
           </h2>
-          <p className="mt-0.5 text-xs text-app-muted">En préparation : aucun chiffre n&apos;est affiché tant qu&apos;ils n&apos;existent pas.</p>
+          <p className="mt-0.5 text-xs text-app-muted"><T>En préparation : aucun chiffre n&apos;est affiché tant qu&apos;ils n&apos;existent pas.</T></p>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <SoonCard title="Mandats et propriétaires" text="Biens confiés par les propriétaires, mandats et dates d'expiration, fiches propriétaires." />

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { effectBankTransfer, cancelBankTransfer } from "@/app/actions/bank";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -27,6 +28,7 @@ export function BankTransferRowActions({
   amount: number;
   accountLabel: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export function BankTransferRowActions({
   const canCancel = status === "DRAFT" || status === "SCHEDULED";
 
   function handleEffect() {
-    if (!confirm(`Confirmer l'effectuation de ce virement de ${fmtFcfa(amount)} vers ${accountLabel} ?`)) return;
+    if (!confirm(t(`Confirmer l'effectuation de ce virement de ${fmtFcfa(amount)} vers ${accountLabel} ?`))) return;
     setError(null);
     startTransition(async () => {
       const result = await effectBankTransfer(id);
@@ -48,7 +50,7 @@ export function BankTransferRowActions({
   }
 
   function handleCancel() {
-    if (!confirm("Voulez-vous vraiment annuler ce virement ?")) return;
+    if (!confirm(t("Voulez-vous vraiment annuler ce virement ?"))) return;
     setError(null);
     startTransition(async () => {
       const result = await cancelBankTransfer(id);
@@ -72,7 +74,7 @@ export function BankTransferRowActions({
             onClick={handleEffect}
             className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-40"
           >
-            {pending ? "..." : "Effectuer le virement"}
+            {pending ? "..." : <T>{"Effectuer le virement"}</T>}
           </button>
         ) : null}
         {canCancel ? (
@@ -82,11 +84,11 @@ export function BankTransferRowActions({
             onClick={handleCancel}
             className="h-10 flex-1 rounded-xl border border-danger/30 bg-danger-bg text-xs font-extrabold text-danger disabled:opacity-40"
           >
-            {pending ? "..." : "Annuler"}
+            {pending ? "..." : <T>{"Annuler"}</T>}
           </button>
         ) : null}
       </div>
-      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
     </div>
   );
 }

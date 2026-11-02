@@ -18,6 +18,7 @@ import { resolveOtpDispatch } from "@/lib/test-otp";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
 import { OTP_MAX_ATTEMPTS, generateOtpCode, isWellFormedOtp, safeEqualOtp } from "@/lib/otp";
+import { getT } from "@/lib/i18n/server";
 
 class EstablishmentRegistrationError extends Error {}
 
@@ -41,10 +42,11 @@ export async function registerEstablishment(
   _prevState: EstablishmentRegistrationFormState,
   formData: FormData,
 ): Promise<EstablishmentRegistrationFormState> {
+  const t = await getT();
   const ip = await getClientIp();
   const rate = checkRateLimit(`register:${ip}`, 5, 600);
   if (!rate.allowed) {
-    return { message: "Trop de tentatives d'inscription depuis cette adresse. Veuillez patienter avant de réessayer." };
+    return { message: t("Trop de tentatives d'inscription depuis cette adresse. Veuillez patienter avant de réessayer.") };
   }
 
   const parsed = EstablishmentRegistrationSchema.safeParse({
@@ -76,7 +78,7 @@ export async function registerEstablishment(
   if (!isGoogleVerified) {
     const issueRate = checkRateLimit(`otp-issue:${email.trim().toLowerCase()}`, 5, 15 * 60);
     if (!issueRate.allowed) {
-      return { message: "Trop de tentatives d'inscription pour cette adresse. Veuillez patienter avant de réessayer." };
+      return { message: t("Trop de tentatives d'inscription pour cette adresse. Veuillez patienter avant de réessayer.") };
     }
   }
 
@@ -204,7 +206,7 @@ export async function registerEstablishment(
           return { errors: { email: [error.message] } };
         }
         console.error("registerEstablishment(google) — échec :", error);
-        return { message: "Une erreur est survenue lors de la création de l'établissement." };
+        return { message: t("Une erreur est survenue lors de la création de l'établissement.") };
       }
     }
   }
@@ -289,10 +291,11 @@ export async function verifyOtpAndRegister(
   _prevState: VerifyOtpFormState,
   formData: FormData,
 ): Promise<VerifyOtpFormState> {
+  const t = await getT();
   const ip = await getClientIp();
   const rate = checkRateLimit(`verify-otp:${ip}`, 10, 300);
   if (!rate.allowed) {
-    return { message: "Trop de tentatives de validation. Veuillez patienter avant de réessayer." };
+    return { message: t("Trop de tentatives de validation. Veuillez patienter avant de réessayer.") };
   }
 
   const parsed = VerifyOtpSchema.safeParse({
@@ -469,7 +472,7 @@ export async function verifyOtpAndRegister(
       return { errors: { code: [DUPLICATE_EMAIL_MESSAGE] } };
     }
     console.error("verifyOtpAndRegister() — échec inattendu :", error);
-    return { message: "Une erreur est survenue lors de la validation. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue lors de la validation. Veuillez réessayer.") };
   }
 
   return {
@@ -485,10 +488,11 @@ export async function verifyOtpAndRegister(
  * Renvoie un nouveau code OTP pour un email donné
  */
 export async function resendOtpCode(email: string): Promise<{ success: boolean; message?: string; testCode?: string }> {
+  const t = await getT();
   const ip = await getClientIp();
   const rate = checkRateLimit(`resend-otp:${ip}`, 3, 300);
   if (!rate.allowed) {
-    return { success: false, message: "Veuillez patienter avant de demander un nouveau code." };
+    return { success: false, message: t("Veuillez patienter avant de demander un nouveau code.") };
   }
 
   // Action publique : l'argument n'est pas typé à l'exécution. Une valeur non textuelle (par
@@ -504,7 +508,7 @@ export async function resendOtpCode(email: string): Promise<{ success: boolean; 
   // non distribuée entre instances.
   const addressRate = checkRateLimit(`otp-issue:${email.trim().toLowerCase()}`, 5, 15 * 60);
   if (!addressRate.allowed) {
-    return { success: false, message: "Veuillez patienter avant de demander un nouveau code." };
+    return { success: false, message: t("Veuillez patienter avant de demander un nouveau code.") };
   }
 
   const existingOtp = await prisma.otpVerification.findFirst({

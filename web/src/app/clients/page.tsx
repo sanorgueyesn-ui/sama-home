@@ -3,6 +3,7 @@ import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
 import { ClientSearchInput } from "./search-input";
 import { listClients } from "@/lib/clients-data";
+import { T } from "@/components/i18n/i18n-provider";
 
 function initials(name: string) {
   return name
@@ -56,7 +57,7 @@ export default async function ClientsPage(props: PageProps<"/clients">) {
               </div>
             </ListCard>
           ))}
-          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint">Affinez votre recherche pour voir plus de résultats.</p>}
+          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint"><T>Affinez votre recherche pour voir plus de résultats.</T></p>}
         </div>
       )}
     </PageShell>

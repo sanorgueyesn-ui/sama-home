@@ -13,6 +13,7 @@ import { classifyArrivalTiming, describeTransactionFailure } from "@/lib/reserva
 import { PHONE_REGEX } from "@/lib/phone";
 import { ReservationSchema, type ReservationFormState } from "@/lib/definitions";
 import { hasEstablishmentPermission } from "@/lib/permissions";
+import { getT } from "@/lib/i18n/server";
 
 class RentalActionError extends Error {}
 
@@ -96,6 +97,7 @@ export async function createRentalDirect(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P6 — requireActiveEstablishment() placé en tout
   // premier, avant parseRentalForm et toute lecture métier, transaction ou
   // écriture. Comble l'incohérence confirmée en D12-P5 : "Nouvelle location
@@ -110,13 +112,13 @@ export async function createRentalDirect(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer une location." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une location.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -193,16 +195,16 @@ export async function createRentalDirect(
     };
   }
 
-  if (!client) return { message: "Client introuvable." };
-  if (!property) return { message: "Logement introuvable." };
-  if (!property.active) return { message: "Ce logement est désactivé." };
-  if (!tariff) return { message: "Tarif introuvable." };
-  if (!tariff.active) return { message: "Ce tarif est désactivé." };
-  if (tariff.propertyId !== propertyId) return { message: "Ce tarif n'appartient pas à ce logement." };
+  if (!client) return { message: t("Client introuvable.") };
+  if (!property) return { message: t("Logement introuvable.") };
+  if (!property.active) return { message: t("Ce logement est désactivé.") };
+  if (!tariff) return { message: t("Tarif introuvable.") };
+  if (!tariff.active) return { message: t("Ce tarif est désactivé.") };
+  if (tariff.propertyId !== propertyId) return { message: t("Ce tarif n'appartient pas à ce logement.") };
 
   const arrivalDateTime = new Date(`${date}T${arrivalTime}:00`);
   if (Number.isNaN(arrivalDateTime.getTime())) {
-    return { message: "Date ou heure invalide." };
+    return { message: t("Date ou heure invalide.") };
   }
 
   // Bloc 21 — arrivée rétroactive : "Nouvelle location directe" acceptait déjà
@@ -345,7 +347,7 @@ export async function createRentalDirect(
     }
     return {
       message:
-        "Le créneau vient peut-être d'être occupé à l'instant par quelqu'un d'autre. Veuillez vérifier la disponibilité et réessayer.",
+        t("Le créneau vient peut-être d'être occupé à l'instant par quelqu'un d'autre. Veuillez vérifier la disponibilité et réessayer."),
     };
   }
 
@@ -363,6 +365,7 @@ export async function checkInReservation(
   reservationId: string,
   options?: { actualArrivalAt?: string; reason?: string; clientId?: string },
 ): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : checkInReservation()
   // n'était gardée que par getCurrentUser(), jamais par
   // requireActiveEstablishment(), contrairement à createRentalDirect() dans
@@ -373,18 +376,18 @@ export async function checkInReservation(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de faire entrer ce séjour." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de faire entrer ce séjour.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de faire entrer ce séjour." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de faire entrer ce séjour.") };
   }
 
   // Phase 3G / Lot D12-P2 — filtrée par établissement (faille signalée en
@@ -404,7 +407,7 @@ export async function checkInReservation(
     },
   });
   if (!reservation) {
-    return { error: "Réservation introuvable." };
+    return { error: t("Réservation introuvable.") };
   }
   if (
     reservation.property.establishmentId !== user.establishmentId ||
@@ -415,16 +418,16 @@ export async function checkInReservation(
     // updateReservation ne rattachent déjà qu'à des entités du même
     // établissement) — traitée comme "introuvable", jamais révélée, par
     // défense en profondeur.
-    return { error: "Réservation introuvable." };
+    return { error: t("Réservation introuvable.") };
   }
   if (reservation.status === "ARRIVED") {
-    return { error: "Cette réservation a déjà donné lieu à une arrivée." };
+    return { error: t("Cette réservation a déjà donné lieu à une arrivée.") };
   }
   if (reservation.status === "CANCELLED") {
-    return { error: "Cette réservation est annulée et ne peut pas donner lieu à une arrivée." };
+    return { error: t("Cette réservation est annulée et ne peut pas donner lieu à une arrivée.") };
   }
   if (reservation.status !== "CONFIRMED") {
-    return { error: "Cette réservation n'est plus confirmée." };
+    return { error: t("Cette réservation n'est plus confirmée.") };
   }
 
   // Mini-lot "Check-in — identifier le client manquant" : Rental.clientId
@@ -446,11 +449,11 @@ export async function checkInReservation(
     if (requiresIdentity(reservation.arrivalTime, reservation.departureTime)) {
       return {
         error:
-          "Cette réservation de 48 h ou plus nécessite un client et une pièce d'identité — corrigez-la depuis sa fiche avant de faire entrer.",
+          t("Cette réservation de 48 h ou plus nécessite un client et une pièce d'identité — corrigez-la depuis sa fiche avant de faire entrer."),
       };
     }
     if (!options?.clientId) {
-      return { error: "Un client est requis pour faire entrer ce séjour." };
+      return { error: t("Un client est requis pour faire entrer ce séjour.") };
     }
     // Existence vérifiée explicitement — jamais de confiance aveugle dans un
     // id transmis par le client. Phase 3G / Lot D12-P2 — filtrée par
@@ -461,7 +464,7 @@ export async function checkInReservation(
       select: { id: true },
     });
     if (!selectedClient) {
-      return { error: "Client introuvable." };
+      return { error: t("Client introuvable.") };
     }
     clientId = selectedClient.id;
     clientWasMissing = true;
@@ -475,7 +478,7 @@ export async function checkInReservation(
   const registeredAt = new Date();
   const actualArrival = options?.actualArrivalAt ? new Date(options.actualArrivalAt) : registeredAt;
   if (Number.isNaN(actualArrival.getTime())) {
-    return { error: "Heure d'arrivée invalide." };
+    return { error: t("Heure d'arrivée invalide.") };
   }
   const retroCheck = checkRetroactiveArrival(registeredAt, actualArrival, options?.reason);
   if (!retroCheck.ok) {
@@ -598,6 +601,7 @@ export async function checkInReservation(
  * `cancelBankTransfer()`, Bloc I.1).
  */
 export async function completeRental(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
   // volontairement JAMAIS gardée par requireActiveEstablishment(), même
   // principe que cancelReservation()/cancelRental() dans ce fichier — terminer
@@ -606,13 +610,13 @@ export async function completeRental(id: string): Promise<{ error?: string }> {
   // doit rester capable de clôturer ses locations déjà actives.
   const user = await getCurrentUser();
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de terminer cette location." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de terminer cette location.") };
   }
 
   // Une location d'un autre établissement est indistinguable d'un id inexistant.
   const rental = await prisma.rental.findFirst({ where: { id, establishmentId: user.establishmentId } });
-  if (!rental) return { error: "Location introuvable." };
-  if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
+  if (!rental) return { error: t("Location introuvable.") };
+  if (rental.status !== "ACTIVE") return { error: t("Cette location n'est plus active.") };
 
   try {
     await prisma.$transaction(
@@ -662,7 +666,7 @@ export async function completeRental(id: string): Promise<{ error?: string }> {
       return { error: error.message };
     }
     return {
-      error: "Cette location vient peut-être d'être clôturée à l'instant (opération concurrente). Veuillez réessayer.",
+      error: t("Cette location vient peut-être d'être clôturée à l'instant (opération concurrente). Veuillez réessayer."),
     };
   }
 
@@ -674,22 +678,23 @@ export async function completeRental(id: string): Promise<{ error?: string }> {
 
 /** Annulation (Bloc 4 "si nécessaire") — avant la fin réelle du séjour. */
 export async function cancelRental(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite, même principe que
   // completeRental()/cancelReservation() ci-dessus : volontairement JAMAIS
   // gardée par requireActiveEstablishment() — annuler une location réduit
   // l'exposition de l'établissement, jamais ne l'augmente.
   const user = await getCurrentUser();
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette location." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette location.") };
   }
 
   if (!hasEstablishmentPermission(user, "CAN_DELETE_RENTAL")) {
-    return { error: "Action refusée : votre compte n'a pas l'autorisation d'annuler les locations." };
+    return { error: t("Action refusée : votre compte n'a pas l'autorisation d'annuler les locations.") };
   }
 
   const rental = await prisma.rental.findFirst({ where: { id, establishmentId: user.establishmentId } });
-  if (!rental) return { error: "Location introuvable." };
-  if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
+  if (!rental) return { error: t("Location introuvable.") };
+  if (rental.status !== "ACTIVE") return { error: t("Cette location n'est plus active.") };
 
   // Phase 3G / Lot D12-P18 — faille confirmée en D12-P17 : contrairement à
   // completeRental/extendRental, ce filtre ne portait pas sur `status`,
@@ -702,7 +707,7 @@ export async function cancelRental(id: string): Promise<{ error?: string }> {
     data: { status: "CANCELLED" },
   });
   if (result.count === 0) {
-    return { error: "Cette location n'est plus active." };
+    return { error: t("Cette location n'est plus active.") };
   }
 
   revalidatePath("/locations");
@@ -762,6 +767,7 @@ export async function checkExtensionAvailability(input: {
  * not match what this property actually charges for 2 hours).
  */
 export async function extendRental(rentalId: string, tariffId: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P9 — requireActiveEstablishment() placé en tout
   // premier, avant toute lecture métier. Comble l'incohérence confirmée en
   // D12-P8 : une prolongation crée une nouvelle période facturable (nouvelle
@@ -774,13 +780,13 @@ export async function extendRental(rentalId: string, tariffId: string): Promise<
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de prolonger cette location." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de prolonger cette location.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -788,15 +794,15 @@ export async function extendRental(rentalId: string, tariffId: string): Promise<
   // La location doit appartenir à l'établissement courant — indistinguable
   // d'un id inexistant sinon.
   const rental = await prisma.rental.findFirst({ where: { id: rentalId, establishmentId: user.establishmentId } });
-  if (!rental) return { error: "Location introuvable." };
-  if (rental.status !== "ACTIVE") return { error: "Cette location n'est plus active." };
+  if (!rental) return { error: t("Location introuvable.") };
+  if (rental.status !== "ACTIVE") return { error: t("Cette location n'est plus active.") };
 
   // Le tarif de prolongation doit lui aussi appartenir au même établissement
   // (en plus du contrôle déjà existant : compatible avec le bien de la
   // location, via `tariff.propertyId !== rental.propertyId`).
   const tariff = await prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } });
   if (!tariff || tariff.propertyId !== rental.propertyId || !tariff.active) {
-    return { error: "Tarif de prolongation invalide pour ce logement." };
+    return { error: t("Tarif de prolongation invalide pour ce logement.") };
   }
 
   const newEnd = computeDepartureTime(rental.plannedDepartureAt, tariff.durationValue, tariff.durationUnit);
@@ -857,7 +863,7 @@ export async function extendRental(rentalId: string, tariffId: string): Promise<
     }
     return {
       error:
-        "Le créneau vient peut-être d'être occupé à l'instant. Veuillez vérifier la disponibilité et réessayer.",
+        t("Le créneau vient peut-être d'être occupé à l'instant. Veuillez vérifier la disponibilité et réessayer."),
     };
   }
 

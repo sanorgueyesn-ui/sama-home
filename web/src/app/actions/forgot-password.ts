@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/password";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendPasswordResetEmail } from "@/lib/mail";
 import { OTP_MAX_ATTEMPTS, generateOtpCode, isWellFormedOtp, safeEqualOtp } from "@/lib/otp";
+import { getT } from "@/lib/i18n/server";
 
 class ResetTokenAlreadyUsedError extends Error {}
 
@@ -35,6 +36,7 @@ export async function requestPasswordReset(
   _prevState: ForgotPasswordState | undefined,
   formData: FormData,
 ): Promise<ForgotPasswordState> {
+  const t = await getT();
   const ip = await getClientIp();
   const rateLimitKey = `forgot_password:${ip}`;
   const rate = checkRateLimit(rateLimitKey, 15, 15 * 60);
@@ -51,7 +53,7 @@ export async function requestPasswordReset(
   if (!rawIdentifier || rawIdentifier.length < 3) {
     return {
       step: "REQUEST",
-      error: "Veuillez renseigner votre adresse e-mail ou votre identifiant de connexion.",
+      error: t("Veuillez renseigner votre adresse e-mail ou votre identifiant de connexion."),
     };
   }
 
@@ -145,13 +147,14 @@ export async function confirmPasswordReset(
   _prevState: ForgotPasswordState | undefined,
   formData: FormData,
 ): Promise<ForgotPasswordState> {
+  const t = await getT();
   const rawEmail = formData.get("email")?.toString()?.trim().toLowerCase();
   const code = formData.get("code")?.toString()?.trim();
   const newPassword = formData.get("newPassword")?.toString()?.trim();
   const confirmPassword = formData.get("confirmPassword")?.toString()?.trim();
 
   if (!rawEmail) {
-    return { step: "REQUEST", error: "Session expirée. Veuillez recommencer la procédure." };
+    return { step: "REQUEST", error: t("Session expirée. Veuillez recommencer la procédure.") };
   }
 
   // Étape 2c-1 — plafond par IP (15 / 15 min) sur la confirmation, avant tout accès à la base.
@@ -203,7 +206,7 @@ export async function confirmPasswordReset(
     return {
       step: "CODE",
       email: typedEmail,
-      error: "Veuillez saisir le code de sécurité à 6 chiffres complet.",
+      error: t("Veuillez saisir le code de sécurité à 6 chiffres complet."),
     };
   }
 
@@ -211,7 +214,7 @@ export async function confirmPasswordReset(
     return {
       step: "CODE",
       email: typedEmail,
-      error: "Le nouveau mot de passe doit comporter au moins 8 caractères.",
+      error: t("Le nouveau mot de passe doit comporter au moins 8 caractères."),
     };
   }
 
@@ -219,7 +222,7 @@ export async function confirmPasswordReset(
     return {
       step: "CODE",
       email: typedEmail,
-      error: "Les deux mots de passe ne correspondent pas.",
+      error: t("Les deux mots de passe ne correspondent pas."),
     };
   }
 
@@ -329,7 +332,7 @@ export async function confirmPasswordReset(
     return {
       step: "SUCCESS",
       success: true,
-      message: "Votre mot de passe a été modifié avec succès ! Vous pouvez maintenant vous connecter en toute sécurité.",
+      message: t("Votre mot de passe a été modifié avec succès ! Vous pouvez maintenant vous connecter en toute sécurité."),
     };
   } catch (err) {
     if (err instanceof ResetTokenAlreadyUsedError) {
@@ -339,7 +342,7 @@ export async function confirmPasswordReset(
     return {
       step: "CODE",
       email: typedEmail,
-      error: "Une erreur est survenue lors de l'enregistrement de votre mot de passe. Veuillez réessayer.",
+      error: t("Une erreur est survenue lors de l'enregistrement de votre mot de passe. Veuillez réessayer."),
     };
   }
 }

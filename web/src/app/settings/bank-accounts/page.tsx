@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/dal";
 import { listBankAccounts } from "@/lib/bank-data";
 import { BankAccountStatusBadge } from "./bank-account-status-badge";
 import { BankAccountRowActions } from "./bank-account-row-actions";
+import { T } from "@/components/i18n/i18n-provider";
 
 const FEEDBACK_MESSAGES: Record<string, string> = {
   created: "Compte bancaire créé.",
@@ -48,7 +49,7 @@ export default async function BankAccountsPage(props: PageProps<"/settings/bank-
               href="/settings/bank-accounts/new"
               className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
             >
-              + Nouveau compte bancaire
+              <T>+ Nouveau compte bancaire</T>
             </Link>
           }
         />
@@ -61,7 +62,7 @@ export default async function BankAccountsPage(props: PageProps<"/settings/bank-
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-bold text-fg">{account.label}</p>
+                  <p className="truncate text-sm font-bold text-fg"><T>{account.label}</T></p>
                   <BankAccountStatusBadge active={account.active} />
                 </div>
                 <p className="mt-0.5 truncate text-xs font-semibold text-fg/60">

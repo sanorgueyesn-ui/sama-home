@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cancelReservation } from "@/app/actions/reservations";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { isNextRedirectError } from "@/lib/reservation-filters";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function CancelButton({ id, summary }: { id: string; summary: string }) {
   const router = useRouter();
@@ -43,7 +44,7 @@ export function CancelButton({ id, summary }: { id: string; summary: string }) {
         }}
         className="flex min-h-12 w-full items-center justify-center rounded-xl border border-danger/30 text-sm font-extrabold text-danger disabled:opacity-60"
       >
-        Annuler la réservation
+        <T>Annuler la réservation</T>
       </button>
       <ConfirmDialog
         open={confirming}
@@ -61,8 +62,8 @@ export function CancelButton({ id, summary }: { id: string; summary: string }) {
       >
         <p>{summary}</p>
         <p className="mt-2 text-xs text-app-muted">
-          Le créneau redeviendra disponible. Les paiements déjà encaissés (acompte) ne sont ni supprimés ni remboursés
-          automatiquement.
+          <T>Le créneau redeviendra disponible. Les paiements déjà encaissés (acompte) ne sont ni supprimés ni remboursés
+          automatiquement.</T>
         </p>
       </ConfirmDialog>
     </div>

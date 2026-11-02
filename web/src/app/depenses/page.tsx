@@ -6,6 +6,8 @@ import { listExpenses, type ExpensePeriodFilter } from "@/lib/expenses-data";
 import { listExpenseCategoriesForFilter } from "@/lib/expense-categories-data";
 import { PAYMENT_METHOD_VALUES } from "@/lib/definitions";
 import type { PaymentMethod } from "@/generated/prisma/client";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 const PERIOD_VALUES: ExpensePeriodFilter[] = ["today", "month", "all"];
 
@@ -20,7 +22,7 @@ function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtDateTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 export default async function ExpensesPage(props: PageProps<"/depenses">) {
@@ -67,15 +69,15 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
               </div>
               <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-app-muted">
                 <span>{fmtDateTime(e.paidAt)}</span>
-                <Badge>{METHOD_LABELS[e.method] ?? e.method}</Badge>
+                <Badge><T>{METHOD_LABELS[e.method] ?? e.method}</T></Badge>
               </div>
-              {e.reference ? <p className="mt-1.5 truncate text-[11px] font-medium text-app-muted">Référence : {e.reference}</p> : null}
+              {e.reference ? <p className="mt-1.5 truncate text-[11px] font-medium text-app-muted"><T>Référence :</T> {e.reference}</p> : null}
               {e.note ? <p className="mt-1 truncate text-[11px] font-medium text-app-muted">{e.note}</p> : null}
             </div>
           </div>
         </div>
       ))}
-      {truncated && <p className="pt-1 text-center text-xs font-medium text-app-faint">Affinez la recherche pour voir plus de résultats.</p>}
+      {truncated && <p className="pt-1 text-center text-xs font-medium text-app-faint"><T>Affinez la recherche pour voir plus de résultats.</T></p>}
     </div>
   );
 
@@ -88,7 +90,7 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
         </div>
       ))}
       <div className="flex items-center justify-between border-t border-app-line-strong pt-3">
-        <span className="text-sm font-extrabold text-app-text">Total</span>
+        <span className="text-sm font-extrabold text-app-text"><T>Total</T></span>
         <span className="text-base font-extrabold tabular-nums text-app-text">{fmtFcfa(totalAmount)}</span>
       </div>
     </Surface>
@@ -105,7 +107,7 @@ export default async function ExpensesPage(props: PageProps<"/depenses">) {
 
       {created ? (
         <p role="status" className="rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          Dépense enregistrée.
+          <T>Dépense enregistrée.</T>
         </p>
       ) : null}
 

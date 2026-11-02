@@ -2,8 +2,10 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/components/i18n/i18n-provider";
 
 export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
+  const t = useT();
   const [value, setValue] = useState(defaultValue);
   const router = useRouter();
   const pathname = usePathname();
@@ -41,8 +43,8 @@ export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Rechercher un client (nom ou téléphone)..."
-        aria-label="Rechercher un client par nom ou téléphone"
+        placeholder={t("Rechercher un client (nom ou téléphone)...")}
+        aria-label={t("Rechercher un client par nom ou téléphone")}
         className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
       />
     </div>

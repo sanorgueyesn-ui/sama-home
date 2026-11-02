@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createSubscriptionPaymentRequest } from "@/app/actions/subscription";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 /**
  * Phase 3G / Lot D12-P58 — même schéma que TariffRowActions/
@@ -20,6 +21,7 @@ import { createSubscriptionPaymentRequest } from "@/app/actions/subscription";
  * dans ce composant).
  */
 export function RequestRenewalForm() {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [reference, setReference] = useState("");
@@ -40,7 +42,7 @@ export function RequestRenewalForm() {
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor="subscription-reference" className="text-xs font-bold text-app-text">
-        Référence de paiement <span className="font-medium text-fg/40">(optionnel)</span>
+        <T>Référence de paiement</T> <span className="font-medium text-fg/40">(optionnel)</span>
       </label>
       <input
         id="subscription-reference"
@@ -48,21 +50,21 @@ export function RequestRenewalForm() {
         value={reference}
         onChange={(e) => setReference(e.target.value)}
         disabled={pending}
-        placeholder="Ex. référence du virement"
+        placeholder={t("Ex. référence du virement")}
         className="h-10 w-full rounded-lg border border-app-line-strong bg-app-panel-2 px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange disabled:opacity-60"
       />
       <p className="text-[10.5px] font-medium text-app-muted">
-        Ne saisissez jamais de numéro de carte bancaire ni aucun autre secret ici — un simple justificatif (référence
-        de virement, numéro de transaction mobile money) suffit.
+        <T>Ne saisissez jamais de numéro de carte bancaire ni aucun autre secret ici — un simple justificatif (référence
+        de virement, numéro de transaction mobile money) suffit.</T>
       </p>
-      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
       <button
         type="button"
         disabled={pending}
         onClick={handleSubmit}
         className="mt-1 h-12 rounded-2xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-60"
       >
-        {pending ? "Envoi en cours..." : "Demander un renouvellement"}
+        {pending ? <T>{"Envoi en cours..."}</T> : <T>{"Demander un renouvellement"}</T>}
       </button>
     </div>
   );

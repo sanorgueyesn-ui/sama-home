@@ -13,6 +13,7 @@ import { STAY_ACTIONS } from "@/components/dashboard/dashboard-actions";
 import { RecentOccupiedTable, UnitTiles } from "@/components/dashboard/dashboard-lists";
 import { formatFcfa, occupancyRate } from "@/lib/dashboard-metrics";
 import type { DashboardOverview } from "@/lib/dashboard-overview";
+import { T } from "@/components/i18n/i18n-provider";
 
 /**
  * Tableau de bord Hôtel (guide Hôtel §4) : l'occupation des chambres d'abord, les actions du
@@ -121,7 +122,7 @@ export function DashboardHotelView({ overview }: { overview: DashboardOverview }
               {rooms.length > 0 ? <UnitTiles units={rooms} /> : null}
               {apartments.length > 0 ? (
                 <div>
-                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-app-muted">Appartements</h3>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-app-muted"><T>Appartements</T></h3>
                   <UnitTiles units={apartments} />
                 </div>
               ) : null}

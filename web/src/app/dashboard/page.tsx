@@ -8,6 +8,8 @@ import { getCurrentUser } from "@/lib/dal";
 import { getDashboardOverview } from "@/lib/dashboard-overview";
 import { listMySpaces } from "@/lib/spaces-data";
 import { AGENCY_MODE_ENABLED, selectableShellModes, toShellMode, type ShellMode } from "@/lib/business-mode";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata = { title: "Tableau de bord — SAMA HOME" };
 
@@ -26,9 +28,9 @@ function parseMode(raw: string | undefined): ShellMode | null {
 function AgencySuspendedNotice() {
   return (
     <section role="status" className="rounded-2xl border border-app-line bg-app-panel p-6 sm:p-8">
-      <h1 className="text-lg font-extrabold text-app-text">Le mode Agence immobilière est suspendu pour le moment</h1>
+      <h1 className="text-lg font-extrabold text-app-text"><T>Le mode Agence immobilière est suspendu pour le moment</T></h1>
       <p className="mt-2 max-w-xl text-sm text-app-muted">
-        Nous nous concentrons sur les hôtels et les résidences. Vos données sont conservées : le mode reviendra tel que vous l&apos;avez laissé.
+        <T>Nous nous concentrons sur les hôtels et les résidences. Vos données sont conservées : le mode reviendra tel que vous l&apos;avez laissé.</T>
       </p>
     </section>
   );
@@ -40,6 +42,7 @@ function AgencySuspendedNotice() {
  * présentations en développement local ; en production il est ignoré.
  */
 export default async function DashboardPage(props: { searchParams?: Promise<{ mode?: string }> }) {
+  const t = await getT();
   // Impose la session et, pour un compte à plusieurs espaces, le choix préalable de l'espace.
   const user = await getCurrentUser();
   if (!user.establishmentId) redirect(user.isPlatformAdmin ? "/plateforme" : "/login");
@@ -58,8 +61,8 @@ export default async function DashboardPage(props: { searchParams?: Promise<{ mo
     <div className="relative min-h-[calc(100dvh-3.5rem)] overflow-x-hidden bg-app-page lg:min-h-[calc(100dvh-60px)] px-4 pb-10 pt-4 font-sans text-app-text sm:px-6 sm:pt-5 lg:px-8 lg:pt-7">
       <div className="mx-auto flex max-w-[1360px] flex-col gap-5 lg:gap-6">
         {isPreviewAllowed ? (
-          <nav aria-label="Aperçu des modes (développement local)" className="flex items-center gap-3">
-            <span className="hidden whitespace-nowrap text-xs font-semibold text-app-faint lg:inline">Aperçu développement</span>
+          <nav aria-label={t("Aperçu des modes (développement local)")} className="flex items-center gap-3">
+            <span className="hidden whitespace-nowrap text-xs font-semibold text-app-faint lg:inline"><T>Aperçu développement</T></span>
             <div className={`grid w-full gap-1 rounded-xl border border-app-line bg-app-panel-2 p-1 lg:w-auto ${MODES.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
               {MODES.map((item) => (
                 <Link
@@ -70,11 +73,11 @@ export default async function DashboardPage(props: { searchParams?: Promise<{ mo
                     item === mode ? MODE_THEME[item].primary : "text-app-muted hover:bg-fg/5 hover:text-app-text"
                   }`}
                 >
-                  {MODE_SHORT_LABEL[item]}
+                  <T>{MODE_SHORT_LABEL[item]}</T>
                 </Link>
               ))}
             </div>
-            <span className="ms-auto hidden whitespace-nowrap text-xs text-app-faint lg:inline">Espace réel : {MODE_THEME[spaceMode].label}</span>
+            <span className="ms-auto hidden whitespace-nowrap text-xs text-app-faint lg:inline"><T>Espace réel :</T> <T>{MODE_THEME[spaceMode].label}</T></span>
           </nav>
         ) : null}
 

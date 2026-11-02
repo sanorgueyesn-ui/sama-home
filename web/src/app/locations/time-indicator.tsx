@@ -1,4 +1,5 @@
 import { computeRentalTimeState, formatRentalTimeText } from "@/lib/rental-status";
+import { T } from "@/components/i18n/i18n-provider";
 
 // Lot 4 — couleurs en var(--color-X) (globals.css) pour suivre le thème
 // dark, même pattern que les autres badges de statut de l'app.
@@ -20,7 +21,7 @@ export function RentalTimeIndicator({ now, plannedDepartureAt }: { now: Date; pl
     <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: meta.bg }}>
       <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: meta.color }} />
       <span className="text-xs font-bold" style={{ color: meta.color }}>
-        {text}
+        <T>{text}</T>
       </span>
     </div>
   );

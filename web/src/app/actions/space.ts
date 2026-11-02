@@ -7,6 +7,7 @@ import { getCurrentUser, verifySession } from "@/lib/dal";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
 import { canCreateSpace, parseSpaceCreation } from "@/lib/space-creation";
+import { getT } from "@/lib/i18n/server";
 
 export type CreateSpaceState =
   | {
@@ -61,6 +62,7 @@ export async function switchSpace(formData: FormData): Promise<void> {
  * ou ACTIVE avec essai). Les données de l'espace actuel ne sont ni copiées ni modifiées.
  */
 export async function createSpace(_previous: CreateSpaceState, formData: FormData): Promise<CreateSpaceState> {
+  const t = await getT();
   const { sessionId } = await verifySession();
   const user = await getCurrentUser();
 
@@ -68,7 +70,7 @@ export async function createSpace(_previous: CreateSpaceState, formData: FormDat
   if (!parsed.ok) return { errors: { [parsed.field]: [parsed.message] } };
 
   const rate = checkRateLimit(`create-space:${user.id}`, 5, 3600);
-  if (!rate.allowed) return { message: "Trop de tentatives. Réessayez plus tard." };
+  if (!rate.allowed) return { message: t("Trop de tentatives. Réessayez plus tard.") };
 
   let created: { id: string; active: boolean };
   try {
@@ -107,7 +109,7 @@ export async function createSpace(_previous: CreateSpaceState, formData: FormDat
   } catch (error) {
     if (error instanceof SpaceCreationError) return { message: error.message };
     console.error("createSpace() — échec inattendu :", error);
-    return { message: "Une erreur est survenue. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 
   if (!created.active) return { pendingName: parsed.name };

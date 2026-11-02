@@ -6,6 +6,8 @@ import { ReservationStatusBadge } from "./status-badge";
 import { listReservations } from "@/lib/reservations-data";
 import { RESERVATION_TIME_FILTERS, isArrivalOverdue, type ReservationTimeFilter } from "@/lib/reservation-filters";
 import { listAllPropertiesForSelect } from "@/lib/properties-data";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 
 function fmtFcfa(amount: number) {
@@ -13,11 +15,11 @@ function fmtFcfa(amount: number) {
 }
 
 function fmtDate(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "short" }).format(d);
 }
 
 function fmtTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 export default async function ReservationsPage(props: PageProps<"/reservations">) {
@@ -65,12 +67,12 @@ export default async function ReservationsPage(props: PageProps<"/reservations">
             <ListCard key={r.id} href={`/reservations/${r.id}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-extrabold text-app-text">{r.client?.name ?? "Sans client"}</p>
+                  <p className="truncate text-sm font-extrabold text-app-text">{r.client?.name ?? <T>{"Sans client"}</T>}</p>
                   <p className="mt-0.5 truncate text-xs font-semibold text-app-muted">{r.property.name}</p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <ReservationStatusBadge status={r.status} />
-                  {isArrivalOverdue(r.status, r.arrivalTime, now) ? <Badge tone="bad">Arrivée à enregistrer</Badge> : null}
+                  {isArrivalOverdue(r.status, r.arrivalTime, now) ? <Badge tone="bad"><T>Arrivée à enregistrer</T></Badge> : null}
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-app-text-2">
@@ -82,7 +84,7 @@ export default async function ReservationsPage(props: PageProps<"/reservations">
               <div className="mt-3 border-t border-app-line pt-2.5 text-sm font-extrabold tabular-nums text-app-text">{fmtFcfa(r.amount)}</div>
             </ListCard>
           ))}
-          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint">Affinez la recherche pour voir plus de résultats.</p>}
+          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint"><T>Affinez la recherche pour voir plus de résultats.</T></p>}
         </div>
       )}
     </PageShell>

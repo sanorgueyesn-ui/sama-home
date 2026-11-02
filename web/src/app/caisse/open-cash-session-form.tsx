@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { openCashSession } from "@/app/actions/cash";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 function fmtFcfa(amount: number) {
   return `${Math.abs(amount).toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -26,6 +27,7 @@ export function OpenCashSessionForm({
   proposedOriginLabel: string | null;
   hasPreviousSession: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<"normal" | "manual">(hasPreviousSession ? "normal" : "manual");
@@ -69,7 +71,7 @@ export function OpenCashSessionForm({
   if (!hasPreviousSession && role !== "ADMIN") {
     return (
       <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
-        Aucune session précédente. Seul un administrateur peut effectuer la toute première ouverture de caisse.
+        <T>Aucune session précédente. Seul un administrateur peut effectuer la toute première ouverture de caisse.</T>
       </p>
     );
   }
@@ -78,18 +80,18 @@ export function OpenCashSessionForm({
     return (
       <div className="flex flex-col gap-3">
         <div className="rounded-xl bg-surface-sunken px-4 py-3">
-          <p className="text-xs font-bold text-fg/50">MONTANT D&apos;OUVERTURE PROPOSÉ</p>
+          <p className="text-xs font-bold text-fg/50"><T>MONTANT D&apos;OUVERTURE PROPOSÉ</T></p>
           <p className="mt-1 text-xl font-extrabold text-fg">{fmtFcfa(proposedBalance ?? 0)}</p>
-          {proposedOriginLabel ? <p className="mt-1 text-xs font-medium text-fg/50">{proposedOriginLabel}</p> : null}
+          {proposedOriginLabel ? <p className="mt-1 text-xs font-medium text-fg/50"><T>{proposedOriginLabel}</T></p> : null}
         </div>
-        {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
         <button
           type="button"
           disabled={pending}
           onClick={handleNormalOpen}
           className="flex h-14 items-center justify-center rounded-2xl bg-brand-orange text-base font-extrabold text-ink disabled:opacity-40"
         >
-          {pending ? "..." : "Ouvrir la caisse"}
+          {pending ? "..." : <T>{"Ouvrir la caisse"}</T>}
         </button>
         {role === "ADMIN" ? (
           <button
@@ -100,7 +102,7 @@ export function OpenCashSessionForm({
             }}
             className="text-center text-xs font-bold text-fg underline"
           >
-            Ouverture manuelle exceptionnelle
+            <T>Ouverture manuelle exceptionnelle</T>
           </button>
         ) : null}
       </div>
@@ -110,15 +112,15 @@ export function OpenCashSessionForm({
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-xl bg-warning-bg px-4 py-3">
-        <p className="text-xs font-extrabold text-warning">Ouverture exceptionnelle</p>
+        <p className="text-xs font-extrabold text-warning"><T>Ouverture exceptionnelle</T></p>
         <p className="mt-0.5 text-xs font-medium text-warning">
-          Cette action remplace le calcul automatique du montant d&apos;ouverture. Elle est tracée et nécessite une
-          justification.
+          <T>Cette action remplace le calcul automatique du montant d&apos;ouverture. Elle est tracée et nécessite une
+          justification.</T>
         </p>
       </div>
       <div>
         <label htmlFor="manualAmount" className="mb-1.5 block text-xs font-bold text-fg">
-          Montant d&apos;ouverture (FCFA)
+          <T>Montant d&apos;ouverture (FCFA)</T>
         </label>
         <input
           id="manualAmount"
@@ -131,17 +133,17 @@ export function OpenCashSessionForm({
       </div>
       <div>
         <label htmlFor="manualReason" className="mb-1.5 block text-xs font-bold text-fg">
-          Justification
+          <T>Justification</T>
         </label>
         <textarea
           id="manualReason"
           value={manualReason}
           onChange={(e) => setManualReason(e.target.value)}
-          placeholder="Ex. Première mise en service de la caisse."
+          placeholder={t("Ex. Première mise en service de la caisse.")}
           className="min-h-20 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         />
       </div>
-      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
       <div className="flex gap-2">
         {hasPreviousSession ? (
           <button
@@ -153,7 +155,7 @@ export function OpenCashSessionForm({
             disabled={pending}
             className="h-12 flex-1 rounded-xl border border-border/15 text-sm font-extrabold text-fg disabled:opacity-60"
           >
-            Annuler
+            <T>Annuler</T>
           </button>
         ) : null}
         <button
@@ -162,7 +164,7 @@ export function OpenCashSessionForm({
           onClick={handleManualOpen}
           className="h-12 flex-1 rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-40"
         >
-          {pending ? "..." : "Ouvrir manuellement"}
+          {pending ? "..." : <T>{"Ouvrir manuellement"}</T>}
         </button>
       </div>
     </div>

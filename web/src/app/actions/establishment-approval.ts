@@ -11,6 +11,7 @@ import {
   ESTABLISHMENT_DELETION_DISABLED_MESSAGE,
   ESTABLISHMENT_DELETION_ENABLED,
 } from "@/lib/establishment-deletion-gate";
+import { getT } from "@/lib/i18n/server";
 
 class EstablishmentApprovalError extends Error {}
 
@@ -46,9 +47,10 @@ class EstablishmentApprovalError extends Error {}
  * actée) — aucun e-mail n'est jamais présenté comme envoyé.
  */
 export async function approveEstablishment(establishmentId: string): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation d'approuver les établissements." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation d'approuver les établissements.") };
   }
 
   try {
@@ -95,16 +97,17 @@ export async function approveEstablishment(establishmentId: string): Promise<{ e
       return { error: error.message };
     }
     console.error(`approveEstablishment(${establishmentId}) — échec inattendu de l'approbation :`, error);
-    return { error: "Une erreur est survenue pendant l'approbation. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant l'approbation. Veuillez réessayer.") };
   }
 
   return {};
 }
 
 export async function rejectEstablishment(establishmentId: string, reason: string): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de refuser les établissements." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de refuser les établissements.") };
   }
 
   // Motif obligatoire, texte non blanc — vérifié avant toute connexion à la
@@ -112,7 +115,7 @@ export async function rejectEstablishment(establishmentId: string, reason: strin
   // client.
   const trimmedReason = reason.trim();
   if (!trimmedReason) {
-    return { error: "Un motif de refus est obligatoire." };
+    return { error: t("Un motif de refus est obligatoire.") };
   }
 
   try {
@@ -160,7 +163,7 @@ export async function rejectEstablishment(establishmentId: string, reason: strin
       return { error: error.message };
     }
     console.error(`rejectEstablishment(${establishmentId}) — échec inattendu du refus :`, error);
-    return { error: "Une erreur est survenue pendant le refus. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant le refus. Veuillez réessayer.") };
   }
 
   return {};
@@ -182,13 +185,14 @@ export async function rejectEstablishment(establishmentId: string, reason: strin
  * utilisateurs n'est jamais supprimée (seul `Establishment.status` change).
  */
 export async function suspendEstablishment(establishmentId: string): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de suspendre les établissements." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de suspendre les établissements.") };
   }
 
   if (!establishmentId) {
-    return { error: "Identifiant d'établissement manquant." };
+    return { error: t("Identifiant d'établissement manquant.") };
   }
 
   try {
@@ -234,7 +238,7 @@ export async function suspendEstablishment(establishmentId: string): Promise<{ e
       return { error: error.message };
     }
     console.error(`suspendEstablishment(${establishmentId}) — échec inattendu de la suspension :`, error);
-    return { error: "Une erreur est survenue pendant la suspension. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la suspension. Veuillez réessayer.") };
   }
 
   return {};
@@ -256,13 +260,14 @@ export async function suspendEstablishment(establishmentId: string): Promise<{ e
  * séparées, jamais fusionnées ni contournées ici).
  */
 export async function reactivateEstablishment(establishmentId: string): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de réactiver les établissements." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de réactiver les établissements.") };
   }
 
   if (!establishmentId) {
-    return { error: "Identifiant d'établissement manquant." };
+    return { error: t("Identifiant d'établissement manquant.") };
   }
 
   try {
@@ -308,7 +313,7 @@ export async function reactivateEstablishment(establishmentId: string): Promise<
       return { error: error.message };
     }
     console.error(`reactivateEstablishment(${establishmentId}) — échec inattendu de la réactivation :`, error);
-    return { error: "Une erreur est survenue pendant la réactivation. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la réactivation. Veuillez réessayer.") };
   }
 
   return {};
@@ -322,9 +327,10 @@ export async function deleteEstablishment(
   establishmentId: string,
   adminPassword?: string
 ): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de supprimer les établissements." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de supprimer les établissements.") };
   }
 
   // Lot 0 : gel temporaire côté serveur. Placé AVANT toute lecture du mot de
@@ -334,10 +340,10 @@ export async function deleteEstablishment(
   }
 
   if (!establishmentId) {
-    return { error: "Identifiant d'établissement manquant." };
+    return { error: t("Identifiant d'établissement manquant.") };
   }
   if (!adminPassword || typeof adminPassword !== "string" || !adminPassword.trim()) {
-    return { error: "Veuillez saisir votre mot de passe administrateur pour confirmer la suppression." };
+    return { error: t("Veuillez saisir votre mot de passe administrateur pour confirmer la suppression.") };
   }
 
   const currentAdmin = await prisma.user.findUnique({
@@ -346,7 +352,7 @@ export async function deleteEstablishment(
   });
   const isPasswordValid = await verifyPassword(adminPassword.trim(), currentAdmin?.passwordHash ?? null);
   if (!isPasswordValid) {
-    return { error: "Mot de passe administrateur incorrect. Suppression refusée." };
+    return { error: t("Mot de passe administrateur incorrect. Suppression refusée.") };
   }
 
   try {
@@ -505,7 +511,7 @@ export async function deleteEstablishment(
       return { error: error.message };
     }
     console.error(`deleteEstablishment(${establishmentId}) — échec de la suppression :`, error);
-    return { error: "Une erreur est survenue pendant la suppression. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la suppression. Veuillez réessayer.") };
   }
 
   return {};
@@ -519,16 +525,17 @@ export async function deletePlatformUser(
   targetUserId: string,
   adminPassword?: string
 ): Promise<{ error?: string }> {
+  const t = await getT();
   const currentAdminUser = await requirePlatformAdmin();
 
   if (!targetUserId) {
-    return { error: "Identifiant utilisateur manquant." };
+    return { error: t("Identifiant utilisateur manquant.") };
   }
   if (targetUserId === currentAdminUser.id) {
-    return { error: "Impossible de supprimer votre propre compte administrateur connecté." };
+    return { error: t("Impossible de supprimer votre propre compte administrateur connecté.") };
   }
   if (!adminPassword || typeof adminPassword !== "string" || !adminPassword.trim()) {
-    return { error: "Veuillez saisir votre mot de passe administrateur pour confirmer la suppression." };
+    return { error: t("Veuillez saisir votre mot de passe administrateur pour confirmer la suppression.") };
   }
 
   const currentAdmin = await prisma.user.findUnique({
@@ -537,7 +544,7 @@ export async function deletePlatformUser(
   });
   const isPasswordValid = await verifyPassword(adminPassword.trim(), currentAdmin?.passwordHash ?? null);
   if (!isPasswordValid) {
-    return { error: "Mot de passe administrateur incorrect. Suppression refusée." };
+    return { error: t("Mot de passe administrateur incorrect. Suppression refusée.") };
   }
 
   try {
@@ -576,7 +583,7 @@ export async function deletePlatformUser(
       return { error: error.message };
     }
     console.error(`deletePlatformUser(${targetUserId}) — échec :`, error);
-    return { error: "Une erreur est survenue pendant la suppression du compte. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la suppression du compte. Veuillez réessayer.") };
   }
 
   return {};

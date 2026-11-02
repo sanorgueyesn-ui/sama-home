@@ -17,6 +17,7 @@ import {
   type UpdateUserFormState,
   type ResetPasswordFormState,
 } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Bloc 9/11 — every function here re-checks ADMIN server-side via
@@ -39,6 +40,7 @@ export async function createUser(
   _prevState: CreateUserFormState,
   formData: FormData,
 ): Promise<CreateUserFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : ajouter un
   // nouveau compte d'équipe est une action métier d'expansion, gardée comme
   // toute autre création — contrairement à resetUserPassword() ci-dessous
@@ -48,18 +50,18 @@ export async function createUser(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un utilisateur." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un utilisateur.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const admin = await requireAdmin();
   if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
-    return { message: "Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs." };
+    return { message: t("Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs.") };
   }
   // Phase 3B / Lot B — l'établissement du nouvel utilisateur est TOUJOURS
   // celui de l'administrateur qui le crée, résolu côté serveur depuis sa
@@ -68,7 +70,7 @@ export async function createUser(
   // établissement (isPlatformAdmin) ne peut pas créer implicitement un
   // utilisateur pour un établissement qu'il ne gère pas.
   if (!admin.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un utilisateur." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un utilisateur.") };
   }
 
   const parsed = CreateUserSchema.safeParse({
@@ -116,7 +118,7 @@ export async function createUser(
     });
   } catch (error) {
     console.error("createUser() — échec inattendu de la création de l'utilisateur :", error);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/settings/users");
@@ -128,6 +130,7 @@ export async function updateUser(
   _prevState: UpdateUserFormState,
   formData: FormData,
 ): Promise<UpdateUserFormState> {
+  const t = await getT();
   // Phase 3D / Lot D2 — l'établissement de l'ADMIN appelant est résolu ici,
   // avant toute lecture ou écriture métier, et sert de filtre pour tout le
   // reste de la fonction. Jamais transmis par le formulaire (aucun champ de
@@ -139,21 +142,21 @@ export async function updateUser(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier un utilisateur." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier un utilisateur.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const admin = await requireAdmin();
   if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
-    return { message: "Action refusée : vous n'avez pas l'autorisation de modifier des utilisateurs." };
+    return { message: t("Action refusée : vous n'avez pas l'autorisation de modifier des utilisateurs.") };
   }
   if (!admin.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier un utilisateur." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier un utilisateur.") };
   }
 
   // Un utilisateur d'un autre établissement doit être indistinguable d'un
@@ -161,7 +164,7 @@ export async function updateUser(
   // de l'existence d'un compte extérieur.
   const existing = await findSpaceUser(id, admin.establishmentId);
   if (!existing) {
-    return { message: "Utilisateur introuvable." };
+    return { message: t("Utilisateur introuvable.") };
   }
   if (existing.spaceCount > 1) {
     return { message: SHARED_ACCOUNT_MESSAGE };
@@ -259,6 +262,7 @@ export async function resetUserPassword(
   _prevState: ResetPasswordFormState,
   formData: FormData,
 ): Promise<ResetPasswordFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
   // volontairement JAMAIS gardée par requireActiveEstablishment() — c'est une
   // réponse à incident de sécurité (compte compromis, employé licencié), même
@@ -267,15 +271,15 @@ export async function resetUserPassword(
   // jamais empêché de le faire par son propre statut.
   const admin = await requireAdmin();
   if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
-    return { message: "Action refusée : vous n'avez pas l'autorisation de réinitialiser les mots de passe." };
+    return { message: t("Action refusée : vous n'avez pas l'autorisation de réinitialiser les mots de passe.") };
   }
   if (!admin.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de réinitialiser ce mot de passe." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de réinitialiser ce mot de passe.") };
   }
 
   const existing = await findSpaceUser(id, admin.establishmentId);
   if (!existing) {
-    return { message: "Utilisateur introuvable." };
+    return { message: t("Utilisateur introuvable.") };
   }
   // Un mot de passe est GLOBAL au compte : le réinitialiser (et fermer toutes ses sessions)
   // depuis un seul espace toucherait aussi les autres.
@@ -322,7 +326,7 @@ export async function resetUserPassword(
       return { message: error.message };
     }
     console.error(`resetUserPassword(${id}) — échec inattendu de la réinitialisation :`, error);
-    return { message: "Une erreur est survenue pendant la réinitialisation. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant la réinitialisation. Veuillez réessayer.") };
   }
 
   revalidatePath("/settings/users");
@@ -334,20 +338,21 @@ export async function resetUserPassword(
  * Le compte est entièrement purgé de la base de données.
  */
 export async function deleteEstablishmentUser(userId: string): Promise<{ error?: string }> {
+  const t = await getT();
   const admin = await requireAdmin();
   if (!hasEstablishmentPermission(admin, "CAN_MANAGE_USERS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de supprimer des utilisateurs." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de supprimer des utilisateurs.") };
   }
   if (!admin.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement.") };
   }
   if (userId === admin.id) {
-    return { error: "Impossible de supprimer votre propre compte administrateur actuellement connecté." };
+    return { error: t("Impossible de supprimer votre propre compte administrateur actuellement connecté.") };
   }
 
   const target = await findSpaceUser(userId, admin.establishmentId);
   if (!target) {
-    return { error: "Utilisateur introuvable." };
+    return { error: t("Utilisateur introuvable.") };
   }
   if (target.spaceCount > 1) {
     return { error: SHARED_ACCOUNT_MESSAGE };
@@ -363,7 +368,7 @@ export async function deleteEstablishmentUser(userId: string): Promise<{ error?:
       },
     });
     if (otherAdmins === 0) {
-      return { error: "Impossible de supprimer le dernier administrateur de cet établissement." };
+      return { error: t("Impossible de supprimer le dernier administrateur de cet établissement.") };
     }
   }
 
@@ -388,7 +393,7 @@ export async function deleteEstablishmentUser(userId: string): Promise<{ error?:
     });
   } catch (error) {
     console.error(`deleteEstablishmentUser(${userId}) — échec :`, error);
-    return { error: "Une erreur est survenue lors de la suppression du compte." };
+    return { error: t("Une erreur est survenue lors de la suppression du compte.") };
   }
 
   revalidatePath("/settings/users");

@@ -13,13 +13,16 @@ import { MachineConnectedBadge } from "@/components/ui/icons";
 import { PageHeader, PageShell, StatTile, Surface, SectionTitle } from "@/components/ui/page-kit";
 import { getActiveSpace } from "@/lib/active-mode";
 import { nextOpeningBalance, varianceBase } from "@/lib/cash-rules";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function fmtFcfa(amount: number) {
   const sign = amount < 0 ? "-" : "";
   return `${sign}${Math.abs(amount).toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtDateTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(dateLocale(), {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -35,6 +38,7 @@ function fmtDuration(ms: number) {
 }
 
 export default async function CaissePage() {
+  const t = await getT();
   const user = await getCurrentUser();
   const current = await getCurrentCashSession();
 
@@ -66,7 +70,7 @@ export default async function CaissePage() {
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Caisse</h1>
+          <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]"><T>Caisse</T></h1>
           <div className="flex items-center gap-2">
             <MachineConnectedBadge />
             <CashSessionStatusBadge open={false} />
@@ -76,35 +80,35 @@ export default async function CaissePage() {
         <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
           {last ? (
             <Card className="mt-4 p-4">
-              <p className="text-xs font-bold text-fg/50">DERNIÈRE SESSION</p>
+              <p className="text-xs font-bold text-fg/50"><T>DERNIÈRE SESSION</T></p>
               <p className="mt-1 text-sm font-semibold text-fg">
                 {fmtDateTime(last.openedAt)} → {last.closedAt ? fmtDateTime(last.closedAt) : "—"}
               </p>
               <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
                 <div>
-                  <p className="text-[11px] font-bold text-fg/40">SOLDE THÉORIQUE DE CLÔTURE</p>
+                  <p className="text-[11px] font-bold text-fg/40"><T>SOLDE THÉORIQUE DE CLÔTURE</T></p>
                   <p className="text-sm font-extrabold text-fg">
                     {last.closingTheoreticalBalance !== null ? fmtFcfa(last.closingTheoreticalBalance) : "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-fg/40">COMPTAGE PHYSIQUE</p>
+                  <p className="text-[11px] font-bold text-fg/40"><T>COMPTAGE PHYSIQUE</T></p>
                   <p className="text-sm font-extrabold text-fg">
-                    {last.physicalCount !== null ? fmtFcfa(last.physicalCount) : "Non renseigné"}
+                    {last.physicalCount !== null ? fmtFcfa(last.physicalCount) : <T>{"Non renseigné"}</T>}
                   </p>
                 </div>
               </div>
               {last.variance !== null ? (
                 <div className="mt-3">
-                  <p className="text-[11px] font-bold text-fg/40">ÉCART</p>
+                  <p className="text-[11px] font-bold text-fg/40"><T>ÉCART</T></p>
                   <p className={`text-sm font-extrabold ${last.variance === 0 ? "text-success" : "text-warning"}`}>
-                    {last.variance === 0 ? "Aucun écart" : `${last.variance > 0 ? "+" : ""}${fmtFcfa(last.variance)}`}
+                    {last.variance === 0 ? <T>{"Aucun écart"}</T> : `${last.variance > 0 ? "+" : ""}${fmtFcfa(last.variance)}`}
                   </p>
                   {last.varianceReason ? <p className="mt-0.5 text-xs font-medium text-fg/50">{last.varianceReason}</p> : null}
                 </div>
               ) : null}
               <p className="mt-3 text-xs font-medium text-fg/50">
-                Fermée par {userName(last.closedByUserId)} le {last.closedAt ? fmtDateTime(last.closedAt) : "—"}.
+                <T>Fermée par</T> {userName(last.closedByUserId)} le {last.closedAt ? fmtDateTime(last.closedAt) : "—"}.
               </p>
 
               {user.role === "ADMIN" && last.closedAt && last.closingTheoreticalBalance !== null ? (
@@ -122,7 +126,7 @@ export default async function CaissePage() {
               ) : null}
             </Card>
           ) : (
-            <p className="mt-4 text-sm font-medium text-fg/60">Aucune session de caisse n&apos;a encore été enregistrée.</p>
+            <p className="mt-4 text-sm font-medium text-fg/60"><T>Aucune session de caisse n&apos;a encore été enregistrée.</T></p>
           )}
 
           <div className="mt-5">
@@ -135,8 +139,8 @@ export default async function CaissePage() {
               />
             ) : (
               <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
-                Votre compte n&apos;a pas de rôle d&apos;établissement — contactez un administrateur pour ouvrir la
-                caisse.
+                <T>Votre compte n&apos;a pas de rôle d&apos;établissement — contactez un administrateur pour ouvrir la
+                caisse.</T>
               </p>
             )}
           </div>
@@ -189,16 +193,16 @@ export default async function CaissePage() {
               <table className="w-full min-w-[20rem] text-sm">
                 <thead>
                   <tr className="text-[11px] font-bold uppercase tracking-wide text-app-muted">
-                    <th scope="col" className="pb-2 text-left font-bold">Moyen</th>
-                    <th scope="col" className="pb-2 text-right font-bold">Encaissé</th>
-                    <th scope="col" className="pb-2 text-right font-bold">Dépensé</th>
+                    <th scope="col" className="pb-2 text-left font-bold"><T>Moyen</T></th>
+                    <th scope="col" className="pb-2 text-right font-bold"><T>Encaissé</T></th>
+                    <th scope="col" className="pb-2 text-right font-bold"><T>Dépensé</T></th>
                     <th scope="col" className="pb-2 text-right font-bold">Net</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-app-line">
                   {methodRows.map((row) => (
                     <tr key={row.key}>
-                      <th scope="row" className="py-2.5 text-left font-semibold text-app-text-2">{row.label}</th>
+                      <th scope="row" className="py-2.5 text-left font-semibold text-app-text-2"><T>{row.label}</T></th>
                       <td className="py-2.5 text-right tabular-nums text-app-text-2">{num(row.in)}</td>
                       <td className="py-2.5 text-right tabular-nums text-app-text-2">{num(row.out)}</td>
                       <td className="py-2.5 text-right font-bold tabular-nums text-app-text">{signed(row.in - row.out)}</td>
@@ -207,7 +211,7 @@ export default async function CaissePage() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-app-line-strong">
-                    <th scope="row" className="pt-3 text-left font-extrabold text-app-text">Total</th>
+                    <th scope="row" className="pt-3 text-left font-extrabold text-app-text"><T>Total</T></th>
                     <td className="pt-3 text-right font-bold tabular-nums text-app-text">{num(breakdown.totalIn)}</td>
                     <td className="pt-3 text-right font-bold tabular-nums text-app-text">{num(breakdown.totalOut)}</td>
                     <td className="pt-3 text-right font-extrabold tabular-nums text-app-text">{signed(breakdown.totalIn - breakdown.totalOut)}</td>
@@ -220,33 +224,33 @@ export default async function CaissePage() {
           <Surface title="Du solde d'ouverture au solde théorique">
             <dl className="divide-y divide-app-line text-sm">
               <div className="flex items-center justify-between gap-3 py-2.5">
-                <dt className="text-app-muted">Solde d&apos;ouverture{current.openingIsManual ? " (saisi à la main)" : ""}</dt>
+                <dt className="text-app-muted"><T>Solde d&apos;ouverture</T>{current.openingIsManual ? <T>{" (saisi à la main)"}</T> : ""}</dt>
                 <dd className="font-semibold tabular-nums text-app-text">{fmtFcfa(breakdown.openingBalance)}</dd>
               </div>
               <div className="flex items-center justify-between gap-3 py-2.5">
-                <dt className="text-app-muted">Encaissé moins dépensé</dt>
+                <dt className="text-app-muted"><T>Encaissé moins dépensé</T></dt>
                 <dd className="font-semibold tabular-nums text-app-text">{breakdown.totalIn - breakdown.totalOut >= 0 ? "+" : "−"}{fmtFcfa(Math.abs(breakdown.totalIn - breakdown.totalOut))}</dd>
               </div>
               <div className="flex items-center justify-between gap-3 py-2.5">
-                <dt className="text-app-muted">Versements vers la banque</dt>
+                <dt className="text-app-muted"><T>Versements vers la banque</T></dt>
                 <dd className="font-semibold tabular-nums text-app-text">−{fmtFcfa(breakdown.transfersOut)}</dd>
               </div>
               <div className="flex items-center justify-between gap-3 py-2.5">
-                <dt className="text-app-muted">Ajustements et apports</dt>
+                <dt className="text-app-muted"><T>Ajustements et apports</T></dt>
                 <dd className={`font-semibold tabular-nums ${breakdown.corrections < 0 ? "text-app-bad" : "text-app-text"}`}>{breakdown.corrections >= 0 ? "+" : "−"}{fmtFcfa(Math.abs(breakdown.corrections))}</dd>
               </div>
               <div className="flex items-center justify-between gap-3 py-3">
-                <dt className="font-extrabold text-app-text">Solde théorique</dt>
+                <dt className="font-extrabold text-app-text"><T>Solde théorique</T></dt>
                 <dd className="text-base font-extrabold tabular-nums text-app-text">{fmtFcfa(breakdown.theoreticalBalance)}</dd>
               </div>
             </dl>
             <p className="mt-3 rounded-xl bg-app-panel-2 px-3 py-2.5 text-xs text-app-muted">
-              Espèces attendues dans le tiroir : <strong className="tabular-nums text-app-text">{fmtFcfa(breakdown.physicalCashBalance)}</strong> (sans Wave ni Orange Money).
+              <T>Espèces attendues dans le tiroir :</T> <strong className="tabular-nums text-app-text">{fmtFcfa(breakdown.physicalCashBalance)}</strong> <T>(sans Wave ni Orange Money).</T>
             </p>
           </Surface>
 
-          <section aria-label="Clôture" className="flex flex-col gap-2.5">
-            <SectionTitle>Clôture</SectionTitle>
+          <section aria-label={t("Clôture")} className="flex flex-col gap-2.5">
+            <SectionTitle><T>Clôture</T></SectionTitle>
             <CloseCashSessionForm
               theoreticalBalance={breakdown.theoreticalBalance}
               expectedCash={breakdown.physicalCashBalance}
@@ -256,8 +260,8 @@ export default async function CaissePage() {
           </section>
         </div>
 
-        <section aria-label="Activité récente" className="min-w-0">
-          <SectionTitle>Activité récente ({activity.length})</SectionTitle>
+        <section aria-label={t("Activité récente")} className="min-w-0">
+          <SectionTitle><T>Activité récente (</T>{activity.length})</SectionTitle>
           <CashActivityList entries={activity} />
         </section>
       </div>

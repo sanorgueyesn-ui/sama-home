@@ -8,6 +8,7 @@ import { ThemeToggleButton } from "@/components/auth/theme-toggle-button";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { DecorativeBlobs } from "@/components/auth/decorative-blobs";
 import { LoginForm } from "./login-form";
+import { T } from "@/components/i18n/i18n-provider";
 
 const OAUTH_ERRORS: Record<string, string> = {
   google_not_configured:
@@ -76,15 +77,15 @@ export default async function LoginPage(props: {
           <AuthLogo variant="dark" />
 
           <h1 className="mt-10 text-4xl font-extrabold leading-tight text-white">
-            Votre activité,
+            <T>Votre activité,</T>
             <br />
-            en toute simplicité
+            <T>en toute simplicité</T>
           </h1>
           <div className="mt-3 h-1 w-14 rounded-full bg-brand-orange" aria-hidden />
 
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
-            Gérez vos logements, vos réservations, vos clients et vos revenus
-            avec un seul outil, simple et efficace.
+            <T>Gérez vos logements, vos réservations, vos clients et vos revenus
+            avec un seul outil, simple et efficace.</T>
           </p>
 
           <FeatureList />
@@ -111,9 +112,9 @@ export default async function LoginPage(props: {
           </div>
 
           <div className="rounded-3xl bg-surface-raised p-7 shadow-card sm:p-9">
-            <h2 className="text-xl font-extrabold text-fg">Connexion</h2>
+            <h2 className="text-xl font-extrabold text-fg"><T>Connexion</T></h2>
             <p className="mt-1 mb-6 text-sm font-medium text-fg/60">
-              Accédez à votre espace de gestion.
+              <T>Accédez à votre espace de gestion.</T>
             </p>
 
             {isResetSuccess && (
@@ -122,17 +123,17 @@ export default async function LoginPage(props: {
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
                     ✓
                   </span>
-                  <p className="font-extrabold">Mot de passe réinitialisé avec succès</p>
+                  <p className="font-extrabold"><T>Mot de passe réinitialisé avec succès</T></p>
                 </div>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-700/80 dark:text-emerald-300/80">
-                  Votre mot de passe a bien été mis à jour. Vous pouvez maintenant vous connecter à votre compte.
+                  <T>Votre mot de passe a bien été mis à jour. Vous pouvez maintenant vous connecter à votre compte.</T>
                 </p>
               </div>
             )}
 
             {errorMessage && (
               <div role="alert" className="mb-5 rounded-2xl border border-danger/30 bg-danger-bg p-3 text-xs font-semibold text-danger">
-                {errorMessage}
+                <T>{errorMessage}</T>
               </div>
             )}
 
@@ -142,11 +143,11 @@ export default async function LoginPage(props: {
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
                     ✓
                   </span>
-                  <p className="font-extrabold">Compte Google validé : {googleUsername}</p>
+                  <p className="font-extrabold"><T>Compte Google validé :</T> {googleUsername}</p>
                 </div>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-700/80 dark:text-emerald-300/80">
-                  {googleEstablishment ? <>Établissement <strong>« {googleEstablishment} »</strong>. </> : null}
-                  Pour votre sécurité, veuillez saisir votre mot de passe pour accéder à votre espace.
+                  {googleEstablishment ? <><T>Établissement</T> <strong>« {googleEstablishment} »</strong>. </> : null}
+                  <T>Pour votre sécurité, veuillez saisir votre mot de passe pour accéder à votre espace.</T>
                 </p>
               </div>
             )}
@@ -165,18 +166,18 @@ export default async function LoginPage(props: {
 
 
             <p className="mt-6 text-center text-sm font-medium text-fg/60">
-              Pas encore de compte ?{" "}
+              <T>Pas encore de compte ?</T>{" "}
               <Link href="/register" className="font-bold text-fg underline underline-offset-2 hover:no-underline">
-                Créer mon espace
+                <T>Créer mon espace</T>
               </Link>
             </p>
 
             <div className="mt-8 border-t border-border/15 pt-4 text-center">
               <p className="text-[11px] font-bold text-fg/50">
-                SAMA HOME • Édité par <span className="font-extrabold text-fg/80">COMPAGNIE GUEYE TAWFEKH</span>
+                <T>SAMA HOME • Édité par</T> <span className="font-extrabold text-fg/80"><T>COMPAGNIE GUEYE TAWFEKH</T></span>
               </p>
               <p className="mt-0.5 font-mono text-[10px] text-fg/40">
-                NINEA : 012521599 2R1 • RCCM : SN.DKR.2025.A.38803 • Dakar, Sénégal
+                <T>NINEA : 012521599 2R1 • RCCM : SN.DKR.2025.A.38803 • Dakar, Sénégal</T>
               </p>
             </div>
           </div>

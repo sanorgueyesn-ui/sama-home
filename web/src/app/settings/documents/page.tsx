@@ -9,6 +9,8 @@ import { SettingsBlock, SettingsPageHeader } from "../settings-ui";
 import { DocumentThumbnail } from "./document-thumbnail";
 import { ChoosePresentation } from "./choose-presentation";
 import { getSettings } from "@/lib/settings-data";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata = { title: "Documents — SAMA HOME" };
 
@@ -30,7 +32,7 @@ function pick<T extends string>(raw: string | undefined, allowed: readonly T[], 
   return (allowed as readonly string[]).includes(raw ?? "") ? (raw as T) : fallback;
 }
 
-function Pills<T extends string>({
+async function Pills<T extends string>({
   label,
   param,
   values,
@@ -45,9 +47,10 @@ function Pills<T extends string>({
   current: T;
   query: Search;
 }) {
+  const t = await getT();
   return (
-    <nav aria-label={label} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-      <span className="text-xs font-bold text-fg/55 sm:w-14 sm:shrink-0">{label}</span>
+    <nav aria-label={t(label)} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+      <span className="text-xs font-bold text-fg/55 sm:w-14 sm:shrink-0"><T>{label}</T></span>
       <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
       {values.map((value) => {
         const active = value === current;
@@ -61,7 +64,7 @@ function Pills<T extends string>({
               active ? "bg-fg text-surface" : "border border-border/15 bg-surface-raised text-fg/70 hover:text-fg"
             }`}
           >
-            {labels[value]}
+            <T>{labels[value]}</T>
           </Link>
         );
       })}
@@ -74,6 +77,7 @@ const Thumbnail = DocumentThumbnail;
 
 export default async function DocumentsLibraryPage(props: { searchParams: Promise<Search> }) {
   await requireAdmin();
+  const t = await getT();
   const search = await props.searchParams;
   const contractKind = pick<ContractKind>(search.contrat, CONTRACT_KINDS, "LEASE_3Y");
   const ticketKind = pick<TicketKind>(search.ticket, TICKET_KINDS, "PAYMENT");
@@ -102,11 +106,11 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
           <ul className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3">
             {CONTRACT_THEMES.map((theme) => (
               <li key={theme.id}>
-                <Thumbnail src={`${base}?family=contract&theme=${theme.id}&kind=${contractKind}`} title={`Contrat, présentation ${theme.name}`} ratio="aspect-[1/1.414]" />
+                <Thumbnail src={`${base}?family=contract&theme=${theme.id}&kind=${contractKind}`} title={t(`Contrat, présentation ${theme.name}`)} ratio="aspect-[1/1.414]" />
                 <p className="mt-2 text-sm font-bold text-fg">
-                  {theme.id}. {theme.name}
+                  {theme.id}. <T>{theme.name}</T>
                 </p>
-                <p className="text-xs text-fg/55">{theme.description}</p>
+                <p className="text-xs text-fg/55"><T>{theme.description}</T></p>
                 <ChoosePresentation kind="contract" theme={theme.id} paper={null} selected={chosenContract === theme.id} />
               </li>
             ))}
@@ -120,9 +124,9 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
           <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3">
             {CONTRACT_THEMES.map((theme) => (
               <li key={theme.id}>
-                <Thumbnail src={`${base}?family=quittance&theme=${theme.id}`} title={`Quittance, présentation ${theme.name}`} ratio="aspect-[1/1.414]" />
+                <Thumbnail src={`${base}?family=quittance&theme=${theme.id}`} title={t(`Quittance, présentation ${theme.name}`)} ratio="aspect-[1/1.414]" />
                 <p className="mt-2 text-sm font-bold text-fg">
-                  {theme.id}. {theme.name}
+                  {theme.id}. <T>{theme.name}</T>
                 </p>
                 <ChoosePresentation kind="contract" theme={theme.id} paper={null} selected={chosenContract === theme.id} />
               </li>
@@ -140,13 +144,13 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
               <li key={theme.id}>
                 <Thumbnail
                   src={`${base}?family=ticket&theme=${theme.id}&kind=${ticketKind}&width=${width}`}
-                  title={`Ticket, présentation ${theme.name}`}
+                  title={t(`Ticket, présentation ${theme.name}`)}
                   ratio={width === "a4" ? "aspect-[1/1.414]" : "aspect-[1/1.9]"}
                 />
                 <p className="mt-2 text-sm font-bold text-fg">
-                  {theme.id}. {theme.name}
+                  {theme.id}. <T>{theme.name}</T>
                 </p>
-                <p className="text-xs text-fg/55">{theme.description}</p>
+                <p className="text-xs text-fg/55"><T>{theme.description}</T></p>
                 <ChoosePresentation kind="ticket" theme={theme.id} paper={width} selected={chosenTicket === theme.id && chosenPaper === width} />
               </li>
             ))}

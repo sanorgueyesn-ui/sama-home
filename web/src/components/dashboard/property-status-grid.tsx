@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { PropertyPhoto } from "@/app/logements/property-photo";
 import { StatusBadge } from "@/app/logements/status-badge";
 import type { PropertyStatus } from "@/lib/property-status";
+import { T } from "@/components/i18n/i18n-provider";
 
 export type PropertyGridItem = {
   id: string;
@@ -20,7 +21,7 @@ export type PropertyGridItem = {
  */
 export function PropertyStatusGrid({ items }: { items: PropertyGridItem[] }) {
   if (items.length === 0) {
-    return <p className="mt-2.5 text-sm font-medium text-fg/50">Aucun logement enregistré.</p>;
+    return <p className="mt-2.5 text-sm font-medium text-fg/50"><T>Aucun logement enregistré.</T></p>;
   }
   return (
     <div className="mt-2.5 grid grid-cols-4 gap-3">

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveEstablishment } from "@/lib/dal";
 import { chargeKeepsTotalValid, parseCharge } from "@/lib/folio";
 import { getRentalPaymentSummary } from "@/lib/payment-summary";
+import { getT } from "@/lib/i18n/server";
 
 /** `nonce` change à chaque ajout réussi : le formulaire s'en sert comme clé pour se vider. */
 export type FolioState = { error?: string; ok?: boolean; nonce?: string } | undefined;
@@ -17,10 +18,11 @@ class FolioError extends Error {}
  * juste partout (payment-summary lit `Rental.amount`). L'établissement vient de la session.
  */
 export async function addRentalCharge(rentalId: string, _prev: FolioState, formData: FormData): Promise<FolioState> {
+  const t = await getT();
   const access = await requireActiveEstablishment();
-  if (!access.ok) return { error: "Cet établissement ne peut pas enregistrer de nouvelle opération pour le moment." };
+  if (!access.ok) return { error: t("Cet établissement ne peut pas enregistrer de nouvelle opération pour le moment.") };
   const { user } = access;
-  if (!user.establishmentId) return { error: "Votre compte n'est rattaché à aucun établissement." };
+  if (!user.establishmentId) return { error: t("Votre compte n'est rattaché à aucun établissement.") };
   const establishmentId = user.establishmentId;
 
   const parsed = parseCharge({ label: formData.get("label"), amount: formData.get("amount"), reason: formData.get("reason") });
@@ -50,7 +52,7 @@ export async function addRentalCharge(rentalId: string, _prev: FolioState, formD
   } catch (error) {
     if (error instanceof FolioError) return { error: error.message };
     console.error("addRentalCharge() — échec de transaction :", error);
-    return { error: "L'extra n'a pas pu être enregistré. Rien n'a été modifié : réessayez." };
+    return { error: t("L'extra n'a pas pu être enregistré. Rien n'a été modifié : réessayez.") };
   }
 
   revalidatePath(`/locations/${rentalId}`);

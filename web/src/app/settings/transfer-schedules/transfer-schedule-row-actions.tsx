@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateTransferSchedule, deactivateTransferSchedule } from "@/app/actions/bank";
 import type { TransferFrequency } from "@/generated/prisma/client";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const FREQUENCY_OPTIONS: { value: TransferFrequency; label: string }[] = [
   { value: "DAILY", label: "Quotidienne" },
@@ -48,6 +49,7 @@ export function TransferScheduleRowActions({
   active: boolean;
   accounts: { id: string; label: string; bankName: string }[];
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -114,7 +116,7 @@ export function TransferScheduleRowActions({
   }
 
   function handleDeactivate() {
-    if (!confirm("Désactiver cette programmation ? Elle ne générera plus de nouveaux virements.")) return;
+    if (!confirm(t("Désactiver cette programmation ? Elle ne générera plus de nouveaux virements."))) return;
     setError(null);
     startTransition(async () => {
       const result = await deactivateTransferSchedule(id);
@@ -136,7 +138,7 @@ export function TransferScheduleRowActions({
       <div className="flex flex-col gap-2.5 py-1">
         <div>
           <label htmlFor={`account-${id}`} className="mb-1 block text-xs font-bold text-fg">
-            Compte bancaire
+            <T>Compte bancaire</T>
           </label>
           <select
             id={`account-${id}`}
@@ -144,23 +146,23 @@ export function TransferScheduleRowActions({
             onChange={(e) => setEditAccountId(e.target.value)}
             className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
-            <option value="">Sélectionner un compte...</option>
+            <option value=""><T>Sélectionner un compte...</T></option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.label} · {a.bankName}
+                <T>{a.label}</T> · {a.bankName}
               </option>
             ))}
           </select>
           {!accountStillActive ? (
             <p className="mt-1 text-[11px] font-medium text-warning">
-              Le compte actuel a été désactivé — choisissez un compte actif pour enregistrer.
+              <T>Le compte actuel a été désactivé — choisissez un compte actif pour enregistrer.</T>
             </p>
           ) : null}
         </div>
 
         <div>
           <label htmlFor={`frequency-${id}`} className="mb-1 block text-xs font-bold text-fg">
-            Fréquence
+            <T>Fréquence</T>
           </label>
           <select
             id={`frequency-${id}`}
@@ -170,14 +172,14 @@ export function TransferScheduleRowActions({
           >
             {FREQUENCY_OPTIONS.map((f) => (
               <option key={f.value} value={f.value}>
-                {f.label}
+                <T>{f.label}</T>
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-bold text-fg">Type de montant</label>
+          <label className="mb-1 block text-xs font-bold text-fg"><T>Type de montant</T></label>
           <div className="flex gap-2">
             <button
               type="button"
@@ -185,7 +187,7 @@ export function TransferScheduleRowActions({
               aria-pressed={editAmountType === "FIXED"}
               className={`h-10 flex-1 rounded-lg border text-xs font-extrabold ${editAmountType === "FIXED" ? "border-navy bg-navy text-white" : "border-border/15 text-fg"}`}
             >
-              Montant fixe
+              <T>Montant fixe</T>
             </button>
             <button
               type="button"
@@ -193,7 +195,7 @@ export function TransferScheduleRowActions({
               aria-pressed={editAmountType === "PERCENTAGE"}
               className={`h-10 flex-1 rounded-lg border text-xs font-extrabold ${editAmountType === "PERCENTAGE" ? "border-navy bg-navy text-white" : "border-border/15 text-fg"}`}
             >
-              Pourcentage
+              <T>Pourcentage</T>
             </button>
           </div>
         </div>
@@ -201,7 +203,7 @@ export function TransferScheduleRowActions({
         {editAmountType === "FIXED" ? (
           <div>
             <label htmlFor={`fixed-${id}`} className="mb-1 block text-xs font-bold text-fg">
-              Montant (FCFA)
+              <T>Montant (FCFA)</T>
             </label>
             <input
               id={`fixed-${id}`}
@@ -215,7 +217,7 @@ export function TransferScheduleRowActions({
         ) : (
           <div>
             <label htmlFor={`pct-${id}`} className="mb-1 block text-xs font-bold text-fg">
-              Pourcentage (%)
+              <T>Pourcentage (%)</T>
             </label>
             <input
               id={`pct-${id}`}
@@ -227,14 +229,14 @@ export function TransferScheduleRowActions({
               className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
             <p className="mt-1 text-[11px] font-medium text-fg/40">
-              Calculé sur le solde théorique disponible au moment de la génération, plafonné au disponible.
+              <T>Calculé sur le solde théorique disponible au moment de la génération, plafonné au disponible.</T>
             </p>
           </div>
         )}
 
         <div>
           <label htmlFor={`next-${id}`} className="mb-1 block text-xs font-bold text-fg">
-            Prochaine génération
+            <T>Prochaine génération</T>
           </label>
           <input
             id={`next-${id}`}
@@ -245,7 +247,7 @@ export function TransferScheduleRowActions({
           />
         </div>
 
-        {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
 
         <div className="flex gap-2">
           <button
@@ -254,7 +256,7 @@ export function TransferScheduleRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
-            Annuler
+            <T>Annuler</T>
           </button>
           <button
             type="button"
@@ -262,7 +264,7 @@ export function TransferScheduleRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
-            {pending ? "..." : "Enregistrer"}
+            {pending ? "..." : <T>{"Enregistrer"}</T>}
           </button>
         </div>
       </div>
@@ -278,7 +280,7 @@ export function TransferScheduleRowActions({
           onClick={() => setEditing(true)}
           className="h-8 rounded-lg border border-border/15 px-2.5 text-[11px] font-bold text-fg disabled:opacity-60"
         >
-          Modifier
+          <T>Modifier</T>
         </button>
         {active ? (
           <button
@@ -287,11 +289,11 @@ export function TransferScheduleRowActions({
             onClick={handleDeactivate}
             className="h-8 rounded-lg bg-danger-bg px-2.5 text-[11px] font-bold text-danger disabled:opacity-60"
           >
-            Désactiver
+            <T>Désactiver</T>
           </button>
         ) : null}
       </div>
-      {error ? <p className="max-w-56 text-right text-[10.5px] font-medium text-danger">{error}</p> : null}
+      {error ? <p className="max-w-56 text-right text-[10.5px] font-medium text-danger"><T>{error}</T></p> : null}
     </div>
   );
 }

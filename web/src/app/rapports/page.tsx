@@ -10,6 +10,9 @@ import {
   trendMax,
   type Share,
 } from "@/lib/reports-metrics";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +27,7 @@ function fmtVariation(variation: number | null) {
 }
 
 function periodTitle(report: Report) {
-  const fmt = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
+  const fmt = new Intl.DateTimeFormat(dateLocale(), { month: "long", year: "numeric" });
   if (report.period === "year") return String(report.range.gte.getFullYear());
   const label = fmt.format(report.range.gte);
   return label.charAt(0).toUpperCase() + label.slice(1);
@@ -32,8 +35,8 @@ function periodTitle(report: Report) {
 
 function bucketLabel(report: Report, date: Date) {
   return report.range.granularity === "day"
-    ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(date)
-    : new Intl.DateTimeFormat("fr-FR", { month: "long" }).format(date);
+    ? new Intl.DateTimeFormat(dateLocale(), { day: "numeric", month: "short" }).format(date)
+    : new Intl.DateTimeFormat(dateLocale(), { month: "long" }).format(date);
 }
 
 function KpiTile({
@@ -50,9 +53,9 @@ function KpiTile({
   const valueTone = tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : "text-fg";
   return (
     <div className="min-w-0 rounded-2xl border border-border/10 bg-surface-raised px-3 py-3.5 shadow-card sm:px-4">
-      <p className="truncate text-[10px] font-bold uppercase tracking-wide text-fg/50">{label}</p>
+      <p className="truncate text-[10px] font-bold uppercase tracking-wide text-fg/50"><T>{label}</T></p>
       <p className={`mt-1 break-words text-base font-extrabold leading-tight sm:text-xl ${valueTone}`}>{value}</p>
-      <p className="mt-1 text-[11px] font-medium leading-snug text-fg/50">{sub}</p>
+      <p className="mt-1 text-[11px] font-medium leading-snug text-fg/50"><T>{sub}</T></p>
     </div>
   );
 }
@@ -60,15 +63,15 @@ function KpiTile({
 function ShareList({ title, rows, emptyText }: { title: string; rows: Share[]; emptyText: string }) {
   return (
     <Card className="px-4 pb-3">
-      <p className="pt-3 text-[11px] font-bold uppercase text-fg/50">{title}</p>
+      <p className="pt-3 text-[11px] font-bold uppercase text-fg/50"><T>{title}</T></p>
       {rows.length === 0 ? (
-        <p className="py-4 text-sm font-medium text-fg/50">{emptyText}</p>
+        <p className="py-4 text-sm font-medium text-fg/50"><T>{emptyText}</T></p>
       ) : (
         <ul className="mt-1">
           {rows.map((row) => (
             <li key={row.key} className="border-b border-border/10 py-2.5 last:border-0">
               <div className="flex items-center justify-between gap-3">
-                <span className="truncate text-sm font-semibold text-fg">{row.label}</span>
+                <span className="truncate text-sm font-semibold text-fg"><T>{row.label}</T></span>
                 <span className="shrink-0 text-sm font-bold text-fg">{fmtFcfa(row.amount)}</span>
               </div>
               <div className="mt-1.5 flex items-center gap-2">
@@ -85,7 +88,8 @@ function ShareList({ title, rows, emptyText }: { title: string; rows: Share[]; e
   );
 }
 
-function TrendChart({ report }: { report: Report }) {
+async function TrendChart({ report }: { report: Report }) {
+  const t = await getT();
   const max = trendMax(report.trend);
   const hasData = report.trend.some((point) => point.revenue > 0 || point.expense > 0);
   const summary = `Recettes et dépenses ${periodTitle(report)} : ${fmtFcfa(report.revenue.total)} de recettes, ${fmtFcfa(report.expenses.total)} de dépenses.`;
@@ -94,36 +98,36 @@ function TrendChart({ report }: { report: Report }) {
     <Card className="px-4 pb-4">
       <div className="flex flex-wrap items-center justify-between gap-2 pt-3">
         <p className="text-[11px] font-bold uppercase text-fg/50">
-          Recettes et dépenses {report.range.granularity === "day" ? "par jour" : "par mois"}
+          <T>Recettes et dépenses</T> {report.range.granularity === "day" ? <T>{"par jour"}</T> : <T>{"par mois"}</T>}
         </p>
         <div className="flex items-center gap-3 text-[11px] font-semibold text-fg/60">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-success" aria-hidden />
-            {report.isAgency ? "Loyers" : "Recettes"}
+            {report.isAgency ? <T>{"Loyers"}</T> : <T>{"Recettes"}</T>}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-danger" aria-hidden />
-            Dépenses
+            <T>Dépenses</T>
           </span>
         </div>
       </div>
 
       {!hasData ? (
         <p className="py-10 text-center text-sm font-medium text-fg/50">
-          Aucun mouvement sur cette période.
+          <T>Aucun mouvement sur cette période.</T>
         </p>
       ) : (
         <>
           <div
             role="img"
-            aria-label={summary}
+            aria-label={t(summary)}
             className="mt-4 flex h-40 items-end gap-[3px] sm:gap-1"
           >
             {report.trend.map((point) => (
               <div
                 key={point.start.toISOString()}
                 className="flex h-full min-w-0 flex-1 items-end justify-center gap-px"
-                title={`${bucketLabel(report, point.start)} — recettes ${fmtFcfa(point.revenue)}, dépenses ${fmtFcfa(point.expense)}`}
+                title={t(`${bucketLabel(report, point.start)} — recettes ${fmtFcfa(point.revenue)}, dépenses ${fmtFcfa(point.expense)}`)}
               >
                 <div
                   className="w-full max-w-3 rounded-t-sm bg-success"
@@ -144,7 +148,7 @@ function TrendChart({ report }: { report: Report }) {
       )}
       {report.trendTruncated ? (
         <p className="mt-2 text-[11px] font-medium text-fg/50">
-          Le graphique est limité aux premiers mouvements de la période. Les totaux restent exacts.
+          <T>Le graphique est limité aux premiers mouvements de la période. Les totaux restent exacts.</T>
         </p>
       ) : null}
     </Card>
@@ -154,6 +158,7 @@ function TrendChart({ report }: { report: Report }) {
 export default async function ReportsPage(props: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const t = await getT();
   const { period: rawPeriod } = await props.searchParams;
   const period = parseReportPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod);
   const report = await getReport(period);
@@ -167,13 +172,13 @@ export default async function ReportsPage(props: {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div>
-        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Rapports</h1>
+        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]"><T>Rapports</T></h1>
         <p className="mt-0.5 text-sm font-medium text-fg/60">
           {report.spaceName} · {periodTitle(report)}
         </p>
       </div>
 
-      <nav aria-label="Période du rapport" className="mt-4 flex gap-2 overflow-x-auto">
+      <nav aria-label={t("Période du rapport")} className="mt-4 flex gap-2 overflow-x-auto">
         {REPORT_PERIODS.map((value) => {
           const active = value === report.period;
           return (
@@ -187,7 +192,7 @@ export default async function ReportsPage(props: {
                   : "border border-border/10 bg-surface-raised text-fg/70"
               }`}
             >
-              {REPORT_PERIOD_LABELS[value]}
+              <T>{REPORT_PERIOD_LABELS[value]}</T>
             </Link>
           );
         })}
@@ -278,16 +283,16 @@ export default async function ReportsPage(props: {
           <div className="flex items-start justify-between gap-3 pt-3">
             <div>
               <p id="soldes" className="text-[11px] font-bold uppercase text-fg/50">
-                Soldes à recouvrer aujourd&apos;hui
+                <T>Soldes à recouvrer aujourd&apos;hui</T>
               </p>
               <p className="mt-0.5 text-[11px] font-medium text-fg/50">
-                Situation actuelle des séjours en cours, indépendante de la période choisie.
+                <T>Situation actuelle des séjours en cours, indépendante de la période choisie.</T>
               </p>
             </div>
             <p className="shrink-0 text-base font-extrabold text-fg">{fmtFcfa(report.receivables.total)}</p>
           </div>
           {report.receivables.top.length === 0 ? (
-            <p className="py-4 text-sm font-medium text-fg/50">Aucun solde à recouvrer.</p>
+            <p className="py-4 text-sm font-medium text-fg/50"><T>Aucun solde à recouvrer.</T></p>
           ) : (
             <ul className="mt-2">
               {report.receivables.top.map((row) => (
@@ -310,7 +315,7 @@ export default async function ReportsPage(props: {
           )}
           {report.receivables.count > report.receivables.top.length ? (
             <p className="pt-2 text-[11px] font-medium text-fg/50">
-              {report.receivables.count} séjours ont un solde ; les {report.receivables.top.length} plus importants sont listés.
+              {report.receivables.count} <T>séjours ont un solde ; les</T> {report.receivables.top.length} <T>plus importants sont listés.</T>
             </p>
           ) : null}
         </Card>

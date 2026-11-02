@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { canCreateSpace } from "@/lib/space-creation";
 import { AddSpaceForm } from "./add-space-form";
+import { T } from "@/components/i18n/i18n-provider";
 
 export const metadata = { title: "Ajouter un espace — SAMA HOME" };
 
@@ -19,17 +20,17 @@ export default async function NewSpacePage() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-10">
       <header>
-        <h1 className="text-2xl font-black">Ajouter un espace professionnel</h1>
+        <h1 className="text-2xl font-black"><T>Ajouter un espace professionnel</T></h1>
         <p className="mt-1 text-sm text-fg/70">
-          Chaque espace a ses propres données, son mode et son abonnement. Les données de votre espace actuel ne sont ni
-          copiées ni modifiées.
+          <T>Chaque espace a ses propres données, son mode et son abonnement. Les données de votre espace actuel ne sont ni
+          copiées ni modifiées.</T>
         </p>
       </header>
       {check.allowed ? (
         <AddSpaceForm />
       ) : (
         <p role="status" className="rounded-xl border border-fg/15 bg-surface-raised px-4 py-3 text-sm">
-          {check.message}
+          <T>{check.message}</T>
         </p>
       )}
     </main>

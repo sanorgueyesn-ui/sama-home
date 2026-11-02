@@ -6,6 +6,7 @@ import { updateProperty } from "@/app/actions/properties";
 import { DeletePropertyButton } from "../delete-property-button";
 import { getCurrentUser } from "@/lib/dal";
 import { hasEstablishmentPermission } from "@/lib/permissions";
+import { T } from "@/components/i18n/i18n-provider";
 
 export default async function EditPropertyPage(props: PageProps<"/logements/[id]/edit">) {
   const { id } = await props.params;
@@ -45,9 +46,9 @@ export default async function EditPropertyPage(props: PageProps<"/logements/[id]
         {canDeleteProperty ? (
           <div className="rounded-2xl border border-danger/20 bg-danger/5 p-4 sm:p-5">
             <div className="mb-3">
-              <h2 className="text-sm font-black text-app-bad uppercase tracking-wide">Supprimer ce logement</h2>
+              <h2 className="text-sm font-black text-app-bad uppercase tracking-wide"><T>Supprimer ce logement</T></h2>
               <p className="mt-1 text-xs text-fg/60">
-                Supprime définitivement ce logement ainsi que ses tarifs et historiques associés.
+                <T>Supprime définitivement ce logement ainsi que ses tarifs et historiques associés.</T>
               </p>
             </div>
             <DeletePropertyButton id={property.id} name={property.name} />

@@ -16,6 +16,7 @@ import {
 } from "@/lib/guest-info";
 import { SettingsSection } from "./settings-ui";
 import { SettingsTabPanel, SettingsTabs, type SettingsTab } from "./settings-tabs";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 type TabId = "identite" | "contrats" | "messages";
 
@@ -192,14 +193,14 @@ function TestSend({ message, defaultPhone, idPrefix }: { message: string; defaul
   const link = buildTestWhatsAppLink(phone, message);
   return (
     <div className="mt-4 rounded-xl border border-border/15 bg-surface p-4">
-      <p className="text-sm font-bold text-fg">Tester ce message</p>
+      <p className="text-sm font-bold text-fg"><T>Tester ce message</T></p>
       <p className="mt-0.5 text-xs text-fg/55">
-        Recevez-le sur votre WhatsApp pour voir exactement ce que verra votre client. Rien n&apos;est envoyé à un client.
+        <T>Recevez-le sur votre WhatsApp pour voir exactement ce que verra votre client. Rien n&apos;est envoyé à un client.</T>
       </p>
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:w-56">
           <label htmlFor={`${idPrefix}-test-phone`} className="mb-1.5 block text-xs font-bold text-fg">
-            Votre numéro WhatsApp
+            <T>Votre numéro WhatsApp</T>
           </label>
           {/* Hors du formulaire enregistré : ce champ n'a pas de `name`, il n'est jamais envoyé au serveur. */}
           <input
@@ -221,11 +222,11 @@ function TestSend({ message, defaultPhone, idPrefix }: { message: string; defaul
             rel="noopener noreferrer"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 text-sm font-extrabold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
           >
-            Envoyer le test sur WhatsApp
+            <T>Envoyer le test sur WhatsApp</T>
           </a>
         ) : (
           <span aria-disabled="true" className="inline-flex h-11 cursor-not-allowed items-center justify-center rounded-xl bg-fg/10 px-5 text-sm font-extrabold text-fg/45">
-            Envoyer le test sur WhatsApp
+            <T>Envoyer le test sur WhatsApp</T>
           </span>
         )}
       </div>
@@ -250,11 +251,12 @@ function WhatsAppText({ text }: { text: string }) {
 
 /** En-tête de vos contrats tel qu'il sera lu par vos clients : se met à jour à chaque frappe. */
 function DocumentPreview({ draft, logo }: { draft: Draft; logo: string | null }) {
+  const t = useT();
   const name = draft.establishmentName.trim();
   const phones = [draft.phone.trim(), draft.secondaryPhone.trim()].filter(Boolean).join(" · ");
   return (
-    <section aria-label="Aperçu de l'en-tête de vos documents" className="rounded-2xl border border-border/15 bg-surface-raised p-5 shadow-card">
-      <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-fg/45">Aperçu sur vos contrats</p>
+    <section aria-label={t("Aperçu de l'en-tête de vos documents")} className="rounded-2xl border border-border/15 bg-surface-raised p-5 shadow-card">
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-fg/45"><T>Aperçu sur vos contrats</T></p>
       <div className="flex flex-col items-stretch gap-3 rounded-xl border border-border/15 bg-surface p-4 sm:flex-row sm:items-start sm:gap-4 lg:flex-col lg:items-stretch lg:gap-3">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -265,9 +267,9 @@ function DocumentPreview({ draft, logo }: { draft: Draft; logo: string | null })
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <p className={`truncate text-base font-extrabold ${name ? "text-fg" : "text-fg/30"}`}>{name || "Nom de votre établissement"}</p>
-          <p className={`mt-0.5 text-sm ${draft.address.trim() ? "text-fg/70" : "text-fg/30"}`}>{draft.address.trim() || "Adresse"}</p>
-          <p className={`mt-0.5 text-sm ${phones ? "text-fg/70" : "text-fg/30"}`}>{phones || "Téléphone"}</p>
+          <p className={`truncate text-base font-extrabold ${name ? "text-fg" : "text-fg/30"}`}>{name || <T>{"Nom de votre établissement"}</T>}</p>
+          <p className={`mt-0.5 text-sm ${draft.address.trim() ? "text-fg/70" : "text-fg/30"}`}>{draft.address.trim() || <T>{"Adresse"}</T>}</p>
+          <p className={`mt-0.5 text-sm ${phones ? "text-fg/70" : "text-fg/30"}`}>{phones || <T>{"Téléphone"}</T>}</p>
           {draft.email.trim() ? <p className="mt-0.5 truncate text-sm text-fg/70">{draft.email.trim()}</p> : null}
         </div>
       </div>
@@ -276,6 +278,7 @@ function DocumentPreview({ draft, logo }: { draft: Draft; logo: string | null })
 }
 
 export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValues?: DefaultValues; guestInfo?: GuestInfoSettings | null }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(updateSettings, undefined);
   // Valeurs de départ figées une fois (le `key` de la page remonte le formulaire après un enregistrement).
   const [initial] = useState<Draft>(() => toDraft(defaultValues, guestInfo));
@@ -452,15 +455,15 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
 
           <div>
             <label htmlFor="logo" className="mb-2 block text-xs font-bold text-fg">
-              Logo de l&apos;établissement<span className="ml-1 font-medium text-fg/40">(optionnel)</span>
+              <T>Logo de l&apos;établissement</T><span className="ml-1 font-medium text-fg/40">(optionnel)</span>
             </label>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               {previewToShow ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={previewToShow} alt="Aperçu du logo" className="h-20 w-20 shrink-0 rounded-xl border border-border/15 bg-surface-sunken object-contain p-2" />
+                <img src={previewToShow} alt={t("Aperçu du logo")} className="h-20 w-20 shrink-0 rounded-xl border border-border/15 bg-surface-sunken object-contain p-2" />
               ) : (
                 <span aria-hidden className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-border/30 text-xs font-semibold text-fg/40">
-                  Aucun logo
+                  <T>Aucun logo</T>
                 </span>
               )}
               <div className="min-w-0 flex-1">
@@ -472,7 +475,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   onChange={handleFileChange}
                   className="block w-full text-sm text-fg file:mr-3 file:h-10 file:rounded-lg file:border-0 file:bg-surface-sunken file:px-4 file:text-sm file:font-bold file:text-fg"
                 />
-                <p className="mt-1.5 text-xs text-fg/50">JPEG, PNG ou WebP, 5 Mo maximum. Réutilisé sur le contrat de location PDF.</p>
+                <p className="mt-1.5 text-xs text-fg/50"><T>JPEG, PNG ou WebP, 5 Mo maximum. Réutilisé sur le contrat de location PDF.</T></p>
                 {currentLogo && !newLogoPreview ? (
                   <label className="mt-2 flex items-center gap-2 text-sm font-semibold text-fg">
                     <input
@@ -482,14 +485,14 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                       onChange={(e) => setRemoveLogo(e.target.checked)}
                       className="h-4 w-4 accent-navy"
                     />
-                    Retirer le logo actuel
+                    <T>Retirer le logo actuel</T>
                   </label>
                 ) : null}
               </div>
             </div>
             {errors?.logoUrl?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
+                <T>{error}</T>
               </p>
             ))}
           </div>
@@ -520,8 +523,8 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
           <div className="sm:col-span-2">
             <Field id="address" label="Adresse" type="text" required maxLength={240} autoComplete="street-address" defaultValue={defaultValues?.address} errors={errors?.address} />
           </div>
-          <Field id="ninea" label="NINEA" type="text" maxLength={20} placeholder="Ex. 012521599" hint="Imprimé sur vos contrats, quittances et tickets." defaultValue={defaultValues?.ninea ?? undefined} errors={errors?.ninea} />
-          <Field id="rccm" label="RCCM" type="text" maxLength={40} placeholder="Ex. SN.DKR.2025.A.12345" defaultValue={defaultValues?.rccm ?? undefined} errors={errors?.rccm} />
+          <Field id="ninea" label="NINEA" type="text" maxLength={20} placeholder={t("Ex. 012521599")} hint="Imprimé sur vos contrats, quittances et tickets." defaultValue={defaultValues?.ninea ?? undefined} errors={errors?.ninea} />
+          <Field id="rccm" label="RCCM" type="text" maxLength={40} placeholder={t("Ex. SN.DKR.2025.A.12345")} defaultValue={defaultValues?.rccm ?? undefined} errors={errors?.rccm} />
           <div className="sm:col-span-2">
             <Field id="email" label="Email" type="email" maxLength={180} autoComplete="email" defaultValue={defaultValues?.email ?? undefined} errors={errors?.email} />
           </div>
@@ -551,7 +554,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
       <SettingsSection title="Contrats" description="Quand le contrat de bail et la pièce d'identité sont demandés.">
         <div>
           <label htmlFor="contractThresholdDays" className="mb-1.5 block text-xs font-bold text-fg">
-            À partir de combien de jours ?
+            <T>À partir de combien de jours ?</T>
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -567,11 +570,11 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
             <span className="text-sm text-fg/60">jours</span>
           </div>
           <p className="mt-1.5 text-xs text-fg/50">
-            Par défaut : 2 jours. Pour une nuit seule ou un passage à l&apos;heure, l&apos;enregistrement se fait directement, sans contrat.
+            <T>Par défaut : 2 jours. Pour une nuit seule ou un passage à l&apos;heure, l&apos;enregistrement se fait directement, sans contrat.</T>
           </p>
           {errors?.contractThresholdDays?.map((error) => (
             <p key={error} className="mt-1 text-xs font-medium text-danger">
-              {error}
+              <T>{error}</T>
             </p>
           ))}
         </div>
@@ -585,7 +588,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
       >
         <div className="flex flex-col gap-6">
           <div>
-            <p className="mb-2 text-xs font-bold text-fg">1. Choisissez un modèle</p>
+            <p className="mb-2 text-xs font-bold text-fg"><T>1. Choisissez un modèle</T></p>
             <ul className="flex flex-wrap gap-2">
               {MESSAGE_MODELS.map((model) => (
                 <li key={model.id}>
@@ -594,7 +597,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                     onClick={() => applyModel(model.text)}
                     className="inline-flex h-11 items-center rounded-xl border border-border/20 bg-surface px-5 text-sm font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange"
                   >
-                    {model.label}
+                    <T>{model.label}</T>
                   </button>
                 </li>
               ))}
@@ -603,7 +606,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
 
           <div>
             <label htmlFor="whatsappTemplate" className="mb-1.5 block text-xs font-bold text-fg">
-              2. Modifiez le texte si vous le souhaitez
+              <T>2. Modifiez le texte si vous le souhaitez</T>
             </label>
             <textarea
               id="whatsappTemplate"
@@ -611,20 +614,20 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
               ref={templateRef}
               rows={4}
               maxLength={2000}
-              placeholder="Ex : Bienvenue chez nous ! Merci pour votre confiance."
+              placeholder={t("Ex : Bienvenue chez nous ! Merci pour votre confiance.")}
               defaultValue={defaultValues?.whatsappTemplate ?? DEFAULT_WHATSAPP_TEMPLATE}
               className="w-full rounded-xl border border-border/20 bg-surface p-3 text-sm leading-relaxed text-fg outline-none focus:border-brand-orange"
             />
             {errors?.whatsappTemplate?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
+                <T>{error}</T>
               </p>
             ))}
           </div>
 
           {guestInfo ? (
             <fieldset className="flex flex-col gap-4">
-              <legend className="mb-1 text-xs font-bold text-fg">3. Wi-Fi de votre établissement</legend>
+              <legend className="mb-1 text-xs font-bold text-fg"><T>3. Wi-Fi de votre établissement</T></legend>
               <input type="hidden" name="guestInfoSection" value="1" />
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Field
@@ -633,7 +636,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   type="text"
                   maxLength={GUEST_INFO_LIMITS.wifiName}
                   autoComplete="off"
-                  placeholder="Ex : Teranga-Almadies"
+                  placeholder={t("Ex : Teranga-Almadies")}
                   defaultValue={guestInfo.wifiName ?? undefined}
                   errors={errors?.guestWifiName}
                 />
@@ -644,7 +647,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   maxLength={GUEST_INFO_LIMITS.wifiPassword}
                   autoComplete="off"
                   spellCheck={false}
-                  placeholder="Ex : bienvenue2026"
+                  placeholder={t("Ex : bienvenue2026")}
                   hint="Laissez vide si le réseau est ouvert."
                   defaultValue={guestInfo.wifiPassword ?? undefined}
                   errors={errors?.guestWifiPassword}
@@ -654,13 +657,13 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
           ) : null}
 
           <div>
-            <p className="mb-2 text-xs font-bold text-fg">Aperçu : ce que votre client reçoit</p>
+            <p className="mb-2 text-xs font-bold text-fg"><T>Aperçu : ce que votre client reçoit</T></p>
             <div className="max-w-md rounded-2xl rounded-tl-sm border border-success/25 bg-success/10 p-4 text-sm leading-relaxed text-fg">
               <p className="whitespace-pre-line">
                 <WhatsAppText text={whatsappPreview} />
               </p>
             </div>
-            <p className="mt-1.5 text-xs text-fg/45">Exemple avec un client et un séjour fictifs.</p>
+            <p className="mt-1.5 text-xs text-fg/45"><T>Exemple avec un client et un séjour fictifs.</T></p>
           </div>
         </div>
       </SettingsSection>
@@ -671,12 +674,12 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
         className="mt-4 rounded-2xl border border-border/15 bg-surface-raised shadow-card"
       >
         <summary className="flex min-h-12 cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3 text-sm font-bold text-fg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-orange">
-          <span>Plus d&apos;options</span>
-          <span className="text-xs font-medium text-fg/50">Informations à insérer, télévision, climatisation, règles, QR code, test d&apos;envoi</span>
+          <span><T>Plus d&apos;options</T></span>
+          <span className="text-xs font-medium text-fg/50"><T>Informations à insérer, télévision, climatisation, règles, QR code, test d&apos;envoi</T></span>
         </summary>
         <div className="flex flex-col gap-6 border-t border-border/10 p-5">
           <div>
-            <p className="mb-2 text-xs font-bold text-fg">Insérer une information dans le texte</p>
+            <p className="mb-2 text-xs font-bold text-fg"><T>Insérer une information dans le texte</T></p>
             <ul className="flex flex-wrap gap-2">
               {VARIABLES.map((variable) => (
                 <li key={variable.token}>
@@ -685,15 +688,15 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                     onClick={() => insertVariable(variable.token)}
                     className="inline-flex h-9 items-center rounded-full border border-border/20 bg-surface px-3 text-xs font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange"
                   >
-                    + {variable.label}
+                    + <T>{variable.label}</T>
                   </button>
                 </li>
               ))}
             </ul>
             <p className="mt-2 text-xs text-fg/50">
               {usesVariables
-                ? "Vous utilisez des informations insérées : seul votre texte est envoyé, rien n'est ajouté automatiquement."
-                : "Sans information insérée, le nom du client est ajouté au début et les détails du séjour (logement, arrivée, départ, montant) à la suite."}
+                ? <T>{"Vous utilisez des informations insérées : seul votre texte est envoyé, rien n'est ajouté automatiquement."}</T>
+                : <T>{"Sans information insérée, le nom du client est ajouté au début et les détails du séjour (logement, arrivée, départ, montant) à la suite."}</T>}
             </p>
             <TestSend message={whatsappPreview} defaultPhone={draft.phone} idPrefix="confirmation" />
           </div>
@@ -701,9 +704,9 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
           {guestInfo ? (
             <>
               <div className="border-t border-border/10 pt-6">
-                <p className="text-sm font-bold text-fg">Informations pratiques pour vos clients</p>
+                <p className="text-sm font-bold text-fg"><T>Informations pratiques pour vos clients</T></p>
                 <p className="mt-1 text-xs text-fg/55">
-                  Renseignez-les une fois, puis envoyez-les par WhatsApp depuis la fiche d&apos;une location. Seuls les champs remplis sont envoyés.
+                  <T>Renseignez-les une fois, puis envoyez-les par WhatsApp depuis la fiche d&apos;une location. Seuls les champs remplis sont envoyés.</T>
                 </p>
               </div>
 
@@ -712,23 +715,23 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   <svg
                     viewBox={`0 0 ${wifiQr.view} ${wifiQr.view}`}
                     role="img"
-                    aria-label={`QR code de connexion au réseau ${draft.guestWifiName}`}
+                    aria-label={t(`QR code de connexion au réseau ${draft.guestWifiName}`)}
                     className="h-36 w-36 shrink-0 rounded-lg bg-white"
                   >
                     <path d={wifiQr.path} fill="#000000" />
                   </svg>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-fg">QR code du Wi-Fi</p>
+                    <p className="text-sm font-bold text-fg"><T>QR code du Wi-Fi</T></p>
                     <p className="mt-1 text-xs leading-relaxed text-fg/60">
-                      Imprimez-le et affichez-le dans la chambre ou à la réception : le client le scanne et se connecte, sans rien taper. Il se met à jour tout seul
-                      quand vous changez le nom ou le mot de passe.
+                      <T>Imprimez-le et affichez-le dans la chambre ou à la réception : le client le scanne et se connecte, sans rien taper. Il se met à jour tout seul
+                      quand vous changez le nom ou le mot de passe.</T>
                     </p>
                     <a
                       href={wifiQr.downloadHref}
                       download="wifi-qr-code.svg"
                       className="mt-3 inline-flex h-11 items-center rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange"
                     >
-                      Télécharger le QR code
+                      <T>Télécharger le QR code</T>
                     </a>
                   </div>
                 </div>
@@ -739,7 +742,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   id="guestTvInstructions"
                   label="Télévision"
                   maxLength={GUEST_INFO_LIMITS.instructions}
-                  placeholder="Ex : Allumez avec le bouton rouge de la télécommande noire, puis changez de chaîne avec ▲ et ▼."
+                  placeholder={t("Ex : Allumez avec le bouton rouge de la télécommande noire, puis changez de chaîne avec ▲ et ▼.")}
                   hint="Comment l'allumer et changer de chaîne."
                   defaultValue={guestInfo.tvInstructions ?? undefined}
                   errors={errors?.guestTvInstructions}
@@ -748,7 +751,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   id="guestAcInstructions"
                   label="Climatisation"
                   maxLength={GUEST_INFO_LIMITS.instructions}
-                  placeholder="Ex : Appuyez sur ON/OFF, réglez entre 22 et 24 °C avec + et −. Pensez à fermer les fenêtres."
+                  placeholder={t("Ex : Appuyez sur ON/OFF, réglez entre 22 et 24 °C avec + et −. Pensez à fermer les fenêtres.")}
                   hint="Comment l'allumer et régler la température."
                   defaultValue={guestInfo.acInstructions ?? undefined}
                   errors={errors?.guestAcInstructions}
@@ -760,7 +763,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                 label="Départ"
                 type="text"
                 maxLength={GUEST_INFO_LIMITS.checkoutTime}
-                placeholder="Ex : Départ avant 11 h, clé à la réception."
+                placeholder={t("Ex : Départ avant 11 h, clé à la réception.")}
                 defaultValue={guestInfo.checkoutTime ?? undefined}
                 errors={errors?.guestCheckoutTime}
               />
@@ -770,7 +773,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   id="guestHouseRules"
                   label="Règles de la maison"
                   maxLength={GUEST_INFO_LIMITS.houseRules}
-                  placeholder="Ex : Pas de fête après 22 h. Non-fumeur à l'intérieur."
+                  placeholder={t("Ex : Pas de fête après 22 h. Non-fumeur à l'intérieur.")}
                   defaultValue={guestInfo.houseRules ?? undefined}
                   errors={errors?.guestHouseRules}
                 />
@@ -778,7 +781,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   id="guestExtraInfo"
                   label="Autres informations utiles"
                   maxLength={GUEST_INFO_LIMITS.extraInfo}
-                  placeholder="Ex : En cas de coupure d'électricité ou d'eau, appelez la réception. Parking devant l'immeuble."
+                  placeholder={t("Ex : En cas de coupure d'électricité ou d'eau, appelez la réception. Parking devant l'immeuble.")}
                   hint="Électricité, eau, parking, adresses utiles…"
                   defaultValue={guestInfo.extraInfo ?? undefined}
                   errors={errors?.guestExtraInfo}
@@ -793,13 +796,13 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   className="mt-0.5 h-4 w-4 shrink-0 accent-navy"
                 />
                 <span>
-                  <span className="font-bold">Ajouter les numéros d&apos;urgence du Sénégal</span>
-                  <span className="mt-0.5 block text-xs text-fg/60">Police 17 · Pompiers 18 · SAMU 1515.</span>
+                  <span className="font-bold"><T>Ajouter les numéros d&apos;urgence du Sénégal</T></span>
+                  <span className="mt-0.5 block text-xs text-fg/60"><T>Police 17 · Pompiers 18 · SAMU 1515.</T></span>
                 </span>
               </label>
 
               <div>
-                <p className="mb-2 text-xs font-bold text-fg">Aperçu du message des informations pratiques</p>
+                <p className="mb-2 text-xs font-bold text-fg"><T>Aperçu du message des informations pratiques</T></p>
                 {hasGuestInfo(guestDraft) ? (
                   <div className="max-w-md rounded-2xl rounded-tl-sm border border-success/25 bg-success/10 p-4 text-sm leading-relaxed text-fg">
                     <p className="whitespace-pre-line">
@@ -808,19 +811,19 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
                   </div>
                 ) : (
                   <p className="rounded-xl border border-dashed border-border/25 px-4 py-5 text-sm text-fg/55">
-                    Renseignez au moins une information ci-dessus (Wi-Fi compris) pour voir le message.
+                    <T>Renseignez au moins une information ci-dessus (Wi-Fi compris) pour voir le message.</T>
                   </p>
                 )}
-                <p className="mt-1.5 text-xs text-fg/45">Exemple avec un client fictif.</p>
+                <p className="mt-1.5 text-xs text-fg/45"><T>Exemple avec un client fictif.</T></p>
                 {hasGuestInfo(guestDraft) ? <TestSend message={guestPreview} defaultPhone={draft.phone} idPrefix="accueil" /> : null}
               </div>
             </>
           ) : null}
 
           <p className="rounded-xl bg-surface-sunken px-4 py-3 text-xs text-fg/65">
-            Les tarifs par heure ou par jour se règlent dans chaque logement.{" "}
+            <T>Les tarifs par heure ou par jour se règlent dans chaque logement.</T>{" "}
             <Link href="/logements" className="font-bold text-fg underline-offset-2 hover:underline">
-              Ouvrir les logements
+              <T>Ouvrir les logements</T>
             </Link>
           </p>
         </div>
@@ -829,7 +832,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
 
       {state?.message && (
         <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 
@@ -845,7 +848,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
               disabled={pending}
               className="h-11 rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 disabled:opacity-40"
             >
-              Annuler
+              <T>Annuler</T>
             </button>
           ) : null}
           <button
@@ -853,7 +856,7 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
             disabled={!dirty || pending}
             className="h-11 rounded-xl bg-brand-orange px-5 text-sm font-extrabold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {pending ? "Enregistrement..." : "Enregistrer les modifications"}
+            {pending ? "Enregistrement..." : <T>{"Enregistrer les modifications"}</T>}
           </button>
         </div>
       </div>

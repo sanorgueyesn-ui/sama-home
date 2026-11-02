@@ -8,15 +8,19 @@ import { listReservations } from "@/lib/reservations-data";
 import { listRentals } from "@/lib/rentals-data";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { RentalStatusBadge } from "@/app/locations/status-badge";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtDate(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 export default async function ClientDetailPage(props: PageProps<"/clients/[id]">) {
+  const t = await getT();
   const { id } = await props.params;
   const { created, updated } = await props.searchParams;
 
@@ -44,8 +48,8 @@ export default async function ClientDetailPage(props: PageProps<"/clients/[id]">
     <PageShell>
       <PageHeader back={{ href: "/clients", label: vocab.guestsTitle }} title={client.name} subtitle={client.phone} />
 
-      {created ? <Flash>{guest.charAt(0).toUpperCase() + guest.slice(1)} créé avec succès.</Flash> : null}
-      {updated ? <Flash>Modifications enregistrées.</Flash> : null}
+      {created ? <Flash>{guest.charAt(0).toUpperCase() + guest.slice(1)} <T>créé avec succès.</T></Flash> : null}
+      {updated ? <Flash><T>Modifications enregistrées.</T></Flash> : null}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_380px] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-5">
@@ -56,24 +60,24 @@ export default async function ClientDetailPage(props: PageProps<"/clients/[id]">
               <InfoRow label="Adresse">{client.address ?? "—"}</InfoRow>
               <InfoRow label="Pièce d'identité">{identity}</InfoRow>
               <InfoRow label="Notes">{client.notes ?? "—"}</InfoRow>
-              <InfoRow label={`${guest.charAt(0).toUpperCase() + guest.slice(1)} depuis`}>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(client.createdAt)}</InfoRow>
+              <InfoRow label={`${guest.charAt(0).toUpperCase() + guest.slice(1)} depuis`}>{new Intl.DateTimeFormat(dateLocale(), { dateStyle: "long" }).format(client.createdAt)}</InfoRow>
             </dl>
           </Surface>
 
-          <section aria-label="Actions" className="flex flex-col gap-2.5">
-            <SectionTitle>Actions</SectionTitle>
-            <ActionLink href={`/reservations/new?clientId=${client.id}`} tone="primary">Nouvelle réservation</ActionLink>
+          <section aria-label={t("Actions")} className="flex flex-col gap-2.5">
+            <SectionTitle><T>Actions</T></SectionTitle>
+            <ActionLink href={`/reservations/new?clientId=${client.id}`} tone="primary"><T>Nouvelle réservation</T></ActionLink>
             <ActionLink href={`/locations/new?clientId=${client.id}`}>{vocab.newStay}</ActionLink>
-            <ActionLink href={`/clients/${client.id}/edit`}>Modifier</ActionLink>
+            <ActionLink href={`/clients/${client.id}/edit`}><T>Modifier</T></ActionLink>
           </section>
         </div>
 
         <div className="flex flex-col gap-5">
-          <section aria-label="Réservations">
-            <SectionTitle action={{ href: `/reservations?q=${encodeURIComponent(client.phone)}`, label: "Voir tout" }}>Réservations</SectionTitle>
+          <section aria-label={t("Réservations")}>
+            <SectionTitle action={{ href: `/reservations?q=${encodeURIComponent(client.phone)}`, label: "Voir tout" }}><T>Réservations</T></SectionTitle>
             {reservationHistory.items.length === 0 ? (
               <Surface className="text-center">
-                <p className="text-sm font-medium text-app-muted">Aucune réservation pour ce {guest}.</p>
+                <p className="text-sm font-medium text-app-muted"><T>Aucune réservation pour ce</T> {guest}.</p>
               </Surface>
             ) : (
               <Surface className="!py-1">
@@ -100,7 +104,7 @@ export default async function ClientDetailPage(props: PageProps<"/clients/[id]">
             <SectionTitle action={{ href: `/locations?q=${encodeURIComponent(client.phone)}`, label: "Voir tout" }}>{vocab.stays.replace(" en cours", "")}</SectionTitle>
             {rentalHistory.items.length === 0 ? (
               <Surface className="text-center">
-                <p className="text-sm font-medium text-app-muted">Aucun {vocab.staysSingular} pour ce {guest}.</p>
+                <p className="text-sm font-medium text-app-muted"><T>Aucun</T> {vocab.staysSingular} <T>pour ce</T> {guest}.</p>
               </Surface>
             ) : (
               <Surface className="!py-1">

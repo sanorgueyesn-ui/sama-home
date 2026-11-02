@@ -12,6 +12,7 @@ import { PropertyPhoto } from "@/app/logements/property-photo";
 // dupliquée (même 4 statuts, mêmes tokens var(--color-X) que l'original),
 // plutôt que de toucher au fichier moteur pour le rendre "client-safe".
 import type { PropertyStatus } from "@/lib/property-status";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const STATUS_META: Record<PropertyStatus, { label: string; color: string; bg: string }> = {
   AVAILABLE: { label: "Disponible", color: "var(--color-success)", bg: "var(--color-success-bg)" },
@@ -26,7 +27,7 @@ function StatusPill({ status }: { status: PropertyStatus }) {
     <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1" style={{ background: meta.bg }}>
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
       <span className="text-[10.5px] font-bold" style={{ color: meta.color }}>
-        {meta.label}
+        <T>{meta.label}</T>
       </span>
     </div>
   );
@@ -61,6 +62,7 @@ function fmtFcfa(amount: number) {
  * nouvelle route/API/Server Action.
  */
 export function SejourAvailableGrid({ properties }: { properties: GridProperty[] }) {
+  const t = useT();
   const [tab, setTab] = useState<"ALL" | PropertyStatus>("ALL");
   const [query, setQuery] = useState("");
 
@@ -82,8 +84,8 @@ export function SejourAvailableGrid({ properties }: { properties: GridProperty[]
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un logement..."
-          aria-label="Rechercher un logement"
+          placeholder={t("Rechercher un logement...")}
+          aria-label={t("Rechercher un logement")}
           className="flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg/40"
         />
       </div>
@@ -99,13 +101,13 @@ export function SejourAvailableGrid({ properties }: { properties: GridProperty[]
               tab === t.value ? "bg-navy text-white" : "bg-surface-raised text-fg"
             }`}
           >
-            {t.label}
+            <T>{t.label}</T>
           </button>
         ))}
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-4 text-sm font-medium text-fg/50">Aucun logement ne correspond à ces critères.</p>
+        <p className="mt-4 text-sm font-medium text-fg/50"><T>Aucun logement ne correspond à ces critères.</T></p>
       ) : (
         <div className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-3">
           {filtered.map((p) => (
@@ -118,7 +120,7 @@ export function SejourAvailableGrid({ properties }: { properties: GridProperty[]
                     <StatusPill status={p.status} />
                     {p.fromPrice !== null ? (
                       <span className="shrink-0 text-[11px] font-bold text-brand-orange">
-                        Dès {fmtFcfa(p.fromPrice)}
+                        <T>Dès</T> {fmtFcfa(p.fromPrice)}
                       </span>
                     ) : null}
                   </div>

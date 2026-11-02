@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireActiveEstablishment } from "@/lib/dal";
 import { type BrandColors, normalizeHexColor } from "@/lib/brand-colors";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Lot "Personnalisation libre" — remplace l'ancien setBrandPalette(paletteId)
@@ -28,6 +29,7 @@ import { type BrandColors, normalizeHexColor } from "@/lib/brand-colors";
  * modifie jamais les couleurs d'un autre établissement.
  */
 export async function saveBrandColors(colors: BrandColors | null): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — gap découvert pendant la recherche exhaustive
   // demandée par ce lot (hors liste explicite de D12-P109, qui ne couvrait
   // pas ce fichier) : modifie les paramètres de l'établissement au même titre
@@ -36,21 +38,21 @@ export async function saveBrandColors(colors: BrandColors | null): Promise<{ err
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer une palette." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer une palette.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer une palette." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'enregistrer une palette.") };
   }
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur d'établissement peut modifier les couleurs de marque." };
+    return { error: t("Seul un administrateur d'établissement peut modifier les couleurs de marque.") };
   }
 
   let nextColors: { primaryColor: string | null; secondaryColor: string | null; accentColor: string | null };
@@ -62,7 +64,7 @@ export async function saveBrandColors(colors: BrandColors | null): Promise<{ err
     const secondary = normalizeHexColor(colors.secondary);
     const accent = normalizeHexColor(colors.accent);
     if (!primary || !secondary || !accent) {
-      return { error: "Couleur invalide : utilisez le format #RRGGBB (6 chiffres hexadécimaux)." };
+      return { error: t("Couleur invalide : utilisez le format #RRGGBB (6 chiffres hexadécimaux).") };
     }
     nextColors = { primaryColor: primary, secondaryColor: secondary, accentColor: accent };
   }
@@ -81,7 +83,7 @@ export async function saveBrandColors(colors: BrandColors | null): Promise<{ err
     // inventée" — la palette ne peut donc être choisie qu'après un premier
     // enregistrement des informations de l'établissement
     // (src/app/settings/settings-form.tsx).
-    return { error: "Veuillez d'abord enregistrer les informations de l'établissement avant de choisir une palette de couleurs." };
+    return { error: t("Veuillez d'abord enregistrer les informations de l'établissement avant de choisir une palette de couleurs.") };
   }
 
   const result = await prisma.settings.updateMany({
@@ -92,7 +94,7 @@ export async function saveBrandColors(colors: BrandColors | null): Promise<{ err
   if (result.count === 0) {
     // Même situation de conflit que updateSettings() — modifié entre notre
     // lecture et notre écriture.
-    return { error: "Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez." };
+    return { error: t("Les paramètres ont été modifiés entre-temps par quelqu'un d'autre. Rechargez la page et réessayez.") };
   }
 
   revalidatePath("/", "layout");

@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const PERIOD_CHIPS: { value: string; label: string }[] = [
   { value: "today", label: "Aujourd'hui" },
@@ -36,6 +37,7 @@ export function ExpenseFilters({
   defaultMethod: string;
   categories: { id: string; name: string; active: boolean }[];
 }) {
+  const t = useT();
   const [query, setQuery] = useState(defaultQuery);
   const router = useRouter();
   const pathname = usePathname();
@@ -68,8 +70,8 @@ export function ExpenseFilters({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher par référence ou note..."
-          aria-label="Rechercher une dépense par référence ou note"
+          placeholder={t("Rechercher par référence ou note...")}
+          aria-label={t("Rechercher une dépense par référence ou note")}
           className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
         />
       </div>
@@ -84,7 +86,7 @@ export function ExpenseFilters({
               defaultPeriod === chip.value ? "bg-brand-orange text-ink" : "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover"
             }`}
           >
-            {chip.label}
+            <T>{chip.label}</T>
           </button>
         ))}
       </div>
@@ -93,10 +95,10 @@ export function ExpenseFilters({
         <select
           value={defaultCategory}
           onChange={(e) => pushParams(query, defaultPeriod, e.target.value, defaultMethod)}
-          aria-label="Filtrer par catégorie"
+          aria-label={t("Filtrer par catégorie")}
           className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40"
         >
-          <option value="">Toutes catégories</option>
+          <option value=""><T>Toutes catégories</T></option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.active ? c.name : `${c.name} (désactivée)`}
@@ -106,13 +108,13 @@ export function ExpenseFilters({
         <select
           value={defaultMethod}
           onChange={(e) => pushParams(query, defaultPeriod, defaultCategory, e.target.value)}
-          aria-label="Filtrer par mode de paiement"
+          aria-label={t("Filtrer par mode de paiement")}
           className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40"
         >
-          <option value="">Tous les modes</option>
+          <option value=""><T>Tous les modes</T></option>
           {METHOD_OPTIONS.map((m) => (
             <option key={m.value} value={m.value}>
-              {m.label}
+              <T>{m.label}</T>
             </option>
           ))}
         </select>

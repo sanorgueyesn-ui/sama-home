@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { completeRental, cancelRental } from "@/app/actions/rentals";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function CompleteButton({ id, hotel = false }: { id: string; hotel?: boolean }) {
   const [pending, startTransition] = useTransition();
@@ -24,9 +25,9 @@ export function CompleteButton({ id, hotel = false }: { id: string; hotel?: bool
         onClick={handleComplete}
         className="flex h-14 w-full items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white disabled:opacity-60"
       >
-        {pending ? "..." : hotel ? "Terminer le séjour" : "Terminer la location"}
+        {pending ? "..." : hotel ? <T>{"Terminer le séjour"}</T> : <T>{"Terminer la location"}</T>}
       </button>
-      {error ? <p className="mt-1.5 text-center text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="mt-1.5 text-center text-xs font-medium text-danger"><T>{error}</T></p> : null}
     </div>
   );
 }
@@ -52,9 +53,9 @@ export function CancelRentalButton({ id, hotel = false }: { id: string; hotel?: 
         onClick={handleCancel}
         className="flex h-14 w-full items-center justify-center rounded-2xl border border-danger/30 text-sm font-extrabold text-danger disabled:opacity-60"
       >
-        {pending ? "..." : hotel ? "Annuler le séjour" : "Annuler la location"}
+        {pending ? "..." : hotel ? <T>{"Annuler le séjour"}</T> : <T>{"Annuler la location"}</T>}
       </button>
-      {error ? <p className="mt-1.5 text-center text-xs font-medium text-danger">{error}</p> : null}
+      {error ? <p className="mt-1.5 text-center text-xs font-medium text-danger"><T>{error}</T></p> : null}
     </div>
   );
 }

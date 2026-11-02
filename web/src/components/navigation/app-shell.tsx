@@ -6,7 +6,11 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 import { SpaceSwitcher } from "@/components/navigation/space-switcher";
+import { T, useT, useLocale } from "@/components/i18n/i18n-provider";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { getMessages } from "@/lib/i18n/messages";
 import { AGENCY_MODE_ENABLED, BUSINESS_MODE_LABELS, toShellMode, type SpaceOption } from "@/lib/business-mode";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 type NavItem = {
   href: string;
@@ -39,8 +43,8 @@ function ShellClock() {
   const minute = useSyncExternalStore(subscribeMinute, readMinute, () => 0);
   if (minute === 0) return <span className="h-8 w-28" aria-hidden />;
   const date = new Date(minute * 60_000);
-  const day = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(date);
-  const time = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(date);
+  const day = new Intl.DateTimeFormat(dateLocale(), { weekday: "long", day: "numeric", month: "long" }).format(date);
+  const time = new Intl.DateTimeFormat(dateLocale(), { hour: "2-digit", minute: "2-digit" }).format(date);
   return (
     <div className="flex flex-col leading-tight">
       <span className="text-[11px] font-medium text-app-text/90">{day.charAt(0).toUpperCase() + day.slice(1)}</span>
@@ -227,6 +231,8 @@ export function AppShell({
   spaces?: SpaceOption[];
   activeSpaceId?: string | null;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -342,8 +348,8 @@ export function AppShell({
   // « SAMA » en rouge, courbe et « HOME » en clair). Les fichiers d'origine restent dans public/brand/.
   const logo = (
     <>
-      <Image src="/brand/sama-home-lockup.png" alt="SAMA HOME" width={720} height={202} priority className="h-auto w-[164px] [[data-theme=dark]_&]:hidden" />
-      <Image src="/brand/sama-home-lockup-light.png" alt="SAMA HOME" width={720} height={202} priority className="hidden h-auto w-[164px] [[data-theme=dark]_&]:block" />
+      <Image src="/brand/sama-home-lockup.png" alt={t("SAMA HOME")} width={720} height={202} priority className="h-auto w-[164px] [[data-theme=dark]_&]:hidden" />
+      <Image src="/brand/sama-home-lockup-light.png" alt={t("SAMA HOME")} width={720} height={202} priority className="hidden h-auto w-[164px] [[data-theme=dark]_&]:block" />
     </>
   );
 
@@ -352,12 +358,12 @@ export function AppShell({
       {/* ===================== MENU LATÉRAL (ORDINATEUR) ===================== */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-app-line bg-app-sidebar lg:flex">
         <div className="px-5 pb-6 pt-6">
-          <Link href={homeHref} aria-label="SAMA HOME, accueil" className="block w-fit rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-app-focus">
+          <Link href={homeHref} aria-label={t("SAMA HOME, accueil")} className="block w-fit rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-app-focus">
             {logo}
           </Link>
         </div>
 
-        <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-3 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav aria-label={t("Navigation principale")} className="flex-1 overflow-y-auto px-3 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <ul className="flex flex-col gap-0.5">
             {navItems.map((item) => {
               const active = isItemActive(item.href);
@@ -366,8 +372,8 @@ export function AppShell({
                   <li key={item.label}>
                     <span aria-disabled="true" className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-app-faint">
                       <span className="shrink-0">{item.icon(false)}</span>
-                      <span>{item.label}</span>
-                      <span className="ms-auto rounded-full bg-fg/5 px-2 py-0.5 text-[9px] font-bold text-app-faint">Bientôt</span>
+                      <span><T>{item.label}</T></span>
+                      <span className="ms-auto rounded-full bg-fg/5 px-2 py-0.5 text-[9px] font-bold text-app-faint"><T>Bientôt</T></span>
                     </span>
                   </li>
                 );
@@ -383,7 +389,7 @@ export function AppShell({
                   >
                     {active ? <span aria-hidden className={`absolute inset-y-2 left-0 w-[3px] rounded-r ${accent.bar}`} /> : null}
                     <span className={`shrink-0 ${active ? accent.text : ""}`}>{item.icon(active)}</span>
-                    <span>{item.label}</span>
+                    <span><T>{item.label}</T></span>
                   </Link>
                 </li>
               );
@@ -396,7 +402,7 @@ export function AppShell({
             <p className="truncate text-[13px] font-bold text-app-text">{shownName}</p>
             <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-app-muted">
               <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${accent.bar}`} />
-              {shownUnits}
+              <T>{shownUnits}</T>
             </p>
           </div>
           <div className="mt-3 flex items-center gap-2.5 px-1">
@@ -405,13 +411,13 @@ export function AppShell({
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold text-app-text">{displayName}</p>
-              <p className="truncate text-[11px] text-app-muted">{roleLabel}</p>
+              <p className="truncate text-[11px] text-app-muted"><T>{roleLabel}</T></p>
             </div>
             <form action={logout}>
               <button
                 type="submit"
-                aria-label="Se déconnecter"
-                title="Se déconnecter"
+                aria-label={t("Se déconnecter")}
+                title={t("Se déconnecter")}
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-app-muted transition-colors hover:bg-fg/[0.06] hover:text-app-bad focus-visible:outline-2 focus-visible:outline-app-focus"
               >
                 <LogoutIcon />
@@ -424,7 +430,7 @@ export function AppShell({
       {/* ===================== EN-TÊTE ===================== */}
       <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-app-line bg-app-sidebar/92 px-4 backdrop-blur lg:left-[248px] lg:h-[60px] lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href={homeHref} aria-label="SAMA HOME, accueil" className="flex h-10 w-10 shrink-0 items-center justify-center lg:hidden">
+          <Link href={homeHref} aria-label={t("SAMA HOME, accueil")} className="flex h-10 w-10 shrink-0 items-center justify-center lg:hidden">
             <Image src="/brand/sama-home-symbol.png" alt="" width={320} height={267} priority className="h-auto w-8 [[data-theme=dark]_&]:hidden" />
             <Image src="/brand/sama-home-symbol-light.png" alt="" width={320} height={267} priority className="hidden h-auto w-8 [[data-theme=dark]_&]:block" />
           </Link>
@@ -442,8 +448,8 @@ export function AppShell({
             </svg>
             <input
               type="text"
-              aria-label="Rechercher"
-              placeholder={establishmentData.searchPlaceholder}
+              aria-label={t("Rechercher")}
+              placeholder={t(establishmentData.searchPlaceholder)}
               className="h-9 w-full rounded-full border border-app-line bg-app-panel-2 pl-9 pr-3 text-xs text-app-text outline-none placeholder:text-app-faint focus:border-brand-orange"
             />
           </div>
@@ -475,7 +481,9 @@ export function AppShell({
             <ShellClock />
           </div>
 
-          <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-app-muted transition-colors hover:text-app-text" aria-label="Notifications">
+          <LanguageSwitcher locale={locale} labels={getMessages(locale).common} />
+
+          <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-app-muted transition-colors hover:text-app-text" aria-label={t("Notifications")}>
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
               <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
@@ -490,7 +498,7 @@ export function AppShell({
 
       {/* ===================== BARRE D'ONGLETS (MOBILE) ===================== */}
       <nav
-        aria-label="Navigation principale"
+        aria-label={t("Navigation principale")}
         className="fixed inset-x-0 bottom-0 z-40 border-t border-app-line bg-app-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         <ul className="grid grid-cols-4">
@@ -506,7 +514,7 @@ export function AppShell({
                   }`}
                 >
                   {item.icon(active)}
-                  <span>{item.label}</span>
+                  <span><T>{item.label}</T></span>
                 </Link>
               </li>
             );
@@ -524,7 +532,7 @@ export function AppShell({
                 <line x1="4" x2="20" y1="12" y2="12" />
                 <line x1="4" x2="20" y1="17" y2="17" />
               </svg>
-              <span>Menu</span>
+              <span><T>Menu</T></span>
             </button>
           </li>
         </ul>
@@ -532,20 +540,20 @@ export function AppShell({
 
       {/* ===================== MENU COMPLET (MOBILE) ===================== */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button type="button" aria-label="Fermer le menu" className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+        <div className="fixed inset-0 z-50 flex lg:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
+          <button type="button" aria-label={t("Fermer le menu")} className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative flex h-full w-72 max-w-[85vw] flex-col justify-between overflow-y-auto border-r border-app-line bg-app-sidebar p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div>
               <div className="mb-6 mt-1">{logo}</div>
-              <nav aria-label="Menu complet">
+              <nav aria-label={t("Menu complet")}>
                 <ul className="flex flex-col gap-0.5">
                   {navItems.map((item) => (
                     <li key={item.label}>
                       {item.soon ? (
                         <span aria-disabled="true" className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-lg px-3 text-[13px] font-semibold text-app-faint">
                           <span>{item.icon(false)}</span>
-                          <span>{item.label}</span>
-                          <span className="ms-auto rounded-full bg-fg/5 px-2 py-0.5 text-[9px] font-bold text-app-faint">Bientôt</span>
+                          <span><T>{item.label}</T></span>
+                          <span className="ms-auto rounded-full bg-fg/5 px-2 py-0.5 text-[9px] font-bold text-app-faint"><T>Bientôt</T></span>
                         </span>
                       ) : (
                         <Link
@@ -557,7 +565,7 @@ export function AppShell({
                           }`}
                         >
                           <span>{item.icon(false)}</span>
-                          <span>{item.label}</span>
+                          <span><T>{item.label}</T></span>
                         </Link>
                       )}
                     </li>
@@ -572,13 +580,13 @@ export function AppShell({
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-bold text-app-text">{displayName}</p>
-                  <p className="truncate text-[11px] text-app-muted">{roleLabel}</p>
+                  <p className="truncate text-[11px] text-app-muted"><T>{roleLabel}</T></p>
                 </div>
               </div>
               <form action={logout}>
                 <button type="submit" className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-[13px] font-semibold text-app-bad hover:bg-fg/[0.04]">
                   <LogoutIcon />
-                  <span>Déconnexion</span>
+                  <span><T>Déconnexion</T></span>
                 </button>
               </form>
             </div>

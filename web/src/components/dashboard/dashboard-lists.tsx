@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatElapsed, formatFcfa } from "@/lib/dashboard-metrics";
 import type { DashboardArrival, DashboardStay, DashboardUnit } from "@/lib/dashboard-overview";
 import { shortDateTime, timeLabel } from "@/components/dashboard/dashboard-ui";
+import { T } from "@/components/i18n/i18n-provider";
 
 // Classe écrite en toutes lettres : Tailwind ne détecte pas une classe construite à l'exécution.
 const MOBILE_LIMIT_3 = "max-lg:[&>li:nth-child(n+4)]:hidden";
@@ -34,11 +35,11 @@ export function StayList({
               ) : null}
             </span>
             <span className="shrink-0 text-right">
-              <span className="block text-xs text-app-muted">{endLabel} {shortDateTime(stay.plannedDepartureAt)}</span>
+              <span className="block text-xs text-app-muted"><T>{endLabel}</T> {shortDateTime(stay.plannedDepartureAt)}</span>
               {stay.remaining > 0 ? (
-                <span className="block text-xs font-bold tabular-nums text-app-warn">Reste {formatFcfa(stay.remaining)} FCFA</span>
+                <span className="block text-xs font-bold tabular-nums text-app-warn"><T>Reste</T> {formatFcfa(stay.remaining)} FCFA</span>
               ) : (
-                <span className="block text-xs font-semibold text-app-good">Soldé</span>
+                <span className="block text-xs font-semibold text-app-good"><T>Soldé</T></span>
               )}
             </span>
           </Link>
@@ -104,13 +105,13 @@ export function RecentOccupiedTable({ stays, now, noun }: { stays: DashboardStay
   return (
     <div className="-mx-1 overflow-x-auto">
       <table className="w-full min-w-[22rem] text-left text-sm">
-        <caption className="sr-only">Dernières occupations : {noun}</caption>
+        <caption className="sr-only"><T>Dernières occupations :</T> <T>{noun}</T></caption>
         <thead>
           <tr className="text-[11px] uppercase tracking-wide text-app-faint">
-            <th scope="col" className="px-1 pb-2 font-bold">N°</th>
-            <th scope="col" className="px-1 pb-2 font-bold">Depuis le</th>
-            <th scope="col" className="px-1 pb-2 font-bold">Durée</th>
-            <th scope="col" className="px-1 pb-2 text-right font-bold">Statut</th>
+            <th scope="col" className="px-1 pb-2 font-bold"><T>N°</T></th>
+            <th scope="col" className="px-1 pb-2 font-bold"><T>Depuis le</T></th>
+            <th scope="col" className="px-1 pb-2 font-bold"><T>Durée</T></th>
+            <th scope="col" className="px-1 pb-2 text-right font-bold"><T>Statut</T></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-app-line-soft">
@@ -124,7 +125,7 @@ export function RecentOccupiedTable({ stays, now, noun }: { stays: DashboardStay
               <td className="px-1 py-2.5 text-app-text-2">{shortDateTime(stay.arrivalAt)}</td>
               <td className="px-1 py-2.5 tabular-nums text-app-text-2">{formatElapsed(stay.arrivalAt, now)}</td>
               <td className="px-1 py-2.5 text-right">
-                <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-bold text-app-bad">Occupé</span>
+                <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-bold text-app-bad"><T>Occupé</T></span>
               </td>
             </tr>
           ))}
@@ -156,7 +157,7 @@ export function UnitTiles({ units }: { units: DashboardUnit[] }) {
               <span className="block truncate text-sm font-bold text-app-text">{unit.name}</span>
               <span className="mt-1 flex items-center gap-1.5 text-xs text-app-text-2">
                 <span className={`h-2 w-2 rounded-full ${meta.dot}`} aria-hidden />
-                {meta.label}
+                <T>{meta.label}</T>
               </span>
             </Link>
           </li>

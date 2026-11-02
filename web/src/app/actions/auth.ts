@@ -10,6 +10,7 @@ import { checkRateLimit, resetRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
 import { getFirstAuthorizedPlatformUrl } from "@/lib/permissions";
 import { blockingStatus } from "@/lib/login-gate";
+import { getT } from "@/lib/i18n/server";
 
 const GENERIC_ERROR = "Identifiant ou mot de passe incorrect.";
 
@@ -17,6 +18,7 @@ export async function login(
   _prevState: LoginFormState,
   formData: FormData,
 ): Promise<LoginFormState> {
+  const t = await getT();
   const ip = await getClientIp();
   const rateLimitKey = `login:${ip}`;
   const rate = checkRateLimit(rateLimitKey, 5, 60);
@@ -72,17 +74,17 @@ export async function login(
   if (blocked === "PENDING") {
     return {
       error:
-        "Votre établissement est en attente d'approbation par l'administrateur de SAMA HOME. Vous aurez accès dès sa validation.",
+        t("Votre établissement est en attente d'approbation par l'administrateur de SAMA HOME. Vous aurez accès dès sa validation."),
     };
   }
   if (blocked === "REJECTED") {
     return {
-      error: "La demande d'inscription pour cet établissement a été refusée par l'administrateur.",
+      error: t("La demande d'inscription pour cet établissement a été refusée par l'administrateur."),
     };
   }
   if (blocked === "SUSPENDED") {
     return {
-      error: "L'accès pour cet établissement est actuellement suspendu. Veuillez contacter le support.",
+      error: t("L'accès pour cet établissement est actuellement suspendu. Veuillez contacter le support."),
     };
   }
 
@@ -99,31 +101,32 @@ export async function setPasswordWithGoogleToken(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ): Promise<{ error?: string }> {
+  const t = await getT();
   const cookieStore = await cookies();
   const token = formData.get("token")?.toString() || cookieStore.get("google_auth_token")?.value;
   const password = formData.get("password")?.toString();
   const confirmPassword = formData.get("confirmPassword")?.toString();
 
   if (!token) {
-    return { error: "Session Google expirée. Veuillez vous reconnecter avec Google." };
+    return { error: t("Session Google expirée. Veuillez vous reconnecter avec Google.") };
   }
   if (!password || password.length < 8) {
-    return { error: "Le mot de passe doit comporter au moins 8 caractères." };
+    return { error: t("Le mot de passe doit comporter au moins 8 caractères.") };
   }
   if (password !== confirmPassword) {
-    return { error: "Les deux mots de passe ne correspondent pas." };
+    return { error: t("Les deux mots de passe ne correspondent pas.") };
   }
 
   const payload = await verifyGoogleAuthToken(token);
   if (!payload || !payload.email) {
-    return { error: "Session Google invalide ou expirée. Veuillez vous reconnecter avec Google." };
+    return { error: t("Session Google invalide ou expirée. Veuillez vous reconnecter avec Google.") };
   }
 
   const user = await prisma.user.findFirst({
     where: { OR: [{ username: payload.email }, { email: payload.email }] },
   });
   if (!user) {
-    return { error: "Utilisateur introuvable." };
+    return { error: t("Utilisateur introuvable.") };
   }
 
   const passwordHash = await hashPassword(password);

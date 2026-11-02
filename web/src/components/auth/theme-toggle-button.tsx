@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { setTheme } from "@/app/actions/theme";
 import type { Theme } from "@/lib/theme";
+import { useT } from "@/components/i18n/i18n-provider";
 
 /**
  * Bascule compacte clair/sombre pour les pages d'authentification — réutilise
@@ -12,6 +13,7 @@ import type { Theme } from "@/lib/theme";
  * correspondre à l'emplacement de la maquette (coin supérieur droit).
  */
 export function ThemeToggleButton({ current }: { current: Theme }) {
+  const t = useT();
   const [pending, startTransition] = useTransition();
   const next: Theme = current === "dark" ? "light" : "dark";
 
@@ -20,7 +22,7 @@ export function ThemeToggleButton({ current }: { current: Theme }) {
       type="button"
       disabled={pending}
       onClick={() => startTransition(() => setTheme(next))}
-      aria-label={current === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+      aria-label={current === "dark" ? t("Passer en mode clair") : t("Passer en mode sombre")}
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/15 bg-surface-raised text-fg/70 disabled:opacity-60"
     >
       {current === "dark" ? (

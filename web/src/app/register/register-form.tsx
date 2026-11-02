@@ -12,6 +12,7 @@ import type { VerifyOtpFormState } from "@/lib/definitions";
 import { AGENCY_MODE_ENABLED } from "@/lib/business-mode";
 import type { PricingSettingsView } from "@/lib/platform-settings-data";
 import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 export function RegisterForm({
   pricing,
@@ -28,6 +29,7 @@ export function RegisterForm({
   googleToken?: string;
   initialMode?: string;
 }) {
+  const t = useT();
   const trialMonths = pricing?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS;
   const periodMonths = pricing?.periodMonths ?? DEFAULT_PERIOD_MONTHS;
   const periodPrice = pricing?.periodPriceFcfa ?? DEFAULT_PERIOD_PRICE_FCFA;
@@ -79,27 +81,27 @@ export function RegisterForm({
           </div>
 
           <div>
-            <h3 className="text-lg font-extrabold text-fg">Inscription enregistrée !</h3>
+            <h3 className="text-lg font-extrabold text-fg"><T>Inscription enregistrée !</T></h3>
             <p className="mt-1 text-xs font-medium text-fg/60">
-              Votre établissement <strong className="text-fg">« {registerState.establishmentName} »</strong> a été enregistré.
+              <T>Votre établissement</T> <strong className="text-fg">« {registerState.establishmentName} »</strong> <T>a été enregistré.</T>
             </p>
           </div>
 
           <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-left">
             <div className="flex items-center gap-2">
               <span className="flex h-6 items-center rounded-md bg-amber-500/20 px-2 text-[11px] font-black tracking-wide text-amber-400 uppercase">
-                Modération SAMA HOME
+                <T>Modération SAMA HOME</T>
               </span>
             </div>
 
             <p className="mt-2 text-[12px] font-medium text-fg/80 leading-relaxed">
-              Pour des raisons de sécurité, chaque inscription fait l&apos;objet d&apos;une vérification par notre administrateur avant l&apos;activation des accès.
+              <T>Pour des raisons de sécurité, chaque inscription fait l&apos;objet d&apos;une vérification par notre administrateur avant l&apos;activation des accès.</T>
             </p>
 
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-amber-300">
               <span className="mt-0.5">🛡️</span>
               <div>
-                <strong>Validation requise :</strong> Votre compte sera activé dès la confirmation administrative avec vos {trialMonths} mois d&apos;essai gratuit.
+                <strong><T>Validation requise :</T></strong> <T>Votre compte sera activé dès la confirmation administrative avec vos</T> {trialMonths} <T>mois d&apos;essai gratuit.</T>
               </div>
             </div>
           </div>
@@ -108,7 +110,7 @@ export function RegisterForm({
             href="/login"
             className="mt-1 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
           >
-            Retour à la page de connexion
+            <T>Retour à la page de connexion</T>
           </Link>
         </div>
       );
@@ -123,9 +125,9 @@ export function RegisterForm({
         </div>
 
         <div>
-          <h3 className="text-lg font-extrabold text-fg">Établissement créé avec succès !</h3>
+          <h3 className="text-lg font-extrabold text-fg"><T>Établissement créé avec succès !</T></h3>
           <p className="mt-1 text-xs font-medium text-fg/60">
-            Votre établissement <strong className="text-fg">« {registerState.establishmentName} »</strong> a été configuré avec succès.
+            <T>Votre établissement</T> <strong className="text-fg">« {registerState.establishmentName} »</strong> <T>a été configuré avec succès.</T>
           </p>
         </div>
 
@@ -133,25 +135,25 @@ export function RegisterForm({
           <div className="w-full rounded-2xl border border-brand-orange/40 bg-brand-orange/5 p-4 text-left">
             <div className="flex items-center justify-between">
               <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
-                Forfait Choisi
+                <T>Forfait Choisi</T>
               </span>
-              <span className="text-xs font-extrabold text-fg">{formattedPrice} FCFA / {periodMonths} mois</span>
+              <span className="text-xs font-extrabold text-fg">{formattedPrice} <T>FCFA /</T> {periodMonths} mois</span>
             </div>
 
-            <p className="mt-2 text-xs font-bold text-fg">Instructions de règlement :</p>
+            <p className="mt-2 text-xs font-bold text-fg"><T>Instructions de règlement :</T></p>
             <div className="mt-2 space-y-1 rounded-xl bg-surface p-3 text-[12px] text-fg/80">
               <p>
-                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au <strong className="text-brand-orange">+221 77 338 66 60</strong>.
+                <strong><T>Wave / Orange Money :</T></strong> <T>Envoyez votre règlement au</T> <strong className="text-brand-orange">+221 77 338 66 60</strong>.
               </p>
               <p>
-                <strong>Référence de dossier :</strong>{" "}
+                <strong><T>Référence de dossier :</T></strong>{" "}
                 <span className="font-mono font-bold text-brand-orange">{registerState.reference ?? "SH-PAID"}</span>
               </p>
             </div>
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
               <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Accès immédiat :</strong> Vos {trialMonths} mois d&apos;essai gratuit sont activés dès maintenant !
+                <strong><T>Accès immédiat :</T></strong> Vos {trialMonths} <T>mois d&apos;essai gratuit sont activés dès maintenant !</T>
               </div>
             </div>
           </div>
@@ -159,23 +161,23 @@ export function RegisterForm({
           <div className="w-full rounded-2xl border border-brand-orange/30 bg-brand-orange/5 p-4 text-left">
             <div className="flex items-center gap-2">
               <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
-                Offre Gratuite
+                <T>Offre Gratuite</T>
               </span>
-              <span className="text-xs font-extrabold text-fg">Période Découverte</span>
+              <span className="text-xs font-extrabold text-fg"><T>Période Découverte</T></span>
             </div>
 
             <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-brand-orange">{trialMonths} MOIS OFFERTS</span>
-              <span className="text-xs font-bold text-fg/60">(0 FCFA)</span>
+              <span className="text-2xl font-black text-brand-orange">{trialMonths} <T>MOIS OFFERTS</T></span>
+              <span className="text-xs font-bold text-fg/60"><T>(0 FCFA)</T></span>
             </div>
             <p className="mt-1 text-[12px] text-fg/75">
-              Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant {trialMonths} mois complets.
+              <T>Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant</T> {trialMonths} <T>mois complets.</T>
             </p>
 
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
               <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Accès immédiat :</strong> Votre compte est activé avec {trialMonths} mois gratuits.
+                <strong><T>Accès immédiat :</T></strong> <T>Votre compte est activé avec</T> {trialMonths} <T>mois gratuits.</T>
               </div>
             </div>
           </div>
@@ -185,7 +187,7 @@ export function RegisterForm({
           href={`/login?google_verified=1&username=${encodeURIComponent(registerState.email || "")}&establishment=${encodeURIComponent(registerState.establishmentName || "")}`}
           className="mt-2 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
         >
-          Se connecter avec mon mot de passe
+          <T>Se connecter avec mon mot de passe</T>
         </Link>
       </div>
     );
@@ -208,27 +210,27 @@ export function RegisterForm({
           </div>
 
           <div>
-            <h3 className="text-lg font-extrabold text-fg">Inscription enregistrée !</h3>
+            <h3 className="text-lg font-extrabold text-fg"><T>Inscription enregistrée !</T></h3>
             <p className="mt-1 text-xs font-medium text-fg/60">
-              Votre demande a été reçue et est en cours de validation.
+              <T>Votre demande a été reçue et est en cours de validation.</T>
             </p>
           </div>
 
           <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-left">
             <div className="flex items-center gap-2">
               <span className="flex h-6 items-center rounded-md bg-amber-500/20 px-2 text-[11px] font-black tracking-wide text-amber-400 uppercase">
-                Modération SAMA HOME
+                <T>Modération SAMA HOME</T>
               </span>
             </div>
 
             <p className="mt-2 text-[12px] font-medium text-fg/80 leading-relaxed">
-              Pour des raisons de sécurité et de conformité, chaque nouvel établissement fait l&apos;objet d&apos;une vérification par notre équipe administrative avant l&apos;activation des accès.
+              <T>Pour des raisons de sécurité et de conformité, chaque nouvel établissement fait l&apos;objet d&apos;une vérification par notre équipe administrative avant l&apos;activation des accès.</T>
             </p>
 
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-amber-300">
               <span className="mt-0.5">🛡️</span>
               <div>
-                <strong>Validation requise :</strong> Vous aurez accès dès l&apos;approbation par l&apos;administrateur de SAMA HOME avec vos {trialMonths} mois d&apos;essai offerts.
+                <strong><T>Validation requise :</T></strong> <T>Vous aurez accès dès l&apos;approbation par l&apos;administrateur de SAMA HOME avec vos</T> {trialMonths} <T>mois d&apos;essai offerts.</T>
               </div>
             </div>
           </div>
@@ -237,7 +239,7 @@ export function RegisterForm({
             href="/login"
             className="mt-1 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
           >
-            Retour à la page de connexion
+            <T>Retour à la page de connexion</T>
           </Link>
         </div>
       );
@@ -252,9 +254,9 @@ export function RegisterForm({
         </div>
 
         <div>
-          <h3 className="text-lg font-extrabold text-fg">Inscription validée avec succès !</h3>
+          <h3 className="text-lg font-extrabold text-fg"><T>Inscription validée avec succès !</T></h3>
           <p className="mt-1 text-xs font-medium text-fg/60">
-            Votre adresse e-mail a été vérifiée et votre espace est prêt.
+            <T>Votre adresse e-mail a été vérifiée et votre espace est prêt.</T>
           </p>
         </div>
 
@@ -263,25 +265,25 @@ export function RegisterForm({
           <div className="w-full rounded-2xl border border-brand-orange/40 bg-brand-orange/5 p-4 text-left">
             <div className="flex items-center justify-between">
               <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
-                Forfait Choisi
+                <T>Forfait Choisi</T>
               </span>
-              <span className="text-xs font-extrabold text-fg">{formattedPrice} FCFA / {periodMonths} mois</span>
+              <span className="text-xs font-extrabold text-fg">{formattedPrice} <T>FCFA /</T> {periodMonths} mois</span>
             </div>
 
-            <p className="mt-2 text-xs font-bold text-fg">Instructions de règlement pour l&apos;activation :</p>
+            <p className="mt-2 text-xs font-bold text-fg"><T>Instructions de règlement pour l&apos;activation :</T></p>
             <div className="mt-2 space-y-1 rounded-xl bg-surface p-3 text-[12px] text-fg/80">
               <p>
-                <strong>Wave / Orange Money :</strong> Envoyez votre règlement au <strong className="text-brand-orange">+221 77 338 66 60</strong>.
+                <strong><T>Wave / Orange Money :</T></strong> <T>Envoyez votre règlement au</T> <strong className="text-brand-orange">+221 77 338 66 60</strong>.
               </p>
               <p>
-                <strong>Référence de dossier :</strong>{" "}
+                <strong><T>Référence de dossier :</T></strong>{" "}
                 <span className="font-mono font-bold text-brand-orange">{otpState.reference ?? "SH-PAID"}</span>
               </p>
             </div>
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
               <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Accès immédiat :</strong> Vos {trialMonths} mois d&apos;essai gratuit sont activés dès maintenant. Vous pouvez vous connecter et explorer votre espace immédiatement !
+                <strong><T>Accès immédiat :</T></strong> Vos {trialMonths} <T>mois d&apos;essai gratuit sont activés dès maintenant. Vous pouvez vous connecter et explorer votre espace immédiatement !</T>
               </div>
             </div>
           </div>
@@ -290,23 +292,23 @@ export function RegisterForm({
           <div className="w-full rounded-2xl border border-brand-orange/30 bg-brand-orange/5 p-4 text-left">
             <div className="flex items-center gap-2">
               <span className="flex h-6 items-center rounded-md bg-brand-orange px-2 text-[11px] font-black tracking-wide text-white uppercase">
-                Offre Gratuite
+                <T>Offre Gratuite</T>
               </span>
-              <span className="text-xs font-extrabold text-fg">Période Découverte</span>
+              <span className="text-xs font-extrabold text-fg"><T>Période Découverte</T></span>
             </div>
 
             <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-brand-orange">{trialMonths} MOIS OFFERTS</span>
-              <span className="text-xs font-bold text-fg/60">(0 FCFA)</span>
+              <span className="text-2xl font-black text-brand-orange">{trialMonths} <T>MOIS OFFERTS</T></span>
+              <span className="text-xs font-bold text-fg/60"><T>(0 FCFA)</T></span>
             </div>
             <p className="mt-1 text-[12px] text-fg/75">
-              Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant {trialMonths} mois complets.
+              <T>Vous bénéficiez de toutes les fonctionnalités de gestion sans frais pendant</T> {trialMonths} <T>mois complets.</T>
             </p>
 
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300">
               <span className="mt-0.5">🚀</span>
               <div>
-                <strong>Accès immédiat :</strong> Votre compte est activé avec {trialMonths} mois gratuits. Vous pouvez vous connecter dès maintenant sans attendre !
+                <strong><T>Accès immédiat :</T></strong> <T>Votre compte est activé avec</T> {trialMonths} <T>mois gratuits. Vous pouvez vous connecter dès maintenant sans attendre !</T>
               </div>
             </div>
           </div>
@@ -316,7 +318,7 @@ export function RegisterForm({
           href="/login"
           className="mt-1 flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90"
         >
-          Aller à la connexion
+          <T>Aller à la connexion</T>
         </Link>
       </div>
     );
@@ -368,48 +370,48 @@ export function RegisterForm({
         </div>
 
         <div>
-          <h3 className="text-lg font-extrabold text-fg">Vérifiez votre boîte e-mail</h3>
+          <h3 className="text-lg font-extrabold text-fg"><T>Vérifiez votre boîte e-mail</T></h3>
           <p className="mt-1 text-xs font-medium text-fg/60">
-            Si l&apos;adresse saisie peut être utilisée pour une inscription, un message contenant les instructions
+            <T>Si l&apos;adresse saisie peut être utilisée pour une inscription, un message contenant les instructions
             nécessaires vient de vous être envoyé. Le message peut mettre quelques minutes à arriver. Pensez à
-            vérifier vos courriers indésirables.
+            vérifier vos courriers indésirables.</T>
           </p>
           <p className="mt-2 text-xs font-medium text-fg/60">
-            Adresse saisie : <strong className="break-all text-fg">{targetEmail}</strong>
+            <T>Adresse saisie :</T> <strong className="break-all text-fg">{targetEmail}</strong>
           </p>
         </div>
 
         <p className="text-left text-[11px] leading-relaxed text-fg/60">
-          <strong className="text-fg/80">Pas de message ?</strong> Vérifiez l&apos;orthographe de l&apos;adresse saisie
+          <strong className="text-fg/80"><T>Pas de message ?</T></strong> <T>Vérifiez l&apos;orthographe de l&apos;adresse saisie
           ci-dessus et vos courriers indésirables. L&apos;envoi peut prendre quelques minutes. Si l&apos;adresse est
-          incorrecte, utilisez « Modifier l&apos;adresse ».
+          incorrecte, utilisez « Modifier l&apos;adresse ».</T>
         </p>
 
         {/* Aide au test local */}
         {currentTestCode && (
           <div className="rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/10 p-3 text-left">
             <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-              🧪 Code de test (développement local) :
+              <T>🧪 Code de test (développement local) :</T>
             </p>
             <p className="mt-0.5 font-mono text-lg font-black tracking-widest text-emerald-700 dark:text-emerald-300">
               {currentTestCode}
             </p>
             <p className="text-[10px] text-emerald-700/70 dark:text-emerald-300/70">
-              (Visible également dans les logs du terminal serveur)
+              <T>(Visible également dans les logs du terminal serveur)</T>
             </p>
           </div>
         )}
 
         <div>
           <label htmlFor="otp-input" className="block text-left text-xs font-bold text-fg/80">
-            Code à 6 chiffres
+            <T>Code à 6 chiffres</T>
           </label>
           <input
             id="otp-input"
             type="text"
             inputMode="numeric"
             maxLength={6}
-            placeholder="Ex. 123456"
+            placeholder={t("Ex. 123456")}
             value={otpCode}
             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
             required
@@ -421,7 +423,7 @@ export function RegisterForm({
           <p className="text-left text-xs font-medium text-danger">{otpState.errors.code[0]}</p>
         )}
         {otpState?.message && (
-          <p className="rounded-lg bg-danger-bg p-2.5 text-xs font-medium text-danger">{otpState.message}</p>
+          <p className="rounded-lg bg-danger-bg p-2.5 text-xs font-medium text-danger"><T>{otpState.message}</T></p>
         )}
 
         <button
@@ -429,7 +431,7 @@ export function RegisterForm({
           disabled={otpCode.length !== 6 || isVerifying}
           className="flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          {isVerifying ? "Vérification en cours..." : "Valider mon code et continuer"}
+          {isVerifying ? <T>{"Vérification en cours..."}</T> : <T>{"Valider mon code et continuer"}</T>}
         </button>
 
         <div className="flex flex-col items-center gap-1">
@@ -438,7 +440,7 @@ export function RegisterForm({
             onClick={handleResend}
             className="text-xs font-bold text-fg hover:underline"
           >
-            Je n&apos;ai pas reçu le code (Renvoyer)
+            <T>Je n&apos;ai pas reçu le code (Renvoyer)</T>
           </button>
           {resendStatus && <p className="text-[11px] font-medium text-fg/60">{resendStatus}</p>}
           <button
@@ -446,7 +448,7 @@ export function RegisterForm({
             onClick={handleEditAddress}
             className="mt-1 text-xs font-medium text-fg/50 transition-colors hover:text-fg hover:underline"
           >
-            ← Modifier l&apos;adresse
+            <T>← Modifier l&apos;adresse</T>
           </button>
         </div>
       </form>
@@ -461,9 +463,9 @@ export function RegisterForm({
       {/* 1. Sélecteur d'Activité Métier (Résidence, Hôtel, Agence - Étape 2 du Guide) */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-extrabold text-fg">Votre activité principale :</label>
+          <label className="text-xs font-extrabold text-fg"><T>Votre activité principale :</T></label>
           <Link href="/#activites" className="text-[11px] font-semibold text-brand-orange hover:underline">
-            Changer d&apos;activité
+            <T>Changer d&apos;activité</T>
           </Link>
         </div>
 
@@ -484,8 +486,8 @@ export function RegisterForm({
                 <path d="M3 10h18" />
               </svg>
             </span>
-            <span className="text-xs font-black leading-tight">Résidence</span>
-            <span className="text-[10px] text-fg/60">Meublée</span>
+            <span className="text-xs font-black leading-tight"><T>Résidence</T></span>
+            <span className="text-[10px] text-fg/60"><T>Meublée</T></span>
           </button>
 
           {/* Mode 2: Hôtel */}
@@ -505,8 +507,8 @@ export function RegisterForm({
                 <path d="M2 17h20" />
               </svg>
             </span>
-            <span className="text-xs font-black leading-tight">Hôtel</span>
-            <span className="text-[10px] text-fg/60">Nuitée</span>
+            <span className="text-xs font-black leading-tight"><T>Hôtel</T></span>
+            <span className="text-[10px] text-fg/60"><T>Nuitée</T></span>
           </button>
 
           {/* Mode 3: Agence — suspendue (AGENCY_MODE_ENABLED) : le choix n'est pas proposé */}
@@ -525,8 +527,8 @@ export function RegisterForm({
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
               </svg>
             </span>
-            <span className="text-xs font-black leading-tight">Agence</span>
-            <span className="text-[10px] text-fg/60">Immobilière</span>
+            <span className="text-xs font-black leading-tight"><T>Agence</T></span>
+            <span className="text-[10px] text-fg/60"><T>Immobilière</T></span>
           </button>
           ) : null}
         </div>
@@ -534,7 +536,7 @@ export function RegisterForm({
 
       {/* Sélecteur des 2 Offres */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-extrabold text-fg">Choisissez votre offre de démarrage :</label>
+        <label className="text-xs font-extrabold text-fg"><T>Choisissez votre offre de démarrage :</T></label>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {/* Offre 1 : Gratuite */}
@@ -549,7 +551,7 @@ export function RegisterForm({
           >
             <div className="flex items-center justify-between">
               <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">
-                Essai Gratuit
+                <T>Essai Gratuit</T>
               </span>
               <input
                 type="radio"
@@ -559,10 +561,10 @@ export function RegisterForm({
                 className="accent-navy"
               />
             </div>
-            <p className="mt-2 text-base font-black text-fg">{trialMonths} MOIS OFFERTS</p>
-            <p className="text-[11px] font-semibold text-fg/60">0 FCFA — Sans engagement</p>
+            <p className="mt-2 text-base font-black text-fg">{trialMonths} <T>MOIS OFFERTS</T></p>
+            <p className="text-[11px] font-semibold text-fg/60"><T>0 FCFA — Sans engagement</T></p>
             <p className="mt-1 text-[11px] leading-tight text-fg/70">
-              Idéal pour découvrir toutes les fonctionnalités librement.
+              <T>Idéal pour découvrir toutes les fonctionnalités librement.</T>
             </p>
           </button>
 
@@ -578,7 +580,7 @@ export function RegisterForm({
           >
             <div className="flex items-center justify-between">
               <span className="rounded-md bg-brand-orange/15 px-2 py-0.5 text-[10px] font-black text-brand-orange uppercase">
-                Prioritaire
+                <T>Prioritaire</T>
               </span>
               <input
                 type="radio"
@@ -589,9 +591,9 @@ export function RegisterForm({
               />
             </div>
             <p className="mt-2 text-base font-black text-brand-orange">{formattedPrice} FCFA</p>
-            <p className="text-[11px] font-semibold text-fg/60">Pour {periodMonths} mois de gestion</p>
+            <p className="text-[11px] font-semibold text-fg/60"><T>Pour</T> {periodMonths} <T>mois de gestion</T></p>
             <p className="mt-1 text-[11px] leading-tight text-fg/70">
-              Activation prioritaire et assistance dédiée pour votre hôtel.
+              <T>Activation prioritaire et assistance dédiée pour votre hôtel.</T>
             </p>
           </button>
         </div>
@@ -604,9 +606,9 @@ export function RegisterForm({
             ✓
           </span>
           <div>
-            <p className="font-extrabold text-fg">Compte Google vérifié ({initialEmail})</p>
+            <p className="font-extrabold text-fg"><T>Compte Google vérifié (</T>{initialEmail})</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-fg/70">
-              Votre identité a été validée. Choisissez le nom de votre établissement et définissez votre mot de passe pour finaliser votre inscription.
+              <T>Votre identité a été validée. Choisissez le nom de votre établissement et définissez votre mot de passe pour finaliser votre inscription.</T>
             </p>
           </div>
         </div>
@@ -651,7 +653,7 @@ export function RegisterForm({
       {isGoogle ? (
         <div>
           <label htmlFor="email" className="block text-left text-xs font-bold text-fg/80">
-            Adresse e-mail <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">✓ Vérifiée via Google</span>
+            <T>Adresse e-mail</T> <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400"><T>✓ Vérifiée via Google</T></span>
           </label>
           <input type="hidden" name="email" value={initialEmail} />
           <div className="relative mt-1.5 flex h-12 w-full items-center rounded-xl border border-border/15 bg-surface/60 pl-10 pr-4 text-sm font-semibold text-fg/80">
@@ -700,14 +702,14 @@ export function RegisterForm({
           className="mt-0.5 h-4 w-4 accent-navy"
         />
         <span>
-          J&apos;accepte les{" "}
-          <span className="font-bold text-fg underline-offset-2">conditions d&apos;utilisation</span>
+          <T>J&apos;accepte les</T>{" "}
+          <span className="font-bold text-fg underline-offset-2"><T>conditions d&apos;utilisation</T></span>
         </span>
       </label>
 
       {registerState?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {registerState.message}
+          <T>{registerState.message}</T>
         </p>
       )}
 
@@ -717,10 +719,10 @@ export function RegisterForm({
         className="flex h-12 w-full items-center justify-center rounded-xl bg-navy text-sm font-extrabold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {isRegisterPending
-          ? "Création de votre établissement..."
+          ? <T>{"Création de votre établissement..."}</T>
           : isGoogle
-            ? "CRÉER MON ÉTABLISSEMENT"
-            : "Continuer et recevoir mon code de validation"}
+            ? <T>{"CRÉER MON ÉTABLISSEMENT"}</T>
+            : <T>{"Continuer et recevoir mon code de validation"}</T>}
       </button>
     </form>
   );

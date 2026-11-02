@@ -7,12 +7,15 @@ import { listBankTransfers, listBankAccounts } from "@/lib/bank-data";
 import { generateDueScheduledTransfers } from "@/app/actions/bank";
 import { BankTransferStatusBadge } from "./bank-transfer-status-badge";
 import { BankTransferRowActions } from "./bank-transfer-row-actions";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtDateTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(dateLocale(), {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -31,6 +34,7 @@ function fmtDateTime(d: Date) {
  * (même précédent que `src/app/page.tsx`/`src/app/caisse/page.tsx`).
  */
 export default async function BankTransfersPage(props: PageProps<"/caisse/virements">) {
+  const t = await getT();
   await verifySession();
   const { done } = await props.searchParams;
 
@@ -67,31 +71,31 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
       <div className="flex items-center gap-3">
         <Link
           href="/caisse"
-          aria-label="Retour"
+          aria-label={t("Retour")}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="flex-1 text-xl font-extrabold text-fg">Virements bancaires</h1>
+        <h1 className="flex-1 text-xl font-extrabold text-fg"><T>Virements bancaires</T></h1>
         <Link
           href="/caisse/virements/new"
           className="flex h-10 items-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-ink"
         >
-          + Nouveau
+          <T>+ Nouveau</T>
         </Link>
       </div>
       <p className="mt-1 text-xs font-medium text-fg/50 lg:max-w-2xl">
-        Transferts d&apos;argent de la caisse vers les comptes bancaires.
+        <T>Transferts d&apos;argent de la caisse vers les comptes bancaires.</T>
       </p>
 
       <p className="mt-4 rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60 lg:max-w-2xl">
-        Un virement bancaire transfère de l&apos;argent de la caisse vers la banque. Il ne constitue pas une dépense.
+        <T>Un virement bancaire transfère de l&apos;argent de la caisse vers la banque. Il ne constitue pas une dépense.</T>
       </p>
 
       {done === "created" ? (
-        <p className="mt-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success lg:max-w-2xl">Virement créé.</p>
+        <p className="mt-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success lg:max-w-2xl"><T>Virement créé.</T></p>
       ) : null}
 
       {transfers.length === 0 ? (
@@ -110,7 +114,7 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
                 href="/caisse/virements/new"
                 className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
               >
-                + Nouveau virement
+                <T>+ Nouveau virement</T>
               </Link>
             }
           />
@@ -125,7 +129,7 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
                   <div className="min-w-0">
                     <p className="text-lg font-extrabold text-fg">{fmtFcfa(t.amount)}</p>
                     <p className="mt-0.5 truncate text-xs font-semibold text-fg/60">
-                      {account ? `${account.label} · ${account.bankName}` : "Compte introuvable"}
+                      {account ? `${account.label} · ${account.bankName}` : <T>{"Compte introuvable"}</T>}
                     </p>
                   </div>
                   <BankTransferStatusBadge status={t.status} />
@@ -135,17 +139,17 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
                     réellement présents sur BankTransfer, rien d'inventé. */}
                 <div className="mt-2.5 flex flex-col gap-0.5 text-xs font-medium text-fg/50">
                   <span>
-                    Créé le {fmtDateTime(t.createdAt)} par {userName(t.createdByUserId)}
+                    <T>Créé le</T> {fmtDateTime(t.createdAt)} par {userName(t.createdByUserId)}
                   </span>
-                  {t.scheduledAt ? <span>Prévu le {fmtDateTime(t.scheduledAt)}</span> : null}
+                  {t.scheduledAt ? <span><T>Prévu le</T> {fmtDateTime(t.scheduledAt)}</span> : null}
                   {t.status === "EFFECTED" && t.effectedAt ? (
                     <span>
-                      Effectué le {fmtDateTime(t.effectedAt)} par {userName(t.effectedByUserId)}
+                      <T>Effectué le</T> {fmtDateTime(t.effectedAt)} par {userName(t.effectedByUserId)}
                     </span>
                   ) : null}
-                  {t.reference ? <span>Réf. {t.reference}</span> : null}
+                  {t.reference ? <span><T>Réf.</T> {t.reference}</span> : null}
                   {t.note ? <span>{t.note}</span> : null}
-                  {t.transferScheduleId ? <span>Généré par une programmation automatique</span> : null}
+                  {t.transferScheduleId ? <span><T>Généré par une programmation automatique</T></span> : null}
                 </div>
 
                 <div className="mt-3">

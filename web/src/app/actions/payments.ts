@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
 import { PaymentSchema, type PaymentFormState } from "@/lib/definitions";
 import { getReservationPaymentSummary, getRentalPaymentSummary } from "@/lib/payment-summary";
+import { getT } from "@/lib/i18n/server";
 
 class PaymentActionError extends Error {}
 
@@ -30,6 +31,7 @@ export async function createReservationPayment(
   _prevState: PaymentFormState,
   formData: FormData,
 ): Promise<PaymentFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : encaisser un
   // paiement crée un nouvel enregistrement financier réel, jamais
   // risk-reducing — gardée comme toute autre création de ce lot.
@@ -37,18 +39,18 @@ export async function createReservationPayment(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement.") };
   }
 
   // Une réservation d'un autre établissement est indistinguable d'un id
@@ -57,7 +59,7 @@ export async function createReservationPayment(
     where: { id: reservationId, establishmentId: user.establishmentId },
   });
   if (!reservation) {
-    return { message: "Réservation introuvable." };
+    return { message: t("Réservation introuvable.") };
   }
   if (reservation.status !== "CONFIRMED") {
     return {
@@ -115,7 +117,7 @@ export async function createReservationPayment(
     // a bug (see the Phase 6/7 reports for the same documented behavior).
     return {
       message:
-        "Le reste à payer vient peut-être de changer à l'instant (autre encaissement concurrent). Veuillez vérifier et réessayer.",
+        t("Le reste à payer vient peut-être de changer à l'instant (autre encaissement concurrent). Veuillez vérifier et réessayer."),
     };
   }
 
@@ -129,34 +131,35 @@ export async function createRentalPayment(
   _prevState: PaymentFormState,
   formData: FormData,
 ): Promise<PaymentFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — même correction que createReservationPayment()
   // ci-dessus.
   const access = await requireActiveEstablishment();
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible d'encaisser ce paiement.") };
   }
 
   const rental = await prisma.rental.findFirst({
     where: { id: rentalId, establishmentId: user.establishmentId },
   });
   if (!rental) {
-    return { message: "Location introuvable." };
+    return { message: t("Location introuvable.") };
   }
   if (rental.status !== "ACTIVE") {
-    return { message: "Cette location n'est plus active — aucun nouvel encaissement possible." };
+    return { message: t("Cette location n'est plus active — aucun nouvel encaissement possible.") };
   }
 
   const parsed = parsePaymentForm(formData);
@@ -194,7 +197,7 @@ export async function createRentalPayment(
     }
     return {
       message:
-        "Le reste à payer vient peut-être de changer à l'instant (autre encaissement concurrent). Veuillez vérifier et réessayer.",
+        t("Le reste à payer vient peut-être de changer à l'instant (autre encaissement concurrent). Veuillez vérifier et réessayer."),
     };
   }
 

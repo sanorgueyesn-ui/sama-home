@@ -3,6 +3,7 @@ import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { listActiveBankAccounts } from "@/lib/bank-data";
 import { CreateBankTransferForm } from "./create-bank-transfer-form";
+import { T } from "@/components/i18n/i18n-provider";
 
 export default async function NewBankTransferPage() {
   // Bloc G, section 16 — ADMIN et GESTIONNAIRE peuvent créer un virement.
@@ -20,11 +21,11 @@ export default async function NewBankTransferPage() {
       <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
         {accounts.length === 0 ? (
           <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
-            Aucun compte bancaire actif.{" "}
+            <T>Aucun compte bancaire actif.</T>{" "}
             <Link href="/settings/bank-accounts/new" className="underline">
-              Créer un compte bancaire
+              <T>Créer un compte bancaire</T>
             </Link>{" "}
-            avant de pouvoir enregistrer un virement.
+            <T>avant de pouvoir enregistrer un virement.</T>
           </p>
         ) : (
           <CreateBankTransferForm accounts={accounts.map((a) => ({ id: a.id, label: a.label, bankName: a.bankName }))} />

@@ -18,6 +18,8 @@ import { DashboardPreview, PhonePreview, PlanningPreview } from "@/components/la
 import { BUTTON_PRIMARY, BUTTON_SECONDARY } from "@/components/landing/landing-header";
 import { COMPANY_LEGAL_INFO } from "@/lib/company-info";
 import type { Messages } from "@/lib/i18n/messages";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 const WRAP = "mx-auto w-full max-w-6xl";
 const SECTION = "scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28 lg:px-8";
@@ -47,11 +49,11 @@ function SectionHeading({
 }) {
   return (
     <div className="max-w-2xl">
-      <Eyebrow>{eyebrow}</Eyebrow>
+      <Eyebrow><T>{eyebrow}</T></Eyebrow>
       <h2 id={id} className="mt-3 text-balance text-3xl font-extrabold tracking-tight text-fg sm:text-4xl">
-        {title}
+        <T>{title}</T>
       </h2>
-      {subtitle ? <p className="mt-4 text-pretty text-base leading-relaxed text-muted sm:text-lg">{subtitle}</p> : null}
+      {subtitle ? <p className="mt-4 text-pretty text-base leading-relaxed text-muted sm:text-lg"><T>{subtitle}</T></p> : null}
     </div>
   );
 }
@@ -74,26 +76,26 @@ export function HeroSection() {
         <div>
           <p className="inline-flex items-center gap-2 rounded-full border border-border/20 bg-surface-raised px-3.5 py-1.5 text-xs font-semibold text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Résidences meublées · Hôtels et agences bientôt
+            <T>Résidences meublées · Hôtels et agences bientôt</T>
           </p>
           <h1
             id="hero-titre"
             className="mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-[3.6rem]"
           >
-            Vos logements, réservations et paiements. Au même endroit.
+            <T>Vos logements, réservations et paiements. Au même endroit.</T>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted sm:text-lg">
-            Fini le cahier et les fichiers Excel. Suivez vos disponibilités, encaissez en espèces, Wave ou Orange Money
-            et éditez vos contrats, depuis votre téléphone ou votre ordinateur.
+            <T>Fini le cahier et les fichiers Excel. Suivez vos disponibilités, encaissez en espèces, Wave ou Orange Money
+            et éditez vos contrats, depuis votre téléphone ou votre ordinateur.</T>
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/register" className={`${BUTTON_PRIMARY} !h-12 !px-7 !text-base`}>
-              Démarrer l&apos;essai gratuit
+              <T>Démarrer l&apos;essai gratuit</T>
               <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" aria-hidden />
             </Link>
             <Link href="/login" className={`${BUTTON_SECONDARY} !h-12 !px-7 !text-base`}>
-              Se connecter
+              <T>Se connecter</T>
             </Link>
           </div>
 
@@ -101,7 +103,7 @@ export function HeroSection() {
             {["1 mois d'essai gratuit", "Rien à installer", "Wave et Orange Money"].map((item) => (
               <li key={item} className="inline-flex items-center gap-2">
                 <CheckIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                {item}
+                <T>{item}</T>
               </li>
             ))}
           </ul>
@@ -112,7 +114,7 @@ export function HeroSection() {
           <div className="absolute -bottom-2 end-3 hidden sm:block lg:-bottom-8 lg:-end-2">
             <PhonePreview />
           </div>
-          <p className="mt-4 max-w-[15rem] text-xs text-muted sm:mt-6">Aperçu illustratif : ce n&apos;est pas une capture de l&apos;application.</p>
+          <p className="mt-4 max-w-[15rem] text-xs text-muted sm:mt-6"><T>Aperçu illustratif : ce n&apos;est pas une capture de l&apos;application.</T></p>
         </div>
       </div>
     </section>
@@ -143,7 +145,7 @@ export function OffersSection({ m }: { m: Messages }) {
             </div>
             <h3 className="mt-6 text-2xl font-extrabold text-fg">{o.residence.name}</h3>
             <p className="mt-1 text-sm font-semibold text-(--accent-text)">{o.residence.tagline}</p>
-            <p className="mt-4 text-pretty leading-relaxed text-muted">{o.residence.description}</p>
+            <p className="mt-4 text-pretty leading-relaxed text-muted"><T>{o.residence.description}</T></p>
             <Link href="/register?mode=RESIDENCE" className={`${BUTTON_PRIMARY} mt-8 self-start`}>
               {o.residence.cta}
               <ArrowRightIcon className="h-4 w-4 rtl:rotate-180" aria-hidden />
@@ -181,7 +183,8 @@ export function OffersSection({ m }: { m: Messages }) {
 // ---------------------------------------------------------------------------------------------
 // 3. Fonctionnalités de la Résidence : mosaïque, les deux preuves fortes d'abord.
 // ---------------------------------------------------------------------------------------------
-export function FeaturesSection({ m }: { m: Messages }) {
+export async function FeaturesSection({ m }: { m: Messages }) {
+  const t = await getT();
   const r = m.landing.residence;
   const [homes, bookings, availability, payments, expenses, contracts] = r.items;
   const small = [
@@ -201,17 +204,17 @@ export function FeaturesSection({ m }: { m: Messages }) {
               {bookings.title.replace(" et ", ", ")} et {availability.title.toLowerCase()}
             </h3>
             <p className="mt-2 max-w-xl text-pretty text-sm leading-relaxed text-muted sm:text-base">
-              {bookings.text} {availability.text}
+              <T>{bookings.text}</T> <T>{availability.text}</T>
             </p>
             <PlanningPreview />
           </article>
 
           <article className={`${PANEL} flex flex-col p-7 sm:p-8`}>
             <IconBadge icon={WalletIcon} />
-            <h3 className="mt-5 text-xl font-extrabold text-fg">{payments.title}</h3>
-            <p className="mt-2 flex-1 text-pretty text-sm leading-relaxed text-muted sm:text-base">{payments.text}</p>
-            <ul className="mt-6 flex flex-wrap gap-2" aria-label="Moyens de paiement">
-              <li className="rounded-full border border-border/20 bg-surface px-3 py-1.5 text-xs font-bold text-fg">Espèces</li>
+            <h3 className="mt-5 text-xl font-extrabold text-fg"><T>{payments.title}</T></h3>
+            <p className="mt-2 flex-1 text-pretty text-sm leading-relaxed text-muted sm:text-base"><T>{payments.text}</T></p>
+            <ul className="mt-6 flex flex-wrap gap-2" aria-label={t("Moyens de paiement")}>
+              <li className="rounded-full border border-border/20 bg-surface px-3 py-1.5 text-xs font-bold text-fg"><T>Espèces</T></li>
               {[
                 { logo: "/images/payments/wave.png", name: "Wave" },
                 { logo: "/images/payments/orange-money.png", name: "Orange Money" },
@@ -230,8 +233,8 @@ export function FeaturesSection({ m }: { m: Messages }) {
           {small.map(({ icon, item }) => (
             <article key={item.title} className={`${PANEL} p-7`}>
               <IconBadge icon={icon} />
-              <h3 className="mt-5 text-lg font-extrabold text-fg">{item.title}</h3>
-              <p className="mt-2 text-pretty text-sm leading-relaxed text-muted">{item.text}</p>
+              <h3 className="mt-5 text-lg font-extrabold text-fg"><T>{item.title}</T></h3>
+              <p className="mt-2 text-pretty text-sm leading-relaxed text-muted"><T>{item.text}</T></p>
             </article>
           ))}
         </div>
@@ -256,7 +259,7 @@ export function HowItWorksSection({ m }: { m: Messages }) {
             <li key={step.title} className="relative border-t-2 border-(--accent) pt-5">
               <span className="text-sm font-extrabold tabular-nums text-(--accent-text)">0{index + 1}</span>
               <h3 className="mt-2 text-lg font-extrabold text-fg">{step.title.replace(/^\d+\.\s*/, "")}</h3>
-              <p className="mt-2 text-pretty text-sm leading-relaxed text-muted">{step.text}</p>
+              <p className="mt-2 text-pretty text-sm leading-relaxed text-muted"><T>{step.text}</T></p>
             </li>
           ))}
         </ol>
@@ -279,7 +282,7 @@ export function RolesSection({ m }: { m: Messages }) {
             <article key={role.name} className={`${PANEL} p-7`}>
               <IconBadge icon={role.icon} />
               <h3 className="mt-5 text-lg font-extrabold text-fg">{role.name}</h3>
-              <p className="mt-2 text-pretty text-sm leading-relaxed text-muted">{role.text}</p>
+              <p className="mt-2 text-pretty text-sm leading-relaxed text-muted"><T>{role.text}</T></p>
             </article>
           ))}
         </div>
@@ -297,11 +300,11 @@ export function AvailabilitySection({ m }: { m: Messages }) {
     <section id="application" aria-labelledby="application-titre" className="px-4 pb-20 sm:px-6 sm:pb-28 lg:px-8">
       <div className={`${WRAP} ${PANEL} grid grid-cols-1 gap-8 p-8 sm:p-10 lg:grid-cols-[1.1fr_1fr] lg:items-center`}>
         <div>
-          <Eyebrow>Application</Eyebrow>
+          <Eyebrow><T>Application</T></Eyebrow>
           <h2 id="application-titre" className="mt-3 text-balance text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
-            {d.title}
+            <T>{d.title}</T>
           </h2>
-          <p className="mt-3 max-w-lg text-pretty text-sm leading-relaxed text-muted sm:text-base">{d.subtitle}</p>
+          <p className="mt-3 max-w-lg text-pretty text-sm leading-relaxed text-muted sm:text-base"><T>{d.subtitle}</T></p>
         </div>
         <ul className="divide-y divide-border/15 rounded-2xl border border-border/15 bg-surface">
           {[
@@ -311,7 +314,7 @@ export function AvailabilitySection({ m }: { m: Messages }) {
             <li key={row.name} className="flex items-start justify-between gap-4 p-5">
               <div>
                 <p className="font-bold text-fg">{row.name}</p>
-                <p className="mt-1 text-sm text-muted">{row.text}</p>
+                <p className="mt-1 text-sm text-muted"><T>{row.text}</T></p>
               </div>
               <span
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
@@ -336,24 +339,24 @@ export function FinalCtaSection() {
     <section aria-labelledby="cta-titre" className="px-4 pb-20 sm:px-6 sm:pb-28 lg:px-8">
       <div className={`${WRAP} rounded-3xl bg-(--accent) px-6 py-14 text-center text-(--accent-ink) sm:px-12 sm:py-16`}>
         <h2 id="cta-titre" className="mx-auto max-w-2xl text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-          Testez SAMA HOME gratuitement pendant 1 mois.
+          <T>Testez SAMA HOME gratuitement pendant 1 mois.</T>
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-pretty text-base opacity-85 sm:text-lg">
-          Créez l&apos;espace de votre résidence, ajoutez vos logements et enregistrez votre première réservation.
+          <T>Créez l&apos;espace de votre résidence, ajoutez vos logements et enregistrez votre première réservation.</T>
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             href="/register"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-(--accent-ink) px-7 text-base font-extrabold text-(--accent) transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-ink)"
           >
-            Démarrer l&apos;essai gratuit
+            <T>Démarrer l&apos;essai gratuit</T>
             <ArrowRightIcon className="h-4 w-4 rtl:rotate-180" aria-hidden />
           </Link>
           <Link
             href="/login"
             className="inline-flex h-12 items-center justify-center rounded-xl border border-(--accent-ink)/40 px-7 text-base font-bold transition hover:bg-(--accent-ink)/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-ink)"
           >
-            Se connecter
+            <T>Se connecter</T>
           </Link>
         </div>
       </div>
@@ -366,7 +369,8 @@ export { ContactSection } from "@/components/landing/contact-section";
 // ---------------------------------------------------------------------------------------------
 // 7. Pied de page.
 // ---------------------------------------------------------------------------------------------
-export function FooterSection() {
+export async function FooterSection() {
+  const t = await getT();
   const link = "text-muted transition-colors hover:text-fg";
   return (
     <footer className="border-t border-border/15 px-4 py-14 text-sm sm:px-6 lg:px-8">
@@ -377,32 +381,32 @@ export function FooterSection() {
               <span className="text-(--accent-text)">SAMA</span> HOME
             </p>
             <p className="mt-3 max-w-sm text-pretty leading-relaxed text-muted">
-              Gestion de résidences meublées au Sénégal : logements, réservations, paiements et caisse.
+              <T>Gestion de résidences meublées au Sénégal : logements, réservations, paiements et caisse.</T>
             </p>
-            <p className="mt-3 text-xs text-muted">{COMPANY_LEGAL_INFO.address}, Dakar.</p>
+            <p className="mt-3 text-xs text-muted">{COMPANY_LEGAL_INFO.address}<T>, Dakar.</T></p>
           </div>
 
-          <nav aria-label="Produit">
-            <p className="font-bold text-fg">Produit</p>
+          <nav aria-label={t("Produit")}>
+            <p className="font-bold text-fg"><T>Produit</T></p>
             <ul className="mt-3 space-y-2">
-              <li><a href="#activites" className={link}>Activités</a></li>
-              <li><a href="#fonctionnalites" className={link}>Fonctionnalités</a></li>
-              <li><a href="#tarifs" className={link}>Tarifs</a></li>
-              <li><Link href="/register" className={link}>Essai gratuit</Link></li>
+              <li><a href="#activites" className={link}><T>Activités</T></a></li>
+              <li><a href="#fonctionnalites" className={link}><T>Fonctionnalités</T></a></li>
+              <li><a href="#tarifs" className={link}><T>Tarifs</T></a></li>
+              <li><Link href="/register" className={link}><T>Essai gratuit</T></Link></li>
             </ul>
           </nav>
 
-          <nav aria-label="Compte">
-            <p className="font-bold text-fg">Compte</p>
+          <nav aria-label={t("Compte")}>
+            <p className="font-bold text-fg"><T>Compte</T></p>
             <ul className="mt-3 space-y-2">
-              <li><Link href="/login" className={link}>Se connecter</Link></li>
-              <li><Link href="/register" className={link}>Créer un compte</Link></li>
-              <li><Link href="/forgot-password" className={link}>Mot de passe oublié</Link></li>
+              <li><Link href="/login" className={link}><T>Se connecter</T></Link></li>
+              <li><Link href="/register" className={link}><T>Créer un compte</T></Link></li>
+              <li><Link href="/forgot-password" className={link}><T>Mot de passe oublié</T></Link></li>
             </ul>
           </nav>
 
           <div>
-            <p className="font-bold text-fg">Contact</p>
+            <p className="font-bold text-fg"><T>Contact</T></p>
             <ul className="mt-3 space-y-2">
               <li><a href={whatsappUrl("Bonjour, j'ai une question sur SAMA HOME.")} target="_blank" rel="noopener noreferrer" className={link}>WhatsApp</a></li>
               <li><a href={`tel:${COMPANY_LEGAL_INFO.phone}`} className={link}>{COMPANY_LEGAL_INFO.formattedPhone}</a></li>
@@ -413,10 +417,10 @@ export function FooterSection() {
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border/15 pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Édité par {COMPANY_LEGAL_INFO.commercialName} ({COMPANY_LEGAL_INFO.sigle}) · NINEA : {COMPANY_LEGAL_INFO.ninea} · RCCM :{" "}
+            <T>Édité par</T> {COMPANY_LEGAL_INFO.commercialName} ({COMPANY_LEGAL_INFO.sigle}<T>) · NINEA :</T> {COMPANY_LEGAL_INFO.ninea} <T>· RCCM :</T>{" "}
             {COMPANY_LEGAL_INFO.rccm}
           </p>
-          <p>© 2026 SAMA HOME. Tous droits réservés.</p>
+          <p><T>© 2026 SAMA HOME. Tous droits réservés.</T></p>
         </div>
       </div>
     </footer>

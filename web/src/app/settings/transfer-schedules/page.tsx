@@ -5,6 +5,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { requireAdmin } from "@/lib/dal";
 import { listTransferSchedules, listBankAccounts } from "@/lib/bank-data";
 import { TransferScheduleRowActions } from "./transfer-schedule-row-actions";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 const FEEDBACK_MESSAGES: Record<string, string> = {
   created: "Programmation créée.",
@@ -21,7 +23,7 @@ function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 }
 function fmtDateTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 /**
@@ -45,8 +47,8 @@ export default async function TransferSchedulesPage(props: PageProps<"/settings/
       <SettingsPageHeader title="Virements programmés" backHref={"/settings"} description="Automatisez la préparation de vos versements bancaires sans effectuer automatiquement les transferts." action={{ href: "/settings/transfer-schedules/new", label: "+ Nouvelle" }} />
 
       <p className="mb-4 rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60">
-        Lorsqu&apos;une échéance arrive, SAMA HOME crée un virement programmé (statut <strong>SCHEDULED</strong>).
-        Vous devrez ensuite l&apos;effectuer depuis Caisse → Virements bancaires — jamais automatiquement.
+        <T>Lorsqu&apos;une échéance arrive, SAMA HOME crée un virement programmé (statut</T> <strong>SCHEDULED</strong><T>).
+        Vous devrez ensuite l&apos;effectuer depuis Caisse → Virements bancaires — jamais automatiquement.</T>
       </p>
 
       {typeof done === "string" && FEEDBACK_MESSAGES[done] ? (
@@ -72,7 +74,7 @@ export default async function TransferSchedulesPage(props: PageProps<"/settings/
               href="/settings/transfer-schedules/new"
               className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
             >
-              + Nouvelle programmation
+              <T>+ Nouvelle programmation</T>
             </Link>
           }
         />
@@ -85,30 +87,30 @@ export default async function TransferSchedulesPage(props: PageProps<"/settings/
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-fg">
-                      {account ? `${account.bankName} · ${account.label}` : "Compte introuvable"}
+                      {account ? `${account.bankName} · ${account.label}` : <T>{"Compte introuvable"}</T>}
                     </p>
                     <p className="mt-1 text-lg font-extrabold text-fg">
                       {schedule.amountType === "FIXED"
                         ? fmtFcfa(schedule.fixedAmount ?? 0)
                         : `${schedule.percentage ?? 0} % du solde disponible`}
                     </p>
-                    <p className="mt-0.5 text-xs font-semibold text-fg/60">{FREQUENCY_LABELS[schedule.frequency] ?? schedule.frequency}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-fg/60"><T>{FREQUENCY_LABELS[schedule.frequency] ?? schedule.frequency}</T></p>
                   </div>
                   <span
                     className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 ${schedule.active ? "bg-success-bg" : "bg-neutral-bg"}`}
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${schedule.active ? "bg-success" : "bg-neutral"}`} />
                     <span className={`text-[10.5px] font-bold ${schedule.active ? "text-success" : "text-neutral"}`}>
-                      {schedule.active ? "Actif" : "Inactif"}
+                      {schedule.active ? <T>{"Actif"}</T> : <T>{"Inactif"}</T>}
                     </span>
                   </span>
                 </div>
 
                 <div className="mt-2.5 flex flex-col gap-0.5 text-xs font-medium text-fg/50">
                   <span>
-                    {schedule.active ? "Prochaine génération" : "Prochaine génération (en pause)"} : {fmtDateTime(schedule.nextRunAt)}
+                    {schedule.active ? <T>{"Prochaine génération"}</T> : <T>{"Prochaine génération (en pause)"}</T>} : {fmtDateTime(schedule.nextRunAt)}
                   </span>
-                  <span>Créée le {fmtDateTime(schedule.createdAt)}</span>
+                  <span><T>Créée le</T> {fmtDateTime(schedule.createdAt)}</span>
                 </div>
 
                 <div className="mt-3">

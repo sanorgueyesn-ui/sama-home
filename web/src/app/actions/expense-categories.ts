@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { requireAdmin, requireActiveEstablishment } from "@/lib/dal";
 import { ExpenseCategoryNameSchema } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Bloc 16.2 — CRUD des catégories de dépenses. ADMIN uniquement, toujours
@@ -47,6 +48,7 @@ async function findDuplicateName(
  * erreur de sérialisation plutôt que de laisser passer un doublon.
  */
 export async function createExpenseCategory(name: string): Promise<{ error?: string; id?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : aucune fonction
   // de ce fichier n'était gardée par requireActiveEstablishment(). Placée
   // avant requireAdmin() (conservé tel quel, redirection inchangée en cas de
@@ -55,18 +57,18 @@ export async function createExpenseCategory(name: string): Promise<{ error?: str
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une catégorie." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une catégorie.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const admin = await requireAdmin();
   if (!admin.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une catégorie." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une catégorie.") };
   }
   // Liaison locale non nullable — le typage de `admin.establishmentId` ne
   // reste pas restreint à `string` à l'intérieur de la fermeture de la
@@ -116,7 +118,7 @@ export async function createExpenseCategory(name: string): Promise<{ error?: str
       return { error: error.message };
     }
     return {
-      error: "Une catégorie du même nom vient peut-être d'être créée à l'instant. Veuillez réessayer.",
+      error: t("Une catégorie du même nom vient peut-être d'être créée à l'instant. Veuillez réessayer."),
     };
   }
 }
@@ -130,24 +132,25 @@ export async function createExpenseCategory(name: string): Promise<{ error?: str
  * (même principe que activate/deactivate ci-dessous).
  */
 export async function renameExpenseCategory(id: string, name: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
   // que createExpenseCategory() ci-dessus.
   const access = await requireActiveEstablishment();
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de renommer cette catégorie." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de renommer cette catégorie.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const admin = await requireAdmin();
   if (!admin.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de renommer cette catégorie." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de renommer cette catégorie.") };
   }
   const establishmentId = admin.establishmentId;
 
@@ -199,7 +202,7 @@ export async function renameExpenseCategory(id: string, name: string): Promise<{
     if (error instanceof ExpenseCategoryActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/depenses");
@@ -208,6 +211,7 @@ export async function renameExpenseCategory(id: string, name: string): Promise<{
 
 /** Section 15 — déjà active : idempotent, aucun AuditLog créé. */
 export async function activateExpenseCategory(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : réactiver une
   // catégorie est la direction "risk-increasing" du bascule, gardée au même
   // titre qu'une création (même principe que toggleActive()/
@@ -216,18 +220,18 @@ export async function activateExpenseCategory(id: string): Promise<{ error?: str
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'activer cette catégorie." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'activer cette catégorie.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const admin = await requireAdmin();
   if (!admin.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'activer cette catégorie." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'activer cette catégorie.") };
   }
 
   try {
@@ -268,7 +272,7 @@ export async function activateExpenseCategory(id: string): Promise<{ error?: str
     if (error instanceof ExpenseCategoryActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/depenses");
@@ -283,6 +287,7 @@ export async function activateExpenseCategory(id: string): Promise<{ error?: str
  * restent intacts.
  */
 export async function deactivateExpenseCategory(id: string, reason: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite, même principe que
   // deactivateBankAccount() (bank.ts) : volontairement JAMAIS gardée par
   // requireActiveEstablishment() — désactiver réduit l'exposition de
@@ -290,12 +295,12 @@ export async function deactivateExpenseCategory(id: string, reason: string): Pro
   const admin = await requireAdmin();
   // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
   if (!admin.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de désactiver cette catégorie." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de désactiver cette catégorie.") };
   }
 
   const trimmedReason = reason?.trim() ?? "";
   if (trimmedReason.length === 0) {
-    return { error: "Une justification est obligatoire pour désactiver une catégorie." };
+    return { error: t("Une justification est obligatoire pour désactiver une catégorie.") };
   }
 
   try {
@@ -336,7 +341,7 @@ export async function deactivateExpenseCategory(id: string, reason: string): Pro
     if (error instanceof ExpenseCategoryActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/depenses");
@@ -352,6 +357,7 @@ export async function deactivateExpenseCategory(id: string, reason: string): Pro
  * cas.
  */
 export async function deleteExpenseCategory(id: string, reason: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : une suppression
   // est gardée au même titre que deleteTariff() (tariffs.ts, déjà gardée
   // depuis D12-O11) — jamais traitée comme risk-reducing au même titre qu'une
@@ -360,23 +366,23 @@ export async function deleteExpenseCategory(id: string, reason: string): Promise
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer cette catégorie." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de supprimer cette catégorie.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const admin = await requireAdmin();
   if (!admin.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer cette catégorie." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de supprimer cette catégorie.") };
   }
 
   const trimmedReason = reason?.trim() ?? "";
   if (trimmedReason.length === 0) {
-    return { error: "Une justification est obligatoire pour supprimer une catégorie." };
+    return { error: t("Une justification est obligatoire pour supprimer une catégorie.") };
   }
 
   try {
@@ -428,7 +434,7 @@ export async function deleteExpenseCategory(id: string, reason: string): Promise
     if (error instanceof ExpenseCategoryActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant la suppression. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la suppression. Veuillez réessayer.") };
   }
 
   revalidatePath("/depenses");

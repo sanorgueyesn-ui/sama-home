@@ -1,4 +1,5 @@
-/** Bloc G, section 8 — mêmes 4 couleurs du langage visuel SAMA HOME (tokens sémantiques, cohérent avec CashSessionStatusBadge), même structure que ReservationStatusBadge/RentalStatusBadge. */
+
+import { T } from "@/components/i18n/i18n-provider";/** Bloc G, section 8 — mêmes 4 couleurs du langage visuel SAMA HOME (tokens sémantiques, cohérent avec CashSessionStatusBadge), même structure que ReservationStatusBadge/RentalStatusBadge. */
 const STATUS_META: Record<string, { label: string; text: string; dot: string; bg: string }> = {
   DRAFT: { label: "Brouillon", text: "text-neutral", dot: "bg-neutral", bg: "bg-neutral-bg" },
   SCHEDULED: { label: "Programmé", text: "text-info", dot: "bg-info", bg: "bg-info-bg" },
@@ -11,7 +12,7 @@ export function BankTransferStatusBadge({ status }: { status: string }) {
   return (
     <div className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 ${meta.bg}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-      <span className={`text-[10.5px] font-bold ${meta.text}`}>{meta.label}</span>
+      <span className={`text-[10.5px] font-bold ${meta.text}`}><T>{meta.label}</T></span>
     </div>
   );
 }

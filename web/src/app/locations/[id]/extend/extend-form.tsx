@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { checkExtensionAvailability, extendRental } from "@/app/actions/rentals";
 import { formatDuration, type DurationUnitValue } from "@/lib/duration";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 type TariffOption = {
   id: string;
@@ -71,8 +73,8 @@ export function ExtendForm({
   if (tariffOptions.length === 0) {
     return (
       <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-semibold text-warning">
-        Aucun tarif actif n&apos;est configuré pour ce logement — impossible de proposer une prolongation
-        chiffrée. Ajoutez un tarif depuis la fiche du logement.
+        <T>Aucun tarif actif n&apos;est configuré pour ce logement — impossible de proposer une prolongation
+        chiffrée. Ajoutez un tarif depuis la fiche du logement.</T>
       </p>
     );
   }
@@ -80,14 +82,14 @@ export function ExtendForm({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-xl bg-surface-sunken px-4 py-3">
-        <p className="text-xs font-bold text-fg/60">Fin actuelle</p>
+        <p className="text-xs font-bold text-fg/60"><T>Fin actuelle</T></p>
         <p className="mt-0.5 text-lg font-extrabold text-fg">
-          {new Date(currentPlannedDeparture).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+          {new Date(currentPlannedDeparture).toLocaleString(dateLocale(), { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-bold text-fg">Choisir une prolongation</p>
+        <p className="mb-2 text-xs font-bold text-fg"><T>Choisir une prolongation</T></p>
         <div className="flex flex-wrap gap-2">
           {tariffOptions.map((t) => (
             <button
@@ -105,14 +107,14 @@ export function ExtendForm({
       </div>
 
       {availability.checking ? (
-        <p className="text-xs font-semibold text-fg/50">Vérification de la disponibilité...</p>
+        <p className="text-xs font-semibold text-fg/50"><T>Vérification de la disponibilité...</T></p>
       ) : availability.available === true ? (
         <div className="flex items-center gap-2.5 rounded-xl bg-success-bg px-4 py-3 text-success">
           <span className="h-2 w-2 rounded-full bg-success" />
           <span className="text-sm font-extrabold">
-            Disponible jusqu&apos;à{" "}
+            <T>Disponible jusqu&apos;à</T>{" "}
             {availability.newEnd
-              ? new Date(availability.newEnd).toLocaleString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+              ? new Date(availability.newEnd).toLocaleString(dateLocale(), { hour: "2-digit", minute: "2-digit" })
               : "—"}
           </span>
         </div>
@@ -120,9 +122,9 @@ export function ExtendForm({
         <div className="flex flex-col gap-1 rounded-xl bg-danger-bg px-4 py-3 text-danger">
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-danger" />
-            <span className="text-sm font-extrabold">Prolongation impossible</span>
+            <span className="text-sm font-extrabold"><T>Prolongation impossible</T></span>
           </div>
-          {availability.message ? <p className="text-xs font-medium">{availability.message}</p> : null}
+          {availability.message ? <p className="text-xs font-medium"><T>{availability.message}</T></p> : null}
         </div>
       ) : null}
 
@@ -138,7 +140,7 @@ export function ExtendForm({
         onClick={handleConfirm}
         className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
-        {pending ? "Enregistrement..." : "CONFIRMER LA PROLONGATION"}
+        {pending ? "Enregistrement..." : <T>{"CONFIRMER LA PROLONGATION"}</T>}
       </button>
     </div>
   );

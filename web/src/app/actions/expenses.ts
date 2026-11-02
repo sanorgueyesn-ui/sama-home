@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireActiveEstablishment } from "@/lib/dal";
 import { ExpenseSchema, type ExpenseFormState } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 class ExpenseActionError extends Error {}
 
@@ -28,6 +29,7 @@ export async function createExpense(
   _prevState: ExpenseFormState,
   formData: FormData,
 ): Promise<ExpenseFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-O2 — action pilote du garde centralisé
   // requireActiveEstablishment() (voir audit D12-O1 : fichier à fonction
   // unique, aucun effet de bord S3, impact métier d'un faux refus le plus
@@ -38,13 +40,13 @@ export async function createExpense(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer une dépense." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une dépense.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -97,7 +99,7 @@ export async function createExpense(
     if (error instanceof ExpenseActionError) {
       return { message: error.message };
     }
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath("/depenses");

@@ -6,6 +6,8 @@ import { MenuIcon } from "@/components/landing/landing-icons";
 import type { Locale } from "@/lib/i18n/config";
 import type { Messages } from "@/lib/i18n/messages";
 import type { Theme } from "@/lib/theme-constants";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 export const HEADER_HEIGHT_CLASS = "h-16";
 
@@ -14,9 +16,10 @@ export const BUTTON_PRIMARY =
 export const BUTTON_SECONDARY =
   "group inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-border/25 bg-surface-raised px-5 text-center text-sm font-bold text-fg transition-all duration-200 hover:bg-surface-sunken hover:border-border/40 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--th-focus)";
 
-function BrandLink() {
+async function BrandLink() {
+  const t = await getT();
   return (
-    <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--th-focus)" aria-label="SAMA HOME">
+    <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--th-focus)" aria-label={t("SAMA HOME")}>
       <span className="relative inline-flex h-9 w-9 shrink-0">
         <Image
           src="/brand/Sama-Home-icone-Bleu-nuit.png"
@@ -40,7 +43,8 @@ function BrandLink() {
   );
 }
 
-export function LandingHeader({ locale, theme, m }: { locale: Locale; theme: Theme; m: Messages }) {
+export async function LandingHeader({ locale, theme, m }: { locale: Locale; theme: Theme; m: Messages }) {
+  const t = await getT();
   const links = [
     { href: "#activites", label: m.landing.nav.offers },
     { href: "#fonctionnalites", label: "Fonctionnalités" },
@@ -53,14 +57,14 @@ export function LandingHeader({ locale, theme, m }: { locale: Locale; theme: The
       <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <BrandLink />
 
-        <nav aria-label="Navigation principale" className="hidden items-center gap-1 md:flex">
+        <nav aria-label={t("Navigation principale")} className="hidden items-center gap-1 md:flex">
           {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
               className="rounded-lg px-3 py-2 text-sm font-semibold text-fg/75 transition hover:bg-fg/5 hover:text-fg focus-visible:outline-2 focus-visible:outline-(--th-focus)"
             >
-              {link.label}
+              <T>{link.label}</T>
             </a>
           ))}
         </nav>
@@ -77,7 +81,7 @@ export function LandingHeader({ locale, theme, m }: { locale: Locale; theme: The
               {m.common.logIn}
             </Link>
             <Link href="/register" className={`${BUTTON_PRIMARY} !h-10 whitespace-nowrap`}>
-              Essai gratuit
+              <T>Essai gratuit</T>
             </Link>
           </div>
 
@@ -89,10 +93,10 @@ export function LandingHeader({ locale, theme, m }: { locale: Locale; theme: The
               <MenuIcon className="h-5 w-5" />
             </summary>
             <div className="absolute end-0 top-12 w-60 rounded-2xl border border-border/20 bg-surface-raised p-3 shadow-card">
-              <nav aria-label="Menu mobile" className="flex flex-col">
+              <nav aria-label={t("Menu mobile")} className="flex flex-col">
                 {links.map((link) => (
                   <a key={link.href} href={link.href} className="rounded-lg px-3 py-2.5 text-sm font-semibold text-fg hover:bg-fg/5">
-                    {link.label}
+                    <T>{link.label}</T>
                   </a>
                 ))}
               </nav>
@@ -101,7 +105,7 @@ export function LandingHeader({ locale, theme, m }: { locale: Locale; theme: The
                   {m.common.logIn}
                 </Link>
                 <Link href="/register" className={BUTTON_PRIMARY}>
-                  Essai gratuit
+                  <T>Essai gratuit</T>
                 </Link>
               </div>
             </div>

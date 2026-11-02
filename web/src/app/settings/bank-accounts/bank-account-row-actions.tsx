@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBankAccount, deactivateBankAccount } from "@/app/actions/bank";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 /**
  * Bloc F — un seul composant par ligne, même structure que
@@ -26,6 +27,7 @@ export function BankAccountRowActions({
   maskedAccountNumber: string | null;
   active: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -70,7 +72,7 @@ export function BankAccountRowActions({
   }
 
   function handleDeactivate() {
-    if (!confirm(`Désactiver « ${label} » ? Il ne pourra plus être utilisé pour de nouveaux versements.`)) return;
+    if (!confirm(t(`Désactiver « ${label} » ? Il ne pourra plus être utilisé pour de nouveaux versements.`))) return;
     setError(null);
     setWarning(null);
     startTransition(async () => {
@@ -96,7 +98,7 @@ export function BankAccountRowActions({
       <div className="flex w-full flex-col gap-2 py-1">
         <div>
           <label htmlFor={`label-${id}`} className="mb-1 block text-xs font-bold text-fg">
-            Libellé
+            <T>Libellé</T>
           </label>
           <input
             id={`label-${id}`}
@@ -108,7 +110,7 @@ export function BankAccountRowActions({
         </div>
         <div>
           <label htmlFor={`bank-${id}`} className="mb-1 block text-xs font-bold text-fg">
-            Banque
+            <T>Banque</T>
           </label>
           <input
             id={`bank-${id}`}
@@ -120,18 +122,18 @@ export function BankAccountRowActions({
         </div>
         <div>
           <label htmlFor={`masked-${id}`} className="mb-1 block text-xs font-bold text-fg">
-            Numéro masqué <span className="font-medium text-fg/40">(optionnel)</span>
+            <T>Numéro masqué</T> <span className="font-medium text-fg/40">(optionnel)</span>
           </label>
           <input
             id={`masked-${id}`}
             type="text"
             value={editMasked}
             onChange={(e) => setEditMasked(e.target.value)}
-            placeholder="Ex. •••• 4821"
+            placeholder={t("Ex. •••• 4821")}
             className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
-        {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-danger"><T>{error}</T></p> : null}
         <div className="flex gap-2">
           <button
             type="button"
@@ -139,7 +141,7 @@ export function BankAccountRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl border border-border/15 text-xs font-extrabold text-fg disabled:opacity-60"
           >
-            Annuler
+            <T>Annuler</T>
           </button>
           <button
             type="button"
@@ -147,7 +149,7 @@ export function BankAccountRowActions({
             disabled={pending}
             className="h-10 flex-1 rounded-xl bg-brand-orange text-xs font-extrabold text-ink disabled:opacity-60"
           >
-            {pending ? "..." : "Enregistrer"}
+            {pending ? "..." : <T>{"Enregistrer"}</T>}
           </button>
         </div>
       </div>
@@ -163,7 +165,7 @@ export function BankAccountRowActions({
           onClick={() => setEditing(true)}
           className="h-8 rounded-lg border border-border/15 px-2.5 text-[11px] font-bold text-fg disabled:opacity-60"
         >
-          Modifier
+          <T>Modifier</T>
         </button>
         {active ? (
           <button
@@ -172,11 +174,11 @@ export function BankAccountRowActions({
             onClick={handleDeactivate}
             className="h-8 rounded-lg bg-danger-bg px-2.5 text-[11px] font-bold text-danger disabled:opacity-60"
           >
-            Désactiver
+            <T>Désactiver</T>
           </button>
         ) : null}
       </div>
-      {error ? <p className="max-w-48 text-right text-[10.5px] font-medium text-danger">{error}</p> : null}
+      {error ? <p className="max-w-48 text-right text-[10.5px] font-medium text-danger"><T>{error}</T></p> : null}
       {warning ? <p className="max-w-48 text-right text-[10.5px] font-medium text-warning">{warning}</p> : null}
     </div>
   );

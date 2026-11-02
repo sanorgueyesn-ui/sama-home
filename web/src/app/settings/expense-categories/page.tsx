@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { requireAdmin } from "@/lib/dal";
 import { listExpenseCategoriesForSettings } from "@/lib/expense-categories-data";
 import { ExpenseCategoryRowActions } from "./expense-category-row-actions";
+import { T } from "@/components/i18n/i18n-provider";
 
 // Bloc 16.3 — seule la création navigue vers cette page après succès (son
 // propre formulaire, sur une page séparée) : un message de confirmation par
@@ -50,7 +51,7 @@ export default async function ExpenseCategoriesPage(props: PageProps<"/settings/
               href="/settings/expense-categories/new"
               className="flex h-11 items-center rounded-xl bg-brand-orange px-5 text-sm font-bold text-ink"
             >
-              + Nouvelle catégorie
+              <T>+ Nouvelle catégorie</T>
             </Link>
           }
         />
@@ -66,13 +67,13 @@ export default async function ExpenseCategoriesPage(props: PageProps<"/settings/
                   <p className="truncate text-sm font-bold text-fg">{category.name}</p>
                   {!category.active ? (
                     <span className="shrink-0 rounded-full bg-neutral-bg px-2 py-0.5 text-[10px] font-bold text-neutral">
-                      Désactivée
+                      <T>Désactivée</T>
                     </span>
                   ) : null}
                 </div>
                 {category._count.expenses > 0 ? (
                   <p className="mt-0.5 text-xs font-medium text-fg/50">
-                    Utilisée dans l&apos;historique ({category._count.expenses})
+                    <T>Utilisée dans l&apos;historique (</T>{category._count.expenses})
                   </p>
                 ) : null}
               </div>

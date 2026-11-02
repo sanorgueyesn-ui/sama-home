@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Field } from "@/components/ui/field";
 import { changePassword } from "@/app/actions/settings";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function ChangePasswordForm() {
   const [state, formAction, pending] = useActionState(changePassword, undefined);
@@ -38,7 +39,7 @@ export function ChangePasswordForm() {
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 

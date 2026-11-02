@@ -6,11 +6,13 @@ import { listUsers } from "@/lib/users-data";
 import { parseUserPermissions } from "@/lib/permissions";
 import { CrownIcon, ShieldIcon, KeyIcon } from "@/components/ui/icons";
 import { DeleteEstablishmentUserButton } from "./delete-user-button";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 const ROLE_LABELS: Record<string, string> = { ADMIN: "Administrateur", GESTIONNAIRE: "Gestionnaire" };
 
 function fmtDate(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
 }
 
 export default async function UsersPage(props: PageProps<"/settings/users">) {
@@ -27,17 +29,17 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
 
       {created ? (
         <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          Utilisateur créé.
+          <T>Utilisateur créé.</T>
         </p>
       ) : null}
       {updated ? (
         <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          Modifications enregistrées.
+          <T>Modifications enregistrées.</T>
         </p>
       ) : null}
       {passwordReset ? (
         <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          Mot de passe réinitialisé.
+          <T>Mot de passe réinitialisé.</T>
         </p>
       ) : null}
 
@@ -48,7 +50,7 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
               <div>
                 <p className="text-sm font-extrabold text-fg">{u.name}</p>
                 <p className="mt-0.5 text-xs font-semibold text-fg/60">
-                  @{u.username} · {u.role ? ROLE_LABELS[u.role] ?? u.role : "Sans rôle"}
+                  @{u.username} · {u.role ? ROLE_LABELS[u.role] ?? u.role : <T>{"Sans rôle"}</T>}
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1">
                   {(() => {
@@ -57,7 +59,7 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                       return (
                         <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-app-good">
                           <CrownIcon className="h-3 w-3" />
-                          <span>Pleins pouvoirs (Patron)</span>
+                          <span><T>Pleins pouvoirs (Patron)</T></span>
                         </span>
                       );
                     }
@@ -65,33 +67,33 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                       return (
                         <span className="inline-flex items-center gap-1 rounded-full bg-info/15 px-2 py-0.5 text-[10px] font-bold text-app-sky">
                           <ShieldIcon className="h-3 w-3" />
-                          <span>Gestionnaire standard</span>
+                          <span><T>Gestionnaire standard</T></span>
                         </span>
                       );
                     }
                     return (
                       <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-app-warn">
                         <KeyIcon className="h-3 w-3" />
-                        <span>Accès personnalisé ({perms.length} droit{perms.length > 1 ? "s" : ""})</span>
+                        <span><T>Accès personnalisé (</T>{perms.length} droit{perms.length > 1 ? "s" : ""})</span>
                       </span>
                     );
                   })()}
                 </div>
               </div>
-              <span className="text-[11px] font-medium text-fg/40">Depuis {fmtDate(u.createdAt)}</span>
+              <span className="text-[11px] font-medium text-fg/40"><T>Depuis</T> {fmtDate(u.createdAt)}</span>
             </div>
             <div className="mt-3 flex gap-2.5">
               <Link
                 href={`/settings/users/${u.id}/edit`}
                 className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border/15 text-xs font-extrabold text-fg"
               >
-                Modifier
+                <T>Modifier</T>
               </Link>
               <Link
                 href={`/settings/users/${u.id}/reset-password`}
                 className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border/15 text-xs font-extrabold text-fg"
               >
-                Réinitialiser
+                <T>Réinitialiser</T>
               </Link>
               <DeleteEstablishmentUserButton
                 userId={u.id}

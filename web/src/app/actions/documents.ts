@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/dal";
 import { parseDocumentSelection } from "@/lib/documents/selection";
+import { getT } from "@/lib/i18n/server";
 
 export type DocumentChoiceState = { error?: string; ok?: boolean } | undefined;
 
@@ -19,8 +20,9 @@ export async function chooseDocumentPresentation(
   _prev: DocumentChoiceState,
   _formData: FormData,
 ): Promise<DocumentChoiceState> {
+  const t = await getT();
   const user = await requireAdmin();
-  if (!user.establishmentId) return { error: "Votre compte n'est rattaché à aucun établissement." };
+  if (!user.establishmentId) return { error: t("Votre compte n'est rattaché à aucun établissement.") };
 
   const parsed = parseDocumentSelection({ kind, theme, paper: paper ?? undefined });
   if (!parsed.ok) return { error: parsed.error };
@@ -30,7 +32,7 @@ export async function chooseDocumentPresentation(
       ? { documentContractTheme: parsed.value.theme }
       : { documentTicketTheme: parsed.value.theme, documentTicketPaper: parsed.value.paper };
   const result = await prisma.settings.updateMany({ where: { establishmentId: user.establishmentId }, data });
-  if (result.count === 0) return { error: "Renseignez d'abord les informations de l'établissement (Paramètres)." };
+  if (result.count === 0) return { error: t("Renseignez d'abord les informations de l'établissement (Paramètres).") };
 
   revalidatePath("/settings/documents");
   return { ok: true };

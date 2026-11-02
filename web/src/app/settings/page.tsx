@@ -13,6 +13,8 @@ import { listBankAccounts, listTransferSchedules } from "@/lib/bank-data";
 import { getTheme } from "@/lib/theme";
 import { resolveImageDisplayUrl } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata = { title: "Paramètres — SAMA HOME" };
 
@@ -29,6 +31,7 @@ function plural(n: number, singular: string, pluralForm: string) {
  * existantes ; les listes réservées à l'administrateur ne sont chargées que pour lui.
  */
 export default async function SettingsPage() {
+  const t = await getT();
   const [user, settings, theme] = await Promise.all([getCurrentUser(), getSettings(), getTheme()]);
   const isAdmin = user.role === "ADMIN";
 
@@ -85,14 +88,14 @@ export default async function SettingsPage() {
           </span>
         )}
         <div className="min-w-0 flex-1 basis-44">
-          <p className="truncate text-base font-bold text-fg">{settings?.establishmentName || "Établissement non renseigné"}</p>
-          <p className="mt-0.5 truncate text-sm text-fg/55">{contact || "Ajoutez vos coordonnées pour les contrats et les messages."}</p>
+          <p className="truncate text-base font-bold text-fg">{settings?.establishmentName || <T>{"Établissement non renseigné"}</T>}</p>
+          <p className="mt-0.5 truncate text-sm text-fg/55">{contact || <T>{"Ajoutez vos coordonnées pour les contrats et les messages."}</T>}</p>
         </div>
         <Link
           href="/settings/etablissement"
           className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 focus-visible:outline-2 focus-visible:outline-brand-orange sm:w-auto"
         >
-          Modifier
+          <T>Modifier</T>
         </Link>
       </section>
 
@@ -100,15 +103,15 @@ export default async function SettingsPage() {
         <section aria-labelledby="setup-title" className="mb-8 rounded-2xl border border-border/15 bg-surface-raised p-4 shadow-card sm:p-5">
           <div className="flex items-baseline justify-between gap-3">
             <h2 id="setup-title" className="text-base font-bold text-fg">
-              À finaliser
+              <T>À finaliser</T>
             </h2>
             <p className="text-sm font-semibold text-fg/55">
-              {setup.done} sur {setup.total} terminées
+              {setup.done} sur {setup.total} <T>terminées</T>
             </p>
           </div>
           <div
             role="progressbar"
-            aria-label="Avancement de la configuration"
+            aria-label={t("Avancement de la configuration")}
             aria-valuemin={0}
             aria-valuemax={setup.total}
             aria-valuenow={setup.done}
@@ -129,10 +132,10 @@ export default async function SettingsPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className={`block text-sm font-bold ${step.done ? "text-fg/50 line-through" : "text-fg"}`}>
-                    {step.label}
-                    <span className="sr-only">{step.done ? " : terminé" : " : à faire"}</span>
+                    <T>{step.label}</T>
+                    <span className="sr-only">{step.done ? <T>{" : terminé"}</T> : <T>{" : à faire"}</T>}</span>
                   </span>
-                  {step.done ? null : <span className="block text-xs text-fg/55">{step.hint}</span>}
+                  {step.done ? null : <span className="block text-xs text-fg/55"><T>{step.hint}</T></span>}
                 </span>
                 {step.done ? null : (
                   <Link
@@ -169,7 +172,7 @@ export default async function SettingsPage() {
           return (
             <section key={group.title} aria-labelledby={`grp-${group.title}`}>
               <h2 id={`grp-${group.title}`} className="mb-2.5 px-1 text-[11px] font-bold uppercase tracking-wider text-fg/45">
-                {group.title}
+                <T>{group.title}</T>
               </h2>
               <ul className="divide-y divide-border/10 overflow-hidden rounded-2xl border border-border/15 bg-surface-raised shadow-card">
                 {rows.map((row) => (
@@ -180,8 +183,8 @@ export default async function SettingsPage() {
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-sunken text-brand-orange">{row.icon}</span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-bold text-fg">{row.title}</span>
-                        <span className="block text-xs text-fg/55">{row.description}</span>
+                        <span className="block truncate text-sm font-bold text-fg"><T>{row.title}</T></span>
+                        <span className="block text-xs text-fg/55"><T>{row.description}</T></span>
                       </span>
                       <span className="shrink-0 text-fg/30">
                         <ChevronIcon />

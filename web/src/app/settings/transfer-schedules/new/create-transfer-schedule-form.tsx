@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createTransferSchedule } from "@/app/actions/bank";
 import type { TransferFrequency } from "@/generated/prisma/client";
+import { T } from "@/components/i18n/i18n-provider";
 
 const FREQUENCY_OPTIONS: { value: TransferFrequency; label: string }[] = [
   { value: "DAILY", label: "Quotidienne" },
@@ -77,7 +78,7 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
         <label htmlFor="bankAccountId" className="mb-1.5 block text-xs font-bold text-fg">
-          Compte bancaire
+          <T>Compte bancaire</T>
         </label>
         <select
           id="bankAccountId"
@@ -85,10 +86,10 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
           onChange={(e) => setBankAccountId(e.target.value)}
           className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
-          <option value="">Sélectionner un compte...</option>
+          <option value=""><T>Sélectionner un compte...</T></option>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.label} · {a.bankName}
+              <T>{a.label}</T> · {a.bankName}
             </option>
           ))}
         </select>
@@ -96,7 +97,7 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
 
       <div>
         <label htmlFor="frequency" className="mb-1.5 block text-xs font-bold text-fg">
-          Fréquence
+          <T>Fréquence</T>
         </label>
         <select
           id="frequency"
@@ -106,14 +107,14 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
         >
           {FREQUENCY_OPTIONS.map((f) => (
             <option key={f.value} value={f.value}>
-              {f.label}
+              <T>{f.label}</T>
             </option>
           ))}
         </select>
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-bold text-fg">Type de montant</label>
+        <label className="mb-1.5 block text-xs font-bold text-fg"><T>Type de montant</T></label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -121,7 +122,7 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
             aria-pressed={amountType === "FIXED"}
             className={`h-12 flex-1 rounded-xl border text-sm font-extrabold ${amountType === "FIXED" ? "border-navy bg-navy text-white" : "border-border/15 text-fg"}`}
           >
-            Montant fixe
+            <T>Montant fixe</T>
           </button>
           <button
             type="button"
@@ -129,7 +130,7 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
             aria-pressed={amountType === "PERCENTAGE"}
             className={`h-12 flex-1 rounded-xl border text-sm font-extrabold ${amountType === "PERCENTAGE" ? "border-navy bg-navy text-white" : "border-border/15 text-fg"}`}
           >
-            Pourcentage
+            <T>Pourcentage</T>
           </button>
         </div>
       </div>
@@ -137,7 +138,7 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
       {amountType === "FIXED" ? (
         <div>
           <label htmlFor="fixedAmount" className="mb-1.5 block text-xs font-bold text-fg">
-            Montant (FCFA)
+            <T>Montant (FCFA)</T>
           </label>
           <input
             id="fixedAmount"
@@ -151,7 +152,7 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
       ) : (
         <div>
           <label htmlFor="percentage" className="mb-1.5 block text-xs font-bold text-fg">
-            Pourcentage (%)
+            <T>Pourcentage (%)</T>
           </label>
           <input
             id="percentage"
@@ -163,15 +164,15 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
             className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
           <p className="mt-1 text-[11px] font-medium text-fg/40">
-            Le montant sera calculé au moment de la génération selon le solde théorique disponible de la caisse,
-            jamais au-delà de ce disponible.
+            <T>Le montant sera calculé au moment de la génération selon le solde théorique disponible de la caisse,
+            jamais au-delà de ce disponible.</T>
           </p>
         </div>
       )}
 
       <div>
         <label htmlFor="nextRunAt" className="mb-1.5 block text-xs font-bold text-fg">
-          Prochaine génération
+          <T>Prochaine génération</T>
         </label>
         <input
           id="nextRunAt"
@@ -183,14 +184,14 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
       </div>
 
       <p className="rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60">
-        Lorsque l&apos;échéance arrive, SAMA HOME crée un virement programmé (statut SCHEDULED) — il reste à
+        <T>Lorsque l&apos;échéance arrive, SAMA HOME crée un virement programmé (statut SCHEDULED) — il reste à
         effectuer manuellement depuis Caisse → Virements bancaires. Aucun transfert n&apos;est jamais réalisé
-        automatiquement.
+        automatiquement.</T>
       </p>
 
       {error ? (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : null}
 
@@ -201,14 +202,14 @@ export function CreateTransferScheduleForm({ accounts }: { accounts: { id: strin
           disabled={pending}
           className="h-14 flex-1 rounded-2xl border border-border/15 text-base font-extrabold text-fg disabled:opacity-40"
         >
-          Annuler
+          <T>Annuler</T>
         </button>
         <button
           type="submit"
           disabled={pending}
           className="h-14 flex-1 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
         >
-          {pending ? "..." : "Créer"}
+          {pending ? "..." : <T>{"Créer"}</T>}
         </button>
       </div>
     </form>

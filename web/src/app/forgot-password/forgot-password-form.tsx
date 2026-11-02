@@ -4,12 +4,14 @@ import { useActionState, useState, useEffect } from "react";
 import Link from "next/link";
 import { requestPasswordReset, confirmPasswordReset, type ForgotPasswordState } from "@/app/actions/forgot-password";
 import { AuthField } from "@/components/auth/auth-field";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const initialState: ForgotPasswordState = {
   step: "REQUEST",
 };
 
 export function ForgotPasswordForm() {
+  const t = useT();
   const [requestState, requestAction, isRequesting] = useActionState(requestPasswordReset, initialState);
   const [confirmState, confirmAction, isConfirming] = useActionState(confirmPasswordReset, initialState);
 
@@ -58,16 +60,16 @@ export function ForgotPasswordForm() {
           </svg>
         </div>
 
-        <h2 className="text-xl font-black text-fg">Mot de passe réinitialisé !</h2>
+        <h2 className="text-xl font-black text-fg"><T>Mot de passe réinitialisé !</T></h2>
         <p className="mt-2 text-sm text-fg/70 leading-relaxed max-w-sm">
-          Votre mot de passe a été mis à jour avec succès. Vos anciennes sessions ont été révoquées pour garantir la sécurité de votre compte.
+          <T>Votre mot de passe a été mis à jour avec succès. Vos anciennes sessions ont été révoquées pour garantir la sécurité de votre compte.</T>
         </p>
 
         <Link
           href="/login"
           className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-brand-orange text-base font-extrabold text-ink transition-all hover:brightness-110 active:scale-98 shadow-md"
         >
-          <span>SE CONNECTER</span>
+          <span><T>SE CONNECTER</T></span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
@@ -90,27 +92,27 @@ export function ForgotPasswordForm() {
       <div className="flex flex-col gap-4 animate-in fade-in duration-300">
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-left">
           <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-xs font-black uppercase tracking-wider">
-            <span>✉️</span> Vérifiez votre boîte e-mail
+            <span>✉️</span> <T>Vérifiez votre boîte e-mail</T>
           </div>
           <p className="mt-1 text-xs text-fg/80 leading-relaxed">{bannerText}</p>
           {currentEmail && (
             <p className="mt-2 text-xs text-fg/80">
-              Saisie : <strong className="break-all text-fg">{currentEmail}</strong>
+              <T>Saisie :</T> <strong className="break-all text-fg">{currentEmail}</strong>
             </p>
           )}
         </div>
 
         <p className="text-left text-[11px] leading-relaxed text-fg/60">
-          <strong className="text-fg/80">Pas de message ?</strong> Vérifiez l&apos;orthographe de l&apos;adresse saisie
+          <strong className="text-fg/80"><T>Pas de message ?</T></strong> <T>Vérifiez l&apos;orthographe de l&apos;adresse saisie
           ci-dessus et vos courriers indésirables. L&apos;envoi peut prendre quelques minutes. Si l&apos;adresse est
           incorrecte, utilisez « Modifier l&apos;adresse ». Si votre compte n&apos;a pas d&apos;adresse e-mail
-          enregistrée, contactez l&apos;administrateur de votre établissement.
+          enregistrée, contactez l&apos;administrateur de votre établissement.</T>
         </p>
 
         <form action={confirmAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5 text-left">
             <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-fg/70">
-              Adresse e-mail ou identifiant <span className="text-danger">*</span>
+              <T>Adresse e-mail ou identifiant</T> <span className="text-danger">*</span>
             </label>
             <input
               id="email"
@@ -119,14 +121,14 @@ export function ForgotPasswordForm() {
               required
               value={currentEmail}
               onChange={(e) => setCurrentEmail(e.target.value)}
-              placeholder="nom@exemple.com ou identifiant"
+              placeholder={t("nom@exemple.com ou identifiant")}
               className="h-12 w-full rounded-2xl border border-border/20 bg-surface-sunken px-4 text-sm font-semibold text-fg placeholder:text-fg/30 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
 
           <div className="flex flex-col gap-1.5 text-left">
             <label htmlFor="code" className="text-xs font-bold uppercase tracking-wider text-fg/70">
-              Code de sécurité à 6 chiffres <span className="text-danger">*</span>
+              <T>Code de sécurité à 6 chiffres</T> <span className="text-danger">*</span>
             </label>
             <input
               id="code"
@@ -166,7 +168,7 @@ export function ForgotPasswordForm() {
 
           {confirmState?.error && (
             <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-xs font-bold text-danger animate-in fade-in">
-              {confirmState.error}
+              <T>{confirmState.error}</T>
             </p>
           )}
 
@@ -178,10 +180,10 @@ export function ForgotPasswordForm() {
             {isConfirming ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent" />
-                Validation en cours...
+                <T>Validation en cours...</T>
               </span>
             ) : (
-              "VALIDER MON NOUVEAU MOT DE PASSE"
+              <T>{"VALIDER MON NOUVEAU MOT DE PASSE"}</T>
             )}
           </button>
         </form>
@@ -197,8 +199,8 @@ export function ForgotPasswordForm() {
               {countdown > 0
                 ? `Renvoyer un nouveau code (${countdown}s)`
                 : isRequesting
-                ? "Envoi en cours..."
-                : "Renvoyer un code de sécurité"}
+                ? <T>{"Envoi en cours..."}</T>
+                : <T>{"Renvoyer un code de sécurité"}</T>}
             </button>
           </form>
 
@@ -207,7 +209,7 @@ export function ForgotPasswordForm() {
             onClick={() => setActiveStep("REQUEST")}
             className="text-xs font-medium text-fg/50 hover:text-fg hover:underline transition-colors"
           >
-            ← Modifier l&apos;adresse / Retour
+            <T>← Modifier l&apos;adresse / Retour</T>
           </button>
         </div>
       </div>
@@ -221,7 +223,7 @@ export function ForgotPasswordForm() {
     <form action={requestAction} className="flex flex-col gap-4 animate-in fade-in duration-300">
       <div className="text-left">
         <p className="text-xs text-fg/70 leading-relaxed">
-          Saisissez l&apos;adresse e-mail ou l&apos;identifiant associé à votre compte. Si un compte correspond, un code de confirmation sécurisé vous sera envoyé par e-mail.
+          <T>Saisissez l&apos;adresse e-mail ou l&apos;identifiant associé à votre compte. Si un compte correspond, un code de confirmation sécurisé vous sera envoyé par e-mail.</T>
         </p>
       </div>
 
@@ -247,7 +249,7 @@ export function ForgotPasswordForm() {
           role="alert"
           className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left text-amber-900 animate-in fade-in dark:text-amber-200"
         >
-          <p className="text-xs font-semibold leading-relaxed">{requestState.error}</p>
+          <p className="text-xs font-semibold leading-relaxed"><T>{requestState.error}</T></p>
         </div>
       )}
 
@@ -259,11 +261,11 @@ export function ForgotPasswordForm() {
         {isRequesting ? (
           <span className="flex items-center gap-2">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent" />
-            Envoi du code...
+            <T>Envoi du code...</T>
           </span>
         ) : (
           <>
-            <span>ENVOYER LE CODE</span>
+            <span><T>ENVOYER LE CODE</T></span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
@@ -285,7 +287,7 @@ export function ForgotPasswordForm() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2m-2-2l-4 4a5 5 0 1 1-7-7l4-4 7 7z" />
           </svg>
-          <span>J&apos;AI DÉJÀ REÇU MON CODE DE CONFIRMATION →</span>
+          <span><T>J&apos;AI DÉJÀ REÇU MON CODE DE CONFIRMATION →</T></span>
         </button>
 
         <Link
@@ -295,14 +297,14 @@ export function ForgotPasswordForm() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          Retour à la page de connexion
+          <T>Retour à la page de connexion</T>
         </Link>
 
         {/* Lien statique, affiché pour tout le monde (ne dépend d'aucune réponse du serveur). */}
         <p className="text-xs font-medium text-fg/60">
-          Pas encore de compte ?{" "}
+          <T>Pas encore de compte ?</T>{" "}
           <Link href="/register" className="font-extrabold text-brand-orange underline hover:no-underline">
-            Créer un compte SAMA HOME →
+            <T>Créer un compte SAMA HOME →</T>
           </Link>
         </p>
       </div>

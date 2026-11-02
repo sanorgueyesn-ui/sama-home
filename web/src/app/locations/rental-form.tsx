@@ -22,6 +22,8 @@ import {
   AlertCircleIcon,
   KeyIcon,
 } from "@/components/ui/icons";
+import { T, useT } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 const ID_DOCUMENT_SUGGESTIONS = ["CNI", "Passeport", "Permis de conduire"];
 
@@ -71,6 +73,7 @@ export function RentalForm({
   guestWord?: string;
   submitLabel?: string;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -164,7 +167,7 @@ export function RentalForm({
 
   const departurePreview = useMemo(() => {
     if (!availability.departureTime) return null;
-    return new Date(availability.departureTime).toLocaleString("fr-FR", {
+    return new Date(availability.departureTime).toLocaleString(dateLocale(), {
       day: "2-digit",
       month: "2-digit",
       hour: "2-digit",
@@ -249,7 +252,7 @@ export function RentalForm({
             }`}
           >
             <CalendarIcon className="h-4 w-4" />
-            <span>Par Jour</span>
+            <span><T>Par Jour</T></span>
           </button>
 
           <button
@@ -267,21 +270,21 @@ export function RentalForm({
             }`}
           >
             <ClockIcon className="h-4 w-4" />
-            <span>Par Heure</span>
+            <span><T>Par Heure</T></span>
           </button>
         </div>
 
         {/* Sélecteur de nombre de jours (si Par Jour) : compact et ultra-simple */}
         {billingMode === "DAY" ? (
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-app-line">
-            <span className="text-xs font-bold text-app-text-2">Nombre de jours :</span>
+            <span className="text-xs font-bold text-app-text-2"><T>Nombre de jours :</T></span>
             <div className="flex items-center gap-2">
               <div className="flex items-center rounded-lg border border-app-line-strong bg-app-panel-2 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setNumberOfDays((d) => Math.max(1, d - 1))}
                   className="flex h-8 w-8 items-center justify-center text-sm font-bold text-app-text hover:bg-fg/10 active:scale-95"
-                  aria-label="Diminuer"
+                  aria-label={t("Diminuer")}
                 >
                   −
                 </button>
@@ -290,7 +293,7 @@ export function RentalForm({
                   type="button"
                   onClick={() => setNumberOfDays((d) => d + 1)}
                   className="flex h-8 w-8 items-center justify-center text-sm font-bold text-app-text hover:bg-fg/10 active:scale-95"
-                  aria-label="Augmenter"
+                  aria-label={t("Augmenter")}
                 >
                   +
                 </button>
@@ -325,14 +328,14 @@ export function RentalForm({
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
             1
           </span>
-          <h2 className="text-sm font-black uppercase tracking-wider text-app-text">Chambre &amp; Formule de séjour</h2>
+          <h2 className="text-sm font-black uppercase tracking-wider text-app-text"><T>Chambre &amp; Formule de séjour</T></h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Logement */}
           <div>
             <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-app-text">
-              Chambre / Logement <span className="text-app-bad">*</span>
+              <T>Chambre / Logement</T> <span className="text-app-bad">*</span>
             </label>
             <select
               id="propertyId"
@@ -346,16 +349,16 @@ export function RentalForm({
               }}
               className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-semibold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
-              <option value="">Sélectionner une chambre...</option>
+              <option value=""><T>Sélectionner une chambre...</T></option>
               {properties.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.type === "ROOM" ? "Chambre" : "Appartement"})
+                  {p.name} ({p.type === "ROOM" ? <T>{"Chambre"}</T> : <T>{"Appartement"}</T>})
                 </option>
               ))}
             </select>
             {errors?.propertyId?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
+                <T>{error}</T>
               </p>
             ))}
           </div>
@@ -363,7 +366,7 @@ export function RentalForm({
           {/* Tarif (auto-sélectionné dès qu'une chambre est choisie) */}
           <div>
             <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-app-text">
-              Formule / Tarif <span className="text-app-bad">*</span>
+              <T>Formule / Tarif</T> <span className="text-app-bad">*</span>
             </label>
             <select
               id="tariffId"
@@ -375,20 +378,20 @@ export function RentalForm({
             >
               <option value="">
                 {!propertyId
-                  ? "Choisissez d'abord une chambre"
+                  ? <T>{"Choisissez d'abord une chambre"}</T>
                   : activeTariffs.length === 0
-                    ? "Aucun tarif configuré pour cette chambre"
-                    : "Sélectionner un tarif..."}
+                    ? <T>{"Aucun tarif configuré pour cette chambre"}</T>
+                    : <T>{"Sélectionner un tarif..."}</T>}
               </option>
               {activeTariffs.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.label} — {fmtFcfa(t.amount)}
+                  <T>{t.label}</T> — {fmtFcfa(t.amount)}
                 </option>
               ))}
             </select>
             {errors?.tariffId?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
+                <T>{error}</T>
               </p>
             ))}
           </div>
@@ -402,7 +405,7 @@ export function RentalForm({
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
               2
             </span>
-            <h2 className="text-sm font-black uppercase tracking-wider text-app-text">Horaires de Check-in</h2>
+            <h2 className="text-sm font-black uppercase tracking-wider text-app-text"><T>Horaires de Check-in</T></h2>
           </div>
           <button
             type="button"
@@ -413,7 +416,7 @@ export function RentalForm({
             className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 px-3 py-1 text-xs font-bold text-brand-orange hover:bg-brand-orange/25"
           >
             <SparklesIcon className="h-3 w-3" />
-            <span>Arrivée maintenant</span>
+            <span><T>Arrivée maintenant</T></span>
           </button>
         </div>
 
@@ -424,19 +427,19 @@ export function RentalForm({
           {/* Badge informatif : Date d'entrée automatique */}
           <div className="flex flex-col justify-between rounded-xl border border-app-line-strong bg-app-panel-2 p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-app-muted">Date d&apos;entrée</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-app-muted"><T>Date d&apos;entrée</T></span>
               <span className="inline-flex items-center gap-1 rounded-full bg-success/15 border border-success/30 px-2.5 py-0.5 text-[10.5px] font-bold text-app-good">
                 <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                Aujourd&apos;hui
+                <T>Aujourd&apos;hui</T>
               </span>
             </div>
             <div className="mt-2 flex items-center gap-2.5">
               <CalendarIcon className="h-5 w-5 text-brand-orange shrink-0" />
               <div>
                 <p className="text-sm font-extrabold text-app-text capitalize">
-                  {new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())}
+                  {new Intl.DateTimeFormat(dateLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())}
                 </p>
-                <p className="text-[11px] font-medium text-app-faint">Entrée automatique en date du jour</p>
+                <p className="text-[11px] font-medium text-app-faint"><T>Entrée automatique en date du jour</T></p>
               </div>
             </div>
           </div>
@@ -458,10 +461,10 @@ export function RentalForm({
           <div className="mt-3.5 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-3.5">
             <div className="flex items-center gap-2 text-brand-orange text-xs font-bold">
               <ClockIcon className="h-3.5 w-3.5 shrink-0" />
-              <span>Arrivée antérieure enregistrée ({arrivalTime.replace(":", "h")})</span>
+              <span><T>Arrivée antérieure enregistrée (</T>{arrivalTime.replace(":", "h")})</span>
             </div>
             <p className="mt-1 text-[11px] text-app-text-2">
-              Le client est arrivé à {arrivalTime.replace(":", "h")}. La libération de la chambre a été calculée sur cette base.
+              <T>Le client est arrivé à</T> {arrivalTime.replace(":", "h")}<T>. La libération de la chambre a été calculée sur cette base.</T>
             </p>
             <input
               name="retroactiveReason"
@@ -474,12 +477,12 @@ export function RentalForm({
         {/* Live Stay Calculations & Availability Card */}
         <div className="mt-4 rounded-xl border border-app-line bg-app-panel-2 p-3.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-app-muted">Sortie prévue :</span>
+            <span className="font-bold text-app-muted"><T>Sortie prévue :</T></span>
             <span className="font-extrabold text-app-text text-sm">{departurePreview ?? "—"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between border-t border-app-line pt-2 text-xs">
             <span className="font-bold text-app-muted">
-              Montant total {billingMode === "DAY" && numberOfDays > 1 ? `(${numberOfDays} jours)` : ""} :
+              <T>Montant total</T> {billingMode === "DAY" && numberOfDays > 1 ? `(${numberOfDays} jours)` : ""} :
             </span>
             <span className="font-black text-brand-orange text-base">
               {selectedTariff ? fmtFcfa(stayAmount) : "—"}
@@ -492,20 +495,20 @@ export function RentalForm({
           {availability.checking ? (
             <div className="flex items-center gap-2 rounded-xl bg-app-panel-2 px-4 py-2 text-xs font-semibold text-app-muted">
               <span className="h-2 w-2 rounded-full bg-brand-orange animate-ping" />
-              Vérification de la disponibilité...
+              <T>Vérification de la disponibilité...</T>
             </div>
           ) : availability.available === true ? (
             <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-2.5 text-app-good">
               <span className="h-2 w-2 rounded-full bg-success shrink-0" />
-              <span className="text-xs font-extrabold uppercase">Logement disponible pour entrée immédiate</span>
+              <span className="text-xs font-extrabold uppercase"><T>Logement disponible pour entrée immédiate</T></span>
             </div>
           ) : availability.available === false ? (
             <div className="flex flex-col gap-1 rounded-xl border border-danger/30 bg-danger/10 px-4 py-2.5 text-app-bad">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-danger shrink-0" />
-                <span className="text-xs font-extrabold uppercase">Logement non disponible</span>
+                <span className="text-xs font-extrabold uppercase"><T>Logement non disponible</T></span>
               </div>
-              {availability.message ? <p className="text-xs font-medium text-app-bad/80">{availability.message}</p> : null}
+              {availability.message ? <p className="text-xs font-medium text-app-bad/80"><T>{availability.message}</T></p> : null}
             </div>
           ) : null}
         </div>
@@ -534,7 +537,7 @@ export function RentalForm({
             >
               <span className="inline-flex items-center gap-1.5">
                 <UsersIcon className="h-3.5 w-3.5" />
-                <span>Existant</span>
+                <span><T>Existant</T></span>
               </span>
             </button>
             <button
@@ -548,7 +551,7 @@ export function RentalForm({
             >
               <span className="inline-flex items-center gap-1.5">
                 <SparklesIcon className="h-3.5 w-3.5" />
-                <span>Nouveau</span>
+                <span><T>Nouveau</T></span>
               </span>
             </button>
           </div>
@@ -560,28 +563,28 @@ export function RentalForm({
         {clientMode === "NEW" ? (
           <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-3.5 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-brand-orange uppercase">Enregistrement rapide du client</span>
-              <span className="text-[11px] font-medium text-app-muted">Sera enregistré automatiquement</span>
+              <span className="text-xs font-black text-brand-orange uppercase"><T>Enregistrement rapide du client</T></span>
+              <span className="text-[11px] font-medium text-app-muted"><T>Sera enregistré automatiquement</T></span>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-app-text">
-                  Nom complet du {guestWord} <span className="text-app-bad">*</span>
+                  <T>Nom complet du</T> {guestWord} <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientName"
                   name="newClientName"
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
-                  placeholder="Ex : Moussa Diop"
+                  placeholder={t("Ex : Moussa Diop")}
                   className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-bold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
                 />
               </div>
 
               <div>
                 <label htmlFor="newClientPhone" className="mb-1 block text-xs font-bold text-app-text">
-                  Téléphone (WhatsApp) <span className="text-app-bad">*</span>
+                  <T>Téléphone (WhatsApp)</T> <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientPhone"
@@ -589,14 +592,14 @@ export function RentalForm({
                   type="tel"
                   value={newClientPhone}
                   onChange={(e) => setNewClientPhone(e.target.value)}
-                  placeholder="Ex : +221 77 123 45 67"
+                  placeholder={t("Ex : +221 77 123 45 67")}
                   className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-bold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 font-mono"
                 />
               </div>
             </div>
             {errors?.clientId?.map((error) => (
               <p key={error} className="text-xs font-medium text-danger">
-                {error}
+                <T>{error}</T>
               </p>
             ))}
           </div>
@@ -604,7 +607,7 @@ export function RentalForm({
           /* Option B : Sélection client existant */
           <div>
             <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-app-text">
-              Sélectionner le {guestWord} existant <span className="text-app-bad">*</span>
+              <T>Sélectionner le</T> {guestWord} existant <span className="text-app-bad">*</span>
             </label>
             <select
               id="clientId"
@@ -613,7 +616,7 @@ export function RentalForm({
               onChange={(e) => setClientId(e.target.value)}
               className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-semibold text-app-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             >
-              <option value="">Sélectionner dans la liste...</option>
+              <option value=""><T>Sélectionner dans la liste...</T></option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} {c.phone ? `(${c.phone})` : ""}
@@ -622,7 +625,7 @@ export function RentalForm({
             </select>
             {errors?.clientId?.map((error) => (
               <p key={error} className="mt-1 text-xs font-medium text-danger">
-                {error}
+                <T>{error}</T>
               </p>
             ))}
           </div>
@@ -639,11 +642,11 @@ export function RentalForm({
             <div className="flex items-center gap-2 text-brand-orange">
               <TagIcon className="h-4 w-4 shrink-0" />
               <p className="text-xs font-black uppercase tracking-wider">
-                Séjour de {numberOfDays} jours — Pièce d&apos;identité obligatoire pour le contrat
+                <T>Séjour de</T> {numberOfDays} <T>jours — Pièce d&apos;identité obligatoire pour le contrat</T>
               </p>
             </div>
             <p className="mt-1 text-xs text-app-text-2">
-              Pour des raisons légales et la génération du contrat de bail officiel imprimable, renseignez la pièce d&apos;identité du client.
+              <T>Pour des raisons légales et la génération du contrat de bail officiel imprimable, renseignez la pièce d&apos;identité du client.</T>
             </p>
             <div className="mt-3">
               <input type="hidden" name="idDocumentType" value={idDocumentType} />
@@ -668,7 +671,7 @@ export function RentalForm({
                 type="text"
                 value={idDocumentNumber}
                 onChange={(e) => setIdDocumentNumber(e.target.value)}
-                placeholder="Numéro de la pièce (CNI, Passeport ou Permis)"
+                placeholder={t("Numéro de la pièce (CNI, Passeport ou Permis)")}
                 className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel-2 px-3 text-sm font-bold text-app-text outline-none focus:border-brand-orange font-mono"
               />
             </div>
@@ -677,13 +680,13 @@ export function RentalForm({
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-xs text-app-good">
             <CheckCircleIcon className="h-4 w-4 shrink-0 text-app-good" />
             <span>
-              Pièce d&apos;identité enregistrée : <strong>{selectedClient?.idDocumentType} n° {selectedClient?.idDocumentNumber}</strong> (pré-remplie sur le contrat).
+              <T>Pièce d&apos;identité enregistrée :</T> <strong>{selectedClient?.idDocumentType} <T>n°</T> {selectedClient?.idDocumentNumber}</strong> <T>(pré-remplie sur le contrat).</T>
             </span>
           </div>
         ) : (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-app-panel-2 p-2.5 text-xs text-app-muted">
             <ClockIcon className="h-3.5 w-3.5 shrink-0 text-app-muted" />
-            <span>Check-in express : sans contrat ni pièce d&apos;identité exigée.</span>
+            <span><T>Check-in express : sans contrat ni pièce d&apos;identité exigée.</T></span>
           </div>
         )}
       </div>
@@ -692,7 +695,7 @@ export function RentalForm({
       {state?.message && (
         <div className="rounded-xl border border-danger/40 bg-danger/15 p-3 text-xs font-bold text-app-bad flex items-center gap-2">
           <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-bad" />
-          <span>{state.message}</span>
+          <span><T>{state.message}</T></span>
         </div>
       )}
 
@@ -700,7 +703,7 @@ export function RentalForm({
       {(!canSubmit && (missingAttempted || !pending)) && getMissingReason() ? (
         <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-center text-xs font-bold text-app-warn flex items-center justify-center gap-2">
           <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-warn" />
-          <span>{getMissingReason()}</span>
+          <span>{t(getMissingReason() ?? "")}</span>
         </div>
       ) : null}
 
@@ -710,7 +713,7 @@ export function RentalForm({
           href="/locations"
           className="flex h-14 min-w-[120px] items-center justify-center rounded-2xl border border-app-line-strong bg-app-panel-2 text-sm font-bold text-app-text hover:bg-fg/5 active:scale-98 transition-all"
         >
-          Annuler
+          <T>Annuler</T>
         </Link>
         <button
           type={canSubmit ? "submit" : "button"}
@@ -727,10 +730,10 @@ export function RentalForm({
           } disabled:opacity-50`}
         >
           {pending
-            ? "Enregistrement en cours..."
+            ? <T>{"Enregistrement en cours..."}</T>
             : isContractStay
-              ? "ENREGISTRER & GÉNÉRER LE CONTRAT"
-              : submitLabel}
+              ? <T>{"ENREGISTRER & GÉNÉRER LE CONTRAT"}</T>
+              : t(submitLabel)}
         </button>
       </div>
     </form>

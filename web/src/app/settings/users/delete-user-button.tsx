@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteEstablishmentUser } from "@/app/actions/users";
 import { AlertCircleIcon } from "@/components/ui/icons";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 export function DeleteEstablishmentUserButton({
   userId,
@@ -16,6 +17,7 @@ export function DeleteEstablishmentUserButton({
   userLogin: string;
   isCurrentAdmin: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function DeleteEstablishmentUserButton({
           setError(null);
           setShowModal(true);
         }}
-        title="Supprimer définitivement ce compte"
+        title={t("Supprimer définitivement ce compte")}
         className="flex h-10 items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 text-xs font-extrabold text-danger transition-colors hover:bg-danger/20"
       >
         <svg
@@ -77,8 +79,8 @@ export function DeleteEstablishmentUserButton({
                   <AlertCircleIcon className="h-5 w-5" />
                 </span>
                 <div>
-                  <h3 className="text-base font-extrabold text-fg">Supprimer ce compte</h3>
-                  <p className="text-xs text-fg/50">Action irréversible</p>
+                  <h3 className="text-base font-extrabold text-fg"><T>Supprimer ce compte</T></h3>
+                  <p className="text-xs text-fg/50"><T>Action irréversible</T></p>
                 </div>
               </div>
               <button
@@ -92,17 +94,17 @@ export function DeleteEstablishmentUserButton({
 
             <div className="mt-4 flex flex-col gap-4">
               <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3.5 text-xs leading-relaxed text-fg/80">
-                Vous êtes sur le point de supprimer définitivement le compte de{" "}
+                <T>Vous êtes sur le point de supprimer définitivement le compte de</T>{" "}
                 <strong className="text-fg">« {userName} »</strong> ({userLogin}).
                 <p className="mt-2 text-danger font-semibold">
-                  Ce compte ainsi que son adresse e-mail quitteront complètement la plateforme.
-                  Toutes les sessions seront révoquées et l&apos;utilisateur ne pourra plus réinitialiser de mot de passe ni se connecter.
+                  <T>Ce compte ainsi que son adresse e-mail quitteront complètement la plateforme.
+                  Toutes les sessions seront révoquées et l&apos;utilisateur ne pourra plus réinitialiser de mot de passe ni se connecter.</T>
                 </p>
               </div>
 
               {error && (
                 <p className="rounded-xl bg-danger/20 px-3 py-2 text-xs font-bold text-danger">
-                  {error}
+                  <T>{error}</T>
                 </p>
               )}
 
@@ -112,7 +114,7 @@ export function DeleteEstablishmentUserButton({
                   onClick={() => setShowModal(false)}
                   className="rounded-xl px-4 py-2.5 text-xs font-bold text-fg/70 hover:bg-fg/10 hover:text-fg"
                 >
-                  Annuler
+                  <T>Annuler</T>
                 </button>
                 <button
                   type="button"
@@ -120,7 +122,7 @@ export function DeleteEstablishmentUserButton({
                   onClick={handleDelete}
                   className="flex items-center justify-center gap-2 rounded-xl bg-danger px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-danger/30 transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                  {pending ? "Suppression en cours..." : "Confirmer la suppression"}
+                  {pending ? <T>{"Suppression en cours..."}</T> : <T>{"Confirmer la suppression"}</T>}
                 </button>
               </div>
             </div>

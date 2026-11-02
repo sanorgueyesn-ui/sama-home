@@ -7,6 +7,7 @@ import { resolveDefaultCashRegister, computeTheoreticalBalance } from "@/lib/cas
 import { catchUpSchedule, isSerializationConflict, isBankTransferScheduleDateUniqueViolation } from "@/lib/transfer-schedule-engine";
 import { resolveAnchorDayOnCreate, resolveAnchorDayOnUpdate } from "@/lib/transfer-frequency";
 import { BankAccountSchema, TransferScheduleSchema } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Bloc 17.2, Étape D — services métier Banque. Un `BankTransfer` n'est
@@ -27,6 +28,7 @@ export async function createBankAccount(input: {
   bankName: string;
   maskedAccountNumber?: string;
 }): Promise<{ error?: string; errors?: Record<string, string[]>; id?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : aucune fonction
   // de ce fichier n'était gardée par requireActiveEstablishment(), alors que
   // tariffs.ts/expenses.ts le sont déjà pour des actions de même nature.
@@ -35,21 +37,21 @@ export async function createBankAccount(input: {
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un compte bancaire." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un compte bancaire.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut créer un compte bancaire." };
+    return { error: t("Seul un administrateur peut créer un compte bancaire.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un compte bancaire." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un compte bancaire.") };
   }
 
   const parsed = BankAccountSchema.safeParse(input);
@@ -89,27 +91,28 @@ export async function updateBankAccount(
   id: string,
   input: { label: string; bankName: string; maskedAccountNumber?: string },
 ): Promise<{ error?: string; errors?: Record<string, string[]> }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
   // que createBankAccount() ci-dessus.
   const access = await requireActiveEstablishment();
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce compte bancaire." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce compte bancaire.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut modifier un compte bancaire." };
+    return { error: t("Seul un administrateur peut modifier un compte bancaire.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce compte bancaire." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce compte bancaire.") };
   }
 
   const parsed = BankAccountSchema.safeParse(input);
@@ -161,7 +164,7 @@ export async function updateBankAccount(
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   return {};
@@ -182,6 +185,7 @@ function formatActiveScheduleWarning(count: number): string {
 
 /** Désactivation uniquement — jamais de suppression physique (BLOC 7 : "pas de suppression destructive si le compte possède un historique"). Idempotent si déjà inactif (pas de faux AuditLog). */
 export async function deactivateBankAccount(id: string): Promise<{ error?: string; warning?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
   // volontairement JAMAIS gardée par requireActiveEstablishment(), même
   // principe que toggleActive()/toggleTariffActive() (direction
@@ -189,11 +193,11 @@ export async function deactivateBankAccount(id: string): Promise<{ error?: strin
   // l'établissement, jamais ne l'augmente.
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut désactiver un compte bancaire." };
+    return { error: t("Seul un administrateur peut désactiver un compte bancaire.") };
   }
   // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de désactiver ce compte bancaire." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de désactiver ce compte bancaire.") };
   }
 
   let activeScheduleCount = 0;
@@ -242,7 +246,7 @@ export async function deactivateBankAccount(id: string): Promise<{ error?: strin
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 
   if (activeScheduleCount > 0) {
@@ -264,6 +268,7 @@ export async function createBankTransfer(input: {
   reference?: string;
   note?: string;
 }): Promise<{ error?: string; id?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : createBankTransfer()
   // crée un nouvel engagement financier, même raison que createBankAccount()
   // ci-dessus.
@@ -271,25 +276,25 @@ export async function createBankTransfer(input: {
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un virement." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un virement.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer un virement." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un virement.") };
   }
 
   if (input.status !== "DRAFT" && input.status !== "SCHEDULED") {
-    return { error: "Statut initial invalide." };
+    return { error: t("Statut initial invalide.") };
   }
   if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    return { error: "Le montant doit être un nombre entier strictement positif." };
+    return { error: t("Le montant doit être un nombre entier strictement positif.") };
   }
 
   try {
@@ -343,7 +348,7 @@ export async function createBankTransfer(input: {
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 }
 
@@ -355,6 +360,7 @@ export async function createBankTransfer(input: {
  * plutôt que de déduire deux fois.
  */
 export async function effectBankTransfer(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : effectuer un
   // virement déplace réellement de la trésorerie (DRAFT/SCHEDULED →
   // EFFECTED) — action financière réelle, jamais risk-reducing, donc gardée
@@ -363,18 +369,18 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de confirmer ce virement." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de confirmer ce virement.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de confirmer ce virement." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de confirmer ce virement.") };
   }
 
   try {
@@ -458,7 +464,7 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Le solde ou le statut a peut-être changé entre-temps (opération concurrente). Veuillez réessayer." };
+    return { error: t("Le solde ou le statut a peut-être changé entre-temps (opération concurrente). Veuillez réessayer.") };
   }
 
   return {};
@@ -466,6 +472,7 @@ export async function effectBankTransfer(id: string): Promise<{ error?: string }
 
 /** BLOC 17 — DRAFT/SCHEDULED uniquement ; EFFECTED jamais annulable (correction via CashCorrection si nécessaire, jamais une annulation destructive). Idempotent si déjà CANCELLED. Transaction Serializable (Bloc I.1) : un effectBankTransfer() concurrent gagnant la course fait échouer cette transaction plutôt que d'écraser silencieusement un virement déjà EFFECTED. */
 export async function cancelBankTransfer(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite : volontairement JAMAIS
   // gardée par requireActiveEstablishment(), même principe que
   // cancelReservation()/cancelRental() — annuler un virement non encore
@@ -474,7 +481,7 @@ export async function cancelBankTransfer(id: string): Promise<{ error?: string }
   const user = await getCurrentUser();
   // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler ce virement." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'annuler ce virement.") };
   }
 
   try {
@@ -516,7 +523,7 @@ export async function cancelBankTransfer(id: string): Promise<{ error?: string }
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Le statut a peut-être changé entre-temps (opération concurrente). Veuillez réessayer." };
+    return { error: t("Le statut a peut-être changé entre-temps (opération concurrente). Veuillez réessayer.") };
   }
 
   return {};
@@ -535,27 +542,28 @@ export async function createTransferSchedule(input: {
   percentage?: number;
   nextRunAt: Date;
 }): Promise<{ error?: string; errors?: Record<string, string[]>; id?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
   // que createBankAccount() ci-dessus.
   const access = await requireActiveEstablishment();
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de configurer une programmation." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de configurer une programmation.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut configurer une programmation de versement." };
+    return { error: t("Seul un administrateur peut configurer une programmation de versement.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de configurer une programmation." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de configurer une programmation.") };
   }
 
   const parsed = TransferScheduleSchema.safeParse(input);
@@ -617,7 +625,7 @@ export async function createTransferSchedule(input: {
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 }
 
@@ -632,27 +640,28 @@ export async function updateTransferSchedule(
     nextRunAt: Date;
   },
 ): Promise<{ error?: string; errors?: Record<string, string[]> }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
   // que createBankAccount() ci-dessus.
   const access = await requireActiveEstablishment();
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette programmation." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier cette programmation.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut modifier une programmation de versement." };
+    return { error: t("Seul un administrateur peut modifier une programmation de versement.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette programmation." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier cette programmation.") };
   }
 
   const parsed = TransferScheduleSchema.safeParse(input);
@@ -730,7 +739,7 @@ export async function updateTransferSchedule(
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 
   return {};
@@ -738,16 +747,17 @@ export async function updateTransferSchedule(
 
 /** Idempotent si déjà inactive. */
 export async function deactivateTransferSchedule(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite, même principe que
   // deactivateBankAccount() ci-dessus : volontairement JAMAIS gardée par
   // requireActiveEstablishment().
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut désactiver une programmation de versement." };
+    return { error: t("Seul un administrateur peut désactiver une programmation de versement.") };
   }
   // Phase 3B / Lot B2 — résolu côté serveur depuis la session.
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de désactiver cette programmation." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de désactiver cette programmation.") };
   }
 
   try {
@@ -785,7 +795,7 @@ export async function deactivateTransferSchedule(id: string): Promise<{ error?: 
     if (error instanceof BankActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 
   return {};

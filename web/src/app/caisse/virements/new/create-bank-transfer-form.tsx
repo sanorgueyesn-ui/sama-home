@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createBankTransfer } from "@/app/actions/bank";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 /**
  * Bloc G, sections 9/10 — appelle directement l'action existante
@@ -13,6 +14,7 @@ import { createBankTransfer } from "@/app/actions/bank";
  * virement ne signifie jamais qu'il est effectué).
  */
 export function CreateBankTransferForm({ accounts }: { accounts: { id: string; label: string; bankName: string }[] }) {
+  const t = useT();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [bankAccountId, setBankAccountId] = useState("");
@@ -56,7 +58,7 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
       <div className="md:grid md:grid-cols-2 md:gap-4">
         <div>
           <label htmlFor="bankAccountId" className="mb-1.5 block text-xs font-bold text-fg">
-            Compte bancaire
+            <T>Compte bancaire</T>
           </label>
           <select
             id="bankAccountId"
@@ -64,10 +66,10 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
             onChange={(e) => setBankAccountId(e.target.value)}
             className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
-            <option value="">Sélectionner un compte...</option>
+            <option value=""><T>Sélectionner un compte...</T></option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.label} · {a.bankName}
+                <T>{a.label}</T> · {a.bankName}
               </option>
             ))}
           </select>
@@ -75,7 +77,7 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
 
         <div className="mt-4 md:mt-0">
           <label htmlFor="amount" className="mb-1.5 block text-xs font-bold text-fg">
-            Montant (FCFA)
+            <T>Montant (FCFA)</T>
           </label>
           <input
             id="amount"
@@ -91,7 +93,7 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
       <div className="md:grid md:grid-cols-2 md:gap-4">
         <div>
           <label htmlFor="scheduledAt" className="mb-1.5 block text-xs font-bold text-fg">
-            Date prévue <span className="font-medium text-fg/40">(optionnel — laisser vide pour un brouillon)</span>
+            <T>Date prévue</T> <span className="font-medium text-fg/40"><T>(optionnel — laisser vide pour un brouillon)</T></span>
           </label>
           <input
             id="scheduledAt"
@@ -104,14 +106,14 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
 
         <div className="mt-4 md:mt-0">
           <label htmlFor="reference" className="mb-1.5 block text-xs font-bold text-fg">
-            Référence <span className="font-medium text-fg/40">(optionnel)</span>
+            <T>Référence</T> <span className="font-medium text-fg/40">(optionnel)</span>
           </label>
           <input
             id="reference"
             type="text"
             value={reference}
             onChange={(e) => setReference(e.target.value)}
-            placeholder="Ex. numéro de bordereau"
+            placeholder={t("Ex. numéro de bordereau")}
             className="h-12 w-full rounded-xl border border-border/15 bg-surface px-4 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           />
         </div>
@@ -119,7 +121,7 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
 
       <div>
         <label htmlFor="note" className="mb-1.5 block text-xs font-bold text-fg">
-          Note <span className="font-medium text-fg/40">(optionnel)</span>
+          <T>Note</T> <span className="font-medium text-fg/40">(optionnel)</span>
         </label>
         <textarea
           id="note"
@@ -130,12 +132,12 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
       </div>
 
       <p className="rounded-xl bg-surface-sunken px-4 py-3 text-xs font-medium text-fg/60">
-        Un virement bancaire transfère de l&apos;argent de la caisse vers la banque. Il ne constitue pas une dépense.
+        <T>Un virement bancaire transfère de l&apos;argent de la caisse vers la banque. Il ne constitue pas une dépense.</T>
       </p>
 
       {error ? (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : null}
 
@@ -146,14 +148,14 @@ export function CreateBankTransferForm({ accounts }: { accounts: { id: string; l
           disabled={pending}
           className="h-14 flex-1 rounded-2xl border border-border/15 text-base font-extrabold text-fg disabled:opacity-40"
         >
-          Annuler
+          <T>Annuler</T>
         </button>
         <button
           type="submit"
           disabled={pending}
           className="h-14 flex-1 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
         >
-          {pending ? "..." : "Créer"}
+          {pending ? "..." : <T>{"Créer"}</T>}
         </button>
       </div>
     </form>

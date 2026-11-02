@@ -1,7 +1,10 @@
 import type { DailyFinancialPoint } from "@/lib/dashboard-data";
+import { T } from "@/components/i18n/i18n-provider";
+import { tSync } from "@/lib/i18n/sync";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function fmtDayLabel(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "2-digit" }).format(d);
 }
 
 /**
@@ -10,6 +13,7 @@ function fmtDayLabel(d: Date) {
  * dépendance de graphique ajoutée.
  */
 export function RevenueChart({ data }: { data: DailyFinancialPoint[] }) {
+  const t = tSync();
   const max = Math.max(1, ...data.flatMap((d) => [d.revenue, d.expense]));
   const barWidth = 18;
   const barGap = 4;
@@ -22,17 +26,17 @@ export function RevenueChart({ data }: { data: DailyFinancialPoint[] }) {
     <div>
       <div className="mb-2 flex items-center gap-4 text-xs font-bold text-navy/60">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-success" /> Recettes
+          <span className="h-2 w-2 rounded-full bg-success" /> <T>Recettes</T>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-danger" /> Dépenses
+          <span className="h-2 w-2 rounded-full bg-danger" /> <T>Dépenses</T>
         </span>
       </div>
       <svg
         viewBox={`0 0 ${width} ${chartHeight + 20}`}
         className="w-full"
         role="img"
-        aria-label="Recettes et dépenses des 7 derniers jours"
+        aria-label={t("Recettes et dépenses des 7 derniers jours")}
       >
         {data.map((d, i) => {
           const x = i * (groupWidth + groupGap);

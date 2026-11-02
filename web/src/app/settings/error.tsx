@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { T } from "@/components/i18n/i18n-provider";
 
 export default function SettingsError({
   error,
@@ -21,16 +22,16 @@ export default function SettingsError({
           <path d="M10.3 3.9 1.9 18.5A1.8 1.8 0 0 0 3.5 21h17a1.8 1.8 0 0 0 1.6-2.5L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
         </svg>
       </div>
-      <p className="text-base font-extrabold text-app-text">Impossible de charger les paramètres</p>
+      <p className="text-base font-extrabold text-app-text"><T>Impossible de charger les paramètres</T></p>
       <p className="mt-1.5 max-w-xs text-sm text-app-muted">
-        Une erreur inattendue est survenue. Vérifiez votre connexion et réessayez.
+        <T>Une erreur inattendue est survenue. Vérifiez votre connexion et réessayez.</T>
       </p>
       <button
         type="button"
         onClick={reset}
         className="mt-5 h-11 rounded-xl bg-brand-orange px-6 text-sm font-bold text-ink"
       >
-        RÉESSAYER
+        <T>RÉESSAYER</T>
       </button>
     </div>
   );

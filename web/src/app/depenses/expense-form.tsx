@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Field, TextAreaField } from "@/components/ui/field";
 import type { ExpenseFormState } from "@/lib/definitions";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 const METHOD_OPTIONS: { value: string; label: string }[] = [
   { value: "CASH", label: "Espèces" },
@@ -25,6 +26,7 @@ export function ExpenseForm({
   action: (state: ExpenseFormState, formData: FormData) => Promise<ExpenseFormState>;
   categories: { id: string; name: string }[];
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
   const [categoryId, setCategoryId] = useState("");
   const [method, setMethod] = useState("CASH");
@@ -35,7 +37,7 @@ export function ExpenseForm({
     <form action={formAction} className="flex flex-col gap-4">
       <div>
         <label htmlFor="categoryId" className="mb-1.5 block text-xs font-bold text-app-text">
-          Catégorie
+          <T>Catégorie</T>
         </label>
         <select
           id="categoryId"
@@ -44,7 +46,7 @@ export function ExpenseForm({
           onChange={(e) => setCategoryId(e.target.value)}
           className="h-12 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
         >
-          <option value="">Sélectionner une catégorie...</option>
+          <option value=""><T>Sélectionner une catégorie...</T></option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -53,7 +55,7 @@ export function ExpenseForm({
         </select>
         {errors?.categoryId?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
@@ -62,7 +64,7 @@ export function ExpenseForm({
 
       <div>
         <label htmlFor="method" className="mb-1.5 block text-xs font-bold text-app-text">
-          Mode de paiement
+          <T>Mode de paiement</T>
         </label>
         <select
           id="method"
@@ -73,13 +75,13 @@ export function ExpenseForm({
         >
           {METHOD_OPTIONS.map((m) => (
             <option key={m.value} value={m.value}>
-              {m.label}
+              <T>{m.label}</T>
             </option>
           ))}
         </select>
         {errors?.method?.map((error) => (
           <p key={error} className="mt-1 text-xs font-medium text-danger">
-            {error}
+            <T>{error}</T>
           </p>
         ))}
       </div>
@@ -88,20 +90,20 @@ export function ExpenseForm({
         id="reference"
         label="Référence"
         type="text"
-        placeholder="Ex. numéro de facture"
+        placeholder={t("Ex. numéro de facture")}
         errors={errors?.reference}
       />
 
       <TextAreaField
         id="note"
         label="Note"
-        placeholder="Ex. Réparation climatiseur chambre 2"
+        placeholder={t("Ex. Réparation climatiseur chambre 2")}
         errors={errors?.note}
       />
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 
@@ -110,7 +112,7 @@ export function ExpenseForm({
         disabled={pending}
         className="mt-1 h-14 rounded-2xl bg-navy text-base font-extrabold tracking-wide text-white disabled:opacity-40"
       >
-        {pending ? "Enregistrement..." : "ENREGISTRER LA DÉPENSE"}
+        {pending ? "Enregistrement..." : <T>{"ENREGISTRER LA DÉPENSE"}</T>}
       </button>
     </form>
   );

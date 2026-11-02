@@ -22,6 +22,7 @@ import { STAY_ACTIONS } from "@/components/dashboard/dashboard-actions";
 import { ArrivalList, ReceivableList, StayList } from "@/components/dashboard/dashboard-lists";
 import { formatFcfa, occupancyRate } from "@/lib/dashboard-metrics";
 import type { DashboardOverview } from "@/lib/dashboard-overview";
+import { T } from "@/components/i18n/i18n-provider";
 
 /**
  * Tableau de bord Résidence (guide Résidence §4). Questions auxquelles il répond : quels logements
@@ -125,15 +126,15 @@ export function DashboardResidenceView({ overview }: { overview: DashboardOvervi
               <StatusBar counts={counts.all} noun="logements" />
               <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-app-line pt-4 text-xs">
                 <div>
-                  <dt className="text-app-muted">Chambres</dt>
+                  <dt className="text-app-muted"><T>Chambres</T></dt>
                   <dd className="mt-0.5 text-sm font-bold text-app-text">
-                    {counts.rooms.occupied} occupée(s) sur {counts.rooms.total}
+                    {counts.rooms.occupied} <T>occupée(s) sur</T> {counts.rooms.total}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-app-muted">Appartements</dt>
+                  <dt className="text-app-muted"><T>Appartements</T></dt>
                   <dd className="mt-0.5 text-sm font-bold text-app-text">
-                    {counts.apartments.occupied} occupé(s) sur {counts.apartments.total}
+                    {counts.apartments.occupied} <T>occupé(s) sur</T> {counts.apartments.total}
                   </dd>
                 </div>
               </dl>
@@ -199,7 +200,7 @@ export function DashboardResidenceView({ overview }: { overview: DashboardOvervi
 
       <p className="flex items-center gap-2 text-xs text-app-faint">
         <WalletIcon className="h-3.5 w-3.5" aria-hidden />
-        {overview.clientCount} client(s) dans votre fichier.
+        {overview.clientCount} <T>client(s) dans votre fichier.</T>
       </p>
     </div>
   );

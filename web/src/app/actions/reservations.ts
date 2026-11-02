@@ -9,6 +9,7 @@ import { findAvailabilityConflict, type AvailabilityConflict } from "@/lib/avail
 import { checkIdentityRequirement, requiresIdentity } from "@/lib/identity";
 import { PHONE_REGEX } from "@/lib/phone";
 import { ReservationClientOptionalSchema, type ReservationFormState } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 function parseReservationForm(formData: FormData) {
   return ReservationClientOptionalSchema.safeParse({
@@ -58,6 +59,7 @@ export async function checkAvailability(input: {
   billingMode?: "HOUR" | "DAY";
   numberOfDays?: number;
 }): Promise<{ available: boolean; message?: string; departureTime?: string; totalAmount?: number }> {
+  const t = await getT();
   const user = await getCurrentUser();
   if (!user.establishmentId) return { available: false };
 
@@ -74,7 +76,7 @@ export async function checkAvailability(input: {
 
   const arrivalDateTime = new Date(`${input.date}T${input.arrivalTime}:00`);
   if (Number.isNaN(arrivalDateTime.getTime())) {
-    return { available: false, message: "Date ou heure invalide." };
+    return { available: false, message: t("Date ou heure invalide.") };
   }
 
   // Interdiction formelle de réserver à une date ou une heure passée
@@ -82,7 +84,7 @@ export async function checkAvailability(input: {
   if (!input.excludeReservationId && arrivalDateTime.getTime() < now.getTime() - 2 * 60 * 1000) {
     return {
       available: false,
-      message: "Impossible de réserver à une date ou heure déjà passée. Veuillez choisir un horaire futur.",
+      message: t("Impossible de réserver à une date ou heure déjà passée. Veuillez choisir un horaire futur."),
     };
   }
 
@@ -112,6 +114,7 @@ export async function createReservation(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-O13 — requireActiveEstablishment() placé en tout
   // premier, avant toute lecture métier (client/logement/tarif), avant le
   // contrôle d'identité et avant la transaction Serializable. Ne concerne
@@ -125,13 +128,13 @@ export async function createReservation(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer une réservation." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une réservation.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
@@ -193,22 +196,22 @@ export async function createReservation(
     };
   }
 
-  if (clientId && clientId !== "temp-inline-client" && !client) return { message: "Client introuvable." };
-  if (!property) return { message: "Logement introuvable." };
-  if (!property.active) return { message: "Ce logement est désactivé." };
-  if (!tariff) return { message: "Tarif introuvable." };
-  if (!tariff.active) return { message: "Ce tarif est désactivé." };
-  if (tariff.propertyId !== propertyId) return { message: "Ce tarif n'appartient pas à ce logement." };
+  if (clientId && clientId !== "temp-inline-client" && !client) return { message: t("Client introuvable.") };
+  if (!property) return { message: t("Logement introuvable.") };
+  if (!property.active) return { message: t("Ce logement est désactivé.") };
+  if (!tariff) return { message: t("Tarif introuvable.") };
+  if (!tariff.active) return { message: t("Ce tarif est désactivé.") };
+  if (tariff.propertyId !== propertyId) return { message: t("Ce tarif n'appartient pas à ce logement.") };
 
   const arrivalDateTime = new Date(`${date}T${arrivalTime}:00`);
   if (Number.isNaN(arrivalDateTime.getTime())) {
-    return { message: "Date ou heure invalide." };
+    return { message: t("Date ou heure invalide.") };
   }
 
   // Refus formel de réservation dans le passé
   const now = new Date();
   if (arrivalDateTime.getTime() < now.getTime() - 2 * 60 * 1000) {
-    return { message: "La date et l'heure d'arrivée d'une réservation doivent être dans le futur." };
+    return { message: t("La date et l'heure d'arrivée d'une réservation doivent être dans le futur.") };
   }
 
   const billingMode = (formData.get("billingMode") as string) || "DAY";
@@ -326,7 +329,7 @@ export async function createReservation(
     // the documented limits of this mechanism.
     return {
       message:
-        "Le créneau vient peut-être d'être réservé à l'instant par quelqu'un d'autre. Veuillez vérifier la disponibilité et réessayer.",
+        t("Le créneau vient peut-être d'être réservé à l'instant par quelqu'un d'autre. Veuillez vérifier la disponibilité et réessayer."),
     };
   }
 
@@ -340,6 +343,7 @@ export async function updateReservation(
   _prevState: ReservationFormState,
   formData: FormData,
 ): Promise<ReservationFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : updateReservation()
   // n'était gardée que par getCurrentUser(), jamais par
   // requireActiveEstablishment(), contrairement à createReservation() dans ce
@@ -348,27 +352,27 @@ export async function updateReservation(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette réservation." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier cette réservation.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (!user.establishmentId) {
-    return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette réservation." };
+    return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier cette réservation.") };
   }
 
   // Une réservation d'un autre établissement est indistinguable d'un id inexistant.
   const existing = await prisma.reservation.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!existing) {
-    return { message: "Réservation introuvable." };
+    return { message: t("Réservation introuvable.") };
   }
   if (existing.status !== "CONFIRMED") {
-    return { message: "Cette réservation n'est plus modifiable (statut actuel)." };
+    return { message: t("Cette réservation n'est plus modifiable (statut actuel).") };
   }
 
   const parsed = parseReservationForm(formData);
@@ -397,16 +401,16 @@ export async function updateReservation(
     prisma.property.findFirst({ where: { id: propertyId, establishmentId: user.establishmentId } }),
     prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } }),
   ]);
-  if (clientId && !client) return { message: "Client introuvable." };
-  if (!property) return { message: "Logement introuvable." };
-  if (!property.active) return { message: "Ce logement est désactivé." };
-  if (!tariff) return { message: "Tarif introuvable." };
-  if (!tariff.active) return { message: "Ce tarif est désactivé." };
-  if (tariff.propertyId !== propertyId) return { message: "Ce tarif n'appartient pas à ce logement." };
+  if (clientId && !client) return { message: t("Client introuvable.") };
+  if (!property) return { message: t("Logement introuvable.") };
+  if (!property.active) return { message: t("Ce logement est désactivé.") };
+  if (!tariff) return { message: t("Tarif introuvable.") };
+  if (!tariff.active) return { message: t("Ce tarif est désactivé.") };
+  if (tariff.propertyId !== propertyId) return { message: t("Ce tarif n'appartient pas à ce logement.") };
 
   const arrivalDateTime = new Date(`${date}T${arrivalTime}:00`);
   if (Number.isNaN(arrivalDateTime.getTime())) {
-    return { message: "Date ou heure invalide." };
+    return { message: t("Date ou heure invalide.") };
   }
 
   // Bloc 3/4: amount and duration stay pinned to whatever tariff was chosen
@@ -428,13 +432,13 @@ export async function updateReservation(
   // ici, pas checkIdentityRequirement (qui exigerait aussi des documents
   // jamais collectés par ce formulaire).
   if (requiresIdentity(arrivalDateTime, departureDateTime) && !client) {
-    return { message: "Le client est obligatoire pour un séjour de 48 h ou plus." };
+    return { message: t("Le client est obligatoire pour un séjour de 48 h ou plus.") };
   }
 
   if (existing.deposit > amount) {
     return {
       message:
-        "L'acompte déjà encaissé pour cette réservation dépasse le montant de ce tarif — choisissez un autre tarif.",
+        t("L'acompte déjà encaissé pour cette réservation dépasse le montant de ce tarif — choisissez un autre tarif."),
     };
   }
 
@@ -481,7 +485,7 @@ export async function updateReservation(
     }
     return {
       message:
-        "Le créneau vient peut-être d'être réservé à l'instant par quelqu'un d'autre. Veuillez vérifier la disponibilité et réessayer.",
+        t("Le créneau vient peut-être d'être réservé à l'instant par quelqu'un d'autre. Veuillez vérifier la disponibilité et réessayer."),
     };
   }
 
@@ -492,6 +496,7 @@ export async function updateReservation(
 }
 
 export async function cancelReservation(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
   // volontairement JAMAIS gardée par requireActiveEstablishment(), par
   // analogie directe avec le principe déjà établi pour toggleActive()/
@@ -504,7 +509,7 @@ export async function cancelReservation(id: string): Promise<{ error?: string }>
   // prolongent un engagement) restent, elles, gardées.
   const user = await getCurrentUser();
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette réservation." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'annuler cette réservation.") };
   }
 
   // Phase 14 audit (Bloc 7): findUniqueOrThrow with no guard here would
@@ -514,7 +519,7 @@ export async function cancelReservation(id: string): Promise<{ error?: string }>
   // chemin "introuvable".
   const existing = await prisma.reservation.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!existing) {
-    return { error: "Réservation introuvable." };
+    return { error: t("Réservation introuvable.") };
   }
   // Phase 3G / Lot D12-P4 — faille confirmée en D12-P3 : cette fonction
   // n'exigeait auparavant aucun statut particulier, contrairement à
@@ -524,7 +529,7 @@ export async function cancelReservation(id: string): Promise<{ error?: string }>
   // par un appel direct, désynchronisant son statut de la Rental déjà créée.
   if (existing.status !== "CONFIRMED") {
     return {
-      error: "Cette réservation n'est plus annulable (statut actuel).",
+      error: t("Cette réservation n'est plus annulable (statut actuel)."),
     };
   }
 
@@ -539,7 +544,7 @@ export async function cancelReservation(id: string): Promise<{ error?: string }>
   });
   if (result.count === 0) {
     return {
-      error: "Cette réservation vient d'être traitée (arrivée ou annulation) : actualisez la page pour voir son état actuel.",
+      error: t("Cette réservation vient d'être traitée (arrivée ou annulation) : actualisez la page pour voir son état actuel."),
     };
   }
 

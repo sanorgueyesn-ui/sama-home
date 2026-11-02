@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 import { isNavItemActive, visibleGroups } from "./settings-nav-config";
+import { useT, T } from "@/components/i18n/i18n-provider";
 
 /**
  * Barre de navigation des paramètres, en haut de page (ordinateur uniquement). Sur téléphone, c'est
@@ -13,10 +14,11 @@ import { isNavItemActive, visibleGroups } from "./settings-nav-config";
  * traversent pas la frontière serveur/client, et la barre n'en a pas besoin.
  */
 export function SettingsNav({ isAdmin }: { isAdmin: boolean }) {
+  const t = useT();
   const pathname = usePathname();
   const groups = visibleGroups(isAdmin);
   return (
-    <nav aria-label="Sections des paramètres" className="hidden lg:block">
+    <nav aria-label={t("Sections des paramètres")} className="hidden lg:block">
       <ul className="flex items-center gap-0.5 overflow-x-auto rounded-full border border-border/15 bg-surface-raised p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {groups.map((group, index) => (
           <Fragment key={group.title}>
@@ -28,12 +30,12 @@ export function SettingsNav({ isAdmin }: { isAdmin: boolean }) {
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    title={item.label}
+                    title={t(item.label)}
                     className={`flex h-10 items-center whitespace-nowrap rounded-full px-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange ${
                       active ? "bg-fg text-surface" : "text-fg/65 hover:bg-fg/[0.06] hover:text-fg"
                     }`}
                   >
-                    {item.shortLabel ?? item.label}
+                    <T>{item.shortLabel ?? item.label}</T>
                   </Link>
                 </li>
               );

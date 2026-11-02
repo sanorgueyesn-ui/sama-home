@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { getCurrentUser, requireActiveEstablishment } from "@/lib/dal";
 import { resolveDefaultCashRegister, computeTheoreticalBalance, computeExpectedCashBalance } from "@/lib/cash-data";
 import { cashVariance, nextOpeningBalance, varianceBase } from "@/lib/cash-rules";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Bloc 17.2, Étape D — services métier Caisse. Toutes les permissions sont
@@ -28,6 +29,7 @@ class CashActionError extends Error {}
 export async function openCashSession(
   manual?: { openingBalance: number; reason: string },
 ): Promise<{ error?: string; id?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : aucune fonction
   // de ce fichier n'était gardée par requireActiveEstablishment(). Ouvrir une
   // nouvelle session de caisse démarre un nouveau cycle financier — gardée
@@ -36,32 +38,32 @@ export async function openCashSession(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'ouvrir une caisse." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'ouvrir une caisse.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
 
   if (manual && user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut ouvrir une caisse manuellement." };
+    return { error: t("Seul un administrateur peut ouvrir une caisse manuellement.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible d'ouvrir une caisse." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible d'ouvrir une caisse.") };
   }
 
   let manualReason: string | undefined;
   if (manual) {
     manualReason = manual.reason?.trim();
     if (!manualReason) {
-      return { error: "Une justification est obligatoire pour une ouverture manuelle." };
+      return { error: t("Une justification est obligatoire pour une ouverture manuelle.") };
     }
     if (!Number.isInteger(manual.openingBalance) || manual.openingBalance < 0) {
-      return { error: "Le montant d'ouverture doit être un nombre entier positif ou nul." };
+      return { error: t("Le montant d'ouverture doit être un nombre entier positif ou nul.") };
     }
   }
 
@@ -140,7 +142,7 @@ export async function openCashSession(
     if (error instanceof CashActionError) {
       return { error: error.message };
     }
-    return { error: "Une session a peut-être été ouverte à l'instant par quelqu'un d'autre. Veuillez réessayer." };
+    return { error: t("Une session a peut-être été ouverte à l'instant par quelqu'un d'autre. Veuillez réessayer.") };
   }
 }
 
@@ -155,6 +157,7 @@ export async function closeCashSession(input: {
   varianceReason?: string | null;
   closeNote?: string | null;
 }): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — décision explicite prise en D12-P109/P110 :
   // volontairement JAMAIS gardée par requireActiveEstablishment() — clôturer
   // une session déjà ouverte permet de boucler proprement un cycle financier
@@ -166,12 +169,12 @@ export async function closeCashSession(input: {
   // Phase 3B / Lot B2 — résolu côté serveur depuis la session, jamais depuis
   // le navigateur ; jamais un repli sur l'établissement historique.
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de clôturer la caisse." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de clôturer la caisse.") };
   }
 
   const physicalCount = input.physicalCount ?? null;
   if (physicalCount !== null && (!Number.isInteger(physicalCount) || physicalCount < 0)) {
-    return { error: "Le comptage physique doit être un nombre entier positif ou nul." };
+    return { error: t("Le comptage physique doit être un nombre entier positif ou nul.") };
   }
 
   try {
@@ -247,7 +250,7 @@ export async function closeCashSession(input: {
     if (error instanceof CashActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant la clôture. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la clôture. Veuillez réessayer.") };
   }
 
   return {};
@@ -265,6 +268,7 @@ export async function modifyClosedCashSession(
   changes: { physicalCount?: number | null; varianceReason?: string | null; closeNote?: string | null },
   reason: string,
 ): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109 : modifie un
   // enregistrement financier existant (correction rétroactive) — gardée
   // comme les autres actions de modification de ce lot.
@@ -272,26 +276,26 @@ export async function modifyClosedCashSession(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette clôture." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier cette clôture.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut modifier une clôture validée." };
+    return { error: t("Seul un administrateur peut modifier une clôture validée.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier cette clôture." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier cette clôture.") };
   }
 
   const trimmedReason = reason?.trim();
   if (!trimmedReason) {
-    return { error: "Une justification est obligatoire pour modifier une clôture." };
+    return { error: t("Une justification est obligatoire pour modifier une clôture.") };
   }
 
   if (
@@ -299,7 +303,7 @@ export async function modifyClosedCashSession(
     changes.physicalCount !== null &&
     (!Number.isInteger(changes.physicalCount) || changes.physicalCount < 0)
   ) {
-    return { error: "Le comptage physique doit être un nombre entier positif ou nul." };
+    return { error: t("Le comptage physique doit être un nombre entier positif ou nul.") };
   }
 
   try {
@@ -387,7 +391,7 @@ export async function modifyClosedCashSession(
     if (error instanceof CashActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue pendant la modification. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la modification. Veuillez réessayer.") };
   }
 
   return {};
@@ -404,6 +408,7 @@ export async function createCashCorrection(
   amount: number,
   reason: string,
 ): Promise<{ error?: string; id?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-P110 — faille confirmée en D12-P109, même correction
   // que openCashSession() ci-dessus : création d'un nouvel ajustement
   // financier.
@@ -411,28 +416,28 @@ export async function createCashCorrection(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une correction de caisse." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une correction de caisse.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
   if (user.role !== "ADMIN") {
-    return { error: "Seul un administrateur peut créer une correction de caisse." };
+    return { error: t("Seul un administrateur peut créer une correction de caisse.") };
   }
   if (!user.establishmentId) {
-    return { error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une correction de caisse." };
+    return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une correction de caisse.") };
   }
   if (!Number.isInteger(amount) || amount === 0) {
-    return { error: "Le montant de la correction doit être un nombre entier non nul." };
+    return { error: t("Le montant de la correction doit être un nombre entier non nul.") };
   }
   const trimmedReason = reason?.trim();
   if (!trimmedReason) {
-    return { error: "Une justification est obligatoire pour une correction de caisse." };
+    return { error: t("Une justification est obligatoire pour une correction de caisse.") };
   }
 
   try {
@@ -481,6 +486,6 @@ export async function createCashCorrection(
     if (error instanceof CashActionError) {
       return { error: error.message };
     }
-    return { error: "Une erreur est survenue. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue. Veuillez réessayer.") };
   }
 }

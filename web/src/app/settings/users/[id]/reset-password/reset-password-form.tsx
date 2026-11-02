@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Field } from "@/components/ui/field";
 import { resetUserPassword } from "@/app/actions/users";
+import { T } from "@/components/i18n/i18n-provider";
 
 export function ResetPasswordForm({ userId }: { userId: string }) {
   const action = resetUserPassword.bind(null, userId);
@@ -31,7 +32,7 @@ export function ResetPasswordForm({ userId }: { userId: string }) {
 
       {state?.message && (
         <p role="alert" className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
-          {state.message}
+          <T>{state.message}</T>
         </p>
       )}
 
@@ -40,7 +41,7 @@ export function ResetPasswordForm({ userId }: { userId: string }) {
         disabled={pending}
         className="mt-1 h-14 rounded-2xl bg-brand-orange text-base font-extrabold tracking-wide text-ink disabled:opacity-40"
       >
-        {pending ? "Enregistrement..." : "RÉINITIALISER LE MOT DE PASSE"}
+        {pending ? "Enregistrement..." : <T>{"RÉINITIALISER LE MOT DE PASSE"}</T>}
       </button>
     </form>
   );

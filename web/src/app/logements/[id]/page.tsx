@@ -18,16 +18,20 @@ import { listReservations } from "@/lib/reservations-data";
 import { StayCountdown } from "@/components/dashboard/stay-countdown";
 import { getCurrentUser } from "@/lib/dal";
 import { hasEstablishmentPermission } from "@/lib/permissions";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 function formatFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/ |,/g, " ")} FCFA`;
 }
 
 function formatArrival(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(d);
 }
 
 export default async function PropertyDetailPage(props: PageProps<"/logements/[id]">) {
+  const t = await getT();
   const { id } = await props.params;
   const { created, updated, tariffCreated, tariffUpdated } = await props.searchParams;
 
@@ -65,10 +69,10 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         badge={<StatusBadge status={status} />}
       />
 
-      {created ? <Flash>{isHotel ? "Chambre créée avec succès." : "Logement créé avec succès."}</Flash> : null}
-      {updated ? <Flash>Modifications enregistrées.</Flash> : null}
-      {tariffCreated ? <Flash>Tarif créé avec succès.</Flash> : null}
-      {tariffUpdated ? <Flash>Tarif modifié avec succès.</Flash> : null}
+      {created ? <Flash>{isHotel ? <T>{"Chambre créée avec succès."}</T> : <T>{"Logement créé avec succès."}</T>}</Flash> : null}
+      {updated ? <Flash><T>Modifications enregistrées.</T></Flash> : null}
+      {tariffCreated ? <Flash><T>Tarif créé avec succès.</T></Flash> : null}
+      {tariffUpdated ? <Flash><T>Tarif modifié avec succès.</T></Flash> : null}
 
       {status === "OCCUPIED" && activeRental ? (
         <StayCountdown
@@ -89,16 +93,16 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           <Surface title="Informations">
             <dl className="divide-y divide-app-line">
               <InfoRow label="Capacité">{`${property.capacity} personne${property.capacity > 1 ? "s" : ""}`}</InfoRow>
-              <InfoRow label="Description">{property.description ?? "—"}</InfoRow>
-              <InfoRow label={isHotel ? "Chambre depuis" : "Logement depuis"}>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(property.createdAt)}</InfoRow>
+              <InfoRow label="Description"><T>{property.description ?? "—"}</T></InfoRow>
+              <InfoRow label={isHotel ? "Chambre depuis" : "Logement depuis"}>{new Intl.DateTimeFormat(dateLocale(), { dateStyle: "long" }).format(property.createdAt)}</InfoRow>
             </dl>
           </Surface>
 
-          <section aria-label="Tarifs">
-            <SectionTitle action={canEditTariffs ? { href: `/logements/${property.id}/tariffs/new`, label: "+ Ajouter un tarif" } : undefined}>Tarifs</SectionTitle>
+          <section aria-label={t("Tarifs")}>
+            <SectionTitle action={canEditTariffs ? { href: `/logements/${property.id}/tariffs/new`, label: "+ Ajouter un tarif" } : undefined}><T>Tarifs</T></SectionTitle>
             {tariffs.length === 0 ? (
               <Surface className="text-center">
-                <p className="text-sm font-semibold text-app-text">Aucun tarif pour ce {vocab.unitsSingular}</p>
+                <p className="text-sm font-semibold text-app-text"><T>Aucun tarif pour ce</T> {vocab.unitsSingular}</p>
                 <p className="mt-1 text-xs text-app-muted">
                   {canEditTariffs ? `Ajoutez au moins un tarif pour pouvoir proposer ce ${vocab.unitsSingular}.` : `Aucun tarif n'a encore été configuré pour ce ${vocab.unitsSingular}.`}
                 </p>
@@ -112,12 +116,12 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                         <div className="flex items-center gap-2">
                           {canEditTariffs ? (
                             <Link href={`/logements/${property.id}/tariffs/${tariff.id}/edit`} className="truncate text-sm font-extrabold text-app-text hover:text-brand-orange">
-                              {tariff.label}
+                              <T>{tariff.label}</T>
                             </Link>
                           ) : (
-                            <span className="truncate text-sm font-extrabold text-app-text">{tariff.label}</span>
+                            <span className="truncate text-sm font-extrabold text-app-text"><T>{tariff.label}</T></span>
                           )}
-                          {!tariff.active ? <Badge>Inactif</Badge> : null}
+                          {!tariff.active ? <Badge><T>Inactif</T></Badge> : null}
                         </div>
                         <p className="mt-0.5 text-xs font-bold tabular-nums text-brand-orange">{formatFcfa(tariff.amount)}</p>
                       </div>
@@ -131,45 +135,45 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         </div>
 
         <div className="flex flex-col gap-5">
-          <section aria-label="Actions" className="flex flex-col gap-2.5">
-            <SectionTitle>Actions</SectionTitle>
+          <section aria-label={t("Actions")} className="flex flex-col gap-2.5">
+            <SectionTitle><T>Actions</T></SectionTitle>
             {status === "OCCUPIED" && activeRental ? (
               <ActionLink href={`/locations/${activeRental.id}`} tone="danger">
                 <DoorIcon className="h-4 w-4" />
-                <span>{isHotel ? "Gérer le départ" : "Gérer la sortie"} et le décompte</span>
+                <span>{isHotel ? <T>{"Gérer le départ"}</T> : <T>{"Gérer la sortie"}</T>} <T>et le décompte</T></span>
               </ActionLink>
             ) : null}
             {property.active && hasActiveTariff && status !== "OCCUPIED" ? (
               <>
                 <ActionLink href={`/locations/new?propertyId=${property.id}`} tone="primary">
                   <KeyIcon className="h-4 w-4" />
-                  <span>{isHotel ? vocab.newStay : "Louer maintenant"}</span>
+                  <span>{isHotel ? vocab.newStay : <T>{"Louer maintenant"}</T>}</span>
                 </ActionLink>
                 <ActionLink href={`/reservations/new?propertyId=${property.id}`}>
                   <CalendarIcon className="h-4 w-4 text-brand-orange" />
-                  <span>Enregistrer une réservation</span>
+                  <span><T>Enregistrer une réservation</T></span>
                 </ActionLink>
               </>
             ) : null}
             {property.active && !hasActiveTariff && status !== "OCCUPIED" && canEditTariffs ? (
               <ActionLink href={`/logements/${property.id}/tariffs/new`} tone="warn">
                 <TagIcon className="h-4 w-4" />
-                <span>Configurer un tarif pour louer ce {vocab.unitsSingular}</span>
+                <span><T>Configurer un tarif pour louer ce</T> {vocab.unitsSingular}</span>
               </ActionLink>
             ) : null}
             <ActionLink href={`/logements/${property.id}/edit`}>
               <EditIcon className="h-4 w-4 text-app-muted" />
-              <span>Modifier ce {vocab.unitsSingular}</span>
+              <span><T>Modifier ce</T> {vocab.unitsSingular}</span>
             </ActionLink>
             <ToggleActiveButton id={property.id} active={property.active} />
             {canDeleteProperty ? <DeletePropertyButton id={property.id} name={property.name} /> : null}
           </section>
 
-          <section aria-label="Prochaines réservations">
-            <SectionTitle action={{ href: "/reservations", label: "Voir tout" }}>Prochaines réservations</SectionTitle>
+          <section aria-label={t("Prochaines réservations")}>
+            <SectionTitle action={{ href: "/reservations", label: "Voir tout" }}><T>Prochaines réservations</T></SectionTitle>
             {upcomingReservations.items.length === 0 ? (
               <Surface className="text-center">
-                <p className="text-sm font-semibold text-app-muted">Aucune réservation à venir pour ce {vocab.unitsSingular}.</p>
+                <p className="text-sm font-semibold text-app-muted"><T>Aucune réservation à venir pour ce</T> {vocab.unitsSingular}.</p>
               </Surface>
             ) : (
               <Surface className="!py-1">
@@ -178,7 +182,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
                     <li key={r.id}>
                       <Link href={`/reservations/${r.id}`} className="flex items-center justify-between gap-3 py-3 focus-visible:outline-2 focus-visible:outline-app-focus">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-app-text">{r.client?.name ?? "Sans client"}</p>
+                          <p className="truncate text-sm font-bold text-app-text">{r.client?.name ?? <T>{"Sans client"}</T>}</p>
                           <p className="mt-0.5 text-xs font-semibold text-app-muted">{formatArrival(r.arrivalTime)}</p>
                         </div>
                         <ReservationStatusBadge status={r.status} />

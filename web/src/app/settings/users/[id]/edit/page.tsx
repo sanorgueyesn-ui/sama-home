@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
 import { getUserById } from "@/lib/users-data";
 import { EditUserForm } from "./edit-user-form";
+import { T } from "@/components/i18n/i18n-provider";
+import { getT } from "@/lib/i18n/server";
 
 export default async function EditUserPage(props: PageProps<"/settings/users/[id]/edit">) {
+  const t = await getT();
   await requireAdmin();
   const { id } = await props.params;
 
@@ -18,14 +21,14 @@ export default async function EditUserPage(props: PageProps<"/settings/users/[id
       <div className="mb-5 flex items-center gap-3 lg:mx-auto lg:w-full lg:max-w-2xl">
         <Link
           href="/settings/users"
-          aria-label="Retour"
+          aria-label={t("Retour")}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="text-xl font-extrabold text-fg">Modifier @{user.username}</h1>
+        <h1 className="text-xl font-extrabold text-fg"><T>Modifier @</T>{user.username}</h1>
       </div>
 
       <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
@@ -38,8 +41,8 @@ export default async function EditUserPage(props: PageProps<"/settings/users/[id
           />
         ) : (
           <p className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
-            Ce compte n&apos;a pas de rôle d&apos;établissement — la modification du rôle n&apos;est pas disponible
-            ici.
+            <T>Ce compte n&apos;a pas de rôle d&apos;établissement — la modification du rôle n&apos;est pas disponible
+            ici.</T>
           </p>
         )}
       </div>

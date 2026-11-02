@@ -8,6 +8,7 @@ import { getSessionCookiePayload } from "@/lib/session-token";
 import { hasPlatformPermission } from "@/lib/permissions";
 import { PricingSettingsSchema, type PricingSettingsFormState } from "@/lib/definitions";
 import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Phase 3G / Lot D12-P88 — bascule du mode d'approbation automatique des
@@ -32,9 +33,10 @@ import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PR
  * `Subscription`.
  */
 export async function setAutoApprovalEnabled(enabled: boolean): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_SETTINGS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de modifier les réglages de la plateforme." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de modifier les réglages de la plateforme.") };
   }
 
   try {
@@ -68,7 +70,7 @@ export async function setAutoApprovalEnabled(enabled: boolean): Promise<{ error?
     });
   } catch (error) {
     console.error("setAutoApprovalEnabled() — échec inattendu de la mise à jour du réglage :", error);
-    return { error: "Une erreur est survenue pendant la mise à jour du réglage. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la mise à jour du réglage. Veuillez réessayer.") };
   }
 
   return {};
@@ -107,9 +109,10 @@ export async function setPricingSettings(
   _prevState: PricingSettingsFormState,
   formData: FormData,
 ): Promise<PricingSettingsFormState> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   if (!hasPlatformPermission(user, "PLATFORM_SETTINGS")) {
-    return { message: "Action refusée : vous n'avez pas l'autorisation de modifier les réglages tarifaires." };
+    return { message: t("Action refusée : vous n'avez pas l'autorisation de modifier les réglages tarifaires.") };
   }
 
   const parsed = PricingSettingsSchema.safeParse({
@@ -165,7 +168,7 @@ export async function setPricingSettings(
     });
   } catch (error) {
     console.error("setPricingSettings() — échec inattendu de la mise à jour des réglages tarifaires :", error);
-    return { message: "Une erreur est survenue pendant la mise à jour des réglages. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant la mise à jour des réglages. Veuillez réessayer.") };
   }
 
   revalidatePath("/register");
@@ -175,15 +178,16 @@ export async function setPricingSettings(
 }
 
 export async function updateAdminPassword(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+  const t = await getT();
   const user = await requirePlatformAdmin();
   const newPassword = formData.get("newPassword")?.toString()?.trim();
   const confirmPassword = formData.get("confirmPassword")?.toString()?.trim();
 
   if (!newPassword || newPassword.length < 8) {
-    return { error: "Le mot de passe doit comporter au moins 8 caractères." };
+    return { error: t("Le mot de passe doit comporter au moins 8 caractères.") };
   }
   if (newPassword !== confirmPassword) {
-    return { error: "Les deux mots de passe ne correspondent pas." };
+    return { error: t("Les deux mots de passe ne correspondent pas.") };
   }
 
   try {
@@ -208,15 +212,16 @@ export async function updateAdminPassword(formData: FormData): Promise<{ error?:
     return { success: true };
   } catch (error) {
     console.error("updateAdminPassword() error:", error);
-    return { error: "Une erreur est survenue lors de la mise à jour du mot de passe." };
+    return { error: t("Une erreur est survenue lors de la mise à jour du mot de passe.") };
   }
 }
 
 export async function createPlatformAdminUser(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+  const t = await getT();
   const admin = await requirePlatformAdmin();
 
   if (!hasPlatformPermission(admin, "PLATFORM_USERS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs sur la plateforme." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs sur la plateforme.") };
   }
 
   const name = formData.get("name")?.toString()?.trim();
@@ -227,21 +232,21 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
   const permissionsMode = formData.get("permissionsMode")?.toString(); // "ALL" ou "CUSTOM"
 
   if (!name || name.length < 2) {
-    return { error: "Veuillez renseigner un nom complet valide (2 caractères min)." };
+    return { error: t("Veuillez renseigner un nom complet valide (2 caractères min).") };
   }
   if (!username || username.length < 3) {
-    return { error: "L'identifiant de connexion doit comporter au moins 3 caractères." };
+    return { error: t("L'identifiant de connexion doit comporter au moins 3 caractères.") };
   }
   if (!password || password.length < 8) {
-    return { error: "Le mot de passe doit comporter au moins 8 caractères." };
+    return { error: t("Le mot de passe doit comporter au moins 8 caractères.") };
   }
   if (password !== confirmPassword) {
-    return { error: "Les deux mots de passe ne correspondent pas." };
+    return { error: t("Les deux mots de passe ne correspondent pas.") };
   }
 
   // Empêcher l'escalade de privilèges : un collaborateur restreint ne peut pas créer un admin avec pleins pouvoirs
   if (admin.permissions && permissionsMode === "ALL") {
-    return { error: "Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet." };
+    return { error: t("Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet.") };
   }
 
   const existing = await prisma.user.findFirst({
@@ -257,7 +262,7 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
   if (permissionsMode === "CUSTOM") {
     const selected = formData.getAll("permissions").map(String).filter(Boolean);
     if (selected.length === 0) {
-      return { error: "Veuillez cocher au moins un module d'accès pour ce compte." };
+      return { error: t("Veuillez cocher au moins un module d'accès pour ce compte.") };
     }
     permissionsJson = JSON.stringify(selected);
   }
@@ -293,32 +298,33 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
     return { success: true };
   } catch (error) {
     console.error("createPlatformAdminUser() error:", error);
-    return { error: "Une erreur est survenue lors de la création du compte administrateur." };
+    return { error: t("Une erreur est survenue lors de la création du compte administrateur.") };
   }
 }
 
 export async function updatePlatformUserPermissions(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+  const t = await getT();
   const admin = await requirePlatformAdmin();
 
   if (!hasPlatformPermission(admin, "PLATFORM_USERS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de modifier les accès." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de modifier les accès.") };
   }
 
   const userId = formData.get("userId")?.toString()?.trim();
   const permissionsMode = formData.get("permissionsMode")?.toString(); // "ALL" ou "CUSTOM"
 
   if (!userId) {
-    return { error: "Identifiant utilisateur manquant." };
+    return { error: t("Identifiant utilisateur manquant.") };
   }
 
   // Protection anti-escalade : impossible de modifier ses propres permissions
   if (userId === admin.id) {
-    return { error: "Action refusée : vous ne pouvez pas modifier vos propres permissions." };
+    return { error: t("Action refusée : vous ne pouvez pas modifier vos propres permissions.") };
   }
 
   // Protection anti-escalade : un admin restreint ne peut pas octroyer les pleins pouvoirs
   if (admin.permissions && permissionsMode === "ALL") {
-    return { error: "Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet." };
+    return { error: t("Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet.") };
   }
 
   const targetUser = await prisma.user.findUnique({
@@ -327,14 +333,14 @@ export async function updatePlatformUserPermissions(formData: FormData): Promise
   });
 
   if (!targetUser || !targetUser.isPlatformAdmin) {
-    return { error: "Cet utilisateur n'est pas un compte de plateforme." };
+    return { error: t("Cet utilisateur n'est pas un compte de plateforme.") };
   }
 
   let newPermissions: string | null = null;
   if (permissionsMode === "CUSTOM") {
     const selected = formData.getAll("permissions").map(String).filter(Boolean);
     if (selected.length === 0) {
-      return { error: "Veuillez cocher au moins un module d'accès." };
+      return { error: t("Veuillez cocher au moins un module d'accès.") };
     }
     newPermissions = JSON.stringify(selected);
   }
@@ -362,7 +368,7 @@ export async function updatePlatformUserPermissions(formData: FormData): Promise
     return { success: true };
   } catch (error) {
     console.error("updatePlatformUserPermissions() error:", error);
-    return { error: "Une erreur est survenue lors de la mise à jour des accès." };
+    return { error: t("Une erreur est survenue lors de la mise à jour des accès.") };
   }
 }
 

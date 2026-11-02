@@ -9,6 +9,7 @@ import {
   type BillingCycle,
   type CategoryPlan,
 } from "@/lib/pricing-config";
+import { T } from "@/components/i18n/i18n-provider";
 
 /* --------------------------------------------------------------------------
  * VRAIES ICÔNES SVG OFFICIELLES (AUCUN EMOJI)
@@ -115,7 +116,7 @@ function PricingCard({
       {isRecommended && (
         <div className="absolute -top-3 start-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 rounded-full bg-surface-sunken border border-border/30 px-3 py-0.5 text-[11px] font-bold text-fg shadow-xs">
-            Recommandé
+            <T>Recommandé</T>
           </span>
         </div>
       )}
@@ -124,11 +125,11 @@ function PricingCard({
       <div className="flex-1 flex flex-col">
         {/* Titre */}
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-xl font-bold text-fg">{plan.name}</h3>
+          <h3 className="text-xl font-bold text-fg"><T>{plan.name}</T></h3>
         </div>
 
         <p className="mt-2 text-xs leading-relaxed text-muted sm:text-sm min-h-[38px]">
-          {plan.tagline}
+          <T>{plan.tagline}</T>
         </p>
 
         {/* Bloc Prix : FCFA principal à gauche + équivalents indicatifs EUR et USD à droite */}
@@ -140,7 +141,7 @@ function PricingCard({
               </span>
               <span className="text-sm font-bold text-muted">FCFA</span>
               <span className="text-xs font-medium text-muted">
-                {isAnnual ? "/ an" : "/ mois"}
+                <T>{isAnnual ? "/ an" : "/ mois"}</T>
               </span>
             </div>
 
@@ -152,8 +153,8 @@ function PricingCard({
           {/* Économie Annuelle sobre */}
           {isAnnual ? (
             <div className="mt-2.5 flex items-center justify-between text-xs text-muted rounded-lg bg-surface-sunken px-2.5 py-1 border border-border/20">
-              <span>Économie : {plan.priceMonthly.toLocaleString("fr-FR")} FCFA</span>
-              <span className="font-semibold text-fg">12 mois pour le prix de 11</span>
+              <span><T>Économie :</T> {plan.priceMonthly.toLocaleString("fr-FR")} FCFA</span>
+              <span className="font-semibold text-fg"><T>12 mois pour le prix de 11</T></span>
             </div>
           ) : null}
         </div>
@@ -161,16 +162,16 @@ function PricingCard({
         {/* Plafonds de capacité */}
         <div className="mt-4 rounded-xl border border-border/15 bg-surface-sunken/40 p-3">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-            Capacité incluse
+            <T>Capacité incluse</T>
           </p>
           <div className="mt-1.5 space-y-1 text-xs font-semibold text-fg">
             <div className="flex items-center justify-between">
-              <span className="text-muted font-normal">{plan.limits.unitsLabel} :</span>
-              <span>{plan.limits.unitsMax}</span>
+              <span className="text-muted font-normal"><T>{plan.limits.unitsLabel}</T> :</span>
+              <span><T>{plan.limits.unitsMax}</T></span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted font-normal">Utilisateurs :</span>
-              <span>{plan.limits.usersMax}</span>
+              <span className="text-muted font-normal"><T>Utilisateurs :</T></span>
+              <span><T>{plan.limits.usersMax}</T></span>
             </div>
           </div>
         </div>
@@ -180,7 +181,7 @@ function PricingCard({
           {plan.features.map((feature, idx) => (
             <li key={idx} className="flex items-start gap-2 text-xs text-muted">
               <CheckIcon className="h-3.5 w-3.5 shrink-0 text-muted mt-0.5" />
-              <span>{feature}</span>
+              <span><T>{feature}</T></span>
             </li>
           ))}
         </ul>
@@ -196,7 +197,7 @@ function PricingCard({
               : "border border-border/30 bg-surface text-fg hover:bg-surface-sunken"
           }`}
         >
-          <span>{isRecommended ? "Choisir la formule Pro" : "Sélectionner cette formule"}</span>
+          <span>{isRecommended ? <T>{"Choisir la formule Pro"}</T> : <T>{"Sélectionner cette formule"}</T>}</span>
           <svg
             className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 rtl:rotate-180"
             viewBox="0 0 16 16"
@@ -234,17 +235,17 @@ export function PricingSection() {
         {/* En-tête de section */}
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-(--accent-text) sm:text-sm">
-            Abonnements SaaS &amp; Tarifs Officiels
+            <T>Abonnements SaaS &amp; Tarifs Officiels</T>
           </p>
           <h2
             id="tarifs-titre"
             className="mt-3 text-balance text-2xl font-black tracking-tight text-fg sm:text-3xl lg:text-4xl"
           >
-            Des formules adaptées à votre catégorie d&apos;établissement
+            <T>Des formules adaptées à votre catégorie d&apos;établissement</T>
           </h2>
           <p className="mt-3 text-pretty text-sm font-medium leading-relaxed text-muted sm:text-base">
-            Profitez d&apos;<strong>1 mois gratuit sans engagement</strong> sur l&apos;ensemble de nos offres.
-            Choisissez votre type d&apos;activité pour afficher la grille de référence et ses plafonds de capacité.
+            <T>Profitez d&apos;</T><strong><T>1 mois gratuit sans engagement</T></strong> <T>sur l&apos;ensemble de nos offres.
+            Choisissez votre type d&apos;activité pour afficher la grille de référence et ses plafonds de capacité.</T>
           </p>
         </div>
 
@@ -269,7 +270,7 @@ export function PricingSection() {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                <span>{cat.label}</span>
+                <span><T>{cat.label}</T></span>
               </button>
             );
           })}
@@ -287,7 +288,7 @@ export function PricingSection() {
                   : "text-muted hover:text-fg"
               }`}
             >
-              Facturation Mensuelle
+              <T>Facturation Mensuelle</T>
             </button>
             <button
               type="button"
@@ -298,9 +299,9 @@ export function PricingSection() {
                   : "text-muted hover:text-fg"
               }`}
             >
-              <span>Facturation Annuelle</span>
+              <span><T>Facturation Annuelle</T></span>
               <span className="rounded-md bg-surface-sunken border border-border/20 px-1.5 py-0.5 text-[10px] font-bold text-fg">
-                1 mois offert
+                <T>1 mois offert</T>
               </span>
             </button>
           </div>
@@ -308,7 +309,7 @@ export function PricingSection() {
 
         {/* Description de la catégorie sélectionnée */}
         <p className="mx-auto mt-4 max-w-xl text-center text-xs font-medium text-muted">
-          {currentCategory.description}
+          <T>{currentCategory.description}</T>
         </p>
 
         {/* Grille des 3 cartes avec items-stretch pour égaliser la hauteur et aligner les boutons */}
@@ -325,7 +326,7 @@ export function PricingSection() {
 
         {/* Note indicative de bas de section */}
         <p className="mt-6 text-center text-xs font-medium text-muted">
-          * Les montants en euros (€) et en dollars ($) sont fournis à titre indicatif.
+          <T>* Les montants en euros (€) et en dollars ($) sont fournis à titre indicatif.</T>
         </p>
 
         {/* Blocs d'éclaircissements avec vraies icônes SVG */}
@@ -335,10 +336,10 @@ export function PricingSection() {
               <TargetIcon className="h-5 w-5" />
             </span>
             <div>
-              <h4 className="text-sm font-extrabold text-fg">Périmètre des abonnements SaaS</h4>
+              <h4 className="text-sm font-extrabold text-fg"><T>Périmètre des abonnements SaaS</T></h4>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                Ces tarifs concernent exclusivement l&apos;utilisation du logiciel de gestion SAMA HOME. Ils sont distincts
-                des prix de location (à la nuitée, journée ou mois) que vous facturez librement à vos clients.
+                <T>Ces tarifs concernent exclusivement l&apos;utilisation du logiciel de gestion SAMA HOME. Ils sont distincts
+                des prix de location (à la nuitée, journée ou mois) que vous facturez librement à vos clients.</T>
               </p>
             </div>
           </div>
@@ -348,10 +349,10 @@ export function PricingSection() {
               <ShieldIcon className="h-5 w-5" />
             </span>
             <div>
-              <h4 className="text-sm font-extrabold text-fg">Respect des plafonds &amp; Données protégées</h4>
+              <h4 className="text-sm font-extrabold text-fg"><T>Respect des plafonds &amp; Données protégées</T></h4>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                Lorsque la limite de chambres ou de biens est atteinte, seules les nouvelles créations sont bloquées.
-                Vos données existantes ne sont jamais supprimées ni désactivées automatiquement.
+                <T>Lorsque la limite de chambres ou de biens est atteinte, seules les nouvelles créations sont bloquées.
+                Vos données existantes ne sont jamais supprimées ni désactivées automatiquement.</T>
               </p>
             </div>
           </div>

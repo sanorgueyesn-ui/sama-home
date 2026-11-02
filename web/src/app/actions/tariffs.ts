@@ -12,6 +12,7 @@ import {
   type TARIFF_TYPE_VALUES,
   type DURATION_UNIT_VALUES,
 } from "@/lib/definitions";
+import { getT } from "@/lib/i18n/server";
 
 type TariffTypeValue = (typeof TARIFF_TYPE_VALUES)[number];
 type DurationUnitValue = (typeof DURATION_UNIT_VALUES)[number];
@@ -66,6 +67,7 @@ export async function createTariff(
   _prevState: TariffFormState,
   formData: FormData,
 ): Promise<TariffFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-P51 — faille confirmée en D12-P50 : un tarif neuf
   // démarre toujours `active: true` (voir plus bas), ce qui équivaut
   // fonctionnellement à une activation — déjà soumise au garde dans
@@ -80,19 +82,19 @@ export async function createTariff(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de créer un tarif." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un tarif.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
 
   if (!hasEstablishmentPermission(user, "CAN_EDIT_TARIFFS")) {
-    return { message: "Action refusée : votre compte n'a pas l'autorisation de créer des tarifs." };
+    return { message: t("Action refusée : votre compte n'a pas l'autorisation de créer des tarifs.") };
   }
 
   // Phase 3D / Lot D8 — le logement cible doit appartenir au même
@@ -102,7 +104,7 @@ export async function createTariff(
     where: { id: propertyId, establishmentId: user.establishmentId },
   });
   if (!property) {
-    return { message: "Logement introuvable." };
+    return { message: t("Logement introuvable.") };
   }
 
   // New tariffs start active — no toggle rendered on the create form.
@@ -142,11 +144,11 @@ export async function createTariff(
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
       return {
         message:
-          "Un tarif identique vient peut-être d'être créé à l'instant par quelqu'un d'autre. Veuillez vérifier et réessayer.",
+          t("Un tarif identique vient peut-être d'être créé à l'instant par quelqu'un d'autre. Veuillez vérifier et réessayer."),
       };
     }
     console.error(`createTariff(propertyId=${propertyId}) — échec inattendu de la création du tarif :`, error);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   revalidatePath(`/logements/${propertyId}`);
@@ -158,6 +160,7 @@ export async function updateTariff(
   _prevState: TariffFormState,
   formData: FormData,
 ): Promise<TariffFormState> {
+  const t = await getT();
   // Phase 3G / Lot D12-O7 — requireActiveEstablishment() placé en tout
   // premier, avant la lecture de `existing`, toute validation et toute
   // écriture. Remplace l'ancien contrôle `!user.establishmentId` seul :
@@ -167,25 +170,25 @@ export async function updateTariff(
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { message: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif." };
+        return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif.") };
       case "INACTIVE":
-        return { message: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { message: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { message: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { message: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { message: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { message: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
 
   if (!hasEstablishmentPermission(user, "CAN_EDIT_TARIFFS")) {
-    return { message: "Action refusée : votre compte n'a pas l'autorisation de modifier les tarifs." };
+    return { message: t("Action refusée : votre compte n'a pas l'autorisation de modifier les tarifs.") };
   }
 
   // Un tarif d'un autre établissement est indistinguable d'un id inexistant.
   const existing = await prisma.tariff.findFirst({ where: { id: tariffId, establishmentId: user.establishmentId } });
   if (!existing) {
-    return { message: "Tarif introuvable." };
+    return { message: t("Tarif introuvable.") };
   }
 
   const parsed = parseTariffForm(formData, formData.get("active") === "on");
@@ -213,10 +216,10 @@ export async function updateTariff(
     });
   } catch (error) {
     console.error(`updateTariff(${tariffId}) — échec inattendu de la mise à jour du tarif :`, error);
-    return { message: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { message: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
   if (result.count === 0) {
-    return { message: "Tarif introuvable." };
+    return { message: t("Tarif introuvable.") };
   }
 
   revalidatePath(`/logements/${existing.propertyId}`);
@@ -234,9 +237,10 @@ export async function toggleTariffActive(
   id: string,
   nextActive: boolean,
 ): Promise<{ error?: string }> {
+  const t = await getT();
   const currentUser = await getCurrentUser();
   if (!hasEstablishmentPermission(currentUser, "CAN_EDIT_TARIFFS")) {
-    return { error: "Action refusée : votre compte n'a pas l'autorisation de modifier les tarifs." };
+    return { error: t("Action refusée : votre compte n'a pas l'autorisation de modifier les tarifs.") };
   }
 
   let establishmentId: string;
@@ -246,13 +250,13 @@ export async function toggleTariffActive(
     if (!access.ok) {
       switch (access.reason) {
         case "NO_ESTABLISHMENT":
-          return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif." };
+          return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif.") };
         case "INACTIVE":
-          return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+          return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
         case "NO_SUBSCRIPTION":
-          return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+          return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
         case "EXPIRED":
-          return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+          return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
       }
     }
     // Narrowing explicite requis par le compilateur — même raison et même
@@ -262,13 +266,13 @@ export async function toggleTariffActive(
     // exclu ci-dessus). Message repris à l'identique de la branche
     // NO_ESTABLISHMENT ci-dessus, aucune formulation nouvelle.
     if (!access.user.establishmentId) {
-      return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif." };
+      return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif.") };
     }
     establishmentId = access.user.establishmentId;
   } else {
     const user = await getCurrentUser();
     if (!user.establishmentId) {
-      return { error: "Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif." };
+      return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce tarif.") };
     }
     establishmentId = user.establishmentId;
   }
@@ -280,7 +284,7 @@ export async function toggleTariffActive(
   // autre établissement suit désormais exactement ce même chemin.
   const existing = await prisma.tariff.findFirst({ where: { id, establishmentId } });
   if (!existing) {
-    return { error: "Tarif introuvable." };
+    return { error: t("Tarif introuvable.") };
   }
 
   if (nextActive && (await hasConflictingActiveTariff(existing.propertyId, existing, id))) {
@@ -292,7 +296,7 @@ export async function toggleTariffActive(
     data: { active: nextActive },
   });
   if (result.count === 0) {
-    return { error: "Tarif introuvable." };
+    return { error: t("Tarif introuvable.") };
   }
   revalidatePath(`/logements/${existing.propertyId}`);
   return {};
@@ -311,6 +315,7 @@ export async function toggleTariffActive(
  * instead of this friendly message) — same rule, extended to Rental.
  */
 export async function deleteTariff(id: string): Promise<{ error?: string }> {
+  const t = await getT();
   // Phase 3G / Lot D12-O11 — requireActiveEstablishment() placé en tout
   // premier, avant la lecture de `existing`, les vérifications de référence
   // et toute suppression. Remplace l'ancien contrôle `!user.establishmentId`
@@ -322,19 +327,19 @@ export async function deleteTariff(id: string): Promise<{ error?: string }> {
   if (!access.ok) {
     switch (access.reason) {
       case "NO_ESTABLISHMENT":
-        return { error: "Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce tarif." };
+        return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de supprimer ce tarif.") };
       case "INACTIVE":
-        return { error: "Cet établissement est inactif — les fonctionnalités de gestion sont bloquées." };
+        return { error: t("Cet établissement est inactif — les fonctionnalités de gestion sont bloquées.") };
       case "NO_SUBSCRIPTION":
-        return { error: "Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire." };
+        return { error: t("Aucun abonnement n'est configuré pour cet établissement — une régularisation est nécessaire.") };
       case "EXPIRED":
-        return { error: "L'abonnement de cet établissement a expiré — un renouvellement est nécessaire." };
+        return { error: t("L'abonnement de cet établissement a expiré — un renouvellement est nécessaire.") };
     }
   }
   const { user } = access;
 
   if (!hasEstablishmentPermission(user, "CAN_EDIT_TARIFFS")) {
-    return { error: "Action refusée : votre compte n'a pas l'autorisation de supprimer les tarifs." };
+    return { error: t("Action refusée : votre compte n'a pas l'autorisation de supprimer les tarifs.") };
   }
 
   // Phase 14 audit (Bloc 7): same fix as toggleTariffActive above.
@@ -342,7 +347,7 @@ export async function deleteTariff(id: string): Promise<{ error?: string }> {
   // même chemin "introuvable".
   const existing = await prisma.tariff.findFirst({ where: { id, establishmentId: user.establishmentId } });
   if (!existing) {
-    return { error: "Tarif introuvable." };
+    return { error: t("Tarif introuvable.") };
   }
 
   // Phase 3D / Lot D3, règle 8 — vérifications de référence limitées aux
@@ -363,7 +368,7 @@ export async function deleteTariff(id: string): Promise<{ error?: string }> {
   if (referencingReservation || referencingRental) {
     return {
       error:
-        "Ce tarif est référencé par au moins une réservation ou une location et ne peut pas être supprimé. Désactivez-le à la place.",
+        t("Ce tarif est référencé par au moins une réservation ou une location et ne peut pas être supprimé. Désactivez-le à la place."),
     };
   }
 
@@ -372,7 +377,7 @@ export async function deleteTariff(id: string): Promise<{ error?: string }> {
   // l'écriture — jamais la donnée d'un autre établissement.
   const result = await prisma.tariff.deleteMany({ where: { id, establishmentId: user.establishmentId } });
   if (result.count === 0) {
-    return { error: "Tarif introuvable." };
+    return { error: t("Tarif introuvable.") };
   }
 
   revalidatePath(`/logements/${existing.propertyId}`);

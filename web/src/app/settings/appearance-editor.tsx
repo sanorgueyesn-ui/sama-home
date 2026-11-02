@@ -18,6 +18,7 @@ import {
   type ThemeName,
 } from "@/lib/brand-colors";
 import { SettingsBlock } from "./settings-ui";
+import { T, useT } from "@/components/i18n/i18n-provider";
 
 type Key = keyof BrandColors;
 const KEYS: Key[] = ["primary", "secondary", "accent"];
@@ -53,13 +54,14 @@ function CheckIcon() {
  * Sélection exclusive : `aria-pressed`, jamais `role="radio"` (même patron que le thème).
  */
 function PaletteOption({ palette, selected, onSelect }: { palette: BrandPalette; selected: boolean; onSelect: () => void }) {
+  const t = useT();
   return (
     <li>
       <button
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        title={palette.description}
+        title={t(palette.description)}
         className={`relative flex min-h-14 w-full items-center gap-4 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-orange ${
           selected ? "bg-fg/[0.05]" : "hover:bg-fg/[0.03]"
         }`}
@@ -71,15 +73,15 @@ function PaletteOption({ palette, selected, onSelect }: { palette: BrandPalette;
           ))}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-fg">{palette.label}</span>
-          <span className="block truncate text-xs text-fg/50">{KEYS.map((key) => palette.names[key]).join(" · ")}</span>
+          <span className="block text-sm font-bold text-fg"><T>{palette.label}</T></span>
+          <span className="block truncate text-xs text-fg/50">{KEYS.map((key) => t(palette.names[key])).join(" · ")}</span>
         </span>
         {selected ? (
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-ink" aria-hidden>
             <CheckIcon />
           </span>
         ) : null}
-        <span className="sr-only">{palette.description}</span>
+        <span className="sr-only"><T>{palette.description}</T></span>
       </button>
     </li>
   );
@@ -113,14 +115,14 @@ function ColorRow({
       />
       <div className="min-w-0">
         <p className="text-sm font-bold text-fg">
-          {role.label}
+          <T>{role.label}</T>
           <span className="ml-2 text-xs font-medium text-fg/45">{name}</span>
         </p>
-        <p className="text-xs text-fg/55">{role.hint}</p>
+        <p className="text-xs text-fg/55"><T>{role.hint}</T></p>
       </div>
       <div>
         <label htmlFor={`hex-${colorKey}`} className="sr-only">
-          Code hexadécimal : {role.label}
+          <T>Code hexadécimal :</T> <T>{role.label}</T>
         </label>
         <input
           id={`hex-${colorKey}`}
@@ -138,12 +140,12 @@ function ColorRow({
       </div>
       {error ? (
         <p role="alert" className="col-span-3 text-xs font-medium text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : check ? (
         <p className={`col-span-3 flex items-center gap-1.5 text-xs font-medium ${check.ok ? "text-success" : "text-warning"}`}>
           <span aria-hidden>{check.ok ? "✓" : "!"}</span>
-          {check.message}
+          <T>{check.message}</T>
         </p>
       ) : null}
     </div>
@@ -157,25 +159,25 @@ function LivePreview({ colors, theme }: { colors: BrandColors; theme: ThemeName 
   return (
     <div className="overflow-hidden rounded-xl border border-border/15 bg-surface">
       <div className="flex items-center justify-between px-4 py-3" style={{ backgroundColor: primary, color: "#FFFFFF" }}>
-        <span className="text-sm font-extrabold tracking-wide">SAMA HOME</span>
+        <span className="text-sm font-extrabold tracking-wide"><T>SAMA HOME</T></span>
         <span className="rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ backgroundColor: colors.secondary, color: "#FFFFFF", textShadow: "0 1px 1px rgba(0,0,0,.35)" }}>
-          Nouveau
+          <T>Nouveau</T>
         </span>
       </div>
       <div className="flex flex-col gap-4 p-4">
         <div>
-          <p className="text-sm font-bold text-fg">Réservation de la chambre 101</p>
-          <p className="mt-0.5 text-xs text-fg/55">Du 29 au 31 octobre · 36 000 FCFA</p>
+          <p className="text-sm font-bold text-fg"><T>Réservation de la chambre 101</T></p>
+          <p className="mt-0.5 text-xs text-fg/55"><T>Du 29 au 31 octobre · 36 000 FCFA</T></p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-extrabold" style={{ backgroundColor: colors.accent, color: INK_COLOR }}>
-            Enregistrer
+            <T>Enregistrer</T>
           </span>
           <span className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-bold text-white" style={{ backgroundColor: primary }}>
-            Confirmer
+            <T>Confirmer</T>
           </span>
           <span className="inline-flex h-10 items-center rounded-xl border px-4 text-sm font-bold" style={{ borderColor: colors.accent, color: accentText }}>
-            Annuler
+            <T>Annuler</T>
           </span>
         </div>
         <div>
@@ -183,7 +185,7 @@ function LivePreview({ colors, theme }: { colors: BrandColors; theme: ThemeName 
             <div className="h-full w-2/3 rounded-full" style={{ backgroundColor: colors.accent }} />
           </div>
           <p className="mt-2 text-xs font-bold" style={{ color: accentText }}>
-            Paiement en cours : 67 % encaissé
+            <T>Paiement en cours : 67 % encaissé</T>
           </p>
         </div>
       </div>
@@ -285,9 +287,9 @@ export function AppearanceEditor({
     <div className="flex flex-col gap-8">
       {!canSave ? (
         <p role="status" className="rounded-xl bg-warning-bg px-4 py-3 text-sm font-medium text-warning">
-          Vous pouvez essayer les palettes, mais pour les enregistrer il faut d&apos;abord renseigner votre établissement.{" "}
+          <T>Vous pouvez essayer les palettes, mais pour les enregistrer il faut d&apos;abord renseigner votre établissement.</T>{" "}
           <Link href="/settings/etablissement" className="font-bold underline underline-offset-2">
-            Renseigner l&apos;établissement
+            <T>Renseigner l&apos;établissement</T>
           </Link>
         </p>
       ) : null}
@@ -343,7 +345,7 @@ export function AppearanceEditor({
 
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex flex-col gap-3 rounded-2xl border border-border/15 bg-surface-raised/95 p-3 shadow-card backdrop-blur sm:flex-row sm:items-center sm:justify-between lg:bottom-4">
         <p role={message?.kind === "error" ? "alert" : "status"} className={`px-1 text-sm font-medium ${message?.kind === "error" ? "text-danger" : message ? "text-success" : "text-fg/60"}`}>
-          {message ? message.text : dirty ? "Modifications non enregistrées." : "Aucune modification."}
+          {message ? message.text : dirty ? <T>{"Modifications non enregistrées."}</T> : <T>{"Aucune modification."}</T>}
         </p>
         <div className="flex flex-wrap gap-2">
           {!isDefaultSaved && !dirty ? (
@@ -353,7 +355,7 @@ export function AppearanceEditor({
               disabled={pending || !canSave}
               className="h-11 rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 disabled:opacity-40"
             >
-              Rétablir le classique
+              <T>Rétablir le classique</T>
             </button>
           ) : null}
           {dirty ? (
@@ -363,7 +365,7 @@ export function AppearanceEditor({
               disabled={pending}
               className="h-11 rounded-xl border border-border/20 px-4 text-sm font-bold text-fg transition-colors hover:bg-fg/5 disabled:opacity-40"
             >
-              Annuler
+              <T>Annuler</T>
             </button>
           ) : null}
           <button
@@ -372,7 +374,7 @@ export function AppearanceEditor({
             disabled={!dirty || !valid || pending || !canSave}
             className="h-11 rounded-xl bg-brand-orange px-5 text-sm font-extrabold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {pending ? "Enregistrement..." : "Enregistrer la palette"}
+            {pending ? "Enregistrement..." : <T>{"Enregistrer la palette"}</T>}
           </button>
         </div>
       </div>

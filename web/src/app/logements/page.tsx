@@ -6,6 +6,7 @@ import { StatusBadge } from "./status-badge";
 import { PropertyPhoto } from "./property-photo";
 import { listProperties } from "@/lib/properties-data";
 import { getPropertyStatuses } from "@/lib/property-status";
+import { T } from "@/components/i18n/i18n-provider";
 
 export default async function PropertiesPage(props: PageProps<"/logements">) {
   const { q, type, deleted } = await props.searchParams;
@@ -31,7 +32,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
       {deleted ? (
         <div role="status" className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-xs font-bold text-app-good">
           <span aria-hidden>✓</span>
-          <span>Logement et ses données associées supprimés avec succès.</span>
+          <span><T>Logement et ses données associées supprimés avec succès.</T></span>
         </div>
       ) : null}
 
@@ -55,13 +56,13 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
                     <StatusBadge status={statuses.get(property.id) ?? "UNAVAILABLE"} />
                   </div>
                   <p className="mt-0.5 text-xs font-medium text-app-muted">
-                    {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"} · {property.capacity} personne{property.capacity > 1 ? "s" : ""}
+                    {property.type === "ROOM" ? <T>{"Chambre meublée"}</T> : <T>{"Appartement meublé"}</T>} · {property.capacity} personne{property.capacity > 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
             </ListCard>
           ))}
-          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint">Affinez votre recherche pour voir plus de résultats.</p>}
+          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint"><T>Affinez votre recherche pour voir plus de résultats.</T></p>}
         </div>
       )}
     </PageShell>

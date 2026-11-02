@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { T } from "@/components/i18n/i18n-provider";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 export type ActivityRow = {
   id: string;
@@ -13,7 +15,7 @@ export type ActivityRow = {
 };
 
 function fmtTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(d);
+  return new Intl.DateTimeFormat(dateLocale(), { hour: "2-digit", minute: "2-digit" }).format(d);
 }
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -27,7 +29,7 @@ function fmtFcfa(amount: number) {
  */
 export function TodayActivityTable({ rows, showAmount }: { rows: ActivityRow[]; showAmount: boolean }) {
   if (rows.length === 0) {
-    return <p className="mt-2.5 text-sm font-medium text-fg/50">Aucune activité aujourd&apos;hui.</p>;
+    return <p className="mt-2.5 text-sm font-medium text-fg/50"><T>Aucune activité aujourd&apos;hui.</T></p>;
   }
   return (
     // overflow-x-auto confiné à la table elle-même : un <table> en
@@ -40,12 +42,12 @@ export function TodayActivityTable({ rows, showAmount }: { rows: ActivityRow[]; 
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="text-xs font-bold text-fg/50">
-            <th className="pb-2 pr-3 font-bold">Heure</th>
-            <th className="pb-2 pr-3 font-bold">Client</th>
-            <th className="pb-2 pr-3 font-bold">Logement</th>
-            <th className="pb-2 pr-3 font-bold">Type</th>
-            {showAmount ? <th className="pb-2 pr-3 font-bold">Montant</th> : null}
-            <th className="pb-2 font-bold">Statut</th>
+            <th className="pb-2 pr-3 font-bold"><T>Heure</T></th>
+            <th className="pb-2 pr-3 font-bold"><T>Client</T></th>
+            <th className="pb-2 pr-3 font-bold"><T>Logement</T></th>
+            <th className="pb-2 pr-3 font-bold"><T>Type</T></th>
+            {showAmount ? <th className="pb-2 pr-3 font-bold"><T>Montant</T></th> : null}
+            <th className="pb-2 font-bold"><T>Statut</T></th>
           </tr>
         </thead>
         <tbody>

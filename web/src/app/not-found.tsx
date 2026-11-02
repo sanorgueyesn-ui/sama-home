@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { T } from "@/components/i18n/i18n-provider";
 
 export default function NotFound() {
   return (
@@ -19,22 +20,22 @@ export default function NotFound() {
           <path d="m9 9 6 6" />
         </svg>
       </div>
-      <h1 className="text-2xl font-extrabold text-navy">404 — Page introuvable</h1>
+      <h1 className="text-2xl font-extrabold text-navy"><T>404 — Page introuvable</T></h1>
       <p className="mt-2 max-w-xs text-sm text-fg/70">
-        La page demandée n&apos;existe pas ou a été déplacée.
+        <T>La page demandée n&apos;existe pas ou a été déplacée.</T>
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/"
           className="inline-flex h-11 items-center justify-center rounded-xl bg-navy px-6 text-sm font-bold text-white shadow-sm hover:bg-navy/90 transition-colors"
         >
-          Retour à l&apos;accueil
+          <T>Retour à l&apos;accueil</T>
         </Link>
         <Link
           href="/dashboard"
           className="inline-flex h-11 items-center justify-center rounded-xl border border-border/20 bg-surface-raised px-5 text-sm font-semibold text-fg hover:bg-fg/5 transition-colors"
         >
-          Accéder à l&apos;application
+          <T>Accéder à l&apos;application</T>
         </Link>
       </div>
     </div>

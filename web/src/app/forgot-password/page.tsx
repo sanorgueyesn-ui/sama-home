@@ -5,6 +5,7 @@ import { FeatureList } from "@/components/auth/feature-list";
 import { ThemeToggleButton } from "@/components/auth/theme-toggle-button";
 import { DecorativeBlobs } from "@/components/auth/decorative-blobs";
 import { ForgotPasswordForm } from "./forgot-password-form";
+import { T } from "@/components/i18n/i18n-provider";
 
 export const metadata = {
   title: "Mot de passe oublié | SAMA HOME",
@@ -35,14 +36,14 @@ export default async function ForgotPasswordPage() {
           <AuthLogo variant="dark" />
 
           <h1 className="mt-10 text-4xl font-extrabold leading-tight text-white">
-            Sécurité renforcée
+            <T>Sécurité renforcée</T>
             <br />
-            pour votre espace
+            <T>pour votre espace</T>
           </h1>
           <div className="mt-3 h-1 w-14 rounded-full bg-brand-orange" aria-hidden />
 
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
-            Protégez vos données et accédez à vos logements en toute sérénité grâce à notre protocole de vérification d'identité par e-mail.
+            <T>Protégez vos données et accédez à vos logements en toute sérénité grâce à notre protocole de vérification d'identité par e-mail.</T>
           </p>
 
           <FeatureList />
@@ -72,11 +73,11 @@ export default async function ForgotPasswordPage() {
                   <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                Récupération sécurisée
+                <T>Récupération sécurisée</T>
               </span>
-              <h2 className="mt-3 text-xl font-extrabold text-fg">Mot de passe oublié</h2>
+              <h2 className="mt-3 text-xl font-extrabold text-fg"><T>Mot de passe oublié</T></h2>
               <p className="mt-1 text-sm font-medium text-fg/60">
-                Réinitialisez l'accès à votre compte en 2 étapes rapides.
+                <T>Réinitialisez l'accès à votre compte en 2 étapes rapides.</T>
               </p>
             </div>
 
@@ -84,10 +85,10 @@ export default async function ForgotPasswordPage() {
 
             <div className="mt-8 border-t border-border/15 pt-4 text-center">
               <p className="text-[11px] font-bold text-fg/50">
-                SAMA HOME • Édité par <span className="font-extrabold text-fg/80">COMPAGNIE GUEYE TAWFEKH</span>
+                <T>SAMA HOME • Édité par</T> <span className="font-extrabold text-fg/80"><T>COMPAGNIE GUEYE TAWFEKH</T></span>
               </p>
               <p className="mt-0.5 font-mono text-[10px] text-fg/40">
-                NINEA : 012521599 2R1 • RCCM : SN.DKR.2025.A.38803 • Dakar, Sénégal
+                <T>NINEA : 012521599 2R1 • RCCM : SN.DKR.2025.A.38803 • Dakar, Sénégal</T>
               </p>
             </div>
           </div>

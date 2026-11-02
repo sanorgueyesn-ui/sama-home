@@ -6,6 +6,7 @@ import { PropertyPhoto } from "@/app/logements/property-photo";
 import { StayCountdown } from "@/components/dashboard/stay-countdown";
 import type { PropertyStatus } from "@/lib/property-status";
 import { KeyIcon, CalendarIcon, BuildingIcon, BedIcon, TagIcon, UsersIcon } from "@/components/ui/icons";
+import { T } from "@/components/i18n/i18n-provider";
 
 export type MyPropertyItem = {
   id: string;
@@ -75,7 +76,7 @@ function StatusPill({ status }: { status: PropertyStatus }) {
         <span className={`relative inline-flex rounded-full h-2 w-2 ${meta.dot}`} />
       </span>
       <span className={`text-[11px] font-extrabold tracking-wide ${meta.text}`}>
-        {meta.label}
+        <T>{meta.label}</T>
       </span>
     </div>
   );
@@ -94,7 +95,7 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/15 text-xs font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-95"
         >
           <TagIcon className="h-3.5 w-3.5" />
-          <span>Configurer un tarif</span>
+          <span><T>Configurer un tarif</T></span>
         </Link>
       );
     }
@@ -106,14 +107,14 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-orange text-xs font-black text-ink shadow-sm transition-all hover:brightness-110 active:scale-95"
         >
           <KeyIcon className="h-3.5 w-3.5" />
-          <span>Louer</span>
+          <span><T>Louer</T></span>
         </Link>
         <Link
           href={`/reservations/new?propertyId=${property.id}`}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 text-xs font-bold text-fg backdrop-blur-sm transition-all hover:bg-white/10 active:scale-95"
         >
           <CalendarIcon className="h-3.5 w-3.5" />
-          <span>Réserver</span>
+          <span><T>Réserver</T></span>
         </Link>
       </>
     );
@@ -133,13 +134,13 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
           href={payHref}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-xs font-black text-emerald-300 transition-all hover:bg-emerald-500/30 active:scale-95"
         >
-          <span>Encaisser</span>
+          <span><T>Encaisser</T></span>
         </Link>
         <Link
           href={targetHref}
           className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs font-bold text-rose-200 transition-all hover:bg-rose-500/20 active:scale-95"
         >
-          <span>Séjour</span>
+          <span><T>Séjour</T></span>
         </Link>
       </div>
     );
@@ -152,7 +153,7 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
         className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-xs font-bold text-sky-200 transition-all hover:bg-sky-500/20 active:scale-95"
       >
         <CalendarIcon className="h-3.5 w-3.5" />
-        <span>Voir la réservation</span>
+        <span><T>Voir la réservation</T></span>
       </Link>
     );
   }
@@ -162,7 +163,7 @@ function ActionButtons({ property }: { property: MyPropertyItem }) {
       href={`/logements/${property.id}`}
       className="flex h-9 flex-1 items-center justify-center rounded-xl border border-border/15 bg-surface-sunken text-xs font-bold text-fg/70 transition-all hover:bg-surface-raised"
     >
-      Voir les détails
+      <T>Voir les détails</T>
     </Link>
   );
 }
@@ -192,12 +193,12 @@ function PropertyCard({ property }: { property: MyPropertyItem }) {
             {property.type === "ROOM" ? (
               <>
                 <BedIcon className="h-3.5 w-3.5 text-brand-orange" />
-                <span>Chambre</span>
+                <span><T>Chambre</T></span>
               </>
             ) : (
               <>
                 <BuildingIcon className="h-3.5 w-3.5 text-brand-orange" />
-                <span>Appartement</span>
+                <span><T>Appartement</T></span>
               </>
             )}
           </span>
@@ -208,12 +209,12 @@ function PropertyCard({ property }: { property: MyPropertyItem }) {
         <div className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex items-end justify-between">
           {property.fromPrice !== null ? (
             <div className="rounded-xl border border-brand-orange/30 bg-black/80 px-2.5 py-1 backdrop-blur-md shadow-md">
-              <span className="block text-[9px] font-bold uppercase tracking-wider text-white/60">Dès</span>
+              <span className="block text-[9px] font-bold uppercase tracking-wider text-white/60"><T>Dès</T></span>
               <span className="text-xs font-black text-brand-orange">{fmtFcfa(property.fromPrice)}</span>
             </div>
           ) : (
             <div className="rounded-xl border border-white/10 bg-black/60 px-2 py-0.5 backdrop-blur-md">
-              <span className="text-[10px] font-medium text-white/60">Tarif à définir</span>
+              <span className="text-[10px] font-medium text-white/60"><T>Tarif à définir</T></span>
             </div>
           )}
           <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white/80 backdrop-blur-md">
@@ -267,12 +268,12 @@ export function MyProperties({ items }: { items: MyPropertyItem[] }) {
   if (items.length === 0) {
     return (
       <div className="mt-4 rounded-2xl border border-border/15 bg-surface-raised p-6 text-center">
-        <p className="text-sm font-semibold text-fg/60">Aucun logement enregistré pour le moment.</p>
+        <p className="text-sm font-semibold text-fg/60"><T>Aucun logement enregistré pour le moment.</T></p>
         <Link
           href="/logements/new"
           className="mt-3 inline-flex h-9 items-center rounded-xl bg-brand-orange px-4 text-xs font-bold text-ink"
         >
-          + Enregistrer une chambre
+          <T>+ Enregistrer une chambre</T>
         </Link>
       </div>
     );
@@ -301,14 +302,14 @@ export function MyProperties({ items }: { items: MyPropertyItem[] }) {
                 : "bg-surface-raised text-fg/80 hover:bg-surface-sunken"
             }`}
           >
-            {f.label} ({counts[f.value]})
+            <T>{f.label}</T> ({counts[f.value]})
           </button>
         ))}
       </div>
 
       {filtered.length === 0 ? (
         <div className="mt-4 rounded-2xl border border-border/10 bg-surface-raised p-6 text-center">
-          <p className="text-sm font-medium text-fg/50">Aucun logement ne correspond à ce filtre.</p>
+          <p className="text-sm font-medium text-fg/50"><T>Aucun logement ne correspond à ce filtre.</T></p>
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">

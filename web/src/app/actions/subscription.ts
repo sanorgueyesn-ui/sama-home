@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/dal";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
 import { computeDepartureTime } from "@/lib/duration";
 import { hasPlatformPermission } from "@/lib/permissions";
+import { getT } from "@/lib/i18n/server";
 
 class SubscriptionPaymentRequestError extends Error {}
 class SubscriptionPaymentConfirmationError extends Error {}
@@ -54,6 +55,7 @@ class SubscriptionPaymentConfirmationError extends Error {}
 export async function createSubscriptionPaymentRequest(
   reference?: string,
 ): Promise<{ error?: string }> {
+  const t = await getT();
   // 1. Session vérifiée côté serveur (jamais le cookie seul) — `verifySession()`
   //    est appelée en interne par `getCurrentUser()`.
   // 2. `establishmentId` résolu exclusivement depuis l'utilisateur authentifié
@@ -63,7 +65,7 @@ export async function createSubscriptionPaymentRequest(
   // 4. Compte sans établissement refusé.
   if (!user.establishmentId) {
     return {
-      error: "Votre compte n'est rattaché à aucun établissement — impossible de créer une demande de renouvellement.",
+      error: t("Votre compte n'est rattaché à aucun établissement — impossible de créer une demande de renouvellement."),
     };
   }
   // 3. Seuls les rôles d'établissement ADMIN et GESTIONNAIRE sont autorisés
@@ -74,7 +76,7 @@ export async function createSubscriptionPaymentRequest(
   //    coïncidence).
   if (user.role !== "ADMIN" && user.role !== "GESTIONNAIRE") {
     return {
-      error: "Seuls un administrateur ou un gestionnaire de l'établissement peuvent initier un renouvellement.",
+      error: t("Seuls un administrateur ou un gestionnaire de l'établissement peuvent initier un renouvellement."),
     };
   }
   const establishmentId = user.establishmentId;
@@ -89,7 +91,7 @@ export async function createSubscriptionPaymentRequest(
   });
   if (!subscription) {
     return {
-      error: "Aucun abonnement n'est configuré pour cet établissement — contactez un administrateur de plateforme.",
+      error: t("Aucun abonnement n'est configuré pour cet établissement — contactez un administrateur de plateforme."),
     };
   }
 
@@ -162,11 +164,11 @@ export async function createSubscriptionPaymentRequest(
     // de fonction).
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
       return {
-        error: "Une demande vient peut-être d'être créée à l'instant par quelqu'un d'autre. Veuillez vérifier et réessayer.",
+        error: t("Une demande vient peut-être d'être créée à l'instant par quelqu'un d'autre. Veuillez vérifier et réessayer."),
       };
     }
     console.error("createSubscriptionPaymentRequest() — échec inattendu de la création de la demande :", error);
-    return { error: "Une erreur est survenue pendant l'enregistrement. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant l'enregistrement. Veuillez réessayer.") };
   }
 
   return {};
@@ -222,12 +224,13 @@ export async function createSubscriptionPaymentRequest(
  * abonnement confirmées concurremment.
  */
 export async function confirmSubscriptionPayment(paymentId: string): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await getCurrentUser();
 
   // Jamais `user.role === "ADMIN"` comme preuve d'administration de
   // plateforme — booléen distinct, vérifié seul.
   if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de confirmer les paiements d'abonnement." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de confirmer les paiements d'abonnement.") };
   }
 
   try {
@@ -322,7 +325,7 @@ export async function confirmSubscriptionPayment(paymentId: string): Promise<{ e
       return { error: error.message };
     }
     console.error(`confirmSubscriptionPayment(${paymentId}) — échec inattendu de la confirmation :`, error);
-    return { error: "Une erreur est survenue pendant la confirmation. Veuillez réessayer." };
+    return { error: t("Une erreur est survenue pendant la confirmation. Veuillez réessayer.") };
   }
 
   return {};
@@ -337,13 +340,14 @@ export async function prolongSubscriptionAction(
   days: number,
   reason?: string
 ): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await getCurrentUser();
   if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation de prolonger un abonnement." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de prolonger un abonnement.") };
   }
 
   if (!days || days <= 0) {
-    return { error: "La durée de prolongation doit être supérieure à zéro jour." };
+    return { error: t("La durée de prolongation doit être supérieure à zéro jour.") };
   }
 
   try {
@@ -402,7 +406,7 @@ export async function prolongSubscriptionAction(
     });
   } catch (error) {
     console.error(`prolongSubscriptionAction(${establishmentId}, ${days}) error:`, error);
-    return { error: "Une erreur est survenue lors de la prolongation de l'abonnement." };
+    return { error: t("Une erreur est survenue lors de la prolongation de l'abonnement.") };
   }
 
   return {};
@@ -418,16 +422,17 @@ export async function recordManualSubscriptionPaymentAction(
   periodMonths: number,
   reference?: string
 ): Promise<{ error?: string }> {
+  const t = await getT();
   const user = await getCurrentUser();
   if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
-    return { error: "Action refusée : vous n'avez pas l'autorisation d'enregistrer un paiement d'abonnement." };
+    return { error: t("Action refusée : vous n'avez pas l'autorisation d'enregistrer un paiement d'abonnement.") };
   }
 
   if (!amount || amount <= 0) {
-    return { error: "Le montant du paiement doit être supérieur à zéro FCFA." };
+    return { error: t("Le montant du paiement doit être supérieur à zéro FCFA.") };
   }
   if (!periodMonths || periodMonths <= 0) {
-    return { error: "La durée en mois doit être d'au moins 1 mois." };
+    return { error: t("La durée en mois doit être d'au moins 1 mois.") };
   }
 
   try {
@@ -490,7 +495,7 @@ export async function recordManualSubscriptionPaymentAction(
     });
   } catch (error) {
     console.error(`recordManualSubscriptionPaymentAction(${establishmentId}) error:`, error);
-    return { error: "Une erreur est survenue lors de l'enregistrement du paiement." };
+    return { error: t("Une erreur est survenue lors de l'enregistrement du paiement.") };
   }
 
   return {};
