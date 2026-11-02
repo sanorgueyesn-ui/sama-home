@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/ui/page-kit";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getRentalById } from "@/lib/rentals-data";
 import { getRentalPaymentSummary } from "@/lib/payment-summary";

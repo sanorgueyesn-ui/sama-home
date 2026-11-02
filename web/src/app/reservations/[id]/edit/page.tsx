@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/ui/page-kit";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ReservationForm } from "@/app/reservations/reservation-form";
 import { getReservationById } from "@/lib/reservations-data";

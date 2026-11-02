@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/ui/page-kit";
-import Link from "next/link";
 import { RentalForm } from "@/app/locations/rental-form";
 import { createRentalDirect } from "@/app/actions/rentals";
 import { listClientsForSelect } from "@/lib/clients-data";

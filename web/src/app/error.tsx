@@ -21,14 +21,14 @@ export default function DashboardError({
           <path d="M10.3 3.9 1.9 18.5A1.8 1.8 0 0 0 3.5 21h17a1.8 1.8 0 0 0 1.6-2.5L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
         </svg>
       </div>
-      <p className="text-base font-extrabold text-fg">Impossible de charger le tableau de bord</p>
-      <p className="mt-1.5 max-w-xs text-sm text-fg/60">
+      <p className="text-base font-extrabold text-app-text">Impossible de charger le tableau de bord</p>
+      <p className="mt-1.5 max-w-xs text-sm text-app-muted">
         Une erreur inattendue est survenue. Vérifiez votre connexion et réessayez.
       </p>
       <button
         type="button"
         onClick={reset}
-        className="mt-5 h-11 rounded-xl bg-navy px-6 text-sm font-bold text-white"
+        className="mt-5 h-11 rounded-xl bg-brand-orange px-6 text-sm font-bold text-ink"
       >
         RÉESSAYER
       </button>

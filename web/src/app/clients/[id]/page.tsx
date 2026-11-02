@@ -1,20 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card } from "@/components/ui/card";
+import { ActionLink, Flash, InfoRow, PageHeader, PageShell, SectionTitle, Surface } from "@/components/ui/page-kit";
+import { getActiveSpace } from "@/lib/active-mode";
+import { pageVocabulary } from "@/lib/page-vocabulary";
 import { getClientById } from "@/lib/clients-data";
 import { listReservations } from "@/lib/reservations-data";
 import { listRentals } from "@/lib/rentals-data";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { RentalStatusBadge } from "@/app/locations/status-badge";
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-b border-border/10 py-3 last:border-0">
-      <p className="text-[11px] font-bold text-fg/50">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-fg">{value}</p>
-    </div>
-  );
-}
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -27,6 +20,7 @@ export default async function ClientDetailPage(props: PageProps<"/clients/[id]">
   const { id } = await props.params;
   const { created, updated } = await props.searchParams;
 
+  const vocab = pageVocabulary((await getActiveSpace()).mode);
   const client = await getClientById(id);
   if (!client) {
     notFound();
@@ -43,148 +37,93 @@ export default async function ClientDetailPage(props: PageProps<"/clients/[id]">
     listRentals({ clientId: client.id, timeFilter: "all" }),
   ]);
 
+  const guest = vocab.guest;
+  const identity = client.idDocumentType || client.idDocumentNumber ? [client.idDocumentType, client.idDocumentNumber].filter(Boolean).join(" · ") : "—";
+
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
-      <div className="mb-5 flex items-center gap-3">
-        <Link
-          href="/clients"
-          aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-fg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 5 8 12l7 7" />
-          </svg>
-        </Link>
-        <h1 className="flex-1 truncate text-xl font-extrabold text-fg">{client.name}</h1>
-      </div>
+    <PageShell>
+      <PageHeader back={{ href: "/clients", label: vocab.guestsTitle }} title={client.name} subtitle={client.phone} />
 
-      {created ? (
-        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          Client créé avec succès.
-        </p>
-      ) : null}
-      {updated ? (
-        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          Modifications enregistrées.
-        </p>
-      ) : null}
+      {created ? <Flash>{guest.charAt(0).toUpperCase() + guest.slice(1)} créé avec succès.</Flash> : null}
+      {updated ? <Flash>Modifications enregistrées.</Flash> : null}
 
-      {/* Desktop (lg+) : fiche + actions en colonne principale, historiques
-          réservations/locations en colonne latérale (même motif que
-          /reservations/[id] et /logements/[id]) — via grid-template-areas
-          plutôt qu'un regroupement en deux <div> sources, pour que
-          mobile/tablette conservent l'ordre d'empilement EXACT d'origine
-          (fiche, réservations, locations, actions), sans aucune
-          réorganisation en dessous de lg. */}
-      <div className="lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-x-6 lg:[grid-template-areas:'info_reservations'_'actions_locations']">
-        <Card className="px-4 lg:[grid-area:info]">
-          <Row label="TÉLÉPHONE" value={client.phone} />
-          <Row label="EMAIL" value={client.email ?? "—"} />
-          <Row label="ADRESSE" value={client.address ?? "—"} />
-          <Row
-            label="PIÈCE D'IDENTITÉ"
-            value={
-              client.idDocumentType || client.idDocumentNumber
-                ? [client.idDocumentType, client.idDocumentNumber].filter(Boolean).join(" · ")
-                : "—"
-            }
-          />
-          <Row label="NOTES" value={client.notes ?? "—"} />
-          <Row
-            label="CLIENT DEPUIS"
-            value={new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(client.createdAt)}
-          />
-        </Card>
+      <div className="grid gap-5 lg:grid-cols-[1fr_380px] lg:items-start lg:gap-6">
+        <div className="flex flex-col gap-5">
+          <Surface title="Coordonnées">
+            <dl className="divide-y divide-app-line">
+              <InfoRow label="Téléphone">{client.phone}</InfoRow>
+              <InfoRow label="Email">{client.email ?? "—"}</InfoRow>
+              <InfoRow label="Adresse">{client.address ?? "—"}</InfoRow>
+              <InfoRow label="Pièce d'identité">{identity}</InfoRow>
+              <InfoRow label="Notes">{client.notes ?? "—"}</InfoRow>
+              <InfoRow label={`${guest.charAt(0).toUpperCase() + guest.slice(1)} depuis`}>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(client.createdAt)}</InfoRow>
+            </dl>
+          </Surface>
 
-        <div className="lg:[grid-area:reservations]">
-          <div className="mt-5 flex items-center justify-between lg:mt-0">
-            <p className="text-xs font-bold tracking-wide text-fg/50">RÉSERVATIONS</p>
-            <Link href={`/reservations?q=${encodeURIComponent(client.phone)}`} className="text-xs font-bold text-fg underline">
-              Voir tout
-            </Link>
-          </div>
-          {reservationHistory.items.length === 0 ? (
-            <Card className="mt-2 px-4 py-6 text-center">
-              <p className="text-sm font-medium text-fg/60">Aucune réservation pour ce client.</p>
-            </Card>
-          ) : (
-            <Card className="mt-2 px-4">
-              {reservationHistory.items.map((r) => (
-                <Link
-                  key={r.id}
-                  href={`/reservations/${r.id}`}
-                  className="flex items-center justify-between gap-3 border-b border-border/10 py-3 last:border-0"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-fg">{r.property.name}</p>
-                    <p className="mt-0.5 text-xs font-semibold text-fg/60">
-                      {fmtDate(r.arrivalTime)} · {fmtFcfa(r.amount)}
-                    </p>
-                  </div>
-                  <ReservationStatusBadge status={r.status} />
-                </Link>
-              ))}
-            </Card>
-          )}
+          <section aria-label="Actions" className="flex flex-col gap-2.5">
+            <SectionTitle>Actions</SectionTitle>
+            <ActionLink href={`/reservations/new?clientId=${client.id}`} tone="primary">Nouvelle réservation</ActionLink>
+            <ActionLink href={`/locations/new?clientId=${client.id}`}>{vocab.newStay}</ActionLink>
+            <ActionLink href={`/clients/${client.id}/edit`}>Modifier</ActionLink>
+          </section>
         </div>
 
-        <div className="lg:[grid-area:locations]">
-          <div className="mt-5 flex items-center justify-between">
-            <p className="text-xs font-bold tracking-wide text-fg/50">LOCATIONS</p>
-            <Link href={`/locations?q=${encodeURIComponent(client.phone)}`} className="text-xs font-bold text-fg underline">
-              Voir tout
-            </Link>
-          </div>
-          {rentalHistory.items.length === 0 ? (
-            <Card className="mt-2 px-4 py-6 text-center">
-              <p className="text-sm font-medium text-fg/60">Aucune location pour ce client.</p>
-            </Card>
-          ) : (
-            <Card className="mt-2 px-4">
-              {rentalHistory.items.map((r) => (
-                <Link
-                  key={r.id}
-                  href={`/locations/${r.id}`}
-                  className="flex items-center justify-between gap-3 border-b border-border/10 py-3 last:border-0"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-fg">{r.property.name}</p>
-                    <p className="mt-0.5 text-xs font-semibold text-fg/60">
-                      {fmtDate(r.arrivalAt)} · {fmtFcfa(r.amount)}
-                    </p>
-                  </div>
-                  <RentalStatusBadge status={r.status} />
-                </Link>
-              ))}
-            </Card>
-          )}
-        </div>
+        <div className="flex flex-col gap-5">
+          <section aria-label="Réservations">
+            <SectionTitle action={{ href: `/reservations?q=${encodeURIComponent(client.phone)}`, label: "Voir tout" }}>Réservations</SectionTitle>
+            {reservationHistory.items.length === 0 ? (
+              <Surface className="text-center">
+                <p className="text-sm font-medium text-app-muted">Aucune réservation pour ce {guest}.</p>
+              </Surface>
+            ) : (
+              <Surface className="!py-1">
+                <ul className="divide-y divide-app-line">
+                  {reservationHistory.items.map((r) => (
+                    <li key={r.id}>
+                      <Link href={`/reservations/${r.id}`} className="flex items-center justify-between gap-3 py-3 focus-visible:outline-2 focus-visible:outline-app-focus">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-app-text">{r.property.name}</p>
+                          <p className="mt-0.5 text-xs font-semibold text-app-muted">
+                            {fmtDate(r.arrivalTime)} · {fmtFcfa(r.amount)}
+                          </p>
+                        </div>
+                        <ReservationStatusBadge status={r.status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Surface>
+            )}
+          </section>
 
-        {/* Phase 12, Bloc 4/6: mêmes raccourcis pré-remplis que /logements/[id]
-            offre déjà pour propertyId — jusqu'ici absents ici, obligeant à
-            resélectionner le client depuis une liste après être passé par sa
-            fiche (trouvé pendant l'inspection de la Phase 12). */}
-        <div className="mt-5 flex flex-col gap-2.5 lg:[grid-area:actions]">
-          <Link
-            href={`/reservations/new?clientId=${client.id}`}
-            className="flex h-14 items-center justify-center rounded-2xl bg-navy text-sm font-extrabold text-white"
-          >
-            Nouvelle réservation
-          </Link>
-          <Link
-            href={`/locations/new?clientId=${client.id}`}
-            className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg"
-          >
-            Nouvelle location
-          </Link>
-          <Link
-            href={`/clients/${client.id}/edit`}
-            className="flex h-14 items-center justify-center rounded-2xl border border-border/15 text-sm font-extrabold text-fg"
-          >
-            Modifier
-          </Link>
+          <section aria-label={vocab.stays}>
+            <SectionTitle action={{ href: `/locations?q=${encodeURIComponent(client.phone)}`, label: "Voir tout" }}>{vocab.stays.replace(" en cours", "")}</SectionTitle>
+            {rentalHistory.items.length === 0 ? (
+              <Surface className="text-center">
+                <p className="text-sm font-medium text-app-muted">Aucun {vocab.staysSingular} pour ce {guest}.</p>
+              </Surface>
+            ) : (
+              <Surface className="!py-1">
+                <ul className="divide-y divide-app-line">
+                  {rentalHistory.items.map((r) => (
+                    <li key={r.id}>
+                      <Link href={`/locations/${r.id}`} className="flex items-center justify-between gap-3 py-3 focus-visible:outline-2 focus-visible:outline-app-focus">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-app-text">{r.property.name}</p>
+                          <p className="mt-0.5 text-xs font-semibold text-app-muted">
+                            {fmtDate(r.arrivalAt)} · {fmtFcfa(r.amount)}
+                          </p>
+                        </div>
+                        <RentalStatusBadge status={r.status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Surface>
+            )}
+          </section>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

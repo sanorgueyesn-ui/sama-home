@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Card } from "@/components/ui/card";
+import { Badge, InfoRow, PageHeader, PageShell, Surface } from "@/components/ui/page-kit";
+import { getActiveSpace } from "@/lib/active-mode";
 import { getCurrentUser } from "@/lib/dal";
 import {
   getSubscriptionStatus,
@@ -22,26 +22,12 @@ const ESTABLISHMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-border/10 py-3 last:border-0">
-      <span className="text-[11px] font-bold text-fg/50">{label}</span>
-      <span className="text-sm font-semibold text-fg">{value}</span>
-    </div>
-  );
-}
-
-function PageShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
-      <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Abonnement</h1>
-      {children}
-    </div>
-  );
+  return <InfoRow label={label}>{value}</InfoRow>;
 }
 
 function SubscriptionSummary({ status }: { status: SubscriptionStatusView }) {
   return (
-    <Card className="mt-5 p-4">
+    <Surface>
       <Row
         label="Statut de l'établissement"
         value={status.establishmentStatus ? (ESTABLISHMENT_STATUS_LABELS[status.establishmentStatus] ?? status.establishmentStatus) : "Inconnu"}
@@ -53,11 +39,11 @@ function SubscriptionSummary({ status }: { status: SubscriptionStatusView }) {
           <Row label="État de l'abonnement" value={status.isExpired ? "Expiré" : "Actif"} />
         </>
       ) : (
-        <p className="py-3 text-sm font-semibold text-fg/70">
+        <p className="py-3 text-sm font-semibold text-app-text-2">
           Aucun abonnement n&apos;est configuré pour cet établissement.
         </p>
       )}
-    </Card>
+    </Surface>
   );
 }
 
@@ -79,44 +65,44 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
   if (status.pendingPaymentRequest) {
     const { amount, periodMonths, createdAt } = status.pendingPaymentRequest;
     return (
-      <Card className="mt-4 p-4">
-        <h2 className="mb-1 text-sm font-extrabold text-fg">Renouvellement</h2>
+      <Surface>
+        <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
         <Row label="Demande envoyée le" value={fmtDate(createdAt)} />
         <Row label="Montant demandé" value={`${fmtFcfa(amount)} / ${periodMonths} mois`} />
-        <p className="pt-2 text-[11px] font-medium text-fg/50">
+        <p className="pt-2 text-[11px] font-medium text-app-muted">
           Demande en attente de confirmation par un administrateur de la plateforme. Aucun paiement n&apos;est encore
           confirmé et l&apos;abonnement n&apos;a pas été prolongé.
         </p>
-      </Card>
+      </Surface>
     );
   }
 
   if (!status.hasSubscription) {
     return (
-      <Card className="mt-4 p-4">
-        <h2 className="mb-1 text-sm font-extrabold text-fg">Renouvellement</h2>
-        <p className="text-sm font-semibold text-fg/70">
+      <Surface>
+        <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
+        <p className="text-sm font-semibold text-app-text-2">
           Aucun abonnement n&apos;est configuré pour cet établissement — contactez un administrateur de la plateforme
           avant de pouvoir demander un renouvellement.
         </p>
-      </Card>
+      </Surface>
     );
   }
 
   if (!canRequestRenewal) {
     return (
-      <Card className="mt-4 p-4">
-        <h2 className="mb-1 text-sm font-extrabold text-fg">Renouvellement</h2>
-        <p className="text-sm font-semibold text-fg/70">
+      <Surface>
+        <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
+        <p className="text-sm font-semibold text-app-text-2">
           Seuls un administrateur ou un gestionnaire de l&apos;établissement peuvent initier un renouvellement.
         </p>
-      </Card>
+      </Surface>
     );
   }
 
   return (
-    <Card className="mt-4 p-4">
-      <h2 className="mb-1 text-sm font-extrabold text-fg">Renouvellement</h2>
+    <Surface>
+      <h2 className="mb-1 text-sm font-bold text-app-text">Renouvellement</h2>
       <Row
         label="Montant qui sera demandé"
         value={`${fmtFcfa(status.pricing.periodPriceFcfa)} / ${status.pricing.periodMonths} mois`}
@@ -124,25 +110,25 @@ function RenewalSection({ status, canRequestRenewal }: { status: SubscriptionSta
       <div className="mt-3">
         <RequestRenewalForm />
       </div>
-    </Card>
+    </Surface>
   );
 }
 
 function PricingSummary({ status }: { status: SubscriptionStatusView }) {
   return (
-    <Card className="mt-4 p-4">
-      <h2 className="mb-1 text-sm font-extrabold text-fg">Tarification</h2>
+    <Surface>
+      <h2 className="mb-1 text-sm font-bold text-app-text">Tarification</h2>
       <Row label="Essai gratuit" value={`${status.pricing.trialDurationMonths} mois`} />
       <Row
         label="Tarif après essai"
         value={`${fmtFcfa(status.pricing.periodPriceFcfa)} / ${status.pricing.periodMonths} mois`}
       />
       {!status.pricing.isConfigured ? (
-        <p className="pt-2 text-[11px] font-medium text-fg/50">
+        <p className="pt-2 text-[11px] font-medium text-app-muted">
           Tarif par défaut — aucune configuration personnalisée n&apos;a encore été enregistrée.
         </p>
       ) : null}
-    </Card>
+    </Surface>
   );
 }
 
@@ -172,8 +158,9 @@ export default async function SubscriptionStatusPage() {
 
   if (!user.establishmentId) {
     return (
-      <PageShell>
-        <p className="mt-5 text-sm font-semibold text-fg/70">
+      <PageShell narrow>
+        <PageHeader title="Abonnement" />
+        <p className="text-sm font-semibold text-app-text-2">
           Votre compte n&apos;est rattaché à aucun établissement — aucun statut d&apos;abonnement à afficher.
         </p>
       </PageShell>
@@ -187,12 +174,22 @@ export default async function SubscriptionStatusPage() {
   // `role === "ADMIN"`).
   const canRequestRenewal = user.role === "ADMIN" || user.role === "GESTIONNAIRE";
 
+  const space = await getActiveSpace();
+  const stateBadge = !status.hasSubscription ? (
+    <Badge>Aucun abonnement</Badge>
+  ) : status.isExpired ? (
+    <Badge tone="bad">Expiré</Badge>
+  ) : (
+    <Badge tone="good">Actif</Badge>
+  );
+
   return (
-    <PageShell>
+    <PageShell narrow>
+      <PageHeader eyebrow={space.name} title="Abonnement" badge={stateBadge} />
       <SubscriptionSummary status={status} />
       <PricingSummary status={status} />
       <RenewalSection status={status} canRequestRenewal={canRequestRenewal} />
-      <p className="mt-4 text-[11px] font-medium text-fg/50">
+      <p className="text-[11px] font-medium text-app-muted">
         Seul un administrateur de plateforme peut confirmer un paiement — aucune confirmation n&apos;est possible
         depuis cette page.
       </p>

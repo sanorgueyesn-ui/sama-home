@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/ui/page-kit";
-import Link from "next/link";
 import { ExpenseForm } from "@/app/depenses/expense-form";
 import { createExpense } from "@/app/actions/expenses";
 import { listActiveExpenseCategories } from "@/lib/expense-categories-data";

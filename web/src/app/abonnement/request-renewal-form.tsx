@@ -39,7 +39,7 @@ export function RequestRenewalForm() {
 
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor="subscription-reference" className="text-xs font-bold text-fg">
+      <label htmlFor="subscription-reference" className="text-xs font-bold text-app-text">
         Référence de paiement <span className="font-medium text-fg/40">(optionnel)</span>
       </label>
       <input
@@ -48,10 +48,10 @@ export function RequestRenewalForm() {
         value={reference}
         onChange={(e) => setReference(e.target.value)}
         disabled={pending}
-        placeholder="Ex. référence de virement ou de mobile money"
-        className="h-10 w-full rounded-lg border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange disabled:opacity-60"
+        placeholder="Ex. référence du virement"
+        className="h-10 w-full rounded-lg border border-app-line-strong bg-app-panel-2 px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange disabled:opacity-60"
       />
-      <p className="text-[10.5px] font-medium text-fg/50">
+      <p className="text-[10.5px] font-medium text-app-muted">
         Ne saisissez jamais de numéro de carte bancaire ni aucun autre secret ici — un simple justificatif (référence
         de virement, numéro de transaction mobile money) suffit.
       </p>

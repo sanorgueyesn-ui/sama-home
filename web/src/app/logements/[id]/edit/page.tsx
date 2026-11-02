@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/ui/page-kit";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PropertyForm } from "@/app/logements/property-form";
 import { getPropertyById } from "@/lib/properties-data";

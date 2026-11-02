@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
 import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
