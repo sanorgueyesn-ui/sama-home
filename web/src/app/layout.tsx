@@ -9,6 +9,11 @@ import { getTheme } from "@/lib/theme";
 import { listMySpaces } from "@/lib/spaces-data";
 import { resolveBrandColors, DEFAULT_BRAND_COLORS, displayAccentText, displayPrimary } from "@/lib/brand-colors";
 import { ShellSwitcher } from "@/components/shell-switcher";
+import { I18nProvider } from "@/components/i18n/i18n-provider";
+import { TitleTranslator } from "@/components/i18n/title-translator";
+import { getLocale } from "@/lib/i18n/locale";
+import { getDirection } from "@/lib/i18n/config";
+import { getPhraseBook } from "@/lib/i18n/phrases";
 
 // Reconstruction UI (Nocturne Opulence) — Plus Jakarta Sans remplace Manrope
 // dans toute l'app, conformément au design system validé (PRD section 3).
@@ -36,10 +41,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // s'appuyer sur verifySession()/getCurrentUser() (src/lib/dal.ts), seuls
   // contrôles authentifiants réels. Un cookie absent/invalide (ex. /login)
   // masque simplement la navigation, sans jamais court-circuiter l'accès.
-  const [payload, theme, currentUser] = await Promise.all([
+  const [payload, theme, currentUser, locale] = await Promise.all([
     getSessionCookiePayload(),
     getTheme(),
     getCurrentUserOrNull(),
+    getLocale(),
   ]);
   const isLocalDevBypass =
     process.env.NODE_ENV === "development" &&
@@ -84,7 +90,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     // `style` injecte les 3 variables CSS déjà existantes (jamais une
     // nouvelle variable, jamais touché le mécanisme clair/sombre lui-même).
     <html
-      lang="fr"
+      lang={locale}
+      dir={getDirection(locale)}
       data-theme={theme}
       className={`${plusJakartaSans.variable} h-full antialiased`}
       style={brandColorVars}
@@ -95,17 +102,20 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             commentaire pour la raison (le calcul ne peut pas rester ici,
             ce layout racine n'étant pas ré-exécuté lors d'une navigation
             côté client entre les routes métier et /plateforme). */}
-        <ShellSwitcher
-          showChrome={showChrome}
-          isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}
-          userPermissions={currentUser?.permissions ?? null}
-          userRole={currentUser?.role ?? null}
-          userName={currentUser?.name ?? null}
-          spaces={spaces}
-          activeSpaceId={currentUser?.establishmentId ?? null}
-        >
-          {children}
-        </ShellSwitcher>
+        <I18nProvider locale={locale} book={getPhraseBook(locale)}>
+          <TitleTranslator />
+          <ShellSwitcher
+            showChrome={showChrome}
+            isPlatformAdmin={currentUser?.isPlatformAdmin ?? false}
+            userPermissions={currentUser?.permissions ?? null}
+            userRole={currentUser?.role ?? null}
+            userName={currentUser?.name ?? null}
+            spaces={spaces}
+            activeSpaceId={currentUser?.establishmentId ?? null}
+          >
+            {children}
+          </ShellSwitcher>
+        </I18nProvider>
       </body>
     </html>
   );

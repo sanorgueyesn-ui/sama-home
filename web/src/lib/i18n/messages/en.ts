@@ -1,6 +1,159 @@
-// Messages en ANGLAIS — SQUELETTE : la traduction n'est PAS commencée.
-// Tant que cet objet est vide, l'interface affiche le français (repli, voir index.ts).
-// Statut de la langue dans config.ts : « preparing » (non sélectionnable en production).
+// Messages en ANGLAIS : interface commune et page d'accueil.
+// Les écrans de l'application sont traduits par le dictionnaire de phrases (voir ../phrases).
 import type { DeepPartial, Messages } from "./index";
 
-export const en: DeepPartial<Messages> = {};
+export const en: DeepPartial<Messages> = {
+  common: {
+    language: "Language",
+    languageSoon: "coming soon",
+    languagePreview: "layout preview, translation not finished",
+    skipToContent: "Skip to content",
+    menu: "Menu",
+    closeMenu: "Close menu",
+    logIn: "Log in",
+    createAccount: "Create an account",
+    soon: "Coming soon",
+    available: "Available",
+    backToTop: "Back to top",
+    themeToLight: "Switch to light mode",
+    themeToDark: "Switch to dark mode",
+  },
+  landing: {
+    meta: {
+      title: "SAMA HOME — Simple management for residences, hotels and agencies",
+      description:
+        "SAMA HOME brings together bookings, stays, payments and cash. The Residence module (furnished apartments and rooms) is available; the Hotel and Real estate agency modules are coming soon.",
+    },
+    nav: {
+      label: "Main navigation",
+      offers: "Activities",
+      pricing: "Pricing",
+      roles: "Roles",
+      app: "Application",
+      contact: "Contact",
+    },
+    floating: {
+      label: "Quick access",
+      demo: "See the demo",
+      demoShort: "Demo",
+      useApp: "Use the application",
+      open: "Open",
+    },
+    hero: {
+      eyebrow: "Professional software for residences, hotels & agencies",
+      title: "Manage your units, bookings and payments with peace of mind.",
+      subtitle:
+        "SAMA HOME brings your schedules, guests, receipts and cash together in one place. Accessible anywhere on the Web, built for real-world operations and the continuity of your business.",
+      note: "1 month free trial · Ready to use immediately on the Web · PC version in preparation",
+    },
+    offers: {
+      title: "Choose your activity",
+      subtitle: "Each activity has its own space and its own tools. Nothing is mixed.",
+      plannedLabel: "Planned:",
+      residence: {
+        name: "Residence",
+        tagline: "Furnished apartments and rooms",
+        description: "Units, rates, bookings, rentals, payments, cash and contracts.",
+        cta: "Start with the Residence",
+      },
+      hotel: {
+        name: "Hotel",
+        tagline: "Rooms, stays, housekeeping and occupancy",
+        planned: "rooms and categories, nightly bookings, stays, housekeeping and maintenance, occupancy reports.",
+        cta: "Get notified",
+        whatsappMessage: "Hello, I would like to be informed when the SAMA HOME Hotel module is released.",
+      },
+      agency: {
+        name: "Real estate agency",
+        tagline: "Properties, owners, viewings, mandates and rents",
+        planned: "properties for sale or rent, owners, prospects, mandates, viewings, leases and rents, commissions.",
+        cta: "Get notified",
+        whatsappMessage: "Hello, I would like to be informed when the SAMA HOME Real estate agency module is released.",
+      },
+    },
+    residence: {
+      title: "The Residence module is available today",
+      subtitle: "Here is what you can do with the Residence module:",
+      items: [
+        { title: "Units and rates", text: "Add your rooms and apartments, with hourly, nightly, weekly or monthly rates." },
+        { title: "Bookings and rentals", text: "Record a booking, welcome the guest, extend their stay and keep the history." },
+        { title: "Availability", text: "The software checks that a unit is not already occupied before confirming." },
+        { title: "Payments and cash", text: "Record payments in cash, Wave or Orange Money and follow your cash." },
+        { title: "Expenses", text: "Record your expenses by category to know where your money goes." },
+        { title: "Contracts and receipts", text: "Issue a rental contract or a receipt as a PDF." },
+      ],
+      footnote: "These are the Residence tools. The Hotel and the Agency will have their own tools.",
+    },
+    roles: {
+      title: "Everyone sees what they need",
+      subtitle: "You decide who can do what in your establishment.",
+      admin: {
+        name: "Administrator",
+        text: "They manage their whole establishment: units, rates, team, cash and settings.",
+      },
+      employee: {
+        name: "Employee",
+        text: "They only see the tools the administrator allows. Everything else stays closed.",
+      },
+    },
+    start: {
+      title: "Create your space or log in",
+      newTitle: "New to SAMA HOME",
+      newText: "Create your establishment's account. You can then invite your team.",
+      existingTitle: "You already have an account",
+      existingText: "Find your establishment with your email address and password.",
+      otherWays: "Other ways to log in",
+      google: "Continue with Google",
+      googleNote: "Google confirms your email address, then you enter your SAMA HOME password.",
+      microsoft: "Continue with Microsoft",
+      microsoftSoon: "Soon",
+    },
+    demo: {
+      title: "See SAMA HOME in action",
+      subtitle: "A preview of what you will do every day with the Residence module.",
+      placeholderTitle: "Demo video",
+      placeholderText: "The demo video is not ready yet. In the meantime, here are the steps of a typical day.",
+      soon: "Coming soon",
+      mockupLabel: "Illustrative mockup: this is not a screenshot of the application.",
+      steps: [
+        { title: "1. Add your units", text: "Rooms or apartments, with their rates." },
+        { title: "2. Record a booking", text: "Choose the unit, the guest and the dates." },
+        { title: "3. Welcome the guest", text: "Arrival, rental and extension in a few taps." },
+        { title: "4. Collect payments and follow the cash", text: "Payments, expenses and contract in one place." },
+      ],
+    },
+    download: {
+      title: "The SAMA HOME application",
+      subtitle:
+        "Today, SAMA HOME is used in your browser, on phone, tablet and computer. An installable application is in preparation.",
+      button: "Download",
+      windows: "Windows",
+      mac: "Mac",
+      web: "Browser",
+      webText: "Available: open SAMA HOME in your browser.",
+      webCta: "Open SAMA HOME",
+      appSoonText: "Application in preparation, not available yet.",
+      mobileTitle: "On your phone",
+      mobileText: "Open SAMA HOME in your phone's browser. Nothing to install.",
+      appsTitle: "Windows and Mac applications",
+      appsText: "In preparation: they are not available yet.",
+      installableSoon: "Installable web version: coming soon.",
+    },
+    contact: {
+      title: "A question? Contact us",
+      subtitle: "Choose the way that suits you: WhatsApp, phone or email.",
+      whatsappTitle: "WhatsApp",
+      whatsappText: "The easiest way to ask a question or request a demonstration.",
+      call: "Call",
+      write: "Write",
+      phone2: "Second number",
+      address: "Address",
+      whatsapp: "Write on WhatsApp",
+      whatsappMessage: "Hello, I have a question about SAMA HOME.",
+      phone: "Phone",
+      email: "Email",
+      publisher: "Platform published by",
+      rights: "All rights reserved.",
+    },
+  },
+};

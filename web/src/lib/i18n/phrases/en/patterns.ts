@@ -1,0 +1,110 @@
+// Anglais : phrases à valeurs (`{n}` = une valeur calculée) et mots de vocabulaire qui s'insèrent dans ces phrases.
+// Le texte déjà assemblé par le code (« 5 règlement(s) ») est reconnu par sa forme : voir translate.ts.
+import type { PhraseBook } from "../../translate";
+
+export const enPatterns: PhraseBook = {
+  // --- mots insérés dans des phrases (vocabulaire par mode, thème, périodes)
+  client: "guest",
+  clients: "guests",
+  locataire: "tenant",
+  locataires: "tenants",
+  chambre: "room",
+  logement: "unit",
+  logements: "units",
+  "logement(s)": "unit(s)",
+  sombre: "dark",
+  clair: "light",
+  Loyers: "Rent",
+  Recettes: "Revenue",
+  séjour: "stay",
+  location: "rental",
+  "Pas de période précédente à comparer": "No previous period to compare",
+  "Stable par rapport à la période précédente": "Unchanged compared with the previous period",
+  "Bail d'habitation meublé": "Furnished residential lease",
+  "Contrat d'hébergement": "Accommodation contract",
+  "durée de trois ans, reconductible": "three-year term, renewable",
+  "durée indéterminée": "indefinite term",
+  "séjour en établissement hôtelier": "stay in a hotel establishment",
+
+  // --- connexion et sécurité
+  "Trop de tentatives de connexion infructueuses. Veuillez patienter {seconds} seconde(s) avant de réessayer.": "Too many failed sign-in attempts. Please wait {seconds} second(s) before trying again.",
+  "Trop de tentatives de réinitialisation. Veuillez patienter {minutes} minute(s) avant de réessayer.": "Too many reset attempts. Please wait {minutes} minute(s) before trying again.",
+  "Trop de tentatives de validation. Veuillez patienter {minutes} minute(s) avant de réessayer.": "Too many validation attempts. Please wait {minutes} minute(s) before trying again.",
+  "Le mot de passe doit contenir au moins {n} caractères.": "The password must contain at least {n} characters.",
+  "Un compte existe déjà avec cet identifiant ou cet email ({username}).": "An account already exists with this login or email ({username}).",
+
+  // --- banque et caisse
+  "Compte bancaire désactivé. Attention : {count} programmations de virements sont toujours actives et ne généreront plus de virements tant que ce compte restera désactivé.": "Bank account deactivated. Warning: {count} transfer schedules are still active and will no longer generate transfers while this account stays deactivated.",
+  "Le montant dépasse la trésorerie théorique disponible ({amount} FCFA).": "The amount exceeds the expected cash available ({amount} FCFA).",
+  "Le montant dépasse le reste à payer ({amount} FCFA).": "The amount exceeds the remaining balance ({amount} FCFA).",
+  "Encaissement reçu ({method})": "Payment received ({method})",
+  "Dépense — {category} ({method})": "Expense — {category} ({method})",
+  "Désactiver « {label} » ? Il ne pourra plus être utilisé pour de nouveaux versements.": "Deactivate “{label}”? It can no longer be used for new deposits.",
+  "Réactiver « {name} » ? Elle redeviendra proposée pour les nouvelles dépenses.": "Reactivate “{name}”? It will be offered again for new expenses.",
+
+  // --- établissements et abonnements
+  "Cet établissement a déjà été traité (statut actuel : {status}).": "This establishment has already been processed (current status: {status}).",
+  "Seul un établissement actif peut être suspendu (statut actuel : {status}).": "Only an active establishment can be suspended (current status: {status}).",
+  "Seul un établissement suspendu peut être réactivé (statut actuel : {status}).": "Only a suspended establishment can be reactivated (current status: {status}).",
+  "Cette demande a déjà été traitée (statut actuel : {status}).": "This request has already been processed (current status: {status}).",
+
+  // --- listes et formulaires
+  "Aucun {who} ne correspond à « {query} ».": "No {who} matches “{query}”.",
+  "Ajoutez votre premier {who}, ou il apparaîtra automatiquement lors d'une réservation.": "Add your first {who}, or they will appear automatically when a reservation is made.",
+  "Veuillez sélectionner un {who} ou basculer sur « Nouveau client »": "Please select a {who} or switch to “New guest”",
+  "Aucun tarif n'a encore été configuré pour ce {unit}.": "No rate has been set up for this {unit} yet.",
+  "{name} (désactivée)": "{name} (deactivated)",
+  "{name} (désactivé)": "{name} (deactivated)",
+  "Êtes-vous sûr de vouloir supprimer définitivement le logement « {name} » ? Cette action est irréversible et supprimera le logement ainsi que ses tarifs.": "Are you sure you want to permanently delete the unit “{name}”? This action cannot be undone and will delete the unit and its rates.",
+  "Êtes-vous sûr de vouloir supprimer définitivement ce tarif « {name} » ? Cette action est irréversible.": "Are you sure you want to permanently delete this rate “{name}”? This action cannot be undone.",
+  "Êtes-vous sûr de vouloir supprimer définitivement ce tarif ? Cette action est irréversible.": "Are you sure you want to permanently delete this rate? This action cannot be undone.",
+  "Réserver {name}": "Reserve {name}",
+  ", départ prévu {date}": ", planned check-out {date}",
+  "{n} / 500 caractères.": "{n} / 500 characters.",
+  "QR code de connexion au réseau {name}": "Wi-Fi connection QR code for network {name}",
+  "Contrat, présentation {name}": "Contract, layout {name}",
+  "Quittance, présentation {name}": "Rent receipt, layout {name}",
+  "Ticket, présentation {name}": "Ticket, layout {name}",
+  "{title} : {subtitle}. Le texte est le même quelle que soit la présentation.": "{title}: {subtitle}. The text is the same whatever the layout.",
+  "Thème {mode} et couleurs de l'établissement": "{mode} theme and establishment colors",
+  "{n} {word}, tarifs gérés depuis chaque logement": "{n} {word}, rates managed from each unit",
+
+  // --- rapports
+  "{value} % par rapport à la période précédente": "{value}% compared with the previous period",
+  "Recettes et dépenses {period} : {revenue} de recettes, {expenses} de dépenses.": "Revenue and expenses {period}: {revenue} in revenue, {expenses} in expenses.",
+  "{bucket} — recettes {revenue}, dépenses {expense}": "{bucket} — revenue {revenue}, expenses {expense}",
+  "{label} moins dépenses · {variation}": "{label} minus expenses · {variation}",
+
+  // --- tableaux de bord
+  "{n} règlement(s)": "{n} payment(s)",
+  "{n} règlement(s) · {amount} FCFA ce mois-ci": "{n} payment(s) · {amount} FCFA this month",
+  "Dépenses {expenses} · solde {balance} FCFA": "Expenses {expenses} · balance {balance} FCFA",
+  "{n} réservé(s)": "{n} reserved",
+  "{n} réservée(s)": "{n} reserved",
+  "{n} location(s) concernée(s)": "{n} rental(s) concerned",
+  "{n} séjour(s) concerné(s)": "{n} stay(s) concerned",
+  "{n} occupé(s) sur {total}": "{n} occupied out of {total}",
+  "{n} réservation(s) à venir": "{n} upcoming reservation(s)",
+  "occupés": "occupied",
+  "loués": "rented",
+  "{n} % occupés": "{n}% occupied",
+  "{total} {noun} : {available} disponibles, {occupied} occupés, {reserved} réservés, {unavailable} indisponibles": "{total} {noun}: {available} available, {occupied} occupied, {reserved} reserved, {unavailable} unavailable",
+  "Sortie dépassée (+{time})": "Check-out overdue (+{time})",
+  "Dépassé de {time}": "Overdue by {time}",
+  "Départ dans {time}": "Departure in {time}",
+
+  // --- règles et validations
+  "{label} : {max} caractères maximum.": "{label}: {max} characters maximum.",
+  "{label} : caractères non valides.": "{label}: invalid characters.",
+  "{label} doit être un nombre entier.": "{label} must be a whole number.",
+  "{label} doit être compris entre {min} et {max} (inclus).": "{label} must be between {min} and {max} (inclusive).",
+  "{label} doit être un texte.": "{label} must be text.",
+  "{label} contient un caractère interdit.": "{label} contains a forbidden character.",
+  "{label} ne peut pas dépasser {max} caractères.": "{label} cannot exceed {max} characters.",
+  "Libellé trop long ({max} caractères maximum).": "Label too long ({max} characters maximum).",
+  "Motif trop long ({max} caractères maximum).": "Reason too long ({max} characters maximum).",
+  "Le fichier dépasse la taille maximale autorisée ({mb} Mo).": "The file exceeds the maximum allowed size ({mb} MB).",
+  "Une arrivée ne peut pas être enregistrée plus de {hours} heures après coup.": "An arrival cannot be recorded more than {hours} hours after the fact.",
+  "Le nom doit contenir entre {min} et {max} caractères.": "The name must contain between {min} and {max} characters.",
+  "La clé d'idempotence doit contenir de {min} à {max} caractères (lettres, chiffres, - et _).": "The idempotency key must contain {min} to {max} characters (letters, digits, - and _).",
+};
