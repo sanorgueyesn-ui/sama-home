@@ -22,7 +22,7 @@ Seize commits locaux depuis `25e3471`, le dernier commit poussé vers la sauvega
 
 ## 2. Migrations à appliquer
 
-Sept migrations sont en attente depuis la dernière mise en ligne connue (`20261023120000`). **Confirmer la liste exacte avec la base de production** avant de commencer :
+Huit migrations sont en attente depuis la dernière mise en ligne connue (`20261023120000`). **Confirmer la liste exacte avec la base de production** avant de commencer :
 
 ```text
 npx prisma migrate status --config scripts/deploy/prisma-deploy.config.ts
@@ -37,6 +37,7 @@ npx prisma migrate status --config scripts/deploy/prisma-deploy.config.ts
 | `20261102100000_add_housekeeping_and_rental_charges` | Type, 2 tables, 2 colonnes sur `Property` | Additive. Contrainte `RentalCharge.amount <> 0` |
 | `20261102140000_add_cash_closing_expected_cash` | 1 colonne facultative sur `CashSession` | Additive |
 | `20261102160000_add_document_presentation_to_settings` | 3 colonnes avec valeur par défaut sur `Settings` | Additive |
+| `20261102180000_add_legal_ids_to_settings` | 2 colonnes facultatives (`ninea`, `rccm`) sur `Settings` | Additive |
 
 Aucune migration ne supprime ni ne modifie de donnée existante. Les ajouts de colonne avec valeur par défaut constante sont instantanés sur PostgreSQL 11 et plus.
 
@@ -53,7 +54,7 @@ Conséquences :
 ## 4. Avant de commencer (liste de contrôle)
 
 - [ ] Décisions du propriétaire prises (section 8).
-- [ ] `npm test` : 604 tests passent. `npm run build` réussit. `tsc --noEmit` réussit.
+- [ ] `npm test` : 607 tests passent. `npm run build` réussit. `tsc --noEmit` réussit.
 - [ ] `git status` propre, sauf les captures de test ; relire `git diff --stat <dernier commit en ligne>..HEAD`.
 - [ ] Hôte exact de la base de production connu (`SAMA_DEPLOY_TARGET_HOST`).
 - [ ] Hébergeur : branche suivie, commande de démarrage, variables d'environnement, accès aux journaux.

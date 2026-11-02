@@ -32,6 +32,22 @@ const optionalText = (max: number, label: string) =>
     })
     .pipe(z.string().max(max, `${label} : ${max} caractères maximum.`).optional());
 
+/** Identifiant légal facultatif (NINEA, RCCM) : vide = null (efface la valeur), sinon lettres, chiffres, espaces et . / -. */
+const legalId = (max: number, label: string) =>
+  z
+    .union([z.string(), z.null(), z.undefined()])
+    .transform((v) => {
+      const trimmed = (v ?? "").trim().replace(/\s+/g, " ");
+      return trimmed.length === 0 ? null : trimmed;
+    })
+    .pipe(
+      z
+        .string()
+        .max(max, `${label} : ${max} caractères maximum.`)
+        .regex(/^[A-Za-z0-9][A-Za-z0-9 ./-]*$/, `${label} : caractères non valides.`)
+        .nullable(),
+    );
+
 export const ClientSchema = z.object({
   name: z
     .string()
@@ -438,6 +454,8 @@ export const SettingsSchema = z.object({
     .transform((v) => (v.length === 0 ? undefined : v))
     .pipe(z.email("Email invalide.").optional())
     .optional(),
+  ninea: legalId(20, "NINEA"),
+  rccm: legalId(40, "RCCM"),
   description: optionalText(500, "Description"),
   whatsappTemplate: optionalText(2000, "Modèle WhatsApp"),
   contractThresholdDays: z

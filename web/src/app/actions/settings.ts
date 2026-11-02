@@ -59,6 +59,8 @@ export async function updateSettings(
     phone: formData.get("phone"),
     secondaryPhone: formData.get("secondaryPhone"),
     address: formData.get("address"),
+    ninea: formData.get("ninea"),
+    rccm: formData.get("rccm"),
     email: formData.get("email"),
     description: formData.get("description"),
     whatsappTemplate: formData.get("whatsappTemplate") || undefined,

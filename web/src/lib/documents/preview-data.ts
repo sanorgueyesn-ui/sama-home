@@ -22,6 +22,8 @@ export async function getPreviewBrand(): Promise<DocumentBrand> {
     phone: settings.phone,
     secondaryPhone: settings.secondaryPhone,
     email: settings.email,
+    ninea: settings.ninea,
+    rccm: settings.rccm,
     logo,
     colors: resolveBrandColors(settings),
   };

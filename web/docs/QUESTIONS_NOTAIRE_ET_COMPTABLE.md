@@ -99,7 +99,7 @@ Ce que nous croyons savoir : TVA **18 %** au taux normal, **10 %** pour l'héber
 
 ### 4.2 Ticket de caisse, reçu, facture
 
-Notre ticket affiche : nom, adresse et téléphone de l'établissement, référence, date et heure, client, logement, dates du séjour, lignes (hébergement, extras), total, montant encaissé, moyen de paiement et référence, **reste à payer**. Il ne porte aujourd'hui ni **NINEA** ni **RCCM** : le logiciel ne les enregistre pas encore, mais le modèle sait les imprimer dès qu'ils le seront.
+Notre ticket affiche : nom, adresse et téléphone de l'établissement, référence, date et heure, client, logement, dates du séjour, lignes (hébergement, extras), total, montant encaissé, moyen de paiement et référence, **reste à payer**. Le **NINEA** et le **RCCM** de l'établissement s'impriment en en-tête dès qu'il les a renseignés (ils figurent aussi sur les contrats et les quittances).
 
 23. Ce ticket est-il une **facture**, un **reçu** ou un simple **justificatif** ? Peut-il remplacer une facture pour un client professionnel ?
 24. Quelles sont les **mentions obligatoires** d'une facture au Sénégal (NINEA, numéro séquentiel, TVA, identité du client) ?

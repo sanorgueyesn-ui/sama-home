@@ -11,6 +11,8 @@ type SettingsRow = {
   secondaryPhone: string | null;
   email: string | null;
   logoUrl: string | null;
+  ninea: string | null;
+  rccm: string | null;
 } & Parameters<typeof resolveBrandColors>[0];
 
 /** Marque RÉELLE de l'établissement pour un document émis : jamais une marque d'exemple. */
@@ -22,6 +24,8 @@ export async function brandFromSettings(settings: SettingsRow): Promise<Document
     phone: settings.phone,
     secondaryPhone: settings.secondaryPhone,
     email: settings.email,
+    ninea: settings.ninea,
+    rccm: settings.rccm,
     logo,
     colors: resolveBrandColors(settings),
   };

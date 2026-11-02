@@ -884,6 +884,10 @@ model Settings {
   establishmentName String
   phone             String
   secondaryPhone    String?
+  /// Identité légale de l'établissement, imprimée sur ses contrats, quittances et tickets. Facultative :
+  /// jamais remplacée par celle de SAMA HOME.
+  ninea             String?
+  rccm              String?
   address           String
   email             String?
   description       String?

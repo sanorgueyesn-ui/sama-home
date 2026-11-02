@@ -26,6 +26,8 @@ const FIELD_TAB: Record<string, TabId> = {
   phone: "identite",
   secondaryPhone: "identite",
   address: "identite",
+  ninea: "identite",
+  rccm: "identite",
   email: "identite",
   description: "identite",
   contractThresholdDays: "contrats",
@@ -137,6 +139,9 @@ type DefaultValues = {
   address: string;
   email: string | null;
   description: string | null;
+  /** Identité légale, imprimée sur les documents de l'établissement. */
+  ninea?: string | null;
+  rccm?: string | null;
   /** URL d'affichage déjà résolue par la page (présignée ou héritée) — jamais la clé brute du bucket. */
   logoUrl: string | null;
   contractThresholdDays?: number | null;
@@ -515,6 +520,8 @@ export function SettingsForm({ defaultValues, guestInfo = null }: { defaultValue
           <div className="sm:col-span-2">
             <Field id="address" label="Adresse" type="text" required maxLength={240} autoComplete="street-address" defaultValue={defaultValues?.address} errors={errors?.address} />
           </div>
+          <Field id="ninea" label="NINEA" type="text" maxLength={20} placeholder="Ex. 012521599" hint="Imprimé sur vos contrats, quittances et tickets." defaultValue={defaultValues?.ninea ?? undefined} errors={errors?.ninea} />
+          <Field id="rccm" label="RCCM" type="text" maxLength={40} placeholder="Ex. SN.DKR.2025.A.12345" defaultValue={defaultValues?.rccm ?? undefined} errors={errors?.rccm} />
           <div className="sm:col-span-2">
             <Field id="email" label="Email" type="email" maxLength={180} autoComplete="email" defaultValue={defaultValues?.email ?? undefined} errors={errors?.email} />
           </div>
