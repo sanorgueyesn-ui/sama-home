@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { PageHeader, PageShell, Surface } from "@/components/ui/page-kit";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getReport, type Report } from "@/lib/reports-data";
 import { getHotelKpis } from "@/lib/hotel-kpis-data";
@@ -164,17 +165,17 @@ export default async function ReportsPage(props: {
   const user = await getCurrentUser();
   if (user.establishmentId && !(await hasPlanFeature(user.establishmentId, "REPORTS"))) {
     return (
-      <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pt-6 sm:px-6 lg:px-8">
-        <h1 className="text-[22px] font-extrabold text-app-text sm:text-2xl lg:text-[28px]"><T>Rapports</T></h1>
-        <Card className="mt-4 p-5">
+      <PageShell narrow>
+        <PageHeader title="Rapports" />
+        <Surface>
           <p className="text-sm font-semibold text-app-text-2">
             <T>Les rapports financiers sont inclus à partir de la formule Pro. Passez à la formule Pro ou Premium pour y accéder ; vos données restent conservées.</T>
           </p>
           <Link href="/abonnement" className="mt-3 inline-block text-sm font-bold text-brand-orange">
             <T>Voir les formules</T>
           </Link>
-        </Card>
-      </div>
+        </Surface>
+      </PageShell>
     );
   }
   const { period: rawPeriod } = await props.searchParams;
