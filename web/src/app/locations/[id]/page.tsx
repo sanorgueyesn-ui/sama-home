@@ -359,7 +359,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
       {/* Historique des paiements (si présent) */}
       {payments.length > 0 ? (
         <div className="mt-4">
-          <PaymentHistory payments={payments} />
+          <PaymentHistory payments={payments} ticketHref={isHotel ? (paymentId) => `/locations/${rental.id}/ticket?payment=${paymentId}` : undefined} />
         </div>
       ) : null}
 

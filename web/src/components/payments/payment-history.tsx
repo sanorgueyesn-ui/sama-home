@@ -24,7 +24,7 @@ function fmtDateTime(d: Date) {
 }
 
 /** Bloc 15 — "30/09 10:05 — 5 000 — Wave", plus référence/note quand présentes. */
-export function PaymentHistory({ payments }: { payments: PaymentRow[] }) {
+export function PaymentHistory({ payments, ticketHref }: { payments: PaymentRow[]; ticketHref?: (paymentId: string) => string }) {
   return (
     <Card className="px-4">
       <p className="pt-3 text-[11px] font-bold text-app-muted">HISTORIQUE DES PAIEMENTS</p>
@@ -42,6 +42,11 @@ export function PaymentHistory({ payments }: { payments: PaymentRow[] }) {
               <p className="mt-0.5 text-xs font-medium text-app-muted">Référence : {p.reference}</p>
             ) : null}
             {p.note ? <p className="mt-0.5 text-xs font-medium text-app-muted">{p.note}</p> : null}
+            {ticketHref ? (
+              <a href={ticketHref(p.id)} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex text-xs font-bold text-brand-orange underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-app-focus">
+                Ticket de caisse
+              </a>
+            ) : null}
           </div>
         ))
       )}
