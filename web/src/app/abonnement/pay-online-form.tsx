@@ -17,8 +17,18 @@ export type OnlineOffer = {
 const fmt = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
 
 /** Choix de la formule et paiement en ligne (Wave, Orange Money, carte…) via PayDunya. */
-export function PayOnlineForm({ offers, currentTier }: { offers: OnlineOffer[]; currentTier: OnlineOffer["tier"] | null }) {
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
+export function PayOnlineForm({
+  offers,
+  currentTier,
+  preferredTier = null,
+  preferredCycle = null,
+}: {
+  offers: OnlineOffer[];
+  currentTier: OnlineOffer["tier"] | null;
+  preferredTier?: OnlineOffer["tier"] | null;
+  preferredCycle?: "monthly" | "annual" | null;
+}) {
+  const [cycle, setCycle] = useState<"monthly" | "annual">(preferredCycle ?? "monthly");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [chosen, setChosen] = useState<string | null>(null);
@@ -57,7 +67,7 @@ export function PayOnlineForm({ offers, currentTier }: { offers: OnlineOffer[]; 
           <li key={offer.tier} className="flex flex-col gap-2 rounded-2xl border border-app-line-strong p-3">
             <p className="text-sm font-extrabold text-app-text">
               <T>{offer.name}</T>
-              {currentTier === offer.tier ? <span className="ms-2 text-[10px] font-bold text-brand-orange"><T>Formule actuelle</T></span> : null}
+              {currentTier === offer.tier ? <span className="ms-2 text-[10px] font-bold text-brand-orange"><T>Formule actuelle</T></span> : preferredTier === offer.tier ? <span className="ms-2 text-[10px] font-bold text-brand-orange"><T>{"Votre choix à l'inscription"}</T></span> : null}
             </p>
             <p className="text-lg font-extrabold text-app-text">
               {fmt(cycle === "annual" ? offer.annualFcfa : offer.monthlyFcfa)}

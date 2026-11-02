@@ -44,7 +44,7 @@ export default async function RegisterPage(props: {
   const tier = isPlanTier(tierName) ? tierName : "ESSENTIAL";
   const cycle = isBillingCycle(searchParams?.billing) ? searchParams.billing : "monthly";
   const offer = planOffer(modeName, tier, cycle);
-  const chosenPlan = offer ? { name: offer.name, amountFcfa: offer.amountFcfa, periodMonths: offer.periodMonths } : null;
+  const chosenPlan = offer ? { name: offer.name, amountFcfa: offer.amountFcfa, periodMonths: offer.periodMonths, tier, cycle } : null;
 
   const isGoogle = searchParams?.google === "1";
   const initialEmail = searchParams?.email ?? "";

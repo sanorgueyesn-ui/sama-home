@@ -9,7 +9,7 @@ import { RequestRenewalForm } from "./request-renewal-form";
 import { PayOnlineForm, type OnlineOffer } from "./pay-online-form";
 import { prisma } from "@/lib/prisma";
 import { getPaydunyaConfig } from "@/lib/paydunya";
-import { planFeatures, planOffer } from "@/lib/subscription-plans";
+import { isBillingCycle, planFeatures, planOffer } from "@/lib/subscription-plans";
 import { CATEGORY_PRICING } from "@/lib/pricing-config";
 import { categoryOfMode } from "@/lib/subscription-plans";
 import { T } from "@/components/i18n/i18n-provider";
@@ -137,7 +137,7 @@ function PlanSummary({ planName, features }: { planName: string | null; features
         </>
       ) : (
         <p className="text-sm font-semibold text-app-text-2">
-          <T>Aucune formule choisie : votre établissement n'a pas de limite pour le moment. Choisissez une formule ci-dessous pour continuer après l'échéance.</T>
+          <T>Aucune formule choisie : votre établissement n&apos;a pas de limite pour le moment. Choisissez une formule ci-dessous pour continuer après l&apos;échéance.</T>
         </p>
       )}
     </Surface>
@@ -194,11 +194,11 @@ export default async function SubscriptionStatusPage() {
     if (est && tier && offer) currentPlan = { name: offer.name, features: planFeatures(est.businessMode, tier) };
   }
   // Paiement en ligne : proposé seulement si PayDunya est configuré sur le serveur.
-  let onlineOffers: { offers: OnlineOffer[]; currentTier: OnlineOffer["tier"] | null } | null = null;
+  let onlineOffers: { offers: OnlineOffer[]; currentTier: OnlineOffer["tier"] | null; preferredTier: OnlineOffer["tier"] | null; preferredCycle: "monthly" | "annual" | null } | null = null;
   if (getPaydunyaConfig() && process.env.APP_URL) {
     const establishment = await prisma.establishment.findUnique({
       where: { id: user.establishmentId },
-      select: { businessMode: true, subscription: { select: { planTier: true } } },
+      select: { businessMode: true, preferredPlanTier: true, preferredBilling: true, subscription: { select: { planTier: true } } },
     });
     if (establishment) {
       const tiers = ["ESSENTIAL", "PRO", "PREMIUM"] as const;
@@ -212,7 +212,12 @@ export default async function SubscriptionStatusPage() {
           offers.push({ tier, name: monthly.name, monthlyFcfa: monthly.amountFcfa, annualFcfa: annual.amountFcfa, units: plan.limits.unitsMax, users: plan.limits.usersMax, features: plan.features });
         }
       }
-      onlineOffers = { offers, currentTier: establishment.subscription?.planTier ?? null };
+      onlineOffers = {
+        offers,
+        currentTier: establishment.subscription?.planTier ?? null,
+        preferredTier: establishment.preferredPlanTier,
+        preferredCycle: isBillingCycle(establishment.preferredBilling) ? establishment.preferredBilling : null,
+      };
     }
   }
 
@@ -233,7 +238,7 @@ export default async function SubscriptionStatusPage() {
       {canRequestRenewal && status.hasSubscription && onlineOffers ? (
         <Surface>
           <h2 className="mb-2 text-sm font-bold text-app-text"><T>Payer en ligne</T></h2>
-          <PayOnlineForm offers={onlineOffers.offers} currentTier={onlineOffers.currentTier} />
+          <PayOnlineForm offers={onlineOffers.offers} currentTier={onlineOffers.currentTier} preferredTier={onlineOffers.preferredTier} preferredCycle={onlineOffers.preferredCycle} />
         </Surface>
       ) : null}
       {status.pendingPaymentRequest ? <RenewalSection status={status} canRequestRenewal={canRequestRenewal} /> : null}

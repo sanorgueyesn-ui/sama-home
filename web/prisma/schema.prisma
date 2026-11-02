@@ -52,6 +52,9 @@ model Establishment {
   /// établissements existants sont des logements meublés (voir décision n° 3).
   /// Valeur corrigeable par simple UPDATE, sans migration de structure.
   businessMode BusinessMode @default(RESIDENCE)
+  /// Formule choisie sur la page d'accueil, reprise a l'inscription (simple preference : rien n'est facture).
+  preferredPlanTier PlanTier?
+  preferredBilling  String?
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
 
@@ -1611,6 +1614,8 @@ model OtpVerification {
   plan              String   @default("FREE_TRIAL")
   /// Socle multi-espaces (lot E) — mode choisi à l'inscription, conservé jusqu'à la création de l'espace.
   businessMode      BusinessMode @default(RESIDENCE)
+  preferredPlanTier PlanTier?
+  preferredBilling  String?
   expiresAt         DateTime
   attempts          Int      @default(0)
   createdAt         DateTime @default(now())

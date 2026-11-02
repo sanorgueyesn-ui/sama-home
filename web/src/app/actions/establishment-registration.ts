@@ -15,6 +15,7 @@ import {
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendAccountExistsEmail, sendOtpEmail } from "@/lib/mail";
 import { resolveOtpDispatch } from "@/lib/test-otp";
+import { isBillingCycle, isPlanTier } from "@/lib/subscription-plans";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
 import { OTP_MAX_ATTEMPTS, generateOtpCode, isWellFormedOtp, safeEqualOtp } from "@/lib/otp";
@@ -63,6 +64,11 @@ export async function registerEstablishment(
   }
 
   const { establishmentName, managerName, email, password, plan, activityMode } = parsed.data;
+  // Formule choisie sur la page d'accueil : simple preference, validee ici (jamais une valeur libre).
+  const rawTier = formData.get("preferredPlanTier");
+  const rawBilling = formData.get("preferredBilling");
+  const preferredPlanTier = isPlanTier(rawTier) ? rawTier : null;
+  const preferredBilling = isBillingCycle(rawBilling) ? rawBilling : null;
 
   // Inscription validée par Google OAuth ? (adresse prouvée par Google : le parcours Google garde
   // son comportement explicite, décision D8.)
@@ -123,6 +129,8 @@ export async function registerEstablishment(
               name: establishmentName,
               status,
               businessMode: fromShellMode(activityMode),
+              preferredPlanTier,
+              preferredBilling,
             },
           });
 
@@ -249,6 +257,8 @@ export async function registerEstablishment(
         plan,
         // Conservé côté serveur jusqu'à la validation du code : jamais relu depuis le navigateur.
         businessMode: fromShellMode(activityMode),
+        preferredPlanTier,
+        preferredBilling,
         expiresAt,
       },
     });
@@ -393,6 +403,8 @@ export async function verifyOtpAndRegister(
           name: otpRecord.establishmentName,
           status,
           businessMode: otpRecord.businessMode,
+          preferredPlanTier: otpRecord.preferredPlanTier,
+          preferredBilling: otpRecord.preferredBilling,
         },
       });
 

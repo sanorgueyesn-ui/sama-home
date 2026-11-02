@@ -2,6 +2,7 @@
 import type { PhraseBook } from "../../translate";
 
 export const enPayments: PhraseBook = {
+  "Votre choix à l'inscription": "Your choice at sign-up",
   "Formule choisie": "Chosen plan",
   "an": "year",
   "mois": "month",

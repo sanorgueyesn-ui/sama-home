@@ -29,7 +29,7 @@ export function RegisterForm({
   initialName?: string;
   googleToken?: string;
   initialMode?: string;
-  chosenPlan?: { name: string; amountFcfa: number; periodMonths: number } | null;
+  chosenPlan?: { name: string; amountFcfa: number; periodMonths: number; tier: string; cycle: string } | null;
 }) {
   const t = useT();
   const trialMonths = DEFAULT_TRIAL_DURATION_MONTHS; // règle confirmée : 1 mois d'essai gratuit
@@ -580,6 +580,8 @@ export function RegisterForm({
 
       {/* Champs cachés pour le plan et le mode */}
       <input type="hidden" name="plan" value={selectedPlan} />
+      {chosenPlan ? <input type="hidden" name="preferredPlanTier" value={chosenPlan.tier} /> : null}
+      {chosenPlan ? <input type="hidden" name="preferredBilling" value={chosenPlan.cycle} /> : null}
       <input type="hidden" name="activityMode" value={selectedMode} />
       {isGoogle && <input type="hidden" name="googleToken" value={googleToken} />}
 
