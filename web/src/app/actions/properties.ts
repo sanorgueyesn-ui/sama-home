@@ -327,6 +327,8 @@ export async function toggleActive(id: string, nextActive: boolean): Promise<{ e
       return { error: t("Votre compte n'est rattaché à aucun établissement — impossible de modifier ce logement.") };
     }
     establishmentId = access.user.establishmentId;
+    const limit = await checkPlanLimit(establishmentId, "units");
+    if (!limit.ok) return { error: t(limit.message) };
   } else {
     const user = await getCurrentUser();
     if (!user.establishmentId) {

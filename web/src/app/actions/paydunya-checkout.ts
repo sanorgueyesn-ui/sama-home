@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/dal";
 import { getT } from "@/lib/i18n/server";
 import { createInvoice, getPaydunyaConfig } from "@/lib/paydunya";
+import { AGENCY_MODE_ENABLED } from "@/lib/business-mode";
 import { isBillingCycle, isPlanTier, planOffer } from "@/lib/subscription-plans";
 
 /**
@@ -31,6 +32,10 @@ export async function startPaydunyaCheckout(tier: string, cycle: string): Promis
   });
   if (!establishment?.subscription) {
     return { error: t("Aucun abonnement n'est configuré pour cet établissement — contactez un administrateur de plateforme.") };
+  }
+  // Pas de vente d'un module non livré (référentiel des abonnements, section 12).
+  if (establishment.businessMode === "REAL_ESTATE" && !AGENCY_MODE_ENABLED) {
+    return { error: t("Ce module n'est pas encore disponible à la souscription.") };
   }
   const offer = planOffer(establishment.businessMode, tier, cycle);
   if (!offer) return { error: t("Formule inconnue.") };

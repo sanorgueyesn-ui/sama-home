@@ -24,7 +24,7 @@ export async function checkPlanLimit(establishmentId: string, kind: PlanLimitKin
 
   const existing =
     kind === "units"
-      ? await prisma.property.count({ where: { establishmentId } })
+      ? await prisma.property.count({ where: { establishmentId, active: true } })
       : await prisma.user.count({ where: { establishmentId } });
   if (!isOverCap(existing, cap)) return { ok: true };
 
