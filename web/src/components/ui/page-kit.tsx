@@ -29,12 +29,15 @@ export function PageHeader({
   subtitle,
   eyebrow,
   back,
+  badge,
   actions = [],
 }: {
   title: string;
   subtitle?: string;
   eyebrow?: string;
   back?: { href: string; label: string };
+  /** Statut affiché à côté du titre. */
+  badge?: ReactNode;
   actions?: PageAction[];
 }) {
   return (
@@ -46,7 +49,10 @@ export function PageHeader({
           </Link>
         ) : null}
         {eyebrow ? <p className="text-xs font-semibold text-app-muted">{eyebrow}</p> : null}
-        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">{title}</h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h1 className="min-w-0 break-words text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">{title}</h1>
+          {badge}
+        </div>
         {subtitle ? <p className="mt-1 max-w-2xl text-sm text-app-muted">{subtitle}</p> : null}
       </div>
       {actions.length > 0 ? (
@@ -136,6 +142,48 @@ export function StatTile({ label, value, sub, tone = "default" }: { label: strin
       <p className="truncate text-[10px] font-bold uppercase tracking-wide text-app-muted sm:text-[11px]">{label}</p>
       <p className={`mt-2 break-words text-base font-extrabold leading-tight tabular-nums sm:text-xl ${valueTone}`}>{value}</p>
       {sub ? <p className="mt-0.5 truncate text-[11px] text-app-muted">{sub}</p> : null}
+    </div>
+  );
+}
+
+/** Message de confirmation (création, modification, encaissement…). */
+export function Flash({ children }: { children: ReactNode }) {
+  return (
+    <p role="status" className="rounded-xl border border-success/30 bg-success-bg px-4 py-3 text-sm font-bold text-success">
+      {children}
+    </p>
+  );
+}
+
+const ACTION_TONES = {
+  primary: "bg-brand-orange text-ink hover:brightness-110",
+  secondary: "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover",
+  warn: "border border-warning/40 bg-warning-bg text-app-warn hover:brightness-95",
+  danger: "border border-danger/40 bg-danger-bg text-app-bad hover:brightness-95",
+} as const;
+
+/** Bouton-lien d'action pleine largeur, hauteur tactile. */
+export function ActionLink({ href, tone = "secondary", children }: { href: string; tone?: keyof typeof ACTION_TONES; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus ${ACTION_TONES[tone]}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/** Titre de section au-dessus d'un bloc, avec un lien facultatif à droite. */
+export function SectionTitle({ children, action }: { children: ReactNode; action?: { href: string; label: string } }) {
+  return (
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <h2 className="text-[11px] font-bold uppercase tracking-wider text-app-muted">{children}</h2>
+      {action ? (
+        <Link href={action.href} className="text-xs font-bold text-app-text-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-app-focus">
+          {action.label}
+        </Link>
+      ) : null}
     </div>
   );
 }

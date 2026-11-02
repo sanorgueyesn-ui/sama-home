@@ -41,7 +41,7 @@ export function CancelButton({ id, summary }: { id: string; summary: string }) {
           setError(null);
           setConfirming(true);
         }}
-        className="flex h-14 w-full items-center justify-center rounded-2xl border border-danger/30 text-sm font-extrabold text-danger disabled:opacity-60"
+        className="flex min-h-12 w-full items-center justify-center rounded-xl border border-danger/30 text-sm font-extrabold text-danger disabled:opacity-60"
       >
         Annuler la réservation
       </button>
@@ -60,7 +60,7 @@ export function CancelButton({ id, summary }: { id: string; summary: string }) {
         onConfirm={handleCancel}
       >
         <p>{summary}</p>
-        <p className="mt-2 text-xs text-fg/60">
+        <p className="mt-2 text-xs text-app-muted">
           Le créneau redeviendra disponible. Les paiements déjà encaissés (acompte) ne sont ni supprimés ni remboursés
           automatiquement.
         </p>

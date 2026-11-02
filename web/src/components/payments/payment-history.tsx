@@ -26,22 +26,22 @@ function fmtDateTime(d: Date) {
 /** Bloc 15 — "30/09 10:05 — 5 000 — Wave", plus référence/note quand présentes. */
 export function PaymentHistory({ payments }: { payments: PaymentRow[] }) {
   return (
-    <Card className="mt-3 px-4">
-      <p className="pt-3 text-[11px] font-bold text-fg/50">HISTORIQUE DES PAIEMENTS</p>
+    <Card className="px-4">
+      <p className="pt-3 text-[11px] font-bold text-app-muted">HISTORIQUE DES PAIEMENTS</p>
       {payments.length === 0 ? (
-        <p className="py-3 text-sm font-medium text-fg/40">Aucun paiement enregistré.</p>
+        <p className="py-3 text-sm font-medium text-app-faint">Aucun paiement enregistré.</p>
       ) : (
         payments.map((p) => (
-          <div key={p.id} className="border-b border-border/10 py-3 last:border-0">
+          <div key={p.id} className="border-b border-app-line py-3 last:border-0">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-fg">
                 {fmtDateTime(p.paidAt)} — {fmtFcfa(p.amount)} — {METHOD_LABELS[p.method] ?? p.method}
               </span>
             </div>
             {p.reference ? (
-              <p className="mt-0.5 text-xs font-medium text-fg/50">Référence : {p.reference}</p>
+              <p className="mt-0.5 text-xs font-medium text-app-muted">Référence : {p.reference}</p>
             ) : null}
-            {p.note ? <p className="mt-0.5 text-xs font-medium text-fg/50">{p.note}</p> : null}
+            {p.note ? <p className="mt-0.5 text-xs font-medium text-app-muted">{p.note}</p> : null}
           </div>
         ))
       )}

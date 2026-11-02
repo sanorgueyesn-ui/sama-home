@@ -23,7 +23,7 @@ export function ToggleActiveButton({ id, active }: { id: string; active: boolean
         type="button"
         disabled={pending}
         onClick={handleClick}
-        className={`h-14 rounded-2xl text-sm font-extrabold disabled:opacity-60 ${
+        className={`min-h-12 rounded-xl text-sm font-extrabold disabled:opacity-60 ${
           active ? "border border-danger/30 text-danger" : "bg-success text-white"
         }`}
       >

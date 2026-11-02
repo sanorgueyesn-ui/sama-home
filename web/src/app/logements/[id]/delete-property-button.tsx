@@ -40,7 +40,7 @@ export function DeletePropertyButton({
         type="button"
         disabled={pending}
         onClick={handleDelete}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border border-danger/30 bg-danger/10 text-sm font-extrabold text-app-bad hover:bg-danger/20 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-danger/30 bg-danger/10 text-sm font-extrabold text-app-bad hover:bg-danger/20 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
       >
         <TrashIcon className="h-4 w-4" />
         <span>{pending ? "Suppression en cours..." : "Supprimer ce logement"}</span>

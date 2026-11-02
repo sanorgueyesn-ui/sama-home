@@ -179,7 +179,7 @@ export function CheckInButton({
           l&apos;acompte ne changent pas.
         </p>
       ) : null}
-      <p className="mt-2 text-xs text-fg/60">
+      <p className="mt-2 text-xs text-app-muted">
         Une location sera créée si le logement est libre sur cette période ; sinon l&apos;arrivée sera refusée avec le détail
         du conflit.
       </p>
@@ -190,7 +190,7 @@ export function CheckInButton({
   // "Faire entrer" ou l'arrivée rétroactive.
   if (needsClient && !clientId) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-border/15 p-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-app-line-strong p-4">
         <p className="text-sm font-bold text-fg">Cette réservation n&apos;a pas encore de client.</p>
         <div>
           <label htmlFor="checkin-clientId" className="mb-1.5 block text-xs font-bold text-fg">
@@ -200,7 +200,7 @@ export function CheckInButton({
             id="checkin-clientId"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
-            className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+            className="h-12 w-full rounded-xl border border-app-line-strong bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
           >
             <option value="">Sélectionner un client...</option>
             {clients.map((c) => (
@@ -223,9 +223,9 @@ export function CheckInButton({
       {needsClient && selectedClient ? (
         <div className="flex items-center justify-between rounded-xl bg-surface-sunken px-4 py-3">
           <div>
-            <p className="text-[11px] font-bold text-fg/50">CLIENT</p>
+            <p className="text-[11px] font-bold text-app-muted">CLIENT</p>
             <p className="text-sm font-bold text-fg">{selectedClient.name}</p>
-            <p className="text-xs font-semibold text-fg/60">{selectedClient.phone}</p>
+            <p className="text-xs font-semibold text-app-muted">{selectedClient.phone}</p>
           </div>
           <button type="button" onClick={() => setClientId("")} className="text-xs font-bold text-fg underline">
             Changer
@@ -242,7 +242,7 @@ export function CheckInButton({
               setError(null);
               setConfirming({ mode: "now", openedAt: Date.now() });
             }}
-            className="flex h-14 w-full items-center justify-center rounded-2xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-orange text-sm font-extrabold text-ink disabled:opacity-60"
           >
             {pending ? "..." : "Faire entrer"}
           </button>
@@ -256,13 +256,13 @@ export function CheckInButton({
           {error && !confirming ? <p role="alert" className="mt-1.5 text-center text-xs font-medium text-danger">{error}</p> : null}
         </div>
       ) : (
-        <div className="flex flex-col gap-3 rounded-2xl border border-border/15 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-app-line-strong p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-extrabold text-fg">Heure réelle d&apos;arrivée</p>
             <button
               type="button"
               onClick={() => setShowRetroactive(false)}
-              className="text-xs font-bold text-fg/50 underline"
+              className="text-xs font-bold text-app-muted underline"
             >
               Annuler
             </button>
@@ -272,13 +272,13 @@ export function CheckInButton({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+              className="h-12 w-full rounded-xl border border-app-line-strong bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
             <input
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="h-12 w-full rounded-xl border border-border/15 bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+              className="h-12 w-full rounded-xl border border-app-line-strong bg-surface px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
             />
           </div>
 
@@ -300,7 +300,7 @@ export function CheckInButton({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Ex. Client arrivé avant l'enregistrement."
-                  className="min-h-16 w-full resize-none rounded-xl border border-border/15 bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+                  className="min-h-16 w-full resize-none rounded-xl border border-app-line-strong bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
                 />
               </div>
             </>
