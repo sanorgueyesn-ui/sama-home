@@ -36,13 +36,23 @@ function formatTimeOnlyFr(d: Date): string {
   }).format(d);
 }
 
+// useSyncExternalStore exige un instantané STABLE entre deux lectures : renvoyer Date.now() à chaque
+// appel change la valeur pendant le rendu et fait boucler React (« Maximum update depth exceeded »).
+// L'heure est donc figée et ne change qu'à chaque tick d'une seconde.
+let cachedNow = 0;
+
 function subscribe(callback: () => void) {
-  const interval = setInterval(callback, 1000);
+  cachedNow = Date.now();
+  const interval = setInterval(() => {
+    cachedNow = Date.now();
+    callback();
+  }, 1000);
   return () => clearInterval(interval);
 }
 
 function getClientNow() {
-  return Date.now();
+  if (cachedNow === 0) cachedNow = Date.now();
+  return cachedNow;
 }
 
 function getServerNow() {
