@@ -115,7 +115,7 @@ export function PropertyForm({
       {/* 2. Nom & Capacité */}
       <div className="rounded-2xl border border-border/15 bg-surface-raised p-4 sm:p-5 shadow-sm">
         <label htmlFor="name" className="mb-1.5 block text-xs font-bold text-fg">
-          Nom ou numéro du logement <span className="text-rose-400">*</span>
+          Nom ou numéro du logement <span className="text-app-bad">*</span>
         </label>
         <input
           ref={nameInputRef}
@@ -154,7 +154,7 @@ export function PropertyForm({
 
         <div className="mt-4">
           <label htmlFor="capacity" className="mb-1.5 block text-xs font-bold text-fg">
-            Capacité d&apos;accueil (personnes) <span className="text-rose-400">*</span>
+            Capacité d&apos;accueil (personnes) <span className="text-app-bad">*</span>
           </label>
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4, 6].map((cap) => (
@@ -189,7 +189,7 @@ export function PropertyForm({
               <CashIcon className="h-4 w-4 text-brand-orange" />
               <h3 className="text-xs font-black uppercase tracking-wider text-fg">Tarif de départ (Prêt à louer)</h3>
             </div>
-            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+            <span className="rounded-full bg-success/15 border border-success/30 px-2 py-0.5 text-[10px] font-bold text-app-good">
               Prêt immédiatement
             </span>
           </div>
@@ -329,8 +329,8 @@ export function PropertyForm({
       </div>
 
       {state?.message && (
-        <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-2">
-          <AlertCircleIcon className="h-4 w-4 shrink-0 text-rose-400" />
+        <div role="alert" className="rounded-xl border border-danger/30 bg-danger/15 p-3 text-xs font-bold text-app-bad flex items-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-bad" />
           <span>{state.message}</span>
         </div>
       )}

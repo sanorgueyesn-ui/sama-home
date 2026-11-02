@@ -92,7 +92,7 @@ export function EstablishmentPermissionsSelector({
           />
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-fg">
-              <CrownIcon className="h-4 w-4 text-emerald-400" />
+              <CrownIcon className="h-4 w-4 text-app-good" />
               <span>Pleins Pouvoirs (Patron / Administrateur)</span>
             </span>
             <p className="text-[11px] text-fg/50">Accès illimité à tous les modules, modification des tarifs et suppression.</p>
@@ -110,7 +110,7 @@ export function EstablishmentPermissionsSelector({
           />
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-fg">
-              <KeyIcon className="h-4 w-4 text-amber-400" />
+              <KeyIcon className="h-4 w-4 text-app-warn" />
               <span>Accès Limité &amp; Personnalisé (Caisse, Réception, Assistant)</span>
             </span>
             <p className="text-[11px] text-fg/50">Seules les pages et actions cochées ci-dessous seront accessibles.</p>
@@ -189,7 +189,7 @@ export function EstablishmentPermissionsSelector({
                     key={action.id}
                     className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-colors ${
                       checked
-                        ? "border-emerald-500/40 bg-emerald-500/10"
+                        ? "border-success/40 bg-success/10"
                         : "border-border/10 bg-surface/50 opacity-60"
                     }`}
                   >
@@ -205,7 +205,7 @@ export function EstablishmentPermissionsSelector({
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-fg block leading-snug">{action.label}</span>
                         {!checked && (
-                          <span className="rounded bg-rose-500/15 px-1 py-0.2 text-[9px] font-bold text-rose-400">
+                          <span className="rounded bg-danger/15 px-1 py-0.2 text-[9px] font-bold text-app-bad">
                             Bloqué
                           </span>
                         )}

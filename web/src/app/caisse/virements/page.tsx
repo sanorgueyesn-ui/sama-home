@@ -63,7 +63,7 @@ export default async function BankTransfersPage(props: PageProps<"/caisse/vireme
   const userName = (id: string | null) => (id ? (users.find((u) => u.id === id)?.name ?? "—") : "—");
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-6 pb-24 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div className="flex items-center gap-3">
         <Link
           href="/caisse"

@@ -103,7 +103,7 @@ export default async function PlatformHistoryPage(props: PageProps<"/plateforme/
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <h1 className="text-2xl font-extrabold text-white">Historique des décisions</h1>
       <p className="mt-1 text-xs font-medium text-white/50">
         Décisions de plateforme réellement journalisées — n&apos;inclut pas les mutations métier internes aux

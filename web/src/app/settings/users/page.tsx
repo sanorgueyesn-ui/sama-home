@@ -55,7 +55,7 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                     const perms = parseUserPermissions(u.permissions);
                     if (u.role === "ADMIN" && (perms.length === 0 || perms.includes("ESTABLISHMENT_ALL"))) {
                       return (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-app-good">
                           <CrownIcon className="h-3 w-3" />
                           <span>Pleins pouvoirs (Patron)</span>
                         </span>
@@ -63,14 +63,14 @@ export default async function UsersPage(props: PageProps<"/settings/users">) {
                     }
                     if (perms.length === 0) {
                       return (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-info/15 px-2 py-0.5 text-[10px] font-bold text-app-sky">
                           <ShieldIcon className="h-3 w-3" />
                           <span>Gestionnaire standard</span>
                         </span>
                       );
                     }
                     return (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-app-warn">
                         <KeyIcon className="h-3 w-3" />
                         <span>Accès personnalisé ({perms.length} droit{perms.length > 1 ? "s" : ""})</span>
                       </span>

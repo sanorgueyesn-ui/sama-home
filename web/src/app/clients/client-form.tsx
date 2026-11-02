@@ -153,7 +153,7 @@ export function ClientForm({
       </div>
 
       {state?.message && (
-        <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-1.5">
+        <p role="alert" className="rounded-xl border border-danger/30 bg-danger/15 p-3 text-xs font-bold text-app-bad flex items-center gap-1.5">
           <AlertCircleIcon className="h-3.5 w-3.5 shrink-0" />
           <span>{state.message}</span>
         </p>

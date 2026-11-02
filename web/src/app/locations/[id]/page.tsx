@@ -15,6 +15,8 @@ import { buildRentalWhatsAppLink } from "@/lib/whatsapp";
 import { buildGuestInfoWhatsAppLink } from "@/lib/guest-info";
 import { getGuestInfoContext } from "@/lib/guest-info-data";
 import { prisma } from "@/lib/prisma";
+import { getActiveSpace } from "@/lib/active-mode";
+import { FolioSection } from "./folio-section";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   ROOM: "Chambre",
@@ -48,6 +50,19 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
   if (!rental) {
     notFound();
   }
+
+  // Extras du séjour : module de l'hôtel. Lecture filtrée par l'établissement du séjour.
+  const space = await getActiveSpace();
+  const folioLines =
+    space.mode === "HOTEL"
+      ? (
+          await prisma.rentalCharge.findMany({
+            where: { rentalId: id, establishmentId: rental.establishmentId ?? undefined },
+            orderBy: { createdAt: "asc" },
+            select: { id: true, label: true, amount: true, reason: true, createdAt: true },
+          })
+        ).map((line) => ({ ...line, createdAt: line.createdAt.toISOString() }))
+      : null;
 
   const isCompleted = rental.status === "COMPLETED";
   const isActive = rental.status === "ACTIVE";
@@ -83,6 +98,9 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
     isCompleted,
     actualDepartureAt: rental.actualDepartureAt,
     customTemplate: settings?.whatsappTemplate,
+    // Wi-Fi : Hôtel et Résidence seulement (`guestContext.enabled`) ; absent du message sinon.
+    wifiName: guestContext.enabled ? guestContext.settings.wifiName : null,
+    wifiPassword: guestContext.enabled ? guestContext.settings.wifiPassword : null,
   });
 
   return (
@@ -112,8 +130,8 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
         {isActive ? (
           <div className="hidden sm:block">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 border border-success/30 px-3 py-1 text-xs font-bold text-app-good">
+              <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
               Séjour en cours
             </span>
           </div>
@@ -122,15 +140,15 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
       {/* Messages de succès rassurants */}
       {created ? (
-        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-300">
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-success/30 bg-success/10 p-4 text-app-good">
           <span className="text-2xl">🎉</span>
           <div>
             <p className="text-sm font-black">Location enregistrée avec succès !</p>
-            <p className="text-xs font-medium text-emerald-300/80">
+            <p className="text-xs font-medium text-app-good/80">
               La chambre est occupée. Vous pouvez envoyer la confirmation sur WhatsApp au client ou télécharger son contrat.
             </p>
             {timing === "early" || timing === "late" ? (
-              <p className="mt-1 text-xs font-bold text-emerald-300">
+              <p className="mt-1 text-xs font-bold text-app-good">
                 {timing === "early" ? "Arrivée anticipée" : "Arrivée tardive"} : la durée du séjour est comptée depuis l&apos;arrivée réelle ;
                 tarif et acompte inchangés.
               </p>
@@ -225,7 +243,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           <p className="mt-1 text-base font-extrabold text-fg">{rental.client.name}</p>
           <p className="mt-0.5 text-xs font-semibold text-fg/70 font-mono">{rental.client.phone || "Sans téléphone"}</p>
           {rental.client.idDocumentType ? (
-            <p className="mt-2 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1 inline-flex items-center gap-1.5">
+            <p className="mt-2 text-[11px] font-medium text-app-warn bg-warning/10 border border-warning/20 rounded-lg px-2.5 py-1 inline-flex items-center gap-1.5">
               <TagIcon className="h-3 w-3" />
               <span>{rental.client.idDocumentType} : {rental.client.idDocumentNumber || "—"}</span>
             </p>
@@ -263,7 +281,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
               <span className="font-bold text-fg">{fmtDateTime(rental.plannedDepartureAt)}</span>
             </div>
             {rental.actualDepartureAt ? (
-              <div className="flex items-center justify-between text-emerald-400">
+              <div className="flex items-center justify-between text-app-good">
                 <span>Départ réel :</span>
                 <span className="font-bold">{fmtDateTime(rental.actualDepartureAt)}</span>
               </div>
@@ -284,11 +302,11 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
             </div>
             <div className="flex items-center justify-between">
               <span className="text-fg/60">Montant réglé :</span>
-              <span className="font-bold text-emerald-400">{fmtFcfa(summary.totalPaid)}</span>
+              <span className="font-bold text-app-good">{fmtFcfa(summary.totalPaid)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-border/15 pt-1.5">
               <span className="font-bold text-fg/70">Solde restant :</span>
-              <span className={`font-black ${summary.remaining > 0 ? "text-rose-400 text-sm" : "text-emerald-400"}`}>
+              <span className={`font-black ${summary.remaining > 0 ? "text-app-bad text-sm" : "text-app-good"}`}>
                 {summary.remaining > 0 ? fmtFcfa(summary.remaining) : "0 FCFA (Soldé)"}
               </span>
             </div>
@@ -298,13 +316,13 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
       {/* Bannière spéciale pour les longs séjours avec contrat */}
       {isLongStay ? (
-        <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <div className="mt-4 rounded-2xl border border-warning/30 bg-warning/10 p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-amber-300">
+            <div className="flex items-center gap-2 text-app-warn">
               <span className="text-lg">📜</span>
               <span className="text-xs font-black uppercase tracking-wider">Contrat de location officiel (+ de 10 jours)</span>
             </div>
-            <span className="text-[11px] font-bold text-amber-300/80">Obligatoire</span>
+            <span className="text-[11px] font-bold text-app-warn/80">Obligatoire</span>
           </div>
           <p className="mt-1 text-xs text-fg/70">
             Contrat complet prêt pour impression et signature manuscrite par le client ({rental.client.name}).
@@ -326,6 +344,12 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         <div className="mt-4 rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-fg/50">Note</span>
           <p className="mt-1 text-xs text-fg/80">{rental.note}</p>
+        </div>
+      ) : null}
+
+      {folioLines ? (
+        <div className="mt-4">
+          <FolioSection rentalId={rental.id} lines={folioLines} canEdit={rental.status === "ACTIVE"} />
         </div>
       ) : null}
 

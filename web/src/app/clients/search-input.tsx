@@ -21,7 +21,7 @@ export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
   }, [value]);
 
   return (
-    <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-surface-raised px-3.5 shadow-card focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange">
+    <div className="flex h-11 items-center gap-2.5 rounded-xl border border-app-line-strong bg-app-panel px-3.5 focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange/40">
       <svg
         aria-hidden="true"
         width="17"
@@ -32,7 +32,7 @@ export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-fg/40"
+        className="text-app-faint"
       >
         <circle cx="11" cy="11" r="7" />
         <path d="m21 21-4.3-4.3" />
@@ -43,7 +43,7 @@ export function ClientSearchInput({ defaultValue }: { defaultValue: string }) {
         onChange={(e) => setValue(e.target.value)}
         placeholder="Rechercher un client (nom ou téléphone)..."
         aria-label="Rechercher un client par nom ou téléphone"
-        className="flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg/40"
+        className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
       />
     </div>
   );

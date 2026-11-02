@@ -9,6 +9,7 @@ import { listClientsForSelect } from "@/lib/clients-data";
 import { listPaymentsForReservation } from "@/lib/payments-data";
 import { getReservationPaymentSummary } from "@/lib/payment-summary";
 import { getSettings } from "@/lib/settings-data";
+import { getGuestInfoContext } from "@/lib/guest-info-data";
 import { prisma } from "@/lib/prisma";
 import { formatDuration } from "@/lib/duration";
 import { buildReservationWhatsAppLink } from "@/lib/whatsapp";
@@ -42,10 +43,11 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
     notFound();
   }
 
-  const [summary, payments, settings] = await Promise.all([
+  const [summary, payments, settings, guestContext] = await Promise.all([
     getReservationPaymentSummary(prisma, id),
     listPaymentsForReservation(id),
     getSettings(),
+    getGuestInfoContext(),
   ]);
   const canModify = reservation.status === "CONFIRMED";
   // Lot "Confirmation par WhatsApp" — lien construit uniquement à partir de
@@ -64,6 +66,12 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
         amount: reservation.amount,
         deposit: reservation.deposit,
         statusLabel: STATUS_META[reservation.status]?.label ?? reservation.status,
+        // Le texte d'accueil des Paramètres s'applique aussi ici : l'aperçu des Paramètres le montre déjà
+        // comme « message de confirmation d'une réservation ».
+        customTemplate: settings?.whatsappTemplate,
+        // Wi-Fi : Hôtel et Résidence seulement (`guestContext.enabled`) ; absent du message sinon.
+        wifiName: guestContext.enabled ? guestContext.settings.wifiName : null,
+        wifiPassword: guestContext.enabled ? guestContext.settings.wifiPassword : null,
       })
     : ({ ok: false, reason: "Cette réservation n'a pas de client associé." } as const);
   const canPay = canModify && summary.remaining > 0;
@@ -75,7 +83,7 @@ export default async function ReservationDetailPage(props: PageProps<"/reservati
   const checkInClients = needsClientForCheckIn ? await listClientsForSelect() : [];
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div className="mb-5 flex items-center gap-3">
         <Link
           href="/reservations"

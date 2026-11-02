@@ -58,7 +58,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
   const upcomingReservations = await listReservations({ propertyId: property.id, timeFilter: "upcoming" });
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div className="mb-5 flex items-center gap-3">
         <Link
           href="/logements"
@@ -240,7 +240,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           {status === "OCCUPIED" && activeRental ? (
             <Link
               href={`/locations/${activeRental.id}`}
-              className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-500/20 via-surface-raised to-navy px-4 text-sm font-extrabold text-rose-200 shadow-sm transition-all hover:bg-rose-500/30"
+              className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-danger/40 bg-gradient-to-r from-danger/20 via-surface-raised to-navy px-4 text-sm font-extrabold text-app-bad shadow-sm transition-all hover:bg-danger/30"
             >
               <DoorIcon className="h-4 w-4" />
               <span>Gérer la sortie (Check-out) &amp; Décompte</span>
@@ -267,7 +267,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
           {property.active && !tariffs.some((t) => t.active) && status !== "OCCUPIED" && canEditTariffs ? (
             <Link
               href={`/logements/${property.id}/tariffs/new`}
-              className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 text-sm font-bold text-amber-300 shadow-sm transition-all hover:bg-amber-500/25 active:scale-98"
+              className="flex h-13 items-center justify-center gap-2 rounded-2xl border border-warning/40 bg-warning/15 px-4 text-sm font-bold text-app-warn shadow-sm transition-all hover:bg-warning/25 active:scale-98"
             >
               <TagIcon className="h-4 w-4" />
               <span>Configurer un tarif pour louer cette chambre</span>

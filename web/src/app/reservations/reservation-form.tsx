@@ -334,7 +334,7 @@ export function ReservationForm({
           {/* Logement */}
           <div>
             <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
-              Chambre / Appartement <span className="text-rose-400">*</span>
+              Chambre / Appartement <span className="text-app-bad">*</span>
             </label>
             <select
               id="propertyId"
@@ -365,7 +365,7 @@ export function ReservationForm({
           {/* Tarif */}
           <div>
             <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
-              Formule / Tarif <span className="text-rose-400">*</span>
+              Formule / Tarif <span className="text-app-bad">*</span>
             </label>
             <select
               id="tariffId"
@@ -452,22 +452,22 @@ export function ReservationForm({
               Vérification de la disponibilité du créneau...
             </div>
           ) : isPastDateTime ? (
-            <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-rose-300">
-              <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+            <div className="flex items-center gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-2 text-app-bad">
+              <span className="h-2 w-2 rounded-full bg-danger shrink-0" />
               <span className="text-xs font-bold">Impossible de réserver dans le passé.</span>
             </div>
           ) : availability.available === true ? (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-emerald-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+            <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-2.5 text-app-good">
+              <span className="h-2 w-2 rounded-full bg-success shrink-0" />
               <span className="text-xs font-extrabold uppercase">Logement disponible pour ces dates</span>
             </div>
           ) : availability.available === false ? (
-            <div className="flex flex-col gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-rose-300">
+            <div className="flex flex-col gap-1 rounded-xl border border-danger/30 bg-danger/10 px-4 py-2.5 text-app-bad">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-danger shrink-0" />
                 <span className="text-xs font-extrabold uppercase">Créneau indisponible</span>
               </div>
-              {availability.message ? <p className="text-xs font-medium text-rose-300/80">{availability.message}</p> : null}
+              {availability.message ? <p className="text-xs font-medium text-app-bad/80">{availability.message}</p> : null}
             </div>
           ) : null}
         </div>
@@ -529,7 +529,7 @@ export function ReservationForm({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-fg">
-                  Nom complet du client <span className="text-rose-400">*</span>
+                  Nom complet du client <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientName"
@@ -543,7 +543,7 @@ export function ReservationForm({
 
               <div>
                 <label htmlFor="newClientPhone" className="mb-1 block text-xs font-bold text-fg">
-                  Téléphone (WhatsApp) <span className="text-rose-400">*</span>
+                  Téléphone (WhatsApp) <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientPhone"
@@ -566,7 +566,7 @@ export function ReservationForm({
           /* Option B : Sélection client existant */
           <div>
             <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
-              Sélectionner le client existant {showIdentitySection ? <span className="text-rose-400">*</span> : <span className="font-normal text-fg/40">(facultatif si passage)</span>}
+              Sélectionner le client existant {showIdentitySection ? <span className="text-app-bad">*</span> : <span className="font-normal text-fg/40">(facultatif si passage)</span>}
             </label>
             <select
               id="clientId"
@@ -636,8 +636,8 @@ export function ReservationForm({
             </div>
           </div>
         ) : clientAlreadyHasIdentity ? (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
-            <CheckCircleIcon className="h-4 w-4 shrink-0 text-emerald-400" />
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-xs text-app-good">
+            <CheckCircleIcon className="h-4 w-4 shrink-0 text-app-good" />
             <span>
               Pièce d&apos;identité enregistrée : <strong>{selectedClient?.idDocumentType} n° {selectedClient?.idDocumentNumber}</strong> (pré-remplie sur le contrat).
             </span>
@@ -652,16 +652,16 @@ export function ReservationForm({
 
       {/* Message d'erreur serveur éventuel */}
       {state?.message && (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-2">
-          <AlertCircleIcon className="h-4 w-4 shrink-0 text-rose-400" />
+        <div className="rounded-xl border border-danger/40 bg-danger/15 p-3 text-xs font-bold text-app-bad flex items-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-bad" />
           <span>{state.message}</span>
         </div>
       )}
 
       {/* Aide visuelle / Alerte si des informations manquent */}
       {(!canSubmit && (missingAttempted || !pending)) && getMissingReason() ? (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
-          <AlertCircleIcon className="h-4 w-4 shrink-0 text-amber-400" />
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-center text-xs font-bold text-app-warn flex items-center justify-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-warn" />
           <span>{getMissingReason()}</span>
         </div>
       ) : null}

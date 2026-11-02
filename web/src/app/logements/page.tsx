@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
+import { getActiveSpace } from "@/lib/active-mode";
+import { pageVocabulary } from "@/lib/page-vocabulary";
 import { PropertyFilters } from "./filters";
 import { StatusBadge } from "./status-badge";
 import { PropertyPhoto } from "./property-photo";
@@ -15,22 +15,22 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
   const { items, truncated } = await listProperties(query, typeFilter);
   // One query for the whole page instead of one per card (Phase 7).
   const statuses = await getPropertyStatuses(items);
+  const space = await getActiveSpace();
+  const vocab = pageVocabulary(space.mode);
 
+  const title = space.mode === "HOTEL" ? "Chambres et appartements" : "Logements";
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-fg">Logements</h1>
-        <Link
-          href="/logements/new"
-          className="flex h-10 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
-        >
-          + Ajouter
-        </Link>
-      </div>
+    <PageShell>
+      <PageHeader
+        eyebrow={space.name}
+        title={title}
+        subtitle={`${items.length}${truncated ? "+" : ""} ${vocab.unitsSingular}${items.length > 1 ? "s" : ""}`}
+        actions={[{ href: "/logements/new", label: space.mode === "HOTEL" ? "+ Ajouter une chambre" : "+ Ajouter un logement" }]}
+      />
 
       {deleted ? (
-        <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-400">
-          <span>✓</span>
+        <div role="status" className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-xs font-bold text-app-good">
+          <span aria-hidden>✓</span>
           <span>Logement et ses données associées supprimés avec succès.</span>
         </div>
       ) : null}
@@ -38,61 +38,32 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
       <PropertyFilters defaultQuery={query ?? ""} defaultType={typeFilter ?? ""} />
 
       {items.length === 0 ? (
-        <EmptyState
-          icon={
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="4" y="8" width="16" height="13" rx="1" />
-              <path d="M9 4h6v4H9z" />
-              <path d="M9 21v-5h6v5" />
-            </svg>
-          }
-          title={query || typeFilter ? "Aucun résultat" : "Aucun logement pour le moment"}
-          description={
-            query || typeFilter
-              ? "Aucun logement ne correspond à ces critères."
-              : "Ajoutez votre première chambre ou votre premier appartement."
-          }
-          action={
-            !query && !typeFilter ? (
-              <Link
-                href="/logements/new"
-                className="flex h-11 items-center rounded-xl bg-navy px-5 text-sm font-bold text-white"
-              >
-                + Ajouter un logement
-              </Link>
-            ) : undefined
-          }
+        <EmptyPanel
+          title={query || typeFilter ? "Aucun résultat" : `Aucun ${vocab.unitsSingular} pour le moment`}
+          text={query || typeFilter ? "Aucun logement ne correspond à ces critères." : "Ajoutez votre première chambre ou votre premier appartement."}
+          action={!query && !typeFilter ? { href: "/logements/new", label: "+ Ajouter un logement" } : undefined}
         />
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {items.map((property) => (
-            <Link key={property.id} href={`/logements/${property.id}`}>
-              <Card className="flex gap-3 p-3.5">
-                <PropertyPhoto
-                  photo={property.photo}
-                  type={property.type}
-                  className="h-16 w-16 shrink-0 rounded-xl"
-                />
+            <ListCard key={property.id} href={`/logements/${property.id}`}>
+              <div className="flex gap-3">
+                <PropertyPhoto photo={property.photo} type={property.type} className="h-16 w-16 shrink-0 rounded-xl" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-extrabold text-fg">{property.name}</p>
+                    <p className="truncate text-sm font-extrabold text-app-text">{property.name}</p>
                     <StatusBadge status={statuses.get(property.id) ?? "UNAVAILABLE"} />
                   </div>
-                  <p className="mt-0.5 text-xs font-medium text-fg/60">
-                    {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"} ·{" "}
-                    {property.capacity} personne{property.capacity > 1 ? "s" : ""}
+                  <p className="mt-0.5 text-xs font-medium text-app-muted">
+                    {property.type === "ROOM" ? "Chambre meublée" : "Appartement meublé"} · {property.capacity} personne{property.capacity > 1 ? "s" : ""}
                   </p>
                 </div>
-              </Card>
-            </Link>
+              </div>
+            </ListCard>
           ))}
-          {truncated && (
-            <p className="col-span-full pt-1 text-center text-xs font-medium text-fg/50">
-              Affinez votre recherche pour voir plus de résultats.
-            </p>
-          )}
+          {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint">Affinez votre recherche pour voir plus de résultats.</p>}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

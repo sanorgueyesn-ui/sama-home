@@ -327,7 +327,7 @@ export function RentalForm({
           {/* Logement */}
           <div>
             <label htmlFor="propertyId" className="mb-1.5 block text-xs font-bold text-fg">
-              Chambre / Logement <span className="text-rose-400">*</span>
+              Chambre / Logement <span className="text-app-bad">*</span>
             </label>
             <select
               id="propertyId"
@@ -358,7 +358,7 @@ export function RentalForm({
           {/* Tarif (auto-sélectionné dès qu'une chambre est choisie) */}
           <div>
             <label htmlFor="tariffId" className="mb-1.5 block text-xs font-bold text-fg">
-              Formule / Tarif <span className="text-rose-400">*</span>
+              Formule / Tarif <span className="text-app-bad">*</span>
             </label>
             <select
               id="tariffId"
@@ -420,8 +420,8 @@ export function RentalForm({
           <div className="flex flex-col justify-between rounded-xl border border-border/15 bg-surface-sunken p-3.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-fg/50">Date d&apos;entrée</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/15 border border-success/30 px-2.5 py-0.5 text-[10.5px] font-bold text-app-good">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                 Aujourd&apos;hui
               </span>
             </div>
@@ -490,17 +490,17 @@ export function RentalForm({
               Vérification de la disponibilité...
             </div>
           ) : availability.available === true ? (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-emerald-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+            <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-2.5 text-app-good">
+              <span className="h-2 w-2 rounded-full bg-success shrink-0" />
               <span className="text-xs font-extrabold uppercase">Logement disponible pour entrée immédiate</span>
             </div>
           ) : availability.available === false ? (
-            <div className="flex flex-col gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-rose-300">
+            <div className="flex flex-col gap-1 rounded-xl border border-danger/30 bg-danger/10 px-4 py-2.5 text-app-bad">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-danger shrink-0" />
                 <span className="text-xs font-extrabold uppercase">Logement non disponible</span>
               </div>
-              {availability.message ? <p className="text-xs font-medium text-rose-300/80">{availability.message}</p> : null}
+              {availability.message ? <p className="text-xs font-medium text-app-bad/80">{availability.message}</p> : null}
             </div>
           ) : null}
         </div>
@@ -562,7 +562,7 @@ export function RentalForm({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-fg">
-                  Nom complet du locataire <span className="text-rose-400">*</span>
+                  Nom complet du locataire <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientName"
@@ -576,7 +576,7 @@ export function RentalForm({
 
               <div>
                 <label htmlFor="newClientPhone" className="mb-1 block text-xs font-bold text-fg">
-                  Téléphone (WhatsApp) <span className="text-rose-400">*</span>
+                  Téléphone (WhatsApp) <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientPhone"
@@ -599,7 +599,7 @@ export function RentalForm({
           /* Option B : Sélection client existant */
           <div>
             <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
-              Sélectionner le locataire existant <span className="text-rose-400">*</span>
+              Sélectionner le locataire existant <span className="text-app-bad">*</span>
             </label>
             <select
               id="clientId"
@@ -669,8 +669,8 @@ export function RentalForm({
             </div>
           </div>
         ) : clientAlreadyHasIdentity ? (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
-            <CheckCircleIcon className="h-4 w-4 shrink-0 text-emerald-400" />
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-xs text-app-good">
+            <CheckCircleIcon className="h-4 w-4 shrink-0 text-app-good" />
             <span>
               Pièce d&apos;identité enregistrée : <strong>{selectedClient?.idDocumentType} n° {selectedClient?.idDocumentNumber}</strong> (pré-remplie sur le contrat).
             </span>
@@ -685,16 +685,16 @@ export function RentalForm({
 
       {/* Message d'erreur serveur éventuel */}
       {state?.message && (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs font-bold text-rose-300 flex items-center gap-2">
-          <AlertCircleIcon className="h-4 w-4 shrink-0 text-rose-400" />
+        <div className="rounded-xl border border-danger/40 bg-danger/15 p-3 text-xs font-bold text-app-bad flex items-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-bad" />
           <span>{state.message}</span>
         </div>
       )}
 
       {/* Aide visuelle / Alerte si des informations manquent */}
       {(!canSubmit && (missingAttempted || !pending)) && getMissingReason() ? (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-bold text-amber-300 flex items-center justify-center gap-2">
-          <AlertCircleIcon className="h-4 w-4 shrink-0 text-amber-400" />
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-center text-xs font-bold text-app-warn flex items-center justify-center gap-2">
+          <AlertCircleIcon className="h-4 w-4 shrink-0 text-app-warn" />
           <span>{getMissingReason()}</span>
         </div>
       ) : null}

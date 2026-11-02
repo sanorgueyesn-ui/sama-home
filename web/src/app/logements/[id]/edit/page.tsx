@@ -21,7 +21,7 @@ export default async function EditPropertyPage(props: PageProps<"/logements/[id]
   const action = updateProperty.bind(null, property.id);
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-6 pb-10 md:max-w-none md:px-8 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div className="mb-5 flex items-center gap-3 lg:mx-auto lg:w-full lg:max-w-2xl">
         <Link
           href={`/logements/${property.id}`}
@@ -52,9 +52,9 @@ export default async function EditPropertyPage(props: PageProps<"/logements/[id]
 
         {/* Zone de suppression */}
         {canDeleteProperty ? (
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 sm:p-5">
+          <div className="rounded-2xl border border-danger/20 bg-danger/5 p-4 sm:p-5">
             <div className="mb-3">
-              <h2 className="text-sm font-black text-rose-400 uppercase tracking-wide">Supprimer ce logement</h2>
+              <h2 className="text-sm font-black text-app-bad uppercase tracking-wide">Supprimer ce logement</h2>
               <p className="mt-1 text-xs text-fg/60">
                 Supprime définitivement ce logement ainsi que ses tarifs et historiques associés.
               </p>

@@ -58,9 +58,9 @@ export function ExpenseFilters({
   }, [query]);
 
   return (
-    <div className="mt-4">
-      <div className="flex h-12 items-center gap-2.5 rounded-xl border border-transparent bg-surface-raised px-3.5 shadow-card focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange">
-        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-fg/40" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div>
+      <div className="flex h-11 items-center gap-2.5 rounded-xl border border-app-line-strong bg-app-panel px-3.5 focus-within:border-brand-orange focus-within:ring-2 focus-within:ring-brand-orange/40">
+        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-app-faint" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
@@ -70,18 +70,18 @@ export function ExpenseFilters({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher par référence ou note..."
           aria-label="Rechercher une dépense par référence ou note"
-          className="flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg/40"
+          className="flex-1 bg-transparent text-sm text-app-text outline-none placeholder:text-app-faint"
         />
       </div>
 
-      <div className="mt-3 flex gap-2 overflow-x-auto">
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {PERIOD_CHIPS.map((chip) => (
           <button
             key={chip.value}
             type="button"
             onClick={() => pushParams(query, chip.value, defaultCategory, defaultMethod)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition-colors ${
-              defaultPeriod === chip.value ? "bg-brand-orange text-ink" : "bg-surface-raised text-fg"
+            className={`shrink-0 inline-flex h-10 items-center whitespace-nowrap rounded-full px-4 text-xs font-bold transition-colors ${
+              defaultPeriod === chip.value ? "bg-brand-orange text-ink" : "border border-app-line-strong bg-app-panel text-app-text-2 hover:bg-app-hover"
             }`}
           >
             {chip.label}
@@ -94,7 +94,7 @@ export function ExpenseFilters({
           value={defaultCategory}
           onChange={(e) => pushParams(query, defaultPeriod, e.target.value, defaultMethod)}
           aria-label="Filtrer par catégorie"
-          className="h-11 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40"
         >
           <option value="">Toutes catégories</option>
           {categories.map((c) => (
@@ -107,7 +107,7 @@ export function ExpenseFilters({
           value={defaultMethod}
           onChange={(e) => pushParams(query, defaultPeriod, defaultCategory, e.target.value)}
           aria-label="Filtrer par mode de paiement"
-          className="h-11 w-full rounded-xl border border-border/15 bg-surface-raised px-3 text-sm text-fg outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange"
+          className="h-11 w-full rounded-xl border border-app-line-strong bg-app-panel px-3 text-sm text-app-text outline-none focus:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/40"
         >
           <option value="">Tous les modes</option>
           {METHOD_OPTIONS.map((m) => (

@@ -63,9 +63,9 @@ export default async function CaissePage() {
     }
 
     return (
-      <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-6 pb-24 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-extrabold text-fg">Caisse</h1>
+          <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Caisse</h1>
           <div className="flex items-center gap-2">
             <MachineConnectedBadge />
             <CashSessionStatusBadge open={false} />
@@ -150,9 +150,9 @@ export default async function CaissePage() {
   const durationMs = new Date().getTime() - current.openedAt.getTime();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-6 pb-24 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[1360px] flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold text-fg">Caisse & Trésorerie</h1>
+        <h1 className="text-[22px] font-extrabold leading-tight tracking-tight text-app-text sm:text-2xl lg:text-[28px]">Caisse & Trésorerie</h1>
         <div className="flex items-center gap-2">
           <MachineConnectedBadge />
           <CashSessionStatusBadge open={true} />
@@ -190,22 +190,22 @@ export default async function CaissePage() {
 
           {/* Cartes Clés du Solde Théorique & Recettes/Dépenses */}
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400">Solde Caisse Actuel</p>
-              <p className="mt-1 text-2xl font-black text-emerald-400">{fmtFcfa(breakdown.theoreticalBalance)}</p>
-              <p className="mt-1 text-[10.5px] text-emerald-300/70">Total net disponible</p>
+            <div className="rounded-2xl border border-success/30 bg-success/10 p-4">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-app-good">Solde Caisse Actuel</p>
+              <p className="mt-1 text-2xl font-black text-app-good">{fmtFcfa(breakdown.theoreticalBalance)}</p>
+              <p className="mt-1 text-[10.5px] text-app-good/70">Total net disponible</p>
             </div>
             
-            <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-sky-400">Encaissé Session</p>
-              <p className="mt-1 text-2xl font-black text-sky-400">+{fmtFcfa(breakdown.totalIn)}</p>
-              <p className="mt-1 text-[10.5px] text-sky-300/70">Wave, OM & Espèces</p>
+            <div className="rounded-2xl border border-info/30 bg-info/10 p-4">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-app-sky">Encaissé Session</p>
+              <p className="mt-1 text-2xl font-black text-app-sky">+{fmtFcfa(breakdown.totalIn)}</p>
+              <p className="mt-1 text-[10.5px] text-app-sky/70">Wave, OM & Espèces</p>
             </div>
 
-            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">Dépensé Session</p>
-              <p className="mt-1 text-2xl font-black text-rose-400">−{fmtFcfa(breakdown.totalOut)}</p>
-              <p className="mt-1 text-[10.5px] text-rose-300/70">Achats & Frais</p>
+            <div className="rounded-2xl border border-danger/30 bg-danger/10 p-4">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-app-bad">Dépensé Session</p>
+              <p className="mt-1 text-2xl font-black text-app-bad">−{fmtFcfa(breakdown.totalOut)}</p>
+              <p className="mt-1 text-[10.5px] text-app-bad/70">Achats & Frais</p>
             </div>
           </div>
 
@@ -248,13 +248,13 @@ export default async function CaissePage() {
                 <span className="text-sm font-bold text-success">+{fmtFcfa(breakdown.totalIn)}</span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-fg/60">
-                <span className="rounded bg-sky-500/10 px-2 py-0.5 text-sky-400 font-semibold border border-sky-500/20">
+                <span className="rounded bg-info/10 px-2 py-0.5 text-app-sky font-semibold border border-info/20">
                   Wave : {fmtFcfa(breakdown.waveIn)}
                 </span>
-                <span className="rounded bg-orange-500/10 px-2 py-0.5 text-orange-400 font-semibold border border-orange-500/20">
+                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
                   Orange Money : {fmtFcfa(breakdown.omIn)}
                 </span>
-                <span className="rounded bg-amber-500/10 px-2 py-0.5 text-amber-300 font-semibold border border-amber-500/20">
+                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
                   Espèces : {fmtFcfa(breakdown.cashIn)}
                 </span>
               </div>
@@ -266,13 +266,13 @@ export default async function CaissePage() {
                 <span className="text-sm font-bold text-danger">−{fmtFcfa(breakdown.totalOut)}</span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-fg/60">
-                <span className="rounded bg-sky-500/10 px-2 py-0.5 text-sky-400 font-semibold border border-sky-500/20">
+                <span className="rounded bg-info/10 px-2 py-0.5 text-app-sky font-semibold border border-info/20">
                   Wave : {fmtFcfa(breakdown.waveOut)}
                 </span>
-                <span className="rounded bg-orange-500/10 px-2 py-0.5 text-orange-400 font-semibold border border-orange-500/20">
+                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
                   Orange Money : {fmtFcfa(breakdown.omOut)}
                 </span>
-                <span className="rounded bg-amber-500/10 px-2 py-0.5 text-amber-300 font-semibold border border-amber-500/20">
+                <span className="rounded bg-warning/10 px-2 py-0.5 text-app-warn font-semibold border border-warning/20">
                   Espèces : {fmtFcfa(breakdown.cashOut)}
                 </span>
               </div>
@@ -294,15 +294,15 @@ export default async function CaissePage() {
             {/* Ligne spécifique Espèces physiques tiroir */}
             <div className="flex items-center justify-between py-2.5 bg-surface-sunken/40 -mx-4 px-4 rounded-b-xl border-t border-border/10">
               <div className="flex items-center gap-1.5">
-                <WalletIcon className="h-4 w-4 text-amber-400" />
-                <span className="text-xs font-extrabold text-amber-300">Solde Espèces physique (Tiroir)</span>
+                <WalletIcon className="h-4 w-4 text-app-warn" />
+                <span className="text-xs font-extrabold text-app-warn">Solde Espèces physique (Tiroir)</span>
               </div>
-              <span className="text-xs font-black text-amber-300">{fmtFcfa(breakdown.physicalCashBalance)}</span>
+              <span className="text-xs font-black text-app-warn">{fmtFcfa(breakdown.physicalCashBalance)}</span>
             </div>
           </Card>
 
-          <p className="mt-2.5 text-[11px] font-medium text-emerald-400/80 flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <p className="mt-2.5 text-[11px] font-medium text-app-good/80 flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
             Toutes vos recettes et dépenses (Espèces, Wave, Orange Money) sont automatiquement calculées et reliées en temps réel à votre caisse.
           </p>
 

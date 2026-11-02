@@ -59,7 +59,7 @@ export function TariffRowActions({
           className={`h-8 rounded-lg px-2.5 text-xs font-bold disabled:opacity-60 transition-all ${
             active
               ? "bg-surface-sunken border border-white/10 text-fg/70 hover:bg-white/5"
-              : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
+              : "bg-success/15 border border-success/30 text-app-good hover:bg-success/25"
           }`}
         >
           {active ? "Désactiver" : "Activer"}
@@ -72,14 +72,14 @@ export function TariffRowActions({
           onClick={handleDelete}
           aria-label="Supprimer ce tarif"
           title="Supprimer ce tarif"
-          className="flex h-8 items-center justify-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2 text-xs font-bold text-rose-400 hover:bg-rose-500/20 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
+          className="flex h-8 items-center justify-center gap-1 rounded-lg border border-danger/30 bg-danger/10 px-2 text-xs font-bold text-app-bad hover:bg-danger/20 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
         >
           <span>🗑️</span>
           <span className="hidden sm:inline">Supprimer</span>
         </button>
       </div>
 
-      {error ? <p className="max-w-64 text-right text-[11px] font-semibold text-rose-300">{error}</p> : null}
+      {error ? <p className="max-w-64 text-right text-[11px] font-semibold text-app-bad">{error}</p> : null}
     </div>
   );
 }

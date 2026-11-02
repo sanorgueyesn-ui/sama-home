@@ -43,9 +43,9 @@ export function CashActivityList({ entries }: { entries: CashActivityEntry[] }) 
                 </span>
                 {entry.method ? (
                   <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                    entry.method === "WAVE" ? "bg-sky-500/15 text-sky-400 border border-sky-500/30" :
-                    entry.method === "ORANGE_MONEY" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" :
-                    "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                    entry.method === "WAVE" ? "bg-info/15 text-app-sky border border-info/30" :
+                    entry.method === "ORANGE_MONEY" ? "bg-warning/15 text-app-warn border border-warning/30" :
+                    "bg-warning/15 text-app-warn border border-warning/30"
                   }`}>
                     {entry.method === "WAVE" ? "Wave" : entry.method === "ORANGE_MONEY" ? "OM" : "Espèces"}
                   </span>

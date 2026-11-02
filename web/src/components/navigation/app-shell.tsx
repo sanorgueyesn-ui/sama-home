@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 import { SpaceSwitcher } from "@/components/navigation/space-switcher";
-import { BUSINESS_MODE_LABELS, toShellMode, type SpaceOption } from "@/lib/business-mode";
+import { AGENCY_MODE_ENABLED, BUSINESS_MODE_LABELS, toShellMode, type SpaceOption } from "@/lib/business-mode";
 
 type NavItem = {
   href: string;
@@ -17,10 +17,13 @@ type NavItem = {
   soon?: boolean;
 };
 
+// Repère de l'entrée active : toujours la couleur d'accent de l'établissement (Paramètres >
+// Apparence), quel que soit le mode. Plus de teinte fixe par mode : changer la palette change aussi
+// le menu. `text-brand-orange` est la version lisible de l'accent selon le thème clair ou sombre.
 const MODE_ACCENT = {
-  RESIDENCE: { bar: "bg-[#e11d48]", text: "text-app-rose" },
-  HOTEL: { bar: "bg-[#2563eb]", text: "text-app-sky" },
-  AGENCY: { bar: "bg-[#7c3aed]", text: "text-app-violet" },
+  RESIDENCE: { bar: "bg-brand-orange", text: "text-brand-orange" },
+  HOTEL: { bar: "bg-brand-orange", text: "text-brand-orange" },
+  AGENCY: { bar: "bg-brand-orange", text: "text-brand-orange" },
 } as const;
 
 const SOON_ROUTES = new Set(["/contrats", "/echeances"]);
@@ -49,7 +52,8 @@ function ShellClock() {
 function parsePreviewMode(raw: string | null): "HOTEL" | "RESIDENCE" | "AGENCY" | null {
   const value = (raw ?? "").toUpperCase();
   if (value === "HOTEL" || value === "RESIDENCE") return value;
-  if (value === "AGENCY" || value === "IMMOBILIER") return "AGENCY";
+  // Agence immobilière suspendue (AGENCY_MODE_ENABLED) : l'aperçu ne la propose plus.
+  if (AGENCY_MODE_ENABLED && (value === "AGENCY" || value === "IMMOBILIER")) return "AGENCY";
   return null;
 }
 
@@ -248,9 +252,7 @@ export function AppShell({
           sub: "Gestion d'hébergement",
           btnLabel: "Voir l'établissement",
           searchPlaceholder: "Rechercher une chambre, un appartement ou une réservation...",
-          activeColor: "bg-[#1e60f0] text-white shadow-md",
-          brandColor: "text-[#ef4444]",
-          topDropdownIconBg: "bg-[#ea580c]",
+          topDropdownIconBg: "bg-navy",
           role: "Responsable",
         }
       : currentMode === "AGENCY"
@@ -261,9 +263,7 @@ export function AppShell({
             sub: "Agence immobilière",
             btnLabel: "Voir l'agence",
             searchPlaceholder: "Rechercher un bien, un locataire, un contrat...",
-            activeColor: "bg-[#1e60f0] text-white shadow-md",
-            brandColor: "text-[#ef4444]",
-            topDropdownIconBg: "bg-[#059669]",
+            topDropdownIconBg: "bg-navy",
             role: "Administrateur",
           }
         : {
@@ -273,9 +273,7 @@ export function AppShell({
             sub: "Gestion d'hébergement",
             btnLabel: "Voir l'établissement",
             searchPlaceholder: "Rechercher une chambre, un appartement ou une réservation...",
-            activeColor: "bg-[#1e60f0] text-white shadow-md",
-            brandColor: "text-[#ef4444]",
-            topDropdownIconBg: "bg-[#ea580c]",
+            topDropdownIconBg: "bg-navy",
             role: "Responsable",
           };
 
@@ -303,6 +301,12 @@ export function AppShell({
           { href: "/reservations", label: "Réservations", icon: (a) => <CalendarIcon active={a} /> },
           { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} /> },
           { href: "/logements?type=ROOM", label: "Chambres", icon: (a) => <BedIcon active={a} /> },
+          ...(currentMode === "HOTEL"
+            ? [
+                { href: "/planning", label: "Planning", icon: (a: boolean) => <CalendarIcon active={a} /> },
+                { href: "/menage", label: "Ménage", icon: (a: boolean) => <KeyIcon active={a} /> },
+              ]
+            : []),
           ...(currentMode === "RESIDENCE"
             ? [{ href: "/logements?type=APARTMENT", label: "Appartements", icon: (a: boolean) => <BuildingIcon active={a} /> }]
             : []),
@@ -440,7 +444,7 @@ export function AppShell({
               type="text"
               aria-label="Rechercher"
               placeholder={establishmentData.searchPlaceholder}
-              className="h-9 w-full rounded-full border border-app-line bg-app-panel-2 pl-9 pr-3 text-xs text-app-text outline-none placeholder:text-app-faint focus:border-[#2563eb]"
+              className="h-9 w-full rounded-full border border-app-line bg-app-panel-2 pl-9 pr-3 text-xs text-app-text outline-none placeholder:text-app-faint focus:border-brand-orange"
             />
           </div>
         </div>
@@ -478,7 +482,7 @@ export function AppShell({
             </svg>
           </button>
 
-          <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0284c7] text-xs font-bold text-white">
+          <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">
             {initial}
           </span>
         </div>

@@ -32,7 +32,7 @@ export default function NotFound() {
         </Link>
         <Link
           href="/dashboard"
-          className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-card px-5 text-sm font-semibold text-fg hover:bg-muted transition-colors"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-border/20 bg-surface-raised px-5 text-sm font-semibold text-fg hover:bg-fg/5 transition-colors"
         >
           Accéder à l&apos;application
         </Link>

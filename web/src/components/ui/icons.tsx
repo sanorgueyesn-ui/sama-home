@@ -216,7 +216,7 @@ export function ChatIcon(props: SVGProps<SVGSVGElement>) {
 
 export function WaveLogoIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-sky-500/20 text-sky-400 font-black text-[10px] border border-sky-500/30">
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-info/20 text-app-sky font-black text-[10px] border border-info/30">
       W
     </span>
   );
@@ -224,7 +224,7 @@ export function WaveLogoIcon(props: SVGProps<SVGSVGElement>) {
 
 export function OmLogoIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-orange-500/20 text-orange-400 font-black text-[9px] border border-orange-500/30">
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-warning/20 text-app-warn font-black text-[9px] border border-warning/30">
       OM
     </span>
   );
@@ -250,9 +250,9 @@ export function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
 export function MachineConnectedBadge({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 backdrop-blur-sm shadow-sm ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-0.5 text-[11px] font-bold text-app-good backdrop-blur-sm shadow-sm ${className}`}
     >
-      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+      <span className="h-2 w-2 rounded-full bg-success animate-pulse shrink-0" />
       <span>Machine connectée</span>
     </div>
   );

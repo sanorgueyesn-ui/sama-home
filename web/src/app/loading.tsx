@@ -4,7 +4,7 @@ function SkeletonBlock({ className }: { className: string }) {
 
 export default function DashboardLoading() {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 pt-6 pb-28 md:max-w-none md:px-8 md:pb-10 lg:px-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-7">
       {/* En-tête : titre + date (toutes largeurs), CTA desktop uniquement —
           même structure que page.tsx, pour éviter un décalage visuel au
           chargement réel. */}
