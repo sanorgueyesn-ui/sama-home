@@ -7,6 +7,8 @@ import { TICKET_KIND_LABELS, TICKET_THEMES } from "@/lib/documents/ticket-themes
 import type { ContractKind, TicketKind, TicketWidth } from "@/lib/documents/types";
 import { SettingsBlock, SettingsPageHeader } from "../settings-ui";
 import { DocumentThumbnail } from "./document-thumbnail";
+import { ChoosePresentation } from "./choose-presentation";
+import { getSettings } from "@/lib/settings-data";
 
 export const metadata = { title: "Documents — SAMA HOME" };
 
@@ -76,6 +78,10 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
   const contractKind = pick<ContractKind>(search.contrat, CONTRACT_KINDS, "LEASE_3Y");
   const ticketKind = pick<TicketKind>(search.ticket, TICKET_KINDS, "PAYMENT");
   const width = pick<TicketWidth>(search.largeur, TICKET_WIDTHS, "80");
+  const settings = await getSettings();
+  const chosenContract = settings?.documentContractTheme ?? 1;
+  const chosenTicket = settings?.documentTicketTheme ?? 1;
+  const chosenPaper = settings?.documentTicketPaper ?? "80";
   const query: Search = { contrat: contractKind, ticket: ticketKind, largeur: width };
   const base = "/settings/documents/preview";
 
@@ -101,6 +107,7 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
                   {theme.id}. {theme.name}
                 </p>
                 <p className="text-xs text-fg/55">{theme.description}</p>
+                <ChoosePresentation kind="contract" theme={theme.id} paper={null} selected={chosenContract === theme.id} />
               </li>
             ))}
           </ul>
@@ -108,7 +115,7 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
 
         <SettingsBlock
           title="Quittance de loyer"
-          description="Pour les résidences. Elle reprend les présentations des contrats. Un paiement partiel donne un reçu pour paiement partiel, jamais une quittance."
+          description="Pour les résidences. Elle utilise la même présentation que le contrat choisi. Un paiement partiel donne un reçu pour paiement partiel, jamais une quittance."
         >
           <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3">
             {CONTRACT_THEMES.map((theme) => (
@@ -117,6 +124,7 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
                 <p className="mt-2 text-sm font-bold text-fg">
                   {theme.id}. {theme.name}
                 </p>
+                <ChoosePresentation kind="contract" theme={theme.id} paper={null} selected={chosenContract === theme.id} />
               </li>
             ))}
           </ul>
@@ -139,6 +147,7 @@ export default async function DocumentsLibraryPage(props: { searchParams: Promis
                   {theme.id}. {theme.name}
                 </p>
                 <p className="text-xs text-fg/55">{theme.description}</p>
+                <ChoosePresentation kind="ticket" theme={theme.id} paper={width} selected={chosenTicket === theme.id && chosenPaper === width} />
               </li>
             ))}
           </ul>

@@ -919,6 +919,13 @@ model Settings {
   guestHouseRules       String?
   guestExtraInfo        String?
   guestCheckoutTime     String?
+  /// Présentation choisie pour les documents PDF (bibliothèque /settings/documents) : numéro de
+  /// 1 à 10 dans le registre des présentations ; le serveur revalide la valeur avant d'écrire.
+  documentContractTheme Int    @default(1)
+  documentTicketTheme   Int    @default(1)
+  /// "58" ou "80" (mm, papier thermique) ou "a4".
+  documentTicketPaper   String @default("80")
+
   guestIncludeEmergency Boolean  @default(false)
 
   createdAt DateTime @default(now())
