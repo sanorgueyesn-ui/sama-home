@@ -3,9 +3,12 @@ import { RentalForm } from "@/app/locations/rental-form";
 import { createRentalDirect } from "@/app/actions/rentals";
 import { listClientsForSelect } from "@/lib/clients-data";
 import { listActivePropertiesWithActiveTariffs } from "@/lib/reservations-data";
+import { getActiveSpace } from "@/lib/active-mode";
+import { pageVocabulary } from "@/lib/page-vocabulary";
 
 export default async function NewRentalPage(props: PageProps<"/locations/new">) {
   const { propertyId, clientId } = await props.searchParams;
+  const vocab = pageVocabulary((await getActiveSpace()).mode);
 
   const [clients, properties] = await Promise.all([
     listClientsForSelect(),
@@ -24,7 +27,7 @@ export default async function NewRentalPage(props: PageProps<"/locations/new">) 
             <path d="M15 5 8 12l7 7" />
           </svg>
         </Link>
-        <h1 className="text-xl font-extrabold text-fg">Nouvelle location</h1>
+        <h1 className="text-xl font-extrabold text-fg">{vocab.newStay}</h1>
       </div>
 
       <div className="lg:mx-auto lg:w-full lg:max-w-2xl">
@@ -32,6 +35,8 @@ export default async function NewRentalPage(props: PageProps<"/locations/new">) 
           action={createRentalDirect}
           clients={clients}
           properties={properties}
+          guestWord={vocab.guest}
+          submitLabel={vocab.newStay === "Check-in direct" ? "ENREGISTRER L'ARRIVÉE" : "ENREGISTRER LA LOCATION"}
           defaultPropertyId={typeof propertyId === "string" ? propertyId : undefined}
           defaultClientId={typeof clientId === "string" ? clientId : undefined}
         />

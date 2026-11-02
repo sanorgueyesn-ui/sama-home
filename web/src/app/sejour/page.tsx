@@ -14,6 +14,8 @@ import { listReservations, listActivePropertiesWithActiveTariffs } from "@/lib/r
 import { listProperties } from "@/lib/properties-data";
 import { getPropertyStatuses } from "@/lib/property-status";
 import { formatDuration } from "@/lib/duration";
+import { getActiveSpace } from "@/lib/active-mode";
+import { pageVocabulary } from "@/lib/page-vocabulary";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -56,6 +58,9 @@ function CompactStatTile({ label, value, color }: { label: string; value: number
 
 export default async function SejourPage() {
   const now = new Date();
+  const space = await getActiveSpace();
+  const vocab = pageVocabulary(space.mode);
+  const isHotel = space.mode === "HOTEL";
 
   const [propertyCounts, arrivals, departures, activeRentals, upcomingReservations, propertiesResult, tariffProperties] =
     await Promise.all([
@@ -134,8 +139,8 @@ export default async function SejourPage() {
         className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-brand-orange px-4 py-4 text-ink shadow-card transition active:scale-[0.98] hover:brightness-105"
       >
         <KeyIcon className="h-6 w-6" />
-        <span className="text-sm font-extrabold">Louer</span>
-        <span className="text-[11px] font-medium text-ink/70">Entrée client direct</span>
+        <span className="text-sm font-extrabold">{isHotel ? vocab.newStay : "Louer"}</span>
+        <span className="text-[11px] font-medium text-ink/70">{isHotel ? "Arrivée sans réservation" : "Entrée client direct"}</span>
       </Link>
       <Link
         href="/reservations/new"
@@ -160,7 +165,7 @@ export default async function SejourPage() {
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-extrabold uppercase tracking-wide text-fg">
-          Locations en cours ({activeRentals.items.length})
+          {isHotel ? "Séjours en cours" : "Locations en cours"} ({activeRentals.items.length})
         </h2>
         <Link href="/locations" className="text-xs font-bold text-fg underline">
           Voir tout
@@ -268,7 +273,7 @@ export default async function SejourPage() {
                   className="inline-flex h-7 items-center gap-1 rounded-lg bg-brand-orange px-2.5 text-[11px] font-bold text-ink hover:brightness-105"
                 >
                   <KeyIcon className="h-3 w-3" />
-                  <span>Louer</span>
+                  <span>{isHotel ? vocab.newStayShort : "Louer"}</span>
                 </Link>
                 <Link
                   href={`/reservations/new?propertyId=${p.id}`}
@@ -322,7 +327,7 @@ export default async function SejourPage() {
           En direct
         </span>
       </div>
-      <p className="mt-0.5 text-sm font-medium text-fg/60">Gérez vos locations et réservations en temps réel.</p>
+      <p className="mt-0.5 text-sm font-medium text-fg/60">{isHotel ? "Gérez vos séjours et réservations en temps réel." : "Gérez vos locations et réservations en temps réel."}</p>
 
       {/* Bandeau du jour — correctif Lot 2, section 2 : mêmes 4 valeurs que
           les tuiles juste en dessous, aucune donnée supplémentaire. */}

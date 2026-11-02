@@ -59,12 +59,17 @@ export function RentalForm({
   properties,
   defaultPropertyId,
   defaultClientId,
+  guestWord = "locataire",
+  submitLabel = "ENREGISTRER LA LOCATION",
 }: {
   action: (state: ReservationFormState, formData: FormData) => Promise<ReservationFormState>;
   clients: ClientOption[];
   properties: PropertyOption[];
   defaultPropertyId?: string;
   defaultClientId?: string;
+  /** « client » à l'hôtel, « locataire » en résidence. */
+  guestWord?: string;
+  submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const pathname = usePathname();
@@ -205,8 +210,8 @@ export function RentalForm({
   function getMissingReason(): string | null {
     if (!propertyId) return "Veuillez sélectionner une chambre / logement";
     if (!effectiveTariffId) return "Veuillez choisir une formule / tarif";
-    if (clientMode === "EXISTING" && !clientId) return "Veuillez sélectionner un locataire ou basculer sur « Nouveau client »";
-    if (clientMode === "NEW" && !newClientName.trim()) return "Veuillez renseigner le nom complet du locataire";
+    if (clientMode === "EXISTING" && !clientId) return `Veuillez sélectionner un ${guestWord} ou basculer sur « Nouveau client »`;
+    if (clientMode === "NEW" && !newClientName.trim()) return `Veuillez renseigner le nom complet du ${guestWord}`;
     if (clientMode === "NEW" && newClientPhone.trim().replace(/[\s.-]/g, "").length < 8) return "Veuillez indiquer un numéro de téléphone valide (8 chiffres min)";
     if (availability.checking) return "Vérification de la disponibilité...";
     if (availability.available === false) return availability.message ?? "Ce logement n'est pas disponible pour ce créneau";
@@ -513,7 +518,7 @@ export function RentalForm({
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-orange/20 text-xs font-black text-brand-orange">
               3
             </span>
-            <h2 className="text-sm font-black uppercase tracking-wider text-fg">Locataire</h2>
+            <h2 className="text-sm font-black uppercase tracking-wider text-fg">{guestWord}</h2>
           </div>
 
           {/* Onglets rapides : Nouveau client direct OU Client existant */}
@@ -562,7 +567,7 @@ export function RentalForm({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="newClientName" className="mb-1 block text-xs font-bold text-fg">
-                  Nom complet du locataire <span className="text-app-bad">*</span>
+                  Nom complet du {guestWord} <span className="text-app-bad">*</span>
                 </label>
                 <input
                   id="newClientName"
@@ -599,7 +604,7 @@ export function RentalForm({
           /* Option B : Sélection client existant */
           <div>
             <label htmlFor="clientId" className="mb-1.5 block text-xs font-bold text-fg">
-              Sélectionner le locataire existant <span className="text-app-bad">*</span>
+              Sélectionner le {guestWord} existant <span className="text-app-bad">*</span>
             </label>
             <select
               id="clientId"
@@ -725,7 +730,7 @@ export function RentalForm({
             ? "Enregistrement en cours..."
             : isContractStay
               ? "ENREGISTRER & GÉNÉRER LE CONTRAT"
-              : "ENREGISTRER LA LOCATION"}
+              : submitLabel}
         </button>
       </div>
     </form>

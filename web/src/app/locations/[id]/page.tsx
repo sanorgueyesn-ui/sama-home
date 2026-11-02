@@ -16,6 +16,7 @@ import { buildGuestInfoWhatsAppLink } from "@/lib/guest-info";
 import { getGuestInfoContext } from "@/lib/guest-info-data";
 import { prisma } from "@/lib/prisma";
 import { getActiveSpace } from "@/lib/active-mode";
+import { pageVocabulary } from "@/lib/page-vocabulary";
 import { FolioSection } from "./folio-section";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
@@ -53,6 +54,8 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
   // Extras du séjour : module de l'hôtel. Lecture filtrée par l'établissement du séjour.
   const space = await getActiveSpace();
+  const vocab = pageVocabulary(space.mode);
+  const isHotel = space.mode === "HOTEL";
   const folioLines =
     space.mode === "HOTEL"
       ? (
@@ -238,7 +241,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         <div className="rounded-2xl border border-border/15 bg-surface-raised p-4">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-fg/50">
             <UserIcon className="h-3.5 w-3.5 text-brand-orange" />
-            <span>Locataire</span>
+            <span className="capitalize">{vocab.guest}</span>
           </span>
           <p className="mt-1 text-base font-extrabold text-fg">{rental.client.name}</p>
           <p className="mt-0.5 text-xs font-semibold text-fg/70 font-mono">{rental.client.phone || "Sans téléphone"}</p>
@@ -388,7 +391,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
         {isActive ? (
           <div className="pt-1">
-            <CompleteButton id={rental.id} />
+            <CompleteButton id={rental.id} hotel={isHotel} />
           </div>
         ) : (
           <p className="text-center text-xs font-medium text-fg/50 pt-2">
@@ -398,7 +401,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
         {isActive ? (
           <div className="pt-2 text-right">
-            <CancelRentalButton id={rental.id} />
+            <CancelRentalButton id={rental.id} hotel={isHotel} />
           </div>
         ) : null}
       </div>
