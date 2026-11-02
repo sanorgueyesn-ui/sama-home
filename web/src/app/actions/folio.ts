@@ -6,7 +6,8 @@ import { requireActiveEstablishment } from "@/lib/dal";
 import { chargeKeepsTotalValid, parseCharge } from "@/lib/folio";
 import { getRentalPaymentSummary } from "@/lib/payment-summary";
 
-export type FolioState = { error?: string; ok?: boolean } | undefined;
+/** `nonce` change à chaque ajout réussi : le formulaire s'en sert comme clé pour se vider. */
+export type FolioState = { error?: string; ok?: boolean; nonce?: string } | undefined;
 
 class FolioError extends Error {}
 
@@ -54,5 +55,5 @@ export async function addRentalCharge(rentalId: string, _prev: FolioState, formD
 
   revalidatePath(`/locations/${rentalId}`);
   revalidatePath("/locations");
-  return { ok: true };
+  return { ok: true, nonce: crypto.randomUUID() };
 }

@@ -3,27 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Vignette = le vrai PDF, sans barre d'outils. Le clic l'agrandit dans la page (pas de nouvel onglet) ;
- * Échap, la croix ou un clic hors du document referme. Le lecteur PDF ajoute une barre de défilement et
- * un liseré sombre : l'iframe, un peu plus grande, est rognée par le cadre pour ne montrer que la page.
+ * Vignette = le vrai PDF, sans barre d'outils. Le clic l'agrandit dans la page (pas de nouvel onglet), dans
+ * un <dialog> natif : le focus clavier reste enfermé dedans, Échap le ferme, et le reste de la page est
+ * inerte. Un clic hors du document ou la croix referme aussi. Le lecteur PDF ajoute une barre de défilement
+ * et un liseré sombre : l'iframe de la vignette, un peu plus grande, est rognée par son cadre.
  */
 export function DocumentThumbnail({ src, title, ratio }: { src: string; title: string; ratio: string }) {
   const [open, setOpen] = useState(false);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    const dialog = dialogRef.current;
+    if (!open || !dialog) return;
     const trigger = triggerRef.current;
+    if (!dialog.open) dialog.showModal();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
+    const onClose = () => setOpen(false);
+    dialog.addEventListener("close", onClose);
     return () => {
-      window.removeEventListener("keydown", onKey);
+      dialog.removeEventListener("close", onClose);
       document.body.style.overflow = previousOverflow;
       trigger?.focus();
     };
@@ -49,29 +49,30 @@ export function DocumentThumbnail({ src, title, ratio }: { src: string; title: s
       </div>
 
       {open ? (
-        <div
-          role="dialog"
-          aria-modal="true"
+        <dialog
+          ref={dialogRef}
           aria-label={title}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-3 sm:p-6"
-          onClick={() => setOpen(false)}
+          className="m-auto h-[92dvh] w-[min(100%-1.5rem,48rem)] max-w-none overflow-hidden rounded-2xl border-0 bg-surface p-0 text-app-text backdrop:bg-black/70"
+          onClick={(event) => {
+            if (event.target === dialogRef.current) dialogRef.current?.close();
+          }}
         >
-          <div className="relative flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-surface" onClick={(event) => event.stopPropagation()}>
+          <div className="flex h-full flex-col">
             <div className="flex items-center justify-between gap-3 border-b border-border/15 px-4 py-2.5">
-              <p className="truncate text-sm font-bold text-fg">{title}</p>
+              <p className="truncate text-sm font-bold">{title}</p>
               <button
-                ref={closeRef}
                 type="button"
-                onClick={() => setOpen(false)}
+                autoFocus
+                onClick={() => dialogRef.current?.close()}
                 aria-label="Fermer l'aperçu"
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-lg font-bold text-fg/70 hover:bg-fg/10 hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-lg font-bold text-app-text-2 hover:bg-fg/10 hover:text-app-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
               >
                 <span aria-hidden="true">×</span>
               </button>
             </div>
             <iframe src={`${src}#toolbar=0&navpanes=0&view=FitH`} title={title} className="min-h-0 w-full flex-1 bg-white" />
           </div>
-        </div>
+        </dialog>
       ) : null}
     </>
   );
