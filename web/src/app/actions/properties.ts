@@ -10,6 +10,7 @@ import { readImageUploadFromFormData } from "@/lib/image-upload";
 import { uploadImageObject, deleteImageObject } from "@/lib/object-storage";
 import { getS3Client, getBucketName } from "@/lib/s3-client";
 import { getT } from "@/lib/i18n/server";
+import { checkPlanLimit } from "@/lib/plan-limits";
 
 const PHOTO_KEY_PREFIX = "logements";
 
@@ -67,6 +68,9 @@ export async function createProperty(
   if (!user.establishmentId) {
     return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un logement.") };
   }
+
+  const limit = await checkPlanLimit(user.establishmentId, "units");
+  if (!limit.ok) return { message: t(limit.message) };
 
   // New listings always start active — there's no reason to ask, and no
   // "active" control is rendered on the create form.

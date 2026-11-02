@@ -1403,12 +1403,22 @@ model Subscription {
   /// renvoyer un rappel déjà émis pour la période déjà traitée.
   reminderSentForPeriodEnd DateTime?
 
+  /// Formule en cours, fixée par un règlement confirmé. NULL = aucune formule choisie (essai / historique).
+  planTier PlanTier?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   payments SubscriptionPayment[]
 
   @@index([currentPeriodEnd])
+}
+
+/// Formule d'abonnement (voir src/lib/pricing-config.ts). NULL = formule historique, sans plafonds.
+enum PlanTier {
+  ESSENTIAL
+  PRO
+  PREMIUM
 }
 
 enum PaymentStatus {
@@ -1440,6 +1450,13 @@ model SubscriptionPayment {
   /// Justificatif libre (référence de virement/mobile money) — jamais un
   /// numéro de carte ni un secret.
   reference    String?
+
+  /// Formule achetée (règlement en ligne). NULL pour un règlement manuel historique.
+  planTier PlanTier?
+  /// Prestataire de paiement en ligne ("PAYDUNYA") ; NULL pour un règlement manuel.
+  provider      String?
+  /// Jeton de la facture chez le prestataire — unique : une facture ne prolonge jamais deux fois.
+  providerToken String? @unique
 
   confirmedByUserId String?
   confirmedBy       User?   @relation("SubscriptionPaymentConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: Restrict)

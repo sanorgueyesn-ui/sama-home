@@ -18,6 +18,7 @@ import {
   type ResetPasswordFormState,
 } from "@/lib/definitions";
 import { getT } from "@/lib/i18n/server";
+import { checkPlanLimit } from "@/lib/plan-limits";
 
 /**
  * Bloc 9/11 — every function here re-checks ADMIN server-side via
@@ -72,6 +73,9 @@ export async function createUser(
   if (!admin.establishmentId) {
     return { message: t("Votre compte n'est rattaché à aucun établissement — impossible de créer un utilisateur.") };
   }
+
+  const limit = await checkPlanLimit(admin.establishmentId, "users");
+  if (!limit.ok) return { message: t(limit.message) };
 
   const parsed = CreateUserSchema.safeParse({
     username: formData.get("username"),

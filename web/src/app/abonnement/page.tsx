@@ -6,6 +6,12 @@ import {
   type SubscriptionStatusView,
 } from "@/lib/subscription-data";
 import { RequestRenewalForm } from "./request-renewal-form";
+import { PayOnlineForm, type OnlineOffer } from "./pay-online-form";
+import { prisma } from "@/lib/prisma";
+import { getPaydunyaConfig } from "@/lib/paydunya";
+import { planOffer } from "@/lib/subscription-plans";
+import { CATEGORY_PRICING } from "@/lib/pricing-config";
+import { categoryOfMode } from "@/lib/subscription-plans";
 import { T } from "@/components/i18n/i18n-provider";
 import { dateLocale } from "@/lib/i18n/date-locale";
 
@@ -176,6 +182,29 @@ export default async function SubscriptionStatusPage() {
   // `role === "ADMIN"`).
   const canRequestRenewal = user.role === "ADMIN" || user.role === "GESTIONNAIRE";
 
+  // Paiement en ligne : proposé seulement si PayDunya est configuré sur le serveur.
+  let onlineOffers: { offers: OnlineOffer[]; currentTier: OnlineOffer["tier"] | null } | null = null;
+  if (getPaydunyaConfig() && process.env.APP_URL) {
+    const establishment = await prisma.establishment.findUnique({
+      where: { id: user.establishmentId },
+      select: { businessMode: true, subscription: { select: { planTier: true } } },
+    });
+    if (establishment) {
+      const tiers = ["ESSENTIAL", "PRO", "PREMIUM"] as const;
+      const category = CATEGORY_PRICING[categoryOfMode(establishment.businessMode)];
+      const offers: OnlineOffer[] = [];
+      for (const tier of tiers) {
+        const monthly = planOffer(establishment.businessMode, tier, "monthly");
+        const annual = planOffer(establishment.businessMode, tier, "annual");
+        const plan = category.plans.find((p) => p.name === monthly?.name);
+        if (monthly && annual && plan) {
+          offers.push({ tier, name: monthly.name, monthlyFcfa: monthly.amountFcfa, annualFcfa: annual.amountFcfa, units: plan.limits.unitsMax, users: plan.limits.usersMax });
+        }
+      }
+      onlineOffers = { offers, currentTier: establishment.subscription?.planTier ?? null };
+    }
+  }
+
   const space = await getActiveSpace();
   const stateBadge = !status.hasSubscription ? (
     <Badge><T>Aucun abonnement</T></Badge>
@@ -190,6 +219,12 @@ export default async function SubscriptionStatusPage() {
       <PageHeader eyebrow={space.name} title="Abonnement" badge={stateBadge} />
       <SubscriptionSummary status={status} />
       <PricingSummary status={status} />
+      {canRequestRenewal && status.hasSubscription && onlineOffers ? (
+        <Surface>
+          <h2 className="mb-2 text-sm font-bold text-app-text"><T>Payer en ligne</T></h2>
+          <PayOnlineForm offers={onlineOffers.offers} currentTier={onlineOffers.currentTier} />
+        </Surface>
+      ) : null}
       <RenewalSection status={status} canRequestRenewal={canRequestRenewal} />
       <p className="text-[11px] font-medium text-app-muted">
         <T>Seul un administrateur de plateforme peut confirmer un paiement — aucune confirmation n&apos;est possible
