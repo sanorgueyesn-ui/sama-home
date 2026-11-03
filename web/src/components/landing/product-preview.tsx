@@ -5,10 +5,12 @@ import { T } from "@/components/i18n/i18n-provider";
 // taille, suit le mode clair/sombre, aucune donnée réelle. Purement décoratif (aria-hidden) ;
 // la légende sous l'aperçu précise que ce n'est pas une capture.
 
+// Mêmes intitulés que l'accueil réel de l'application.
 const KPI = [
-  { label: "Disponibles", value: "6", tone: "text-emerald-600 dark:text-emerald-400" },
-  { label: "Occupés", value: "3", tone: "text-fg" },
-  { label: "Recettes", value: "85 000", unit: "FCFA", tone: "text-fg" },
+  { label: "Logements libres", value: "6", unit: "/ 10", tone: "text-emerald-600 dark:text-emerald-400" },
+  { label: "Séjours en cours", value: "3", tone: "text-fg" },
+  { label: "Arrivées du jour", value: "2", tone: "text-fg" },
+  { label: "Recettes du jour", value: "85 000", unit: "FCFA", tone: "text-fg" },
 ] as const;
 
 const HOMES = [
@@ -42,13 +44,13 @@ export function DashboardPreview() {
       </div>
 
       <div className="space-y-4 p-4 sm:p-5">
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {KPI.map((item) => (
             <div key={item.label} className="rounded-xl border border-border/15 bg-surface p-3">
               <p className="text-[10px] font-bold uppercase tracking-wide text-muted"><T>{item.label}</T></p>
               <p className={`mt-1 whitespace-nowrap text-lg font-extrabold tabular-nums sm:text-2xl ${item.tone}`}>
                 {item.value}
-                {"unit" in item ? <span className="ms-1 hidden text-[10px] font-bold text-muted min-[430px]:inline">{item.unit}</span> : null}
+                {"unit" in item ? <span className="ms-1 text-[10px] font-bold text-muted">{item.unit}</span> : null}
               </p>
             </div>
           ))}

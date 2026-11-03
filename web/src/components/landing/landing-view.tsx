@@ -1,15 +1,17 @@
 import { HEADER_HEIGHT_CLASS, LandingHeader } from "@/components/landing/landing-header";
 import {
   HeroSection,
-  OffersSection,
-  FeaturesSection,
-  HowItWorksSection,
-  RolesSection,
+  ModulesSection,
+  ActivitiesSection,
+  DailyFlowSection,
+  TeamSection,
+  FaqSection,
   AvailabilitySection,
   FinalCtaSection,
   ContactSection,
   FooterSection,
 } from "@/components/landing/landing-sections";
+import { VideoSection } from "@/components/landing/landing-video";
 import { PricingSection } from "@/components/landing/landing-pricing";
 import { FloatingActions } from "@/components/landing/floating-actions";
 import { getDirection, type Locale } from "@/lib/i18n/config";
@@ -44,12 +46,14 @@ export function LandingView({
 
       <main id="contenu">
         <HeroSection />
-        <OffersSection m={m} />
-        <FeaturesSection m={m} />
-        <HowItWorksSection m={m} />
-        <RolesSection m={m} />
-        <AvailabilitySection m={m} />
+        <VideoSection />
+        <ModulesSection />
+        <ActivitiesSection m={m} />
+        <DailyFlowSection />
+        <TeamSection m={m} />
         <PricingSection />
+        <FaqSection />
+        <AvailabilitySection m={m} />
         <FinalCtaSection />
         <ContactSection />
       </main>

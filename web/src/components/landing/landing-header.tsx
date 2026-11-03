@@ -49,6 +49,7 @@ export async function LandingHeader({ locale, theme, m }: { locale: Locale; them
     { href: "#activites", label: m.landing.nav.offers },
     { href: "#fonctionnalites", label: "Fonctionnalités" },
     { href: "#tarifs", label: m.landing.nav.pricing },
+    { href: "#faq", label: "FAQ" },
     { href: "#contact", label: m.landing.nav.contact },
   ];
 

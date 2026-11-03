@@ -8,13 +8,14 @@ import { enApp2 } from "./en/app2";
 import { enApp3 } from "./en/app3";
 import { enDocuments } from "./en/documents";
 import { enLanding } from "./en/landing";
+import { enLanding2 } from "./en/landing2";
 import { enPricing } from "./en/pricing";
 import { enPayments } from "./en/payments";
 import { enPatterns } from "./en/patterns";
 import { enVocab } from "./en/vocab";
 
 // `enShell` (menu) passe en dernier : ses libellés courts (« Clients », « Planning ») priment sur les phrases générées.
-const EN: PhraseBook = { ...enApp, ...enApp2, ...enApp3, ...enDocuments, ...enLanding, ...enPricing, ...enPayments, ...enPatterns, ...enVocab, ...enShell };
+const EN: PhraseBook = { ...enApp, ...enApp2, ...enApp3, ...enDocuments, ...enLanding, ...enLanding2, ...enPricing, ...enPayments, ...enPatterns, ...enVocab, ...enShell };
 
 const BY_LOCALE: Record<Locale, PhraseBook> = {
   fr: {},

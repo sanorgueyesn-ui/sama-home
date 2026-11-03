@@ -4,9 +4,9 @@ import { getTheme } from "@/lib/theme";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SAMA HOME — Logiciel Tout-en-Un de Gestion Hôtelière & Immobilière au Sénégal",
+  title: "SAMA HOME — Gestion de résidences meublées et d'hôtels au Sénégal",
   description:
-    "Pilotez vos résidences meublées, hôtels, auberges et appartements Airbnb à Dakar et au Sénégal. Réservations, séjours, contrats 1-clic, Wave/Orange Money et caisse étanche en temps réel.",
+    "Planning des réservations, séjours, caisse, paiements Wave et Orange Money, contrats et reçus en PDF pour résidences meublées et hôtels. Essai gratuit de 1 mois.",
 };
 
 export default async function RootHomePage() {
