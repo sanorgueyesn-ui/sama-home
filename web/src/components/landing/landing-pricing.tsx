@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   CATEGORY_PRICING,
@@ -9,353 +10,268 @@ import {
   type BillingCycle,
   type CategoryPlan,
 } from "@/lib/pricing-config";
+import { planCaps, type BusinessModeName, type PlanTierValue } from "@/lib/subscription-plans";
+import { AGENCY_MODE_ENABLED } from "@/lib/business-mode";
+import { ArrowRightIcon, BedIcon, BuildingIcon, CheckIcon, KeyIcon, LockIcon, ShieldIcon, UsersIcon } from "@/components/ui/icons";
 import { T } from "@/components/i18n/i18n-provider";
 
-/* --------------------------------------------------------------------------
- * VRAIES ICÔNES SVG OFFICIELLES (AUCUN EMOJI)
- * -------------------------------------------------------------------------- */
-function CheckIcon({ className }: { className?: string }) {
+const MODE_OF: Record<EstablishmentCategory, BusinessModeName> = { residence: "RESIDENCE", hotel: "HOTEL", agency: "REAL_ESTATE" };
+const TIER_OF: Record<CategoryPlan["id"], PlanTierValue> = { essential: "ESSENTIAL", pro: "PRO", premium: "PREMIUM" };
+
+const fmt = (n: number) => n.toLocaleString("fr-FR").replace(/\s|,/g, " ");
+
+function Capacity({ icon: Icon, value, label }: { icon: typeof BedIcon; value: number | null; label: string }) {
   return (
-    <svg
-      className={className ?? "h-4 w-4 shrink-0 text-muted"}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        fillRule="evenodd"
-        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
-function ResidenceIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
-function HotelIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16" />
-      <path d="M9 7h1" />
-      <path d="M14 7h1" />
-      <path d="M9 11h1" />
-      <path d="M14 11h1" />
-      <path d="M9 15h1" />
-      <path d="M14 15h1" />
-      <path d="M10 21v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3" />
-    </svg>
-  );
-}
-
-function AgencyIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="4" y="2" width="16" height="20" rx="2" />
-      <line x1="8" y1="6" x2="16" y2="6" />
-      <line x1="8" y1="10" x2="16" y2="10" />
-      <line x1="8" y1="14" x2="16" y2="14" />
-      <line x1="8" y1="18" x2="12" y2="18" />
-    </svg>
-  );
-}
-
-function TargetIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="6" />
-      <circle cx="12" cy="12" r="2" />
-    </svg>
-  );
-}
-
-function ShieldIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="M9 12l2 2 4-4" />
-    </svg>
-  );
-}
-
-/* --------------------------------------------------------------------------
- * COMPOSANT CARTE TARIFAIRE SOBRE ET ÉPURÉE
- * -------------------------------------------------------------------------- */
-function PricingCard({
-  plan,
-  category,
-  billing,
-}: {
-  plan: CategoryPlan;
-  category: EstablishmentCategory;
-  billing: BillingCycle;
-}) {
-  const isRecommended = plan.isPopular;
-  const isAnnual = billing === "annual";
-  const rawPrice = isAnnual ? plan.priceAnnual : plan.priceMonthly;
-  const { fcfaFormatted, displayLine } = getPriceEquivalents(rawPrice);
-  const registerUrl = `/register?category=${category}&plan=${plan.id}&billing=${billing}`;
-
-  return (
-    <div
-      className={`relative flex h-full flex-col justify-between rounded-2xl p-6 sm:p-7 hover-card-lift ${
-        isRecommended
-          ? "border border-border/50 bg-surface-raised shadow-sm"
-          : "border border-border/25 bg-surface-raised shadow-xs"
-      }`}
-    >
-      {/* Badge Recommandé sobre */}
-      {isRecommended && (
-        <div className="absolute -top-3 start-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-surface-sunken border border-border/30 px-3 py-0.5 text-[11px] font-bold text-fg shadow-xs">
-            <T>Recommandé</T>
-          </span>
-        </div>
-      )}
-
-      {/* Contenu supérieur extensible */}
-      <div className="flex-1 flex flex-col">
-        {/* Titre */}
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-xl font-bold text-fg"><T>{plan.name}</T></h3>
-        </div>
-
-        <p className="mt-2 text-xs leading-relaxed text-muted sm:text-sm min-h-[38px]">
-          <T>{plan.tagline}</T>
-        </p>
-
-        {/* Bloc Prix : FCFA principal à gauche + équivalents indicatifs EUR et USD à droite */}
-        <div className="mt-4 border-b border-border/15 pb-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-extrabold tracking-tight text-fg sm:text-4xl">
-                {fcfaFormatted}
-              </span>
-              <span className="text-sm font-bold text-muted">FCFA</span>
-              <span className="text-xs font-medium text-muted">
-                <T>{isAnnual ? "/ an" : "/ mois"}</T>
-              </span>
-            </div>
-
-            <span className="text-sm font-medium text-muted sm:text-[15px] text-right ms-auto">
-              {displayLine}
-            </span>
-          </div>
-
-          {/* Économie Annuelle sobre */}
-          {isAnnual ? (
-            <div className="mt-2.5 flex items-center justify-between text-xs text-muted rounded-lg bg-surface-sunken px-2.5 py-1 border border-border/20">
-              <span><T>Économie :</T> {plan.priceMonthly.toLocaleString("fr-FR")} FCFA</span>
-              <span className="font-semibold text-fg"><T>12 mois pour le prix de 11</T></span>
-            </div>
-          ) : null}
-        </div>
-
-        {/* Plafonds de capacité */}
-        <div className="mt-4 rounded-xl border border-border/15 bg-surface-sunken/40 p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-            <T>Capacité incluse</T>
-          </p>
-          <div className="mt-1.5 space-y-1 text-xs font-semibold text-fg">
-            <div className="flex items-center justify-between">
-              <span className="text-muted font-normal"><T>{plan.limits.unitsLabel}</T> :</span>
-              <span><T>{plan.limits.unitsMax}</T></span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted font-normal"><T>Utilisateurs :</T></span>
-              <span><T>{plan.limits.usersMax}</T></span>
-            </div>
-          </div>
-        </div>
-
-        {/* Avantages inclus */}
-        <ul className="mt-4 space-y-2 flex-1" role="list">
-          {plan.features.map((feature, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-xs text-muted">
-              <CheckIcon className="h-3.5 w-3.5 shrink-0 text-muted mt-0.5" />
-              <span><T>{feature}</T></span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Bouton CTA ancré en bas */}
-      <div className="mt-6 pt-4 border-t border-border/10">
-        <Link
-          href={registerUrl}
-          className={`flex h-11 w-full items-center justify-center gap-2 rounded-xl text-center text-xs sm:text-sm font-bold transition-colors ${
-            isRecommended
-              ? "bg-(--accent) text-(--accent-ink) hover:bg-(--accent-hover) shadow-xs"
-              : "border border-border/30 bg-surface text-fg hover:bg-surface-sunken"
-          }`}
-        >
-          <span>{isRecommended ? <T>{"Choisir la formule Pro"}</T> : <T>{"Sélectionner cette formule"}</T>}</span>
-          <svg
-            className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 rtl:rotate-180"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M3.333 8h9.334M8.667 4l4 4-4 4" />
-          </svg>
-        </Link>
+    <div className="flex items-center gap-3 rounded-xl border border-border/15 bg-surface px-3.5 py-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-(--accent)/12 text-(--accent-text)">
+        <Icon className="h-4.5 w-4.5" aria-hidden />
+      </span>
+      <div className="min-w-0 leading-tight">
+        <p className="text-lg font-extrabold tabular-nums text-fg">{value === null ? <T>Illimité</T> : value}</p>
+        <p className="truncate text-[11px] font-semibold text-muted"><T>{label}</T></p>
       </div>
     </div>
   );
 }
 
-/* --------------------------------------------------------------------------
- * SECTION PRICING PRINCIPALE
- * -------------------------------------------------------------------------- */
+function PricingCard({ plan, category, billing }: { plan: CategoryPlan; category: EstablishmentCategory; billing: BillingCycle }) {
+  const featured = Boolean(plan.isPopular);
+  const isAnnual = billing === "annual";
+  const price = isAnnual ? plan.priceAnnual : plan.priceMonthly;
+  const { fcfaFormatted, displayLine } = getPriceEquivalents(price);
+  const caps = planCaps(MODE_OF[category], TIER_OF[plan.id]);
+  const unitsLabel = category === "agency" ? "biens" : "chambres";
+  const registerUrl = `/register?category=${category}&plan=${plan.id}&billing=${billing}`;
+
+  return (
+    <div
+      className={`relative flex h-full flex-col rounded-3xl p-6 sm:p-7 hover-card-lift ${
+        featured
+          ? "border-2 border-(--accent) bg-surface-raised shadow-card lg:-my-3 lg:py-9"
+          : "border border-border/20 bg-surface-raised"
+      }`}
+    >
+      {featured ? (
+        <span className="absolute -top-3.5 start-1/2 -translate-x-1/2 rounded-full bg-(--accent) px-4 py-1 text-[11px] font-extrabold uppercase tracking-wide text-(--accent-ink) shadow-sm">
+          <T>Le plus choisi</T>
+        </span>
+      ) : null}
+
+      <h3 className="text-xl font-extrabold text-fg"><T>{plan.name}</T></h3>
+      <p className="mt-1.5 min-h-[2.6rem] text-pretty text-sm leading-snug text-muted"><T>{plan.tagline}</T></p>
+
+      <div className="mt-5">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <span className="text-4xl font-black tracking-tight text-fg sm:text-[2.6rem]">{fcfaFormatted}</span>
+          <span className="text-sm font-bold text-muted">FCFA</span>
+          <span className="text-sm font-medium text-muted"><T>{isAnnual ? "/ an" : "/ mois"}</T></span>
+        </div>
+        {isAnnual ? (
+          <p className="mt-1.5 text-xs font-semibold text-muted">
+            <T>Soit</T> <span className="text-fg">{fmt(Math.round(plan.priceAnnual / 12))} FCFA</span> <T>/ mois</T>
+            {" · "}
+            <T>au lieu de</T> <span className="line-through">{fmt(plan.priceMonthly * 12)}</span>
+          </p>
+        ) : (
+          <p className="mt-1.5 text-xs font-medium text-muted">{displayLine}</p>
+        )}
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-2.5">
+        <Capacity icon={category === "agency" ? BuildingIcon : BedIcon} value={caps?.units ?? null} label={unitsLabel} />
+        <Capacity icon={UsersIcon} value={caps?.users ?? null} label="utilisateurs" />
+      </div>
+
+      <ul className="mt-6 flex-1 space-y-2.5" role="list">
+        {plan.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2.5 text-sm leading-snug text-muted">
+            <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+            <span><T>{feature}</T></span>
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href={registerUrl}
+        className={`group mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-extrabold transition-colors ${
+          featured
+            ? "btn-shimmer bg-(--accent) text-(--accent-ink) hover:bg-(--accent-hover)"
+            : "border border-border/30 bg-surface text-fg hover:bg-surface-sunken"
+        }`}
+      >
+        <span>{featured ? <T>Choisir la formule Pro</T> : <T>Sélectionner cette formule</T>}</span>
+        <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" aria-hidden />
+      </Link>
+    </div>
+  );
+}
+
+// Lignes du tableau : seulement ce qui est réellement contrôlé ou offert dans l'application.
+const COMPARE: { label: string; in: readonly [boolean, boolean, boolean] }[] = [
+  { label: "Planning et calendrier des réservations", in: [true, true, true] },
+  { label: "Suivi des entrées, sorties et séjours", in: [true, true, true] },
+  { label: "Journal de caisse et encaissements", in: [true, true, true] },
+  { label: "Contrats, quittances et tickets en PDF", in: [true, true, true] },
+  { label: "Messages WhatsApp aux clients", in: [true, true, true] },
+  { label: "Rapports financiers", in: [false, true, true] },
+  { label: "Support prioritaire WhatsApp et téléphone", in: [false, true, true] },
+];
+
+function ComparisonTable({ category }: { category: EstablishmentCategory }) {
+  const plans = CATEGORY_PRICING[category].plans;
+  const unitsLabel = category === "agency" ? "Biens gérés" : "Chambres gérées";
+  const cap = (tier: PlanTierValue, key: "units" | "users") => planCaps(MODE_OF[category], tier)?.[key] ?? null;
+  return (
+    <details className="group mt-12 rounded-3xl border border-border/20 bg-surface-raised">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-base font-extrabold text-fg [&::-webkit-details-marker]:hidden">
+        <T>Comparer les formules en détail</T>
+        <span aria-hidden className="flex h-7 w-7 items-center justify-center rounded-full bg-fg/8 text-lg leading-none text-muted transition-transform group-open:rotate-45">+</span>
+      </summary>
+      <div className="overflow-x-auto px-2 pb-4 sm:px-4">
+        <table className="w-full min-w-[34rem] text-start text-sm">
+          <thead>
+            <tr className="border-b border-border/15">
+              <th scope="col" className="px-4 py-3 text-start text-xs font-bold uppercase tracking-wide text-muted"><T>Fonction</T></th>
+              {plans.map((plan) => (
+                <th key={plan.id} scope="col" className={`px-4 py-3 text-center text-sm font-extrabold ${plan.isPopular ? "text-(--accent-text)" : "text-fg"}`}>
+                  <T>{plan.name}</T>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/10">
+            {[
+              { label: unitsLabel, values: plans.map((p) => cap(TIER_OF[p.id], "units")) },
+              { label: "Utilisateurs", values: plans.map((p) => cap(TIER_OF[p.id], "users")) },
+            ].map((row) => (
+              <tr key={row.label}>
+                <th scope="row" className="px-4 py-3 text-start font-semibold text-fg"><T>{row.label}</T></th>
+                {row.values.map((value, i) => (
+                  <td key={i} className="px-4 py-3 text-center font-extrabold tabular-nums text-fg">{value === null ? <T>Illimité</T> : value}</td>
+                ))}
+              </tr>
+            ))}
+            {COMPARE.map((row) => (
+              <tr key={row.label}>
+                <th scope="row" className="px-4 py-3 text-start font-semibold text-fg"><T>{row.label}</T></th>
+                {row.in.map((included, i) => (
+                  <td key={i} className="px-4 py-3 text-center">
+                    {included ? (
+                      <CheckIcon className="mx-auto h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" aria-label="Inclus" />
+                    ) : (
+                      <span className="text-muted" aria-label="Non inclus">—</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  );
+}
+
 export function PricingSection() {
   const [selectedCategory, setSelectedCategory] = useState<EstablishmentCategory>("residence");
   const [billing, setBilling] = useState<BillingCycle>("monthly");
-
   const currentCategory = CATEGORY_PRICING[selectedCategory];
 
+  const categories: { id: EstablishmentCategory; label: string; icon: typeof BedIcon }[] = [
+    { id: "residence", label: "Résidence meublée", icon: KeyIcon },
+    { id: "hotel", label: "Hôtel", icon: BedIcon },
+    ...(AGENCY_MODE_ENABLED ? [{ id: "agency" as const, label: "Agence immobilière", icon: BuildingIcon }] : []),
+  ];
+
   return (
-    <section
-      id="tarifs"
-      aria-labelledby="tarifs-titre"
-      className="scroll-mt-20 border-t border-border/10 py-16 sm:py-24"
-    >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* En-tête de section */}
+    <section id="tarifs" aria-labelledby="tarifs-titre" className="scroll-mt-20 border-t border-border/10 bg-surface-raised/40 py-20 sm:py-28">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-(--accent-text) sm:text-sm">
-            <T>Abonnements SaaS &amp; Tarifs Officiels</T>
-          </p>
-          <h2
-            id="tarifs-titre"
-            className="mt-3 text-balance text-2xl font-black tracking-tight text-fg sm:text-3xl lg:text-4xl"
-          >
-            <T>Des formules adaptées à votre catégorie d&apos;établissement</T>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-(--accent-text)"><T>Tarifs</T></p>
+          <h2 id="tarifs-titre" className="mt-3 text-balance text-3xl font-extrabold tracking-tight text-fg sm:text-4xl">
+            <T>Un prix clair, selon la taille de votre établissement</T>
           </h2>
-          <p className="mt-3 text-pretty text-sm font-medium leading-relaxed text-muted sm:text-base">
-            <T>Profitez d&apos;</T><strong><T>1 mois gratuit sans engagement</T></strong> <T>sur l&apos;ensemble de nos offres.
-            Choisissez votre type d&apos;activité pour afficher la grille de référence et ses plafonds de capacité.</T>
+          <p className="mt-4 text-pretty text-base leading-relaxed text-muted sm:text-lg">
+            <T>1 mois gratuit sans engagement, puis la formule de votre choix. Paiement en ligne par Wave, Orange Money ou carte.</T>
           </p>
         </div>
 
-        {/* Ligne 1 : Boutons Catégories parfaitement alignés et stylisés avec vraies icônes SVG */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
-          {[
-            { id: "residence" as const, label: "Chambre meublée / Résidence", Icon: ResidenceIcon },
-            { id: "hotel" as const, label: "Hôtel", Icon: HotelIcon },
-            { id: "agency" as const, label: "Agence Immobilière", Icon: AgencyIcon },
-          ].map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            const Icon = cat.Icon;
-            return (
+        <div className="mt-10 flex flex-col items-center gap-5">
+          <div role="tablist" aria-label="Activité" className="inline-flex rounded-2xl border border-border/25 bg-surface p-1.5">
+            {categories.map((cat) => {
+              const selected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold transition-colors ${
+                    selected ? "bg-(--accent) text-(--accent-ink)" : "text-muted hover:text-fg"
+                  }`}
+                >
+                  <cat.icon className="h-4 w-4" aria-hidden />
+                  <T>{cat.label}</T>
+                </button>
+              );
+            })}
+          </div>
+
+          <div role="group" aria-label="Durée" className="inline-flex items-center rounded-2xl border border-border/25 bg-surface p-1.5">
+            {(["monthly", "annual"] as const).map((value) => (
               <button
-                key={cat.id}
+                key={value}
                 type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`inline-flex h-11 items-center justify-center gap-2.5 rounded-2xl px-5 text-xs font-bold transition-all sm:text-sm shadow-xs ${
-                  isSelected
-                    ? "bg-(--accent) text-(--accent-ink) shadow-md"
-                    : "border border-border/25 bg-surface-raised text-fg/80 hover:bg-surface-sunken hover:text-fg"
+                aria-pressed={billing === value}
+                onClick={() => setBilling(value)}
+                className={`inline-flex h-10 items-center gap-2 rounded-xl px-5 text-sm font-bold transition-colors ${
+                  billing === value ? "bg-(--accent) text-(--accent-ink)" : "text-muted hover:text-fg"
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                <span><T>{cat.label}</T></span>
+                <T>{value === "monthly" ? "Mensuel" : "Annuel"}</T>
+                {value === "annual" ? (
+                  <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${billing === "annual" ? "bg-(--accent-ink)/15" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"}`}>
+                    <T>1 mois offert</T>
+                  </span>
+                ) : null}
               </button>
-            );
-          })}
-        </div>
-
-        {/* Ligne 2 : Commutateur Facturation Mensuelle / Annuelle parfaitement centré et calibré */}
-        <div className="mt-6 flex items-center justify-center">
-          <div className="inline-flex items-center rounded-2xl border border-border/30 bg-surface-raised p-1.5 shadow-xs">
-            <button
-              type="button"
-              onClick={() => setBilling("monthly")}
-              className={`inline-flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold transition-all sm:text-sm ${
-                billing === "monthly"
-                  ? "bg-(--accent) text-(--accent-ink) shadow-xs"
-                  : "text-muted hover:text-fg"
-              }`}
-            >
-              <T>Facturation Mensuelle</T>
-            </button>
-            <button
-              type="button"
-              onClick={() => setBilling("annual")}
-              className={`inline-flex h-9 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold transition-all sm:text-sm ${
-                billing === "annual"
-                  ? "bg-(--accent) text-(--accent-ink) shadow-xs"
-                  : "text-muted hover:text-fg"
-              }`}
-            >
-              <span><T>Facturation Annuelle</T></span>
-              <span className="rounded-md bg-surface-sunken border border-border/20 px-1.5 py-0.5 text-[10px] font-bold text-fg">
-                <T>1 mois offert</T>
-              </span>
-            </button>
+            ))}
           </div>
+          <p className="max-w-xl text-center text-sm text-muted"><T>{currentCategory.description}</T></p>
         </div>
 
-        {/* Description de la catégorie sélectionnée */}
-        <p className="mx-auto mt-4 max-w-xl text-center text-xs font-medium text-muted">
-          <T>{currentCategory.description}</T>
-        </p>
-
-        {/* Grille des 3 cartes avec items-stretch pour égaliser la hauteur et aligner les boutons */}
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 items-stretch">
+        <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {currentCategory.plans.map((plan) => (
-            <PricingCard
-              key={plan.id}
-              plan={plan}
-              category={selectedCategory}
-              billing={billing}
-            />
+            <PricingCard key={plan.id} plan={plan} category={selectedCategory} billing={billing} />
           ))}
         </div>
 
-        {/* Note indicative de bas de section */}
-        <p className="mt-6 text-center text-xs font-medium text-muted">
-          <T>* Les montants en euros (€) et en dollars ($) sont fournis à titre indicatif.</T>
-        </p>
+        <ComparisonTable category={selectedCategory} />
 
-        {/* Blocs d'éclaircissements avec vraies icônes SVG */}
-        <div className="mt-8 grid gap-4 rounded-3xl border border-border/20 bg-surface-sunken/60 p-6 sm:grid-cols-2 sm:gap-6 sm:p-8">
-          <div className="flex items-start gap-3.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--accent)/15 text-(--accent-text)">
-              <TargetIcon className="h-5 w-5" />
-            </span>
-            <div>
-              <h4 className="text-sm font-extrabold text-fg"><T>Périmètre des abonnements SaaS</T></h4>
-              <p className="mt-1 text-xs leading-relaxed text-muted">
-                <T>Ces tarifs concernent exclusivement l&apos;utilisation du logiciel de gestion SAMA HOME. Ils sont distincts
-                des prix de location (à la nuitée, journée ou mois) que vous facturez librement à vos clients.</T>
-              </p>
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[
+            { icon: LockIcon, title: "Paiement sécurisé", text: "Wave, Orange Money et carte, via PayDunya. SAMA HOME ne voit jamais votre numéro de carte." },
+            { icon: ShieldIcon, title: "Aucune surprise", text: "Si la limite de chambres est atteinte, seules les nouvelles créations sont bloquées. Rien n'est supprimé." },
+            { icon: KeyIcon, title: "Sans engagement", text: "Ces tarifs concernent le logiciel, pas vos prix de location, que vous fixez librement." },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-3.5 rounded-2xl border border-border/15 bg-surface p-5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--accent)/12 text-(--accent-text)">
+                <item.icon className="h-5 w-5" aria-hidden />
+              </span>
+              <div>
+                <h4 className="text-sm font-extrabold text-fg"><T>{item.title}</T></h4>
+                <p className="mt-1 text-xs leading-relaxed text-muted"><T>{item.text}</T></p>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="flex items-start gap-3.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--accent)/15 text-(--accent-text)">
-              <ShieldIcon className="h-5 w-5" />
-            </span>
-            <div>
-              <h4 className="text-sm font-extrabold text-fg"><T>Respect des plafonds &amp; Données protégées</T></h4>
-              <p className="mt-1 text-xs leading-relaxed text-muted">
-                <T>Lorsque la limite de chambres ou de biens est atteinte, seules les nouvelles créations sont bloquées.
-                Vos données existantes ne sont jamais supprimées ni désactivées automatiquement.</T>
-              </p>
-            </div>
-          </div>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs font-semibold text-muted">
+          <span className="inline-flex items-center gap-2"><Image src="/images/payments/wave.png" alt="" width={20} height={20} className="h-5 w-5 rounded-full" />Wave</span>
+          <span className="inline-flex items-center gap-2"><Image src="/images/payments/orange-money.png" alt="" width={20} height={20} className="h-5 w-5 rounded-full" />Orange Money</span>
+          <span><T>Cartes Visa et Mastercard</T></span>
+          <span className="text-muted/70"><T>* Les montants en euros (€) et en dollars ($) sont fournis à titre indicatif.</T></span>
         </div>
       </div>
     </section>
