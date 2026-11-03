@@ -78,5 +78,6 @@ export const config = {
   // provoquant une erreur "isn't a valid image" pour toute photo locale
   // utilisée sur une page publique (/login, /register) avant connexion —
   // confirmé dans les logs serveur pendant la vérification de cette page.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|brand/|images/|maquette/|maquette-mnd/).*)"],
+  // "videos/" : la vidéo de présentation de la page d'accueil doit se lire sans être connecté (comme "images/").
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|brand/|images/|videos/|maquette/|maquette-mnd/).*)"],
 };

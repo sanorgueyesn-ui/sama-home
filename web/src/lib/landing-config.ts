@@ -8,8 +8,8 @@
  * « embed » (`https://www.youtube.com/embed/…`) est aussi accepté.
  */
 export const LANDING_VIDEO: { src: string | null; poster: string | null } = {
-  src: null,
-  poster: null,
+  src: "/videos/presentation.mp4",
+  poster: "/videos/presentation-poster.jpg",
 };
 
 /**
