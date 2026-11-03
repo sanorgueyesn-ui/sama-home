@@ -98,15 +98,14 @@ async function run(entries: Record<string, string>) {
   }
 }
 
-test("modération manuelle : espace PENDING, appartenance ADMIN du compte de la SESSION, aucune bascule", async () => {
+test("activation immédiate : espace ACTIVE avec essai, même si l'ancien réglage de modération existe encore", async () => {
   reset();
+  autoApprove = false; // l'ancien réglage ne décide plus de rien
   const result = await run({ name: "Mon Hôtel", businessMode: "HOTEL" });
-  assert.deepEqual(result, { state: { pendingName: "Mon Hôtel" } });
-  assert.deepEqual(created[0].data, { name: "Mon Hôtel", businessMode: "HOTEL", status: "PENDING" });
+  assert.deepEqual(result, { redirect: "/dashboard" });
+  assert.deepEqual(created[0].data, { name: "Mon Hôtel", businessMode: "HOTEL", status: "ACTIVE" });
   assert.deepEqual(memberships[0].data, { userId: "u1", establishmentId: "new-space", role: "ADMIN" });
-  assert.equal(audits.length, 1);
-  assert.equal(trials.length, 0);
-  assert.equal(sessionWrites.length, 0);
+  assert.deepEqual(trials, [{ establishmentId: "new-space", actor: "u1" }]);
 });
 
 test("approbation automatique : ACTIVE avec essai, bascule vers le nouvel espace, redirection", async () => {
@@ -191,6 +190,6 @@ test("userId, rôle, statut ou espace envoyés par le formulaire sont ignorés",
     status: "ACTIVE",
     establishmentId: "autre-espace",
   });
-  assert.deepEqual(created[0].data, { name: "Mon Hôtel", businessMode: "HOTEL", status: "PENDING" });
+  assert.deepEqual(created[0].data, { name: "Mon Hôtel", businessMode: "HOTEL", status: "ACTIVE" });
   assert.deepEqual(memberships[0].data, { userId: "u1", establishmentId: "new-space", role: "ADMIN" });
 });

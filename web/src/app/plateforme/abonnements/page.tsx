@@ -11,6 +11,7 @@ import { SubscriptionChangeRequestsSection } from "./subscription-change-section
 import { SubscriptionChangeRequestsLoading } from "./subscription-change-view";
 import { requirePlatformPermission } from "@/lib/dal";
 import { getPublicPricingSettings, resolvePricingView, type PricingSettingsView } from "@/lib/platform-settings-data";
+import { BuildingIcon, CalendarIcon, CheckIcon } from "@/components/ui/icons";
 
 function fmtFcfa(amount: number) {
   return `${amount.toLocaleString("fr-FR").replace(/\s|,/g, " ")} FCFA`;
@@ -79,16 +80,11 @@ export default async function PlatformSubscriptionPaymentsPage() {
 
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Link
-            href="/plateforme/parametres"
-            className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-center text-xs font-bold text-white transition-colors hover:bg-white/10 sm:flex-initial"
-          >
-            ⚙️ Modifier tarifs
-          </Link>
-          <Link
             href="/plateforme/etablissements"
             className="flex flex-1 items-center justify-center rounded-2xl bg-brand-orange px-3.5 py-2.5 text-center text-xs font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98] sm:flex-initial"
           >
-            🏢 Établissements
+            <BuildingIcon className="mr-1.5 h-4 w-4" aria-hidden />
+            Établissements
           </Link>
         </div>
       </div>
@@ -162,8 +158,8 @@ export default async function PlatformSubscriptionPaymentsPage() {
                     }`}
                   >
                     {overview.pendingPayments.length > 0
-                      ? `⚠️ ${overview.pendingPayments.length} en attente`
-                      : `✓ 0 en attente`}
+                      ? `${overview.pendingPayments.length} en attente`
+                      : `0 en attente`}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-white/60">
@@ -176,7 +172,7 @@ export default async function PlatformSubscriptionPaymentsPage() {
               {overview.pendingPayments.length === 0 ? (
                 <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0e1a22] p-5 text-white/70">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-lg text-emerald-400">
-                    ✓
+                    <CheckIcon className="h-5 w-5" aria-hidden />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white">Toutes les demandes ont été traitées</p>
@@ -266,7 +262,7 @@ export default async function PlatformSubscriptionPaymentsPage() {
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] text-white/50">
-                          <span>📅 {fmtDate(p.createdAt)}</span>
+                          <span className="inline-flex items-center gap-1"><CalendarIcon className="h-3 w-3" aria-hidden /> {fmtDate(p.createdAt)}</span>
                           <span>Par : <strong className="text-white/70">{p.confirmedByName ?? "Système"}</strong></span>
                         </div>
 

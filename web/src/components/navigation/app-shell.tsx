@@ -222,6 +222,7 @@ export function AppShell({
   userName = null,
   spaces = [],
   activeSpaceId = null,
+  subscriptionExpired = false,
 }: {
   children: ReactNode;
   isPlatformAdmin?: boolean;
@@ -230,6 +231,7 @@ export function AppShell({
   userName?: string | null;
   spaces?: SpaceOption[];
   activeSpaceId?: string | null;
+  subscriptionExpired?: boolean;
 }) {
   const t = useT();
   const locale = useLocale();
@@ -595,7 +597,19 @@ export function AppShell({
       )}
 
       {/* ===================== CONTENU ===================== */}
-      <main className="min-h-screen bg-surface pb-[calc(4rem+env(safe-area-inset-bottom))] pt-14 text-fg lg:pb-0 lg:pl-[248px] lg:pt-[60px]">{children}</main>
+      <main className="min-h-screen bg-surface pb-[calc(4rem+env(safe-area-inset-bottom))] pt-14 text-fg lg:pb-0 lg:pl-[248px] lg:pt-[60px]">
+        {subscriptionExpired && pathname !== "/abonnement" && !pathname.startsWith("/abonnement/") ? (
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/30 bg-danger-bg px-4 py-3 text-sm font-semibold text-danger sm:px-6">
+            <span>
+              <T>Votre abonnement a expiré. Vos données sont conservées, mais les nouvelles créations sont bloquées jusqu&apos;au renouvellement.</T>
+            </span>
+            <Link href="/abonnement" className="rounded-xl bg-brand-orange px-3.5 py-1.5 text-xs font-extrabold text-ink">
+              <T>Renouveler maintenant</T>
+            </Link>
+          </div>
+        ) : null}
+        {children}
+      </main>
     </div>
   );
 }

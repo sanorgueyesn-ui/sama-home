@@ -9,7 +9,7 @@ import { CloseCashSessionForm } from "./close-cash-session-form";
 import { CreateCorrectionForm } from "./create-correction-form";
 import { ModifyClosureForm } from "./modify-closure-form";
 import { CashActivityList } from "./cash-activity-list";
-import { MachineConnectedBadge } from "@/components/ui/icons";
+import { MachineConnectedBadge } from "@/components/ui/machine-badge";
 import { PageHeader, PageShell, StatTile, Surface, SectionTitle } from "@/components/ui/page-kit";
 import { getActiveSpace } from "@/lib/active-mode";
 import { nextOpeningBalance, varianceBase } from "@/lib/cash-rules";

@@ -1,6 +1,7 @@
 import type { SubscriptionChangeOverview, SubscriptionChangeRequestView } from "@/lib/subscription-change-data";
 import { SubscriptionChangeDecisionControls } from "./subscription-change-decision-controls";
 import type { DecisionSummary } from "./subscription-change-decision-panel";
+import { CheckIcon } from "@/components/ui/icons";
 
 /**
  * Lot 3B (B2.14-A et B2.14-B) — présentation des demandes de paiement manuel et de prolongation. Composant
@@ -273,7 +274,7 @@ export function SubscriptionChangeRequestsView({ state }: { state: SubscriptionC
         {pending.length === 0 ? (
           <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0e1a22] p-5 text-white/70">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-lg text-emerald-400">
-              ✓
+              <CheckIcon className="h-5 w-5" aria-hidden />
             </div>
             <div>
               <p className="text-xs font-bold text-white">Aucune demande en attente</p>

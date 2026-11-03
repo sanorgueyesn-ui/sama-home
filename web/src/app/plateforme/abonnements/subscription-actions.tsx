@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { prolongSubscriptionAction, recordManualSubscriptionPaymentAction } from "@/app/actions/subscription";
+import { CalendarIcon, ClockIcon, CloseIcon, WalletIcon } from "@/components/ui/icons";
 
 export function SubscriptionActions({
   establishmentId,
@@ -95,7 +96,7 @@ export function SubscriptionActions({
             title="Offrir ou ajouter 30 jours de validité"
             className="flex h-10 sm:h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/90 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-emerald-300 active:scale-95 disabled:opacity-40"
           >
-            <span>⏱️</span>
+            <ClockIcon className="h-3.5 w-3.5" aria-hidden />
             <span>{pending ? "..." : "+30 jours"}</span>
           </button>
 
@@ -106,7 +107,7 @@ export function SubscriptionActions({
             title="Ajouter 90 jours (3 mois)"
             className="flex h-10 sm:h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/90 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-emerald-300 active:scale-95 disabled:opacity-40"
           >
-            <span>🚀</span>
+            <CalendarIcon className="h-3.5 w-3.5" aria-hidden />
             <span>{pending ? "..." : "+3 mois"}</span>
           </button>
         </div>
@@ -121,7 +122,7 @@ export function SubscriptionActions({
           }}
           className="flex h-10 sm:h-9 w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-brand-orange px-3.5 py-1.5 text-xs font-black text-[#0e171d] shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:opacity-40"
         >
-          <span>💳</span>
+          <WalletIcon className="h-3.5 w-3.5" aria-hidden />
           <span>Encaisser un règlement</span>
         </button>
       </div>
@@ -150,7 +151,7 @@ export function SubscriptionActions({
                 onClick={() => setShowPaymentModal(false)}
                 className="rounded-xl p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
               >
-                ✕
+                <CloseIcon className="h-4 w-4" aria-hidden />
               </button>
             </div>
 

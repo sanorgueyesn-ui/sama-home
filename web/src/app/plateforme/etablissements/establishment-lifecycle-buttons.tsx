@@ -8,6 +8,7 @@ import {
   deleteEstablishment,
 } from "@/app/actions/establishment-approval";
 import { ESTABLISHMENT_DELETION_ENABLED } from "@/lib/establishment-deletion-gate";
+import { AlertCircleIcon, CloseIcon } from "@/components/ui/icons";
 
 export function EstablishmentLifecycleButtons({
   establishmentId,
@@ -180,7 +181,7 @@ export function EstablishmentLifecycleButtons({
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger/20 text-danger font-bold">
-                  ⚠️
+                  <AlertCircleIcon className="h-4 w-4" aria-hidden />
                 </span>
                 <div>
                   <h3 className="text-base font-extrabold text-white">Suppression définitive</h3>
@@ -192,7 +193,7 @@ export function EstablishmentLifecycleButtons({
                 onClick={() => setShowDeleteModal(false)}
                 className="rounded-xl p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
               >
-                ✕
+                <CloseIcon className="h-4 w-4" aria-hidden />
               </button>
             </div>
 

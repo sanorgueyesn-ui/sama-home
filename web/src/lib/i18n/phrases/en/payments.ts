@@ -2,6 +2,9 @@
 import type { PhraseBook } from "../../translate";
 
 export const enPayments: PhraseBook = {
+  "Votre abonnement a expiré. Vos données sont conservées, mais les nouvelles créations sont bloquées jusqu'au renouvellement.": "Your subscription has expired. Your data is kept, but new records are blocked until you renew.",
+  "Renouveler maintenant": "Renew now",
+  "Votre abonnement a expiré. Vos données sont conservées et restent consultables ; les nouvelles créations sont bloquées. Choisissez une formule ci-dessous pour reprendre tout de suite.": "Your subscription has expired. Your data is kept and remains viewable; new records are blocked. Choose a plan below to resume right away.",
   "Action refusée : cet administrateur a des droits que vous ne possédez pas.": "Action refused: this administrator has rights that you do not hold.",
   "Action refusée : il doit toujours rester au moins un super-administrateur.": "Action refused: at least one super-administrator must always remain.",
   "Action refusée : vous n'avez pas l'autorisation de supprimer des comptes.": "Action refused: you are not authorised to delete accounts.",

@@ -11,6 +11,7 @@ import {
   type PlatformCapabilityId,
   type PlatformRoleId,
 } from "@/lib/platform-access";
+import { CheckIcon, CloseIcon } from "@/components/ui/icons";
 
 const LEVEL_LABEL = { view: "Consulter", act: "Agir", sensitive: "Sensible" } as const;
 const LEVEL_STYLE = {
@@ -148,13 +149,13 @@ export function AccessPicker({
         <div>
           <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">Cette personne pourra</span>
           <ul className="mt-1.5 space-y-0.5 text-[11px] text-white/80">
-            {can.length === 0 ? <li className="text-white/40">Rien pour l&apos;instant.</li> : can.map((c) => <li key={c.id}>✓ {c.label}</li>)}
+            {can.length === 0 ? <li className="text-white/40">Rien pour l&apos;instant.</li> : can.map((c) => <li key={c.id} className="flex items-start gap-1.5"><CheckIcon className="mt-0.5 h-3 w-3 shrink-0 text-emerald-400" aria-hidden />{c.label}</li>)}
           </ul>
         </div>
         <div>
           <span className="text-[11px] font-black uppercase tracking-wider text-white/40">Elle ne pourra pas</span>
           <ul className="mt-1.5 space-y-0.5 text-[11px] text-white/45">
-            {cannot.length === 0 ? <li>Aucune restriction.</li> : cannot.map((c) => <li key={c.id}>✕ {c.label}</li>)}
+            {cannot.length === 0 ? <li>Aucune restriction.</li> : cannot.map((c) => <li key={c.id} className="flex items-start gap-1.5"><CloseIcon className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />{c.label}</li>)}
           </ul>
         </div>
       </div>

@@ -193,7 +193,8 @@ const txModel = {
     },
   },
   auditLog: { create: async () => ({}) },
-  subscription: { findUnique: async () => null },
+  subscription: { findUnique: async () => null, create: async () => ({ id: "s1" }) },
+  expenseCategory: { createMany: async () => ({ count: 0 }) },
   otpVerification: otpModel,
 };
 
@@ -436,14 +437,14 @@ test("protection : code expiré → refusé et supprimé", async () => {
   assert.equal(db.establishments + db.users, 0);
 });
 
-test("protection : bon code → établissement et compte créés dans UNE transaction, OTP consommé, statut en attente", async () => {
+test("protection : bon code → établissement et compte créés dans UNE transaction, OTP consommé, statut actif tout de suite", async () => {
   resetDb();
   freshIp();
   setEnv({ NODE_ENV: "production" });
   seedOtp();
   const result = await verifyOtpAndRegister(undefined as never, otpForm("verif@exemple.invalid", "424242"));
   assert.equal(result?.success, true);
-  assert.ok(result && "pendingApproval" in result && result.pendingApproval === true);
+  assert.ok(result && "pendingApproval" in result && result.pendingApproval === false);
   assert.equal(db.establishments, 1);
   assert.equal(db.users, 1);
   assert.equal(db.otp.length, 0);

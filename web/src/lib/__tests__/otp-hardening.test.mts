@@ -270,7 +270,8 @@ const txModel = {
     },
   },
   auditLog: { create: async () => ({}) },
-  subscription: { findUnique: async () => null },
+  subscription: { findUnique: async () => null, create: async () => ({ id: "s1" }) },
+  expenseCategory: { createMany: async () => ({ count: 0 }) },
   otpVerification: otpModel,
   passwordResetToken: tokenModel,
 };

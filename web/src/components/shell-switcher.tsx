@@ -28,6 +28,7 @@ export function ShellSwitcher({
   userName = null,
   spaces = [],
   activeSpaceId = null,
+  subscriptionExpired = false,
 }: {
   children: ReactNode;
   showChrome: boolean;
@@ -37,6 +38,7 @@ export function ShellSwitcher({
   userName?: string | null;
   spaces?: SpaceOption[];
   activeSpaceId?: string | null;
+  subscriptionExpired?: boolean;
 }) {
   const pathname = usePathname();
   const isPlatformConsole = pathname === "/plateforme" || pathname.startsWith("/plateforme/");
@@ -63,6 +65,7 @@ export function ShellSwitcher({
         userName={userName}
         spaces={spaces}
         activeSpaceId={activeSpaceId}
+        subscriptionExpired={subscriptionExpired}
       >
         {children}
       </AppShell>

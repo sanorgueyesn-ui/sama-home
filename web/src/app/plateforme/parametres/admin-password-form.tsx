@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateAdminPassword } from "@/app/actions/platform-settings";
+import { AlertCircleIcon, CheckIcon } from "@/components/ui/icons";
 
 export function AdminPasswordForm({
   currentUsername,
@@ -91,13 +92,13 @@ export function AdminPasswordForm({
 
       {error ? (
         <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-300">
-          ⚠️ {error}
+          <AlertCircleIcon className="mr-1 inline h-3.5 w-3.5 align-[-2px]" aria-hidden /> {error}
         </div>
       ) : null}
 
       {success ? (
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-400 flex items-center gap-2">
-          <span>✓</span>
+          <CheckIcon className="h-3.5 w-3.5" aria-hidden />
           <span>Votre mot de passe administrateur a été modifié avec succès ! Utilisez ce mot de passe pour vos prochaines connexions.</span>
         </div>
       ) : null}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PlatformSubscriptionEstablishmentView } from "@/lib/subscription-data";
 import { SubscriptionActions } from "./subscription-actions";
+import { CalendarIcon, ClockIcon, CloseIcon } from "@/components/ui/icons";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(d));
@@ -57,7 +58,7 @@ export function SubscriptionsTable({
               onClick={() => setQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/40 hover:text-white"
             >
-              ✕
+              <CloseIcon className="h-3.5 w-3.5" aria-hidden />
             </button>
           )}
         </div>
@@ -149,7 +150,7 @@ export function SubscriptionsTable({
 
                   <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px]">
                     <span className="inline-flex items-center gap-1 rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-white/60">
-                      📅 Inscrit le <strong className="text-white/85">{fmtDate(est.createdAt)}</strong>
+                      <CalendarIcon className="mr-1 inline h-3 w-3 align-[-2px]" aria-hidden /> Inscrit le <strong className="text-white/85">{fmtDate(est.createdAt)}</strong>
                     </span>
                     {sub && (
                       <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-bold ${
@@ -157,7 +158,7 @@ export function SubscriptionsTable({
                           ? "border border-danger/30 bg-danger/10 text-danger"
                           : "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                       }`}>
-                        ⏳ Échéance : {fmtDate(sub.currentPeriodEnd)}
+                        <ClockIcon className="mr-1 inline h-3 w-3 align-[-2px]" aria-hidden /> Échéance : {fmtDate(sub.currentPeriodEnd)}
                       </span>
                     )}
                   </div>

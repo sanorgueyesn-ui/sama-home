@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPlatformAdminUser } from "@/app/actions/platform-settings";
 import { AccessPicker } from "./access-picker";
+import { AlertCircleIcon, CheckIcon, CloseIcon, CrownIcon } from "@/components/ui/icons";
 
 export function NewPlatformAdminModal({ actorPermissions }: { actorPermissions: string | null }) {
   const router = useRouter();
@@ -46,7 +47,7 @@ export function NewPlatformAdminModal({ actorPermissions }: { actorPermissions: 
         }}
         className="flex h-11 items-center gap-2 rounded-xl bg-brand-orange px-4 text-xs sm:text-sm font-black text-ink shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
       >
-        <span>👑</span>
+        <CrownIcon className="h-4 w-4" aria-hidden />
         <span>+ Nouvel administrateur</span>
       </button>
 
@@ -57,7 +58,7 @@ export function NewPlatformAdminModal({ actorPermissions }: { actorPermissions: 
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-orange/20 text-lg text-brand-orange font-black">
-                  👑
+                  <CrownIcon className="h-5 w-5" aria-hidden />
                 </span>
                 <div>
                   <h3 className="text-base font-black text-white">Ajouter un administrateur plateforme</h3>
@@ -69,7 +70,7 @@ export function NewPlatformAdminModal({ actorPermissions }: { actorPermissions: 
                 onClick={() => setOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 hover:bg-white/10 hover:text-white"
               >
-                ✕
+                <CloseIcon className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
@@ -165,13 +166,13 @@ export function NewPlatformAdminModal({ actorPermissions }: { actorPermissions: 
 
               {error ? (
                 <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-300">
-                  ⚠️ {error}
+                  <AlertCircleIcon className="mr-1 inline h-3.5 w-3.5 align-[-2px]" aria-hidden /> {error}
                 </div>
               ) : null}
 
               {success ? (
                 <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-400 flex items-center gap-2">
-                  <span>✓</span>
+                  <CheckIcon className="h-3.5 w-3.5" aria-hidden />
                   <span>Compte administrateur créé avec succès !</span>
                 </div>
               ) : null}

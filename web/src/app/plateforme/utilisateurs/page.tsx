@@ -6,7 +6,6 @@ import { hasPlatformCapability } from "@/lib/permissions";
 import { canGrant, roleLabel } from "@/lib/platform-access";
 import { NewPlatformAdminModal } from "./new-platform-admin-modal";
 import { EditPlatformUserPermissionsModal } from "./edit-platform-user-permissions-modal";
-import { parseUserPermissions } from "@/lib/permissions";
 import { requirePlatformPermission } from "@/lib/dal";
 
 function fmtDate(d: Date) {
@@ -33,21 +32,6 @@ function UserRow({ user, actorPermissions, canManage }: { user: PlatformUserView
               <span className="rounded-full bg-brand-orange/20 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
                 Compte Plateforme
               </span>
-              {(() => {
-                const perms = parseUserPermissions(user.permissions);
-                if (perms.length === 0 || perms.includes("PLATFORM_ALL") || perms.includes("ALL")) {
-                  return (
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                      👑 Pleins pouvoirs
-                    </span>
-                  );
-                }
-                return (
-                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-                    🎯 Accès limité ({perms.length} module{perms.length > 1 ? "s" : ""})
-                  </span>
-                );
-              })()}
             </div>
           ) : user.role ? (
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/60">

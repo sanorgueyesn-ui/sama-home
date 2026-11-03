@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { computeDepartureTime } from "@/lib/duration";
-import { DEFAULT_TRIAL_DURATION_MONTHS } from "@/lib/subscription-data";
+import { TRIAL_DURATION_MONTHS } from "@/lib/registration-policy";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 
 /**
@@ -40,8 +40,7 @@ export async function createTrialSubscriptionAndAudit(
   actorUserId: string | null,
   auditAction: "ESTABLISHMENT_APPROVED" | "ESTABLISHMENT_AUTO_APPROVED",
 ): Promise<{ trialStartedAt: Date; currentPeriodEnd: Date }> {
-  const pricingSettings = await tx.pricingSettings.findUnique({ where: { id: "singleton" } });
-  const trialDurationMonths = pricingSettings?.trialDurationMonths ?? DEFAULT_TRIAL_DURATION_MONTHS;
+  const trialDurationMonths = TRIAL_DURATION_MONTHS; // règle confirmée : 1 mois, aucun réglage modifiable
   const trialStartedAt = new Date();
   const currentPeriodEnd = computeDepartureTime(trialStartedAt, trialDurationMonths, "MONTH");
 

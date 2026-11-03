@@ -16,6 +16,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendAccountExistsEmail, sendOtpEmail } from "@/lib/mail";
 import { resolveOtpDispatch } from "@/lib/test-otp";
 import { isBillingCycle, isPlanTier } from "@/lib/subscription-plans";
+import { AUTO_APPROVE_NEW_ESTABLISHMENTS } from "@/lib/registration-policy";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/pricing-defaults";
 import { verifyGoogleAuthToken } from "@/lib/session-token";
 import { OTP_MAX_ATTEMPTS, generateOtpCode, isWellFormedOtp, safeEqualOtp } from "@/lib/otp";
@@ -119,8 +120,7 @@ export async function registerEstablishment(
           }
 
           // Vérifier les réglages de modération de la plateforme
-          const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
-          const shouldAutoApprove = platformSettings?.autoApproveEstablishments ?? false;
+          const shouldAutoApprove = AUTO_APPROVE_NEW_ESTABLISHMENTS;
           const status = shouldAutoApprove ? "ACTIVE" : "PENDING";
           isPendingApproval = !shouldAutoApprove;
 
@@ -393,8 +393,7 @@ export async function verifyOtpAndRegister(
       }
 
       // 2. Vérifier les réglages de modération de la plateforme
-      const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
-      const shouldAutoApprove = platformSettings?.autoApproveEstablishments ?? false;
+      const shouldAutoApprove = AUTO_APPROVE_NEW_ESTABLISHMENTS;
       const status = shouldAutoApprove ? "ACTIVE" : "PENDING";
       isPendingApproval = !shouldAutoApprove;
 

@@ -12,6 +12,7 @@ import { ShellSwitcher } from "@/components/shell-switcher";
 import { I18nProvider } from "@/components/i18n/i18n-provider";
 import { TitleTranslator } from "@/components/i18n/title-translator";
 import { getLocale } from "@/lib/i18n/locale";
+import { isSubscriptionExpired } from "@/lib/subscription-expiry";
 import { getDirection } from "@/lib/i18n/config";
 import { getPhraseBook } from "@/lib/i18n/phrases";
 
@@ -72,6 +73,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Socle multi-espaces — espaces du compte pour le sélecteur (appartenances de la SESSION, jamais
   // une liste globale). Seulement pour une session valide avec un espace actif.
   const spaces = currentUser?.establishmentId ? await listMySpaces(currentUser.id) : [];
+  // Abonnement expiré : l'espace reste consultable, mais un bandeau l'explique et mène au renouvellement.
+  const subscriptionExpired =
+    currentUser?.establishmentId && !currentUser.isPlatformAdmin ? await isSubscriptionExpired(currentUser.establishmentId) : false;
   const brandColorVars = {
     // Couleurs ENREGISTRÉES, adaptées seulement à l'affichage : un noir devient un gris profond en
     // thème sombre (sinon invisible), un accent clair devient plus foncé quand il sert de texte
@@ -112,6 +116,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             userName={currentUser?.name ?? null}
             spaces={spaces}
             activeSpaceId={currentUser?.establishmentId ?? null}
+            subscriptionExpired={subscriptionExpired}
           >
             {children}
           </ShellSwitcher>

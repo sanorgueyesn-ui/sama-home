@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deletePlatformUser } from "@/app/actions/establishment-approval";
+import { AlertCircleIcon, CloseIcon } from "@/components/ui/icons";
 
 export function UserLifecycleButtons({
   userId,
@@ -75,7 +76,7 @@ export function UserLifecycleButtons({
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger/20 text-danger font-bold">
-                  ⚠️
+                  <AlertCircleIcon className="h-4 w-4" aria-hidden />
                 </span>
                 <div>
                   <h3 className="text-base font-extrabold text-white">Supprimer ce compte</h3>
@@ -87,7 +88,7 @@ export function UserLifecycleButtons({
                 onClick={() => setShowDeleteModal(false)}
                 className="rounded-xl p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
               >
-                ✕
+                <CloseIcon className="h-4 w-4" aria-hidden />
               </button>
             </div>
 

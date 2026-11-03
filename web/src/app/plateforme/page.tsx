@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { WalletIcon, BuildingIcon, ClockIcon } from "@/components/ui/icons";
+import { BuildingIcon, CheckIcon, ClockIcon, WalletIcon } from "@/components/ui/icons";
 import { getPlatformDashboardSummary } from "@/lib/platform-dashboard-data";
 import { ACTION_LABELS } from "./historique/action-labels";
 import type { PlatformDecisionAction } from "@/lib/audit-log-data";
@@ -142,7 +142,7 @@ export default async function PlatformDashboardPage() {
                   {summary.pendingEstablishments > 0 ? (
                     <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400 animate-ping" />
                   ) : (
-                    <span className="text-[11px] text-white/40">✓</span>
+                    <CheckIcon className="h-3.5 w-3.5 text-white/40" aria-hidden />
                   )}
                 </div>
                 <div>
@@ -171,7 +171,7 @@ export default async function PlatformDashboardPage() {
                   {summary.pendingPayments > 0 ? (
                     <span className="h-2 w-2 shrink-0 rounded-full bg-brand-orange animate-pulse" />
                   ) : (
-                    <span className="text-[11px] text-white/40">✓</span>
+                    <CheckIcon className="h-3.5 w-3.5 text-white/40" aria-hidden />
                   )}
                 </div>
                 <div>

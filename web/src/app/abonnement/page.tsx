@@ -233,6 +233,13 @@ export default async function SubscriptionStatusPage() {
   return (
     <PageShell narrow>
       <PageHeader eyebrow={space.name} title="Abonnement" badge={stateBadge} />
+      {status.hasSubscription && status.isExpired ? (
+        <Surface>
+          <p role="alert" className="text-sm font-bold text-danger">
+            <T>Votre abonnement a expiré. Vos données sont conservées et restent consultables ; les nouvelles créations sont bloquées. Choisissez une formule ci-dessous pour reprendre tout de suite.</T>
+          </p>
+        </Surface>
+      ) : null}
       <SubscriptionSummary status={status} />
       <PlanSummary planName={currentPlan?.name ?? null} features={currentPlan?.features ?? []} />
       {canRequestRenewal && status.hasSubscription && onlineOffers ? (

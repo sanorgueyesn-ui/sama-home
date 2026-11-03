@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updatePlatformUserPermissions } from "@/app/actions/platform-settings";
 import { AccessPicker } from "./access-picker";
+import { AlertCircleIcon, CheckIcon, CloseIcon, KeyIcon } from "@/components/ui/icons";
 
 export function EditPlatformUserPermissionsModal({
   userId,
@@ -58,7 +59,7 @@ export function EditPlatformUserPermissionsModal({
         }}
         className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-brand-orange hover:bg-brand-orange/15 transition-all cursor-pointer"
       >
-        <span>🔑</span>
+        <KeyIcon className="h-4 w-4" aria-hidden />
         <span>Gérer les droits</span>
       </button>
 
@@ -69,7 +70,7 @@ export function EditPlatformUserPermissionsModal({
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-orange/20 text-lg text-brand-orange font-black">
-                  🔑
+                  <KeyIcon className="h-5 w-5" aria-hidden />
                 </span>
                 <div>
                   <h3 className="text-base font-black text-white">Modifier les accès de {userName}</h3>
@@ -81,7 +82,7 @@ export function EditPlatformUserPermissionsModal({
                 onClick={() => setOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 hover:bg-white/10 hover:text-white"
               >
-                ✕
+                <CloseIcon className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
@@ -90,13 +91,13 @@ export function EditPlatformUserPermissionsModal({
 
               {error ? (
                 <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-300">
-                  ⚠️ {error}
+                  <AlertCircleIcon className="mr-1 inline h-3.5 w-3.5 align-[-2px]" aria-hidden /> {error}
                 </div>
               ) : null}
 
               {success ? (
                 <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-400 flex items-center gap-2">
-                  <span>✓</span>
+                  <CheckIcon className="h-3.5 w-3.5" aria-hidden />
                   <span>Accès mis à jour avec succès !</span>
                 </div>
               ) : null}

@@ -7,6 +7,7 @@ import { getCurrentUser, verifySession } from "@/lib/dal";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createTrialSubscriptionAndAudit } from "@/lib/establishment-activation";
 import { canCreateSpace, parseSpaceCreation } from "@/lib/space-creation";
+import { AUTO_APPROVE_NEW_ESTABLISHMENTS } from "@/lib/registration-policy";
 import { getT } from "@/lib/i18n/server";
 
 export type CreateSpaceState =
@@ -79,8 +80,7 @@ export async function createSpace(_previous: CreateSpaceState, formData: FormDat
       const check = canCreateSpace({ isPlatformAdmin: user.isPlatformAdmin, role: user.role, currentSpaceCount: spaceCount });
       if (!check.allowed) throw new SpaceCreationError(check.message);
 
-      const platformSettings = await tx.platformSettings.findUnique({ where: { id: "singleton" } });
-      const autoApprove = platformSettings?.autoApproveEstablishments ?? false;
+      const autoApprove = AUTO_APPROVE_NEW_ESTABLISHMENTS;
 
       const establishment = await tx.establishment.create({
         data: { name: parsed.name, businessMode: parsed.businessMode, status: autoApprove ? "ACTIVE" : "PENDING" },
