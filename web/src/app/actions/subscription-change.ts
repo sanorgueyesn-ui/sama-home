@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/dal";
 import { computeDepartureTime } from "@/lib/duration";
-import { hasExplicitPlatformPermission } from "@/lib/permissions";
+import { hasExplicitPlatformCapability } from "@/lib/permissions";
 import {
   areRequesterAndDeciderDistinct,
   validateIdempotencyKey,
@@ -28,7 +28,7 @@ import {
  * `rejectSubscriptionChange` et `cancelSubscriptionChange`, plus bas dans ce fichier.
  *
  * Autorisation (côté serveur, indépendamment de l'interface) : session vérifiée en base par
- * `getCurrentUser()`, puis `hasExplicitPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")` — jamais
+ * `getCurrentUser()`, puis `hasExplicitPlatformCapability` (droit précis : saisir, prolonger ou valider) — jamais
  * `hasPlatformPermission` (une liste de permissions vide n'accorde pas l'accès). Le demandeur est
  * EXCLUSIVEMENT l'utilisateur de la session : tout champ `requestedByUserId`, `status`, etc. envoyé par
  * le client est ignoré, car seuls les champs listés ci-dessous sont lus.
@@ -260,7 +260,7 @@ async function createChangeRequest(userId: string, request: NormalizedRequest): 
  */
 export async function requestManualPayment(input: unknown): Promise<SubscriptionChangeCreateResult> {
   const user = await getCurrentUser();
-  if (!hasExplicitPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!hasExplicitPlatformCapability(user, "PAYMENTS_RECORD")) {
     return { error: FORBIDDEN_MESSAGE };
   }
 
@@ -299,7 +299,7 @@ export async function requestManualPayment(input: unknown): Promise<Subscription
  */
 export async function requestProlongation(input: unknown): Promise<SubscriptionChangeCreateResult> {
   const user = await getCurrentUser();
-  if (!hasExplicitPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!hasExplicitPlatformCapability(user, "SUBSCRIPTIONS_ADJUST")) {
     return { error: FORBIDDEN_MESSAGE };
   }
 
@@ -385,7 +385,7 @@ function alreadyProcessedMessage(status: string): string {
  */
 export async function approveSubscriptionChange(input: unknown): Promise<SubscriptionChangeDecisionResult> {
   const user = await getCurrentUser();
-  if (!hasExplicitPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!hasExplicitPlatformCapability(user, "PAYMENTS_CONFIRM")) {
     return { error: FORBIDDEN_DECISION_MESSAGE };
   }
 
@@ -569,7 +569,7 @@ export async function approveSubscriptionChange(input: unknown): Promise<Subscri
  */
 export async function rejectSubscriptionChange(input: unknown): Promise<SubscriptionChangeDecisionResult> {
   const user = await getCurrentUser();
-  if (!hasExplicitPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!hasExplicitPlatformCapability(user, "PAYMENTS_CONFIRM")) {
     return { error: FORBIDDEN_DECISION_MESSAGE };
   }
 
@@ -637,7 +637,7 @@ export async function rejectSubscriptionChange(input: unknown): Promise<Subscrip
  */
 export async function cancelSubscriptionChange(input: unknown): Promise<SubscriptionChangeDecisionResult> {
   const user = await getCurrentUser();
-  if (!hasExplicitPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!hasExplicitPlatformCapability(user, "SUBSCRIPTIONS_ADJUST")) {
     return { error: FORBIDDEN_DECISION_MESSAGE };
   }
 

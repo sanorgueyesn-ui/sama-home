@@ -9,6 +9,13 @@
 // 1. MODULES & PERMISSIONS PLATEFORME
 // ============================================================================
 
+import {
+  domainOfLegacyModule,
+  effectivePlatformCapabilities,
+  viewCapabilityOf,
+  type PlatformCapabilityId,
+} from "@/lib/platform-access";
+
 export type PlatformPermissionId =
   | "PLATFORM_ALL"
   | "PLATFORM_DASHBOARD"
@@ -180,15 +187,42 @@ export function hasPlatformPermission(
 ): boolean {
   if (!user || !user.isPlatformAdmin) return false;
 
-  // Si permissions est non défini / null / vide : Super-Admin principal (pleins pouvoirs)
-  if (!user.permissions) return true;
+  // Aucun droit précisé / vide / « tous » : super-administrateur (pleins pouvoirs).
+  const granted = effectivePlatformCapabilities(user.permissions);
+  const domain = domainOfLegacyModule(requiredPermission);
+  // Un module = le droit de CONSULTER son domaine (ouvrir la page). Les actions ont leurs propres droits.
+  if (domain) return granted.has(viewCapabilityOf(domain));
+  return requiredPermission === "PLATFORM_ALL" ? isEverything(granted) : false;
+}
 
-  const perms = parseUserPermissions(user.permissions);
-  if (perms.length === 0 || perms.includes("PLATFORM_ALL") || perms.includes("ALL")) {
-    return true;
-  }
+function isEverything(granted: Set<PlatformCapabilityId>): boolean {
+  return effectivePlatformCapabilities(null).size === granted.size;
+}
 
-  return perms.includes(requiredPermission);
+/** Vérifie un droit précis (ex. valider un règlement) — jamais déduit du seul accès à une page. */
+export function hasPlatformCapability(
+  user: { isPlatformAdmin: boolean; permissions?: string | null } | null | undefined,
+  capability: PlatformCapabilityId,
+): boolean {
+  if (!user || user.isPlatformAdmin !== true) return false;
+  return effectivePlatformCapabilities(user.permissions).has(capability);
+}
+
+/**
+ * Variante STRICTE de `hasPlatformCapability` : seul `null` (pleins pouvoirs canoniques) ou une liste
+ * bien formée, non vide, qui accorde le droit. Même exigence que `hasExplicitPlatformPermission`.
+ */
+export function hasExplicitPlatformCapability(
+  user: { isPlatformAdmin: boolean; permissions?: string | null } | null | undefined,
+  capability: PlatformCapabilityId,
+): boolean {
+  if (!user || user.isPlatformAdmin !== true) return false;
+  const stored = user.permissions;
+  if (stored === null) return true;
+  if (typeof stored !== "string") return false;
+  const list = parseExplicitPermissions(stored);
+  if (list === null || list.length === 0) return false;
+  return effectivePlatformCapabilities(stored).has(capability);
 }
 
 /**
@@ -309,17 +343,10 @@ export function hasEstablishmentPermission(
  * Trouve la première URL autorisée pour un utilisateur de plateforme lors de sa connexion
  */
 export function getFirstAuthorizedPlatformUrl(permissionsStr: string | null | undefined): string {
-  if (!permissionsStr) return "/plateforme";
-  const perms = parseUserPermissions(permissionsStr);
-  if (perms.length === 0 || perms.includes("PLATFORM_ALL") || perms.includes("ALL")) {
-    return "/plateforme";
-  }
-
+  const granted = effectivePlatformCapabilities(permissionsStr);
   for (const item of PLATFORM_PERMISSIONS) {
-    if (perms.includes(item.id)) {
-      return item.href;
-    }
+    const domain = domainOfLegacyModule(item.id);
+    if (domain && granted.has(viewCapabilityOf(domain))) return item.href;
   }
-
   return "/plateforme";
 }

@@ -2,6 +2,13 @@
 import type { PhraseBook } from "../../translate";
 
 export const enPayments: PhraseBook = {
+  "Action refusée : cet administrateur a des droits que vous ne possédez pas.": "Action refused: this administrator has rights that you do not hold.",
+  "Action refusée : il doit toujours rester au moins un super-administrateur.": "Action refused: at least one super-administrator must always remain.",
+  "Action refusée : vous n'avez pas l'autorisation de supprimer des comptes.": "Action refused: you are not authorised to delete accounts.",
+  "Action refusée : vous ne pouvez accorder que des droits que vous possédez vous-même.": "Action refused: you can only grant rights that you hold yourself.",
+  "Choisissez un rôle ou un accès personnalisé.": "Choose a role or custom access.",
+  "Cochez au moins un droit.": "Select at least one right.",
+  "Droit inconnu : la demande est refusée.": "Unknown right: the request is refused.",
   "Votre choix à l'inscription": "Your choice at sign-up",
   "Formule choisie": "Chosen plan",
   "an": "year",

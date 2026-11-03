@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
 import { hashPassword } from "@/lib/password";
 import { getSessionCookiePayload } from "@/lib/session-token";
-import { hasPlatformPermission } from "@/lib/permissions";
+import { hasPlatformCapability } from "@/lib/permissions";
+import { canGrant, isFullPlatformAccess, parseCapabilitySelection, roleLabel } from "@/lib/platform-access";
 import { PricingSettingsSchema, type PricingSettingsFormState } from "@/lib/definitions";
 import { DEFAULT_TRIAL_DURATION_MONTHS, DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
 import { getT } from "@/lib/i18n/server";
@@ -35,7 +36,7 @@ import { getT } from "@/lib/i18n/server";
 export async function setAutoApprovalEnabled(enabled: boolean): Promise<{ error?: string }> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_SETTINGS")) {
+  if (!hasPlatformCapability(user, "SETTINGS_EDIT")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de modifier les réglages de la plateforme.") };
   }
 
@@ -111,7 +112,7 @@ export async function setPricingSettings(
 ): Promise<PricingSettingsFormState> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_SETTINGS")) {
+  if (!hasPlatformCapability(user, "SETTINGS_EDIT")) {
     return { message: t("Action refusée : vous n'avez pas l'autorisation de modifier les réglages tarifaires.") };
   }
 
@@ -220,7 +221,7 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
   const t = await getT();
   const admin = await requirePlatformAdmin();
 
-  if (!hasPlatformPermission(admin, "PLATFORM_USERS")) {
+  if (!hasPlatformCapability(admin, "USERS_MANAGE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de créer des utilisateurs sur la plateforme.") };
   }
 
@@ -244,9 +245,11 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
     return { error: t("Les deux mots de passe ne correspondent pas.") };
   }
 
-  // Empêcher l'escalade de privilèges : un collaborateur restreint ne peut pas créer un admin avec pleins pouvoirs
-  if (admin.permissions && permissionsMode === "ALL") {
-    return { error: t("Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet.") };
+  // Droits : validés (aucun droit inconnu) et jamais supérieurs aux siens (anti-escalade).
+  const selection = parseCapabilitySelection(permissionsMode, formData.getAll("permissions").map(String));
+  if (!selection.ok) return { error: t(selection.error) };
+  if (!canGrant(admin.permissions, selection.stored)) {
+    return { error: t("Action refusée : vous ne pouvez accorder que des droits que vous possédez vous-même.") };
   }
 
   const existing = await prisma.user.findFirst({
@@ -258,14 +261,7 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
     return { error: `Un compte existe déjà avec cet identifiant ou cet email (${username}).` };
   }
 
-  let permissionsJson: string | null = null;
-  if (permissionsMode === "CUSTOM") {
-    const selected = formData.getAll("permissions").map(String).filter(Boolean);
-    if (selected.length === 0) {
-      return { error: t("Veuillez cocher au moins un module d'accès pour ce compte.") };
-    }
-    permissionsJson = JSON.stringify(selected);
-  }
+  const permissionsJson = selection.stored;
 
   try {
     const passwordHash = await hashPassword(password);
@@ -288,7 +284,8 @@ export async function createPlatformAdminUser(formData: FormData): Promise<{ err
           action: "PLATFORM_ADMIN_CREATED",
           entityType: "User",
           entityId: newUser.id,
-          reason: `Création du compte administrateur plateforme ${username} par ${admin.name} (accès : ${permissionsJson ?? "Pleins pouvoirs"})`,
+          reason: `Création du compte administrateur plateforme ${username} par ${admin.name} (rôle : ${roleLabel(permissionsJson)})`,
+          newValue: { role: roleLabel(permissionsJson), permissions: permissionsJson },
           establishmentId: null,
         },
       });
@@ -306,25 +303,29 @@ export async function updatePlatformUserPermissions(formData: FormData): Promise
   const t = await getT();
   const admin = await requirePlatformAdmin();
 
-  if (!hasPlatformPermission(admin, "PLATFORM_USERS")) {
+  if (!hasPlatformCapability(admin, "USERS_MANAGE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de modifier les accès.") };
   }
 
   const userId = formData.get("userId")?.toString()?.trim();
-  const permissionsMode = formData.get("permissionsMode")?.toString(); // "ALL" ou "CUSTOM"
-
   if (!userId) {
     return { error: t("Identifiant utilisateur manquant.") };
   }
 
-  // Protection anti-escalade : impossible de modifier ses propres permissions
+  // Anti-escalade : impossible de modifier ses propres droits.
   if (userId === admin.id) {
     return { error: t("Action refusée : vous ne pouvez pas modifier vos propres permissions.") };
   }
 
-  // Protection anti-escalade : un admin restreint ne peut pas octroyer les pleins pouvoirs
-  if (admin.permissions && permissionsMode === "ALL") {
-    return { error: t("Action refusée : seul un administrateur aux pleins pouvoirs peut accorder un accès complet.") };
+  const selection = parseCapabilitySelection(
+    formData.get("permissionsMode")?.toString(),
+    formData.getAll("permissions").map(String),
+  );
+  if (!selection.ok) return { error: t(selection.error) };
+
+  // Anti-escalade : on ne peut accorder que des droits que l'on possède soi-même.
+  if (!canGrant(admin.permissions, selection.stored)) {
+    return { error: t("Action refusée : vous ne pouvez accorder que des droits que vous possédez vous-même.") };
   }
 
   const targetUser = await prisma.user.findUnique({
@@ -336,20 +337,28 @@ export async function updatePlatformUserPermissions(formData: FormData): Promise
     return { error: t("Cet utilisateur n'est pas un compte de plateforme.") };
   }
 
-  let newPermissions: string | null = null;
-  if (permissionsMode === "CUSTOM") {
-    const selected = formData.getAll("permissions").map(String).filter(Boolean);
-    if (selected.length === 0) {
-      return { error: t("Veuillez cocher au moins un module d'accès.") };
+  // On ne modifie pas quelqu'un qui a plus de droits que soi (par exemple un super-administrateur).
+  if (!canGrant(admin.permissions, targetUser.permissions)) {
+    return { error: t("Action refusée : cet administrateur a des droits que vous ne possédez pas.") };
+  }
+
+  // Protection du dernier super-administrateur : il en faut toujours au moins un.
+  if (isFullPlatformAccess(targetUser.permissions) && !isFullPlatformAccess(selection.stored)) {
+    const admins = await prisma.user.findMany({
+      where: { isPlatformAdmin: true },
+      select: { id: true, permissions: true },
+    });
+    const otherSuperAdmins = admins.filter((a) => a.id !== userId && isFullPlatformAccess(a.permissions));
+    if (otherSuperAdmins.length === 0) {
+      return { error: t("Action refusée : il doit toujours rester au moins un super-administrateur.") };
     }
-    newPermissions = JSON.stringify(selected);
   }
 
   try {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: userId },
-        data: { permissions: newPermissions },
+        data: { permissions: selection.stored },
       });
 
       await tx.auditLog.create({
@@ -358,7 +367,9 @@ export async function updatePlatformUserPermissions(formData: FormData): Promise
           action: "PLATFORM_PERMISSIONS_UPDATED",
           entityType: "User",
           entityId: userId,
-          reason: `Mise à jour des permissions de ${targetUser.username} par ${admin.name} (nouvel accès : ${newPermissions ?? "Pleins pouvoirs"})`,
+          reason: `Droits de ${targetUser.username} modifiés par ${admin.name} : ${roleLabel(targetUser.permissions)} → ${roleLabel(selection.stored)}`,
+          oldValue: { role: roleLabel(targetUser.permissions), permissions: targetUser.permissions },
+          newValue: { role: roleLabel(selection.stored), permissions: selection.stored },
           establishmentId: null,
         },
       });
@@ -371,4 +382,3 @@ export async function updatePlatformUserPermissions(formData: FormData): Promise
     return { error: t("Une erreur est survenue lors de la mise à jour des accès.") };
   }
 }
-

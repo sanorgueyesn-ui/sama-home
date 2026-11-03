@@ -5,7 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { getCurrentUser } from "@/lib/dal";
 import { DEFAULT_PERIOD_MONTHS, DEFAULT_PERIOD_PRICE_FCFA } from "@/lib/subscription-data";
 import { computeDepartureTime } from "@/lib/duration";
-import { hasPlatformPermission } from "@/lib/permissions";
+import { hasPlatformCapability } from "@/lib/permissions";
 import { getT } from "@/lib/i18n/server";
 
 class SubscriptionPaymentRequestError extends Error {}
@@ -229,7 +229,7 @@ export async function confirmSubscriptionPayment(paymentId: string): Promise<{ e
 
   // Jamais `user.role === "ADMIN"` comme preuve d'administration de
   // plateforme — booléen distinct, vérifié seul.
-  if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!user.isPlatformAdmin || !hasPlatformCapability(user, "PAYMENTS_CONFIRM")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de confirmer les paiements d'abonnement.") };
   }
 
@@ -342,7 +342,7 @@ export async function prolongSubscriptionAction(
 ): Promise<{ error?: string }> {
   const t = await getT();
   const user = await getCurrentUser();
-  if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!user.isPlatformAdmin || !hasPlatformCapability(user, "PAYMENTS_CONFIRM")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de prolonger un abonnement.") };
   }
 
@@ -424,7 +424,7 @@ export async function recordManualSubscriptionPaymentAction(
 ): Promise<{ error?: string }> {
   const t = await getT();
   const user = await getCurrentUser();
-  if (!user.isPlatformAdmin || !hasPlatformPermission(user, "PLATFORM_SUBSCRIPTIONS")) {
+  if (!user.isPlatformAdmin || !hasPlatformCapability(user, "PAYMENTS_CONFIRM")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation d'enregistrer un paiement d'abonnement.") };
   }
 

@@ -1572,7 +1572,7 @@ test("source : fichier \"use server\" qui n'exporte que les cinq actions (créat
 });
 
 test("source : permission explicite appelée par chaque action, jamais hasPlatformPermission", () => {
-  const calls = code.match(/hasExplicitPlatformPermission\(user, "PLATFORM_SUBSCRIPTIONS"\)/g) ?? [];
+  const calls = code.match(/hasExplicitPlatformCapability\(user, "(PAYMENTS_RECORD|SUBSCRIPTIONS_ADJUST|PAYMENTS_CONFIRM)"\)/g) ?? [];
   assert.equal(calls.length, 5);
   assert.doesNotMatch(code, /\bhasPlatformPermission\b/);
   assert.equal((code.match(/await getCurrentUser\(\)/g) ?? []).length, 5);

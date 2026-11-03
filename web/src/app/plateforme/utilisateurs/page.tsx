@@ -2,6 +2,8 @@ import { listPlatformUsers, type PlatformUserView } from "@/lib/platform-users-d
 import { ROLE_LABELS, ESTABLISHMENT_STATUS_LABELS } from "./filter-labels";
 import { PlatformUserFilterBar } from "./filter-bar";
 import { UserLifecycleButtons } from "./user-lifecycle-buttons";
+import { hasPlatformCapability } from "@/lib/permissions";
+import { canGrant, roleLabel } from "@/lib/platform-access";
 import { NewPlatformAdminModal } from "./new-platform-admin-modal";
 import { EditPlatformUserPermissionsModal } from "./edit-platform-user-permissions-modal";
 import { parseUserPermissions } from "@/lib/permissions";
@@ -20,7 +22,7 @@ function fmtDateTime(d: Date) {
   }).format(d);
 }
 
-function UserRow({ user }: { user: PlatformUserView }) {
+function UserRow({ user, actorPermissions, canManage }: { user: PlatformUserView; actorPermissions: string | null; canManage: boolean }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-white/20 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
@@ -82,11 +84,17 @@ function UserRow({ user }: { user: PlatformUserView }) {
 
       <div className="shrink-0 flex items-center gap-2 pt-2 sm:pt-0">
         {user.isPlatformAdmin ? (
+          <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-bold text-white/80">
+            {roleLabel(user.permissions)}
+          </span>
+        ) : null}
+        {user.isPlatformAdmin && canManage && canGrant(actorPermissions, user.permissions) ? (
           <EditPlatformUserPermissionsModal
             userId={user.id}
             userName={user.name}
             userLogin={user.username}
             currentPermissions={user.permissions}
+            actorPermissions={actorPermissions}
           />
         ) : null}
         <UserLifecycleButtons
@@ -101,7 +109,8 @@ function UserRow({ user }: { user: PlatformUserView }) {
 }
 
 export default async function PlatformUsersPage(props: PageProps<"/plateforme/utilisateurs">) {
-  await requirePlatformPermission("PLATFORM_USERS");
+  const actor = await requirePlatformPermission("PLATFORM_USERS");
+  const canManage = hasPlatformCapability(actor, "USERS_MANAGE");
   const { role, status, platform, q } = await props.searchParams;
   const roleParam = typeof role === "string" ? role : "ALL";
   const statusParam = typeof status === "string" ? status : "ALL";
@@ -138,7 +147,7 @@ export default async function PlatformUsersPage(props: PageProps<"/plateforme/ut
           </p>
         </div>
         <div className="shrink-0">
-          <NewPlatformAdminModal />
+          {canManage ? <NewPlatformAdminModal actorPermissions={actor.permissions} /> : null}
         </div>
       </div>
 
@@ -162,7 +171,7 @@ export default async function PlatformUsersPage(props: PageProps<"/plateforme/ut
       ) : (
         <div className="mt-5 flex flex-col gap-3">
           {items.map((user) => (
-            <UserRow key={user.id} user={user} />
+            <UserRow key={user.id} user={user} actorPermissions={actor.permissions} canManage={canManage} />
           ))}
           {truncated && (
             <p className="pt-2 text-center text-xs font-medium text-white/50">

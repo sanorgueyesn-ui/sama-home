@@ -3,20 +3,15 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPlatformAdminUser } from "@/app/actions/platform-settings";
-import { PLATFORM_PERMISSIONS } from "@/lib/permissions";
+import { AccessPicker } from "./access-picker";
 
-export function NewPlatformAdminModal() {
+export function NewPlatformAdminModal({ actorPermissions }: { actorPermissions: string | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [permissionsMode, setPermissionsMode] = useState<"ALL" | "CUSTOM">("ALL");
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
-    "PLATFORM_ESTABLISHMENTS",
-    "PLATFORM_USERS",
-  ]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,7 +47,7 @@ export function NewPlatformAdminModal() {
         className="flex h-11 items-center gap-2 rounded-xl bg-brand-orange px-4 text-xs sm:text-sm font-black text-ink shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
       >
         <span>👑</span>
-        <span>+ Nouvel Administrateur Plateforme</span>
+        <span>+ Nouvel administrateur</span>
       </button>
 
       {open ? (
@@ -165,116 +160,8 @@ export function NewPlatformAdminModal() {
                 </div>
               </div>
 
-              {/* Sélecteur de Permissions & Limites d'accès */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-brand-orange">
-                    Niveau d&apos;accès &amp; Permissions
-                  </span>
-                  <span className="text-[11px] text-white/50">Limitez ce que ce collaborateur peut voir</span>
-                </div>
-
-                <div className="mt-3 flex flex-col gap-2.5">
-                  <label className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-surface p-3 cursor-pointer hover:border-brand-orange/40 transition-colors">
-                    <input
-                      type="radio"
-                      name="permissionsMode"
-                      value="ALL"
-                      checked={permissionsMode === "ALL"}
-                      onChange={() => setPermissionsMode("ALL")}
-                      className="accent-brand-orange h-4 w-4"
-                    />
-                    <div>
-                      <span className="text-xs font-extrabold text-white">👑 Pleins Pouvoirs (Super-Admin complet)</span>
-                      <p className="text-[11px] text-white/50">Accès illimité à tous les modules, approbations, abonnements et réglages.</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-surface p-3 cursor-pointer hover:border-brand-orange/40 transition-colors">
-                    <input
-                      type="radio"
-                      name="permissionsMode"
-                      value="CUSTOM"
-                      checked={permissionsMode === "CUSTOM"}
-                      onChange={() => {
-                        setPermissionsMode("CUSTOM");
-                        if (selectedPermissions.length === 0) {
-                          setSelectedPermissions(["PLATFORM_ESTABLISHMENTS", "PLATFORM_USERS"]);
-                        }
-                      }}
-                      className="accent-brand-orange h-4 w-4"
-                    />
-                    <div>
-                      <span className="text-xs font-extrabold text-white">🎯 Accès Restreint &amp; Limité aux pages cochées</span>
-                      <p className="text-[11px] text-white/50">Pour assistante, caisse ou frère : ils ne verront que les pages autorisées.</p>
-                    </div>
-                  </label>
-                </div>
-
-                {permissionsMode === "CUSTOM" && (
-                  <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-3 animate-in fade-in duration-150">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-white/50 mr-1">Raccourcis :</span>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPermissions(["PLATFORM_ESTABLISHMENTS", "PLATFORM_USERS"])}
-                        className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-bold text-white hover:bg-brand-orange hover:text-ink transition-colors cursor-pointer"
-                      >
-                        🛎️ Assistant / Approbations
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPermissions(["PLATFORM_SUBSCRIPTIONS"])}
-                        className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-bold text-white hover:bg-brand-orange hover:text-ink transition-colors cursor-pointer"
-                      >
-                        💳 Caisse / Abonnements
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPermissions(["PLATFORM_DASHBOARD", "PLATFORM_AUDIT"])}
-                        className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-bold text-white hover:bg-brand-orange hover:text-ink transition-colors cursor-pointer"
-                      >
-                        📊 Statistiques &amp; Audit
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {PLATFORM_PERMISSIONS.map((perm) => {
-                        const checked = selectedPermissions.includes(perm.id);
-                        return (
-                          <label
-                            key={perm.id}
-                            className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-colors ${
-                              checked
-                                ? "border-brand-orange/40 bg-brand-orange/10"
-                                : "border-white/5 bg-surface/50 opacity-70"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              name="permissions"
-                              value={perm.id}
-                              checked={checked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedPermissions((prev) => [...prev, perm.id]);
-                                } else {
-                                  setSelectedPermissions((prev) => prev.filter((p) => p !== perm.id));
-                                }
-                              }}
-                              className="accent-brand-orange h-4 w-4 mt-0.5"
-                            />
-                            <div className="min-w-0">
-                              <span className="text-xs font-bold text-white block leading-snug">{perm.label}</span>
-                              <p className="text-[10px] text-white/50 leading-tight mt-0.5">{perm.description}</p>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Rôle et droits */}
+              <AccessPicker initialStored={undefined} actorPermissions={actorPermissions} />
 
               {error ? (
                 <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-300">

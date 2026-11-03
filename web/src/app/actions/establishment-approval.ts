@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/dal";
 import { createTrialSubscriptionAndAudit, createPaidPlanRequestOnApproval } from "@/lib/establishment-activation";
 import { verifyPassword } from "@/lib/password";
-import { hasPlatformPermission } from "@/lib/permissions";
+import { hasPlatformCapability } from "@/lib/permissions";
 import { purgeUserFromDatabase } from "@/lib/user-purge";
 import { sharedAccountsWhere } from "@/lib/membership-guards";
 import {
@@ -49,7 +49,7 @@ class EstablishmentApprovalError extends Error {}
 export async function approveEstablishment(establishmentId: string): Promise<{ error?: string }> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+  if (!hasPlatformCapability(user, "ESTABLISHMENTS_DECIDE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation d'approuver les établissements.") };
   }
 
@@ -106,7 +106,7 @@ export async function approveEstablishment(establishmentId: string): Promise<{ e
 export async function rejectEstablishment(establishmentId: string, reason: string): Promise<{ error?: string }> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+  if (!hasPlatformCapability(user, "ESTABLISHMENTS_DECIDE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de refuser les établissements.") };
   }
 
@@ -187,7 +187,7 @@ export async function rejectEstablishment(establishmentId: string, reason: strin
 export async function suspendEstablishment(establishmentId: string): Promise<{ error?: string }> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+  if (!hasPlatformCapability(user, "ESTABLISHMENTS_LIFECYCLE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de suspendre les établissements.") };
   }
 
@@ -262,7 +262,7 @@ export async function suspendEstablishment(establishmentId: string): Promise<{ e
 export async function reactivateEstablishment(establishmentId: string): Promise<{ error?: string }> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+  if (!hasPlatformCapability(user, "ESTABLISHMENTS_LIFECYCLE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de réactiver les établissements.") };
   }
 
@@ -329,7 +329,7 @@ export async function deleteEstablishment(
 ): Promise<{ error?: string }> {
   const t = await getT();
   const user = await requirePlatformAdmin();
-  if (!hasPlatformPermission(user, "PLATFORM_ESTABLISHMENTS")) {
+  if (!hasPlatformCapability(user, "ESTABLISHMENTS_LIFECYCLE")) {
     return { error: t("Action refusée : vous n'avez pas l'autorisation de supprimer les établissements.") };
   }
 
@@ -527,6 +527,9 @@ export async function deletePlatformUser(
 ): Promise<{ error?: string }> {
   const t = await getT();
   const currentAdminUser = await requirePlatformAdmin();
+  if (!hasPlatformCapability(currentAdminUser, "USERS_MANAGE")) {
+    return { error: t("Action refusée : vous n'avez pas l'autorisation de supprimer des comptes.") };
+  }
 
   if (!targetUserId) {
     return { error: t("Identifiant utilisateur manquant.") };
