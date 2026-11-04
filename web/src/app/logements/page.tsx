@@ -1,4 +1,6 @@
-import { EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
+import { setCleaningStatus } from "@/app/actions/housekeeping";
+import { Badge, EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
+import { CLEANING_LABELS, cleaningActions, type CleaningStatusValue } from "@/lib/housekeeping";
 import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
 import { PropertyFilters } from "./filters";
@@ -7,6 +9,8 @@ import { PropertyPhoto } from "./property-photo";
 import { listProperties } from "@/lib/properties-data";
 import { getPropertyStatuses } from "@/lib/property-status";
 import { T } from "@/components/i18n/i18n-provider";
+
+const CLEANING_TONE: Record<CleaningStatusValue, "bad" | "warn" | "good"> = { DIRTY: "bad", IN_PROGRESS: "warn", CLEAN: "good" };
 
 export default async function PropertiesPage(props: PageProps<"/logements">) {
   const { q, type, deleted } = await props.searchParams;
@@ -47,7 +51,8 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {items.map((property) => (
-            <ListCard key={property.id} href={`/logements/${property.id}`}>
+            <div key={property.id} className="flex flex-col gap-2">
+            <ListCard href={`/logements/${property.id}`}>
               <div className="flex gap-3">
                 <PropertyPhoto photo={property.photo} type={property.type} className="h-16 w-16 shrink-0 rounded-xl" />
                 <div className="min-w-0 flex-1">
@@ -61,6 +66,23 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
                 </div>
               </div>
             </ListCard>
+            {/* Hôtel : état du ménage et gestes rapides (à nettoyer, en cours, prête), sans quitter la liste. */}
+            {space.mode === "HOTEL" && property.active ? (
+              <div className="flex flex-wrap items-center gap-2 px-1">
+                <Badge tone={CLEANING_TONE[property.cleaningStatus]}><T>{CLEANING_LABELS[property.cleaningStatus]}</T></Badge>
+                {cleaningActions(property.cleaningStatus).map((action) => (
+                  <form key={action.to} action={setCleaningStatus.bind(null, property.id, action.to)}>
+                    <button
+                      type="submit"
+                      className="inline-flex h-9 items-center rounded-lg border border-app-line-strong bg-app-panel px-3 text-xs font-bold text-app-text-2 transition hover:bg-app-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus"
+                    >
+                      <T>{action.label}</T>
+                    </button>
+                  </form>
+                ))}
+              </div>
+            ) : null}
+            </div>
           ))}
           {truncated && <p className="col-span-full pt-1 text-center text-xs font-medium text-app-faint"><T>Affinez votre recherche pour voir plus de résultats.</T></p>}
         </div>

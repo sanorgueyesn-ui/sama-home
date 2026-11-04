@@ -77,10 +77,12 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
   const now = new Date();
   const canPay = isActive && summary.remaining > 0;
   // Ticket de caisse (hôtel) : celui du dernier paiement enregistré, imprimable en un clic dès l'encaissement.
+  // Sans paiement encore (séjour sans acompte), le ticket est le récapitulatif du séjour : il reste imprimable dès l'arrivée.
   const lastPayment = isHotel && payments.length > 0 ? payments[payments.length - 1] : null;
-  const ticketUrl = lastPayment ? `/locations/${rental.id}/ticket?payment=${lastPayment.id}` : null;
+  const ticketKey = isHotel ? (lastPayment ? lastPayment.id : "stay") : null;
+  const ticketUrl = ticketKey ? `/locations/${rental.id}/ticket?payment=${ticketKey}` : null;
   // Même ticket en page imprimable : le papier (80 ou 58 mm) y est réglé d'avance, jamais A4.
-  const ticketPrintUrl = lastPayment ? `/locations/${rental.id}/ticket/print?payment=${lastPayment.id}` : null;
+  const ticketPrintUrl = ticketKey ? `/locations/${rental.id}/ticket/print?payment=${ticketKey}` : null;
 
   const thresholdDays = settings?.contractThresholdDays ?? 2;
   const stayDays = rental.durationUnit === "DAY" ? rental.durationValue : Math.floor(rental.durationValue / 24);
