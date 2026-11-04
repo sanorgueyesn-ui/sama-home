@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { effectBankTransfer, cancelBankTransfer } from "@/app/actions/bank";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { T, useT } from "@/components/i18n/i18n-provider";
 
 function fmtFcfa(amount: number) {
@@ -29,6 +30,7 @@ export function BankTransferRowActions({
   accountLabel: string;
 }) {
   const t = useT();
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +38,13 @@ export function BankTransferRowActions({
   const canEffect = status === "DRAFT" || status === "SCHEDULED";
   const canCancel = status === "DRAFT" || status === "SCHEDULED";
 
-  function handleEffect() {
-    if (!confirm(t(`Confirmer l'effectuation de ce virement de ${fmtFcfa(amount)} vers ${accountLabel} ?`))) return;
+  async function handleEffect() {
+    const ok = await askConfirm({
+      title: "Effectuer ce virement ?",
+      message: t(`Confirmer l'effectuation de ce virement de ${fmtFcfa(amount)} vers ${accountLabel} ?`),
+      confirmLabel: "Effectuer le virement",
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       const result = await effectBankTransfer(id);
@@ -49,8 +56,14 @@ export function BankTransferRowActions({
     });
   }
 
-  function handleCancel() {
-    if (!confirm(t("Voulez-vous vraiment annuler ce virement ?"))) return;
+  async function handleCancel() {
+    const ok = await askConfirm({
+      title: "Annuler ce virement ?",
+      message: t("Voulez-vous vraiment annuler ce virement ?"),
+      confirmLabel: "Annuler le virement",
+      danger: true,
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       const result = await cancelBankTransfer(id);
@@ -66,6 +79,7 @@ export function BankTransferRowActions({
 
   return (
     <div className="flex flex-col gap-1.5">
+      {confirmDialog}
       <div className="flex gap-2">
         {canEffect ? (
           <button

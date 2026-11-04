@@ -2,14 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { completeRental, cancelRental } from "@/app/actions/rentals";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { T } from "@/components/i18n/i18n-provider";
 
 export function CompleteButton({ id, hotel = false }: { id: string; hotel?: boolean }) {
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleComplete() {
-    if (!confirm(hotel ? "Terminer ce séjour ? La chambre passera à nettoyer." : "Terminer cette location ? Le logement redeviendra disponible.")) return;
+  async function handleComplete() {
+    const ok = await askConfirm({
+      title: hotel ? "Terminer ce séjour ?" : "Terminer cette location ?",
+      message: <T>{hotel ? "La chambre passera à nettoyer." : "Le logement redeviendra disponible."}</T>,
+      confirmLabel: hotel ? "Terminer le séjour" : "Terminer la location",
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       const result = await completeRental(id);
@@ -19,6 +26,7 @@ export function CompleteButton({ id, hotel = false }: { id: string; hotel?: bool
 
   return (
     <div>
+      {confirmDialog}
       <button
         type="button"
         disabled={pending}
@@ -33,11 +41,18 @@ export function CompleteButton({ id, hotel = false }: { id: string; hotel?: bool
 }
 
 export function CancelRentalButton({ id, hotel = false }: { id: string; hotel?: boolean }) {
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleCancel() {
-    if (!confirm(hotel ? "Annuler ce séjour ? La chambre redeviendra disponible." : "Annuler cette location ? Le logement redeviendra disponible.")) return;
+  async function handleCancel() {
+    const ok = await askConfirm({
+      title: hotel ? "Annuler ce séjour ?" : "Annuler cette location ?",
+      message: <T>{hotel ? "La chambre redeviendra disponible." : "Le logement redeviendra disponible."}</T>,
+      confirmLabel: hotel ? "Annuler le séjour" : "Annuler la location",
+      danger: true,
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       const result = await cancelRental(id);
@@ -47,6 +62,7 @@ export function CancelRentalButton({ id, hotel = false }: { id: string; hotel?: 
 
   return (
     <div>
+      {confirmDialog}
       <button
         type="button"
         disabled={pending}

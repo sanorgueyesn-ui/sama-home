@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toggleTariffActive, deleteTariff } from "@/app/actions/tariffs";
 import { EditIcon } from "@/components/ui/icons";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { T, useT } from "@/components/i18n/i18n-provider";
 
 export function TariffRowActions({
@@ -18,6 +19,7 @@ export function TariffRowActions({
   label?: string;
 }) {
   const t = useT();
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -29,10 +31,13 @@ export function TariffRowActions({
     });
   }
 
-  function handleDelete() {
-    const confirmed = window.confirm(
-      t(`Êtes-vous sûr de vouloir supprimer définitivement ce tarif${label ? ` « ${label} »` : ""} ?\n\nCette action est irréversible.`)
-    );
+  async function handleDelete() {
+    const confirmed = await askConfirm({
+      title: "Supprimer ce tarif ?",
+      message: t(`Êtes-vous sûr de vouloir supprimer définitivement ce tarif${label ? ` « ${label} »` : ""} ?\n\nCette action est irréversible.`),
+      confirmLabel: "Supprimer définitivement",
+      danger: true,
+    });
     if (!confirmed) return;
     setError(null);
     startTransition(async () => {
@@ -43,6 +48,7 @@ export function TariffRowActions({
 
   return (
     <div className="flex flex-col items-end gap-1">
+      {confirmDialog}
       <div className="flex items-center gap-1.5">
         {/* Bouton Modifier clairement visible */}
         <Link

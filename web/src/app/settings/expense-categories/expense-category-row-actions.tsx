@@ -8,6 +8,7 @@ import {
   deactivateExpenseCategory,
   deleteExpenseCategory,
 } from "@/app/actions/expense-categories";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { T, useT } from "@/components/i18n/i18n-provider";
 
 type Mode = "idle" | "rename" | "deactivate" | "delete";
@@ -40,6 +41,7 @@ export function ExpenseCategoryRowActions({
   usageCount: number;
 }) {
   const t = useT();
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<Mode>("idle");
@@ -74,8 +76,13 @@ export function ExpenseCategoryRowActions({
     });
   }
 
-  function handleActivate() {
-    if (!confirm(t(`Réactiver « ${name} » ? Elle redeviendra proposée pour les nouvelles dépenses.`))) return;
+  async function handleActivate() {
+    const ok = await askConfirm({
+      title: "Réactiver cette catégorie ?",
+      message: t(`Réactiver « ${name} » ? Elle redeviendra proposée pour les nouvelles dépenses.`),
+      confirmLabel: "Réactiver",
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       const result = await activateExpenseCategory(id);
@@ -241,6 +248,7 @@ export function ExpenseCategoryRowActions({
 
   return (
     <div className="flex flex-col items-end gap-1">
+      {confirmDialog}
       <div className="flex flex-wrap justify-end gap-1.5">
         <button
           type="button"

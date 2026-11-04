@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteProperty } from "@/app/actions/properties";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { TrashIcon, AlertCircleIcon } from "@/components/ui/icons";
 import { T, useT } from "@/components/i18n/i18n-provider";
 
@@ -14,14 +15,18 @@ export function DeletePropertyButton({
   name: string;
 }) {
   const t = useT();
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleDelete() {
-    const confirmed = window.confirm(
-      t(`Êtes-vous sûr de vouloir supprimer définitivement le logement « ${name} » ?\n\nCette action est irréversible et supprimera le logement ainsi que ses tarifs.`)
-    );
+  async function handleDelete() {
+    const confirmed = await askConfirm({
+      title: "Supprimer ce logement ?",
+      message: t(`Êtes-vous sûr de vouloir supprimer définitivement le logement « ${name} » ?\n\nCette action est irréversible et supprimera le logement ainsi que ses tarifs.`),
+      confirmLabel: "Supprimer définitivement",
+      danger: true,
+    });
     if (!confirmed) return;
 
     setError(null);
@@ -38,6 +43,7 @@ export function DeletePropertyButton({
 
   return (
     <div className="flex flex-col gap-1.5">
+      {confirmDialog}
       <button
         type="button"
         disabled={pending}

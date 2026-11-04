@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBankAccount, deactivateBankAccount } from "@/app/actions/bank";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { T, useT } from "@/components/i18n/i18n-provider";
 
 /**
@@ -28,6 +29,7 @@ export function BankAccountRowActions({
   active: boolean;
 }) {
   const t = useT();
+  const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -71,8 +73,14 @@ export function BankAccountRowActions({
     });
   }
 
-  function handleDeactivate() {
-    if (!confirm(t(`Désactiver « ${label} » ? Il ne pourra plus être utilisé pour de nouveaux versements.`))) return;
+  async function handleDeactivate() {
+    const ok = await askConfirm({
+      title: "Désactiver ce compte ?",
+      message: t(`Désactiver « ${label} » ? Il ne pourra plus être utilisé pour de nouveaux versements.`),
+      confirmLabel: "Désactiver",
+      danger: true,
+    });
+    if (!ok) return;
     setError(null);
     setWarning(null);
     startTransition(async () => {
@@ -158,6 +166,7 @@ export function BankAccountRowActions({
 
   return (
     <div className="flex flex-col items-end gap-1">
+      {confirmDialog}
       <div className="flex flex-wrap justify-end gap-1.5">
         <button
           type="button"
