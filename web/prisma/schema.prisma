@@ -933,6 +933,11 @@ model Settings {
   /// "58" ou "80" (mm, papier thermique) ou "a4".
   documentTicketPaper   String @default("80")
 
+  /// Déconnexion automatique : minutes d'inactivité après lesquelles la session expire et les identifiants
+  /// sont redemandés. Choix de l'administrateur de l'établissement (5 min à 8 h, voir lib/session-policy.ts) ;
+  /// 30 par défaut. S'applique à tous les comptes de l'établissement ; toujours plafonnée par les 12 h absolues.
+  sessionIdleMinutes Int @default(30)
+
   guestIncludeEmergency Boolean  @default(false)
 
   createdAt DateTime @default(now())

@@ -14,6 +14,16 @@
  * d'inactivité glissante, toujours plafonnée à `createdAt + 12 h`.
  */
 export const SESSION_IDLE_MS = 30 * 60 * 1000;
+
+/** Délais d'inactivité proposés à l'administrateur (minutes). 30 = valeur par défaut. */
+export const SESSION_IDLE_OPTIONS_MINUTES = [5, 15, 30, 60, 120, 240, 480] as const;
+export const DEFAULT_IDLE_MINUTES = 30;
+
+/** Valeur lue ou saisie -> un délai autorisé ; tout le reste retombe sur le défaut (jamais d'erreur ni de 0). */
+export function normalizeIdleMinutes(value: unknown): number {
+  const n = typeof value === "string" ? Number(value) : typeof value === "number" ? value : NaN;
+  return (SESSION_IDLE_OPTIONS_MINUTES as readonly number[]).includes(n) ? n : DEFAULT_IDLE_MINUTES;
+}
 export const SESSION_MAX_MS = 12 * 60 * 60 * 1000;
 export const SESSION_TOUCH_MIN_GAIN_MS = 60 * 1000;
 
@@ -35,14 +45,14 @@ export function getSessionAbsoluteEnd(createdAt: Date): Date {
  * `shouldWrite` vaut `true` si l'échéance doit être réduite (session créée avant cette règle,
  * dont `expiresAt` dépasse la cible) ou prolongée d'au moins `SESSION_TOUCH_MIN_GAIN_MS`.
  */
-export function evaluateSession(session: SessionTimes, nowMs: number): SessionEvaluation {
+export function evaluateSession(session: SessionTimes, nowMs: number, idleMs: number = SESSION_IDLE_MS): SessionEvaluation {
   const absoluteEndMs = getSessionAbsoluteEnd(session.createdAt).getTime();
   if (nowMs >= absoluteEndMs) return { valid: false, reason: "MAX_LIFETIME" };
 
   const currentMs = session.expiresAt.getTime();
   if (nowMs >= currentMs) return { valid: false, reason: "IDLE" };
 
-  const targetMs = Math.min(nowMs + SESSION_IDLE_MS, absoluteEndMs);
+  const targetMs = Math.min(nowMs + idleMs, absoluteEndMs);
   const shouldWrite = currentMs > targetMs || targetMs - currentMs >= SESSION_TOUCH_MIN_GAIN_MS;
   return { valid: true, nextExpiresAt: new Date(targetMs), shouldWrite };
 }

@@ -1,16 +1,37 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { completeRental, cancelRental } from "@/app/actions/rentals";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { T } from "@/components/i18n/i18n-provider";
 
-export function CompleteButton({ id, hotel = false }: { id: string; hotel?: boolean }) {
+/**
+ * `remaining` : reste à encaisser (FCFA). S'il est positif, on propose d'encaisser d'abord au lieu de terminer ;
+ * un séjour soldé se termine directement (la chambre passe à nettoyer).
+ */
+export function CompleteButton({ id, hotel = false, remaining = 0 }: { id: string; hotel?: boolean; remaining?: number }) {
+  const router = useRouter();
   const { confirm: askConfirm, dialog: confirmDialog } = useConfirm();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   async function handleComplete() {
+    if (remaining > 0) {
+      const collect = await askConfirm({
+        title: "Encaisser avant de terminer",
+        message: (
+          <>
+            <T>Il reste</T> {remaining.toLocaleString("fr-FR").replace(/\s|,/g, " ")}{" "}
+            <T>FCFA à encaisser pour ce séjour. Encaissez le règlement, puis terminez le séjour.</T>
+          </>
+        ),
+        confirmLabel: "Encaisser maintenant",
+        cancelLabel: "Plus tard",
+      });
+      if (collect) router.push(`/locations/${id}/pay`);
+      return;
+    }
     const ok = await askConfirm({
       title: hotel ? "Terminer ce séjour ?" : "Terminer cette location ?",
       message: <T>{hotel ? "La chambre passera à nettoyer." : "Le logement redeviendra disponible."}</T>,

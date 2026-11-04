@@ -33,7 +33,9 @@ const at = (ms: number) => {
 };
 
 // --- Doublures -----------------------------------------------------------------------------
-type Row = { id: string; userId: string; createdAt: Date; expiresAt: Date };
+type Row = { id: string; userId: string; createdAt: Date; expiresAt: Date; establishmentId?: string | null };
+// Réglage de l'établissement (Paramètres > Établissement) : minutes d'inactivité, absent = aucun réglage lu.
+let idleSetting: number | null = null;
 const table = new Map<string, Row>();
 let idSeq = 0;
 const writes: Array<{ where: { id: string; expiresAt: Date }; data: { expiresAt: Date } }> = [];
@@ -66,6 +68,9 @@ class NextRedirect extends Error {
 const stubs: Record<string, unknown> = {
   "@/lib/prisma": {
     prisma: {
+      settings: {
+        findUnique: async () => (idleSetting === null ? null : { sessionIdleMinutes: idleSetting }),
+      },
       session: {
         create: async ({ data }: { data: { userId: string; createdAt: Date; expiresAt: Date } }) => {
           const row = { id: `s${++idSeq}`, ...data };
@@ -74,7 +79,7 @@ const stubs: Record<string, unknown> = {
         },
         findUnique: async ({ where }: { where: { id: string } }) => {
           const row = table.get(where.id);
-          const snapshot = row ? { ...row } : null;
+          const snapshot = row ? { ...row, activeEstablishmentId: null, user: { establishmentId: row.establishmentId ?? null } } : null;
           if (readBarrier) await readBarrier.arrive(); // force une VRAIE course : toutes les lectures avant toute écriture
           return snapshot;
         },
@@ -146,6 +151,7 @@ function reset() {
   readBarrier = null;
   cookieSets.length = 0;
   failNextUpdate = false;
+  idleSetting = null;
   at(T0);
 }
 async function newSession(remember = false) {
@@ -157,6 +163,48 @@ async function expectRedirect(promise: Promise<unknown>) {
 }
 
 // --- Politique pure : limites exactes ---------------------------------------------------------
+
+test("délai réglable : 5 min => invalide à 5 min exactement ; la cible suit le délai choisi", () => {
+  const five = 5 * MIN;
+  const s = { createdAt: new Date(T0), expiresAt: new Date(T0 + five) };
+  assert.equal(policy.evaluateSession(s, T0 + five - 1, five).valid, true);
+  assert.deepEqual(policy.evaluateSession(s, T0 + five, five), { valid: false, reason: "IDLE" });
+  const e = policy.evaluateSession(s, T0 + 2 * MIN, five);
+  assert.ok(e.valid && e.shouldWrite === true);
+  if (e.valid) assert.equal(e.nextExpiresAt.getTime(), T0 + 2 * MIN + five);
+});
+
+test("délai réglable : une session créée à 30 min est raccourcie quand l'établissement choisit 5 min", () => {
+  const s = { createdAt: new Date(T0), expiresAt: new Date(T0 + 30 * MIN) };
+  const e = policy.evaluateSession(s, T0 + 1 * MIN, 5 * MIN);
+  assert.ok(e.valid && e.shouldWrite === true);
+  if (e.valid) assert.equal(e.nextExpiresAt.getTime(), T0 + 6 * MIN);
+});
+
+test("normalizeIdleMinutes : liste autorisée seulement, sinon 30", () => {
+  assert.equal(policy.normalizeIdleMinutes(5), 5);
+  assert.equal(policy.normalizeIdleMinutes("60"), 60);
+  assert.equal(policy.normalizeIdleMinutes(480), 480);
+  for (const bad of [0, 1, 7, 9999, -5, NaN, null, undefined, "abc", ""]) assert.equal(policy.normalizeIdleMinutes(bad), 30);
+});
+
+test("verifySession : le réglage de l'établissement (5 min) déconnecte après 5 min d'inactivité", async () => {
+  await newSession();
+  idleSetting = 5;
+  const row = [...table.values()][0];
+  row.establishmentId = "etab-1";
+  at(T0 + 4 * MIN);
+  const ok = await dal.verifySession();
+  assert.equal(ok.isAuth, true);
+  at(T0 + 4 * MIN + 5 * MIN + 1000);
+  await expectRedirect(dal.verifySession());
+});
+
+test("verifySession : sans réglage, 30 min d'inactivité comme avant", async () => {
+  await newSession();
+  at(T0 + 29 * MIN);
+  assert.equal((await dal.verifySession()).isAuth, true);
+});
 
 test("constantes : 30 min, 12 h, 60 s", () => {
   assert.equal(policy.SESSION_IDLE_MS, 30 * MIN);

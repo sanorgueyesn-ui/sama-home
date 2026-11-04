@@ -414,7 +414,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
         {isActive ? (
           <div className="pt-1">
-            <CompleteButton id={rental.id} hotel={isHotel} />
+            <CompleteButton id={rental.id} hotel={isHotel} remaining={summary.remaining} />
           </div>
         ) : (
           <p className="text-center text-xs font-medium text-fg/50 pt-2">

@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionCookiePayload } from "@/lib/session-token";
-import { evaluateSession } from "@/lib/session-policy";
+import { DEFAULT_IDLE_MINUTES, evaluateSession, normalizeIdleMinutes } from "@/lib/session-policy";
 import { needsSpaceSelection, resolveEstablishmentIdentity } from "@/lib/active-space";
 
 // Garde stricte de développement local : actif UNIQUEMENT si NODE_ENV === 'development'
@@ -90,14 +90,23 @@ export const verifySession = cache(async () => {
  * l'autre ne modifie rien. Un échec d'écriture est journalisé (nom de l'erreur seul) sans
  * faire échouer la requête : la session lue est valide.
  */
+async function getIdleMinutes(establishmentId: string | null | undefined): Promise<number> {
+  if (!establishmentId) return DEFAULT_IDLE_MINUTES;
+  const settings = await prisma.settings.findUnique({ where: { establishmentId }, select: { sessionIdleMinutes: true } });
+  return normalizeIdleMinutes(settings?.sessionIdleMinutes);
+}
+
 async function readSession(sessionId: string, options: { extend: boolean }) {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    select: { userId: true, createdAt: true, expiresAt: true, activeEstablishmentId: true },
+    select: { userId: true, createdAt: true, expiresAt: true, activeEstablishmentId: true, user: { select: { establishmentId: true } } },
   });
   if (!session) return null;
 
-  const evaluation = evaluateSession(session, Date.now());
+  // Délai d'inactivité choisi par l'établissement (Paramètres > Établissement) ; 30 min si aucun réglage.
+  const establishmentId = session.activeEstablishmentId ?? session.user.establishmentId;
+  const idleMs = (await getIdleMinutes(establishmentId)) * 60_000;
+  const evaluation = evaluateSession(session, Date.now(), idleMs);
   if (!evaluation.valid) return null;
 
   if (options.extend && evaluation.shouldWrite) {
