@@ -18,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
 import { FolioSection } from "./folio-section";
+import { PrintTicketButton } from "./print-ticket-button";
 import { T } from "@/components/i18n/i18n-provider";
 import { getT } from "@/lib/i18n/server";
 import { dateLocale } from "@/lib/i18n/date-locale";
@@ -75,6 +76,11 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
   const isActive = rental.status === "ACTIVE";
   const now = new Date();
   const canPay = isActive && summary.remaining > 0;
+  // Ticket de caisse (hôtel) : celui du dernier paiement enregistré, imprimable en un clic dès l'encaissement.
+  const lastPayment = isHotel && payments.length > 0 ? payments[payments.length - 1] : null;
+  const ticketUrl = lastPayment ? `/locations/${rental.id}/ticket?payment=${lastPayment.id}` : null;
+  // Même ticket en page imprimable : le papier (80 ou 58 mm) y est réglé d'avance, jamais A4.
+  const ticketPrintUrl = lastPayment ? `/locations/${rental.id}/ticket/print?payment=${lastPayment.id}` : null;
 
   const thresholdDays = settings?.contractThresholdDays ?? 2;
   const stayDays = rental.durationUnit === "DAY" ? rental.durationValue : Math.floor(rental.durationValue / 24);
@@ -152,7 +158,11 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
           <div>
             <p className="text-sm font-black"><T>Location enregistrée avec succès !</T></p>
             <p className="text-xs font-medium text-app-good/80">
-              <T>La chambre est occupée. Vous pouvez envoyer la confirmation sur WhatsApp au client ou télécharger son contrat.</T>
+              {ticketUrl ? (
+                <T>La chambre est occupée. Imprimez le ticket de caisse, téléchargez le contrat ou envoyez la confirmation sur WhatsApp au client.</T>
+              ) : (
+                <T>La chambre est occupée. Vous pouvez envoyer la confirmation sur WhatsApp au client ou télécharger son contrat.</T>
+              )}
             </p>
             {timing === "early" || timing === "late" ? (
               <p className="mt-1 text-xs font-bold text-app-good">
@@ -170,9 +180,14 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
         </p>
       ) : null}
       {paid ? (
-        <p className="mb-4 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
-          <T>Encaissement enregistré avec succès.</T>
-        </p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-success-bg px-4 py-3 text-sm font-bold text-success">
+          <span><T>Encaissement enregistré avec succès.</T></span>
+          {ticketPrintUrl ? (
+            <a href={ticketPrintUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+              <T>Imprimer le ticket de caisse</T>
+            </a>
+          ) : null}
+        </div>
       ) : null}
 
       {/* Décompte du temps restant */}
@@ -184,6 +199,8 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
 
       {/* ZONE D'ACTIONS PRIORITAIRES (WhatsApp & Contrat PDF) */}
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Ticket de caisse (hôtel) : impression directe, ou ouverture du PDF */}
+        {ticketUrl && ticketPrintUrl ? <PrintTicketButton printHref={ticketPrintUrl} pdfHref={ticketUrl} /> : null}
         {/* Bouton WhatsApp Vert Officiel — Ultra mis en valeur */}
         {whatsapp.ok ? (
           <a
@@ -363,7 +380,7 @@ export default async function RentalDetailPage(props: PageProps<"/locations/[id]
       {/* Historique des paiements (si présent) */}
       {payments.length > 0 ? (
         <div className="mt-4">
-          <PaymentHistory payments={payments} ticketHref={isHotel ? (paymentId) => `/locations/${rental.id}/ticket?payment=${paymentId}` : undefined} />
+          <PaymentHistory payments={payments} ticketHref={isHotel ? (paymentId) => `/locations/${rental.id}/ticket/print?payment=${paymentId}` : undefined} />
         </div>
       ) : null}
 
