@@ -1367,4 +1367,10 @@ export const enApp: PhraseBook = {
   "Plus tard": "Later",
   "Il reste": "There is",
   "FCFA à encaisser pour ce séjour. Encaissez le règlement, puis terminez le séjour.": "FCFA left to collect for this stay. Collect the payment, then end the stay.",
+  "Sécurité": "Security",
+  "Protégez l'accès à votre établissement quand un poste reste sans surveillance.": "Protect access to your establishment when a workstation is left unattended.",
+  "Après ce temps sans activité, la session se ferme : au retour, l'identifiant et le mot de passe sont redemandés. Le réglage vaut pour tous les comptes de l'établissement.": "After this time without activity, the session closes: on return, the login and password are asked again. The setting applies to all accounts of the establishment.",
+  "Une session ne dépasse jamais 12 heures, même avec une activité continue.": "A session never exceeds 12 hours, even with continuous activity.",
+  "Déconnexion automatique après inactivité": "Automatic sign-out after inactivity",
+  "Ménage des chambres": "Room housekeeping",
 };

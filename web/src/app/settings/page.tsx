@@ -51,6 +51,7 @@ export default async function SettingsPage() {
   const descriptions: Record<string, string> = {
     "/settings/etablissement": settings?.establishmentName || "À renseigner : nom, téléphone, adresse",
     "/settings/apparence": `Thème ${theme === "dark" ? "sombre" : "clair"} et couleurs de l'établissement`,
+    "/settings/securite": "Déconnexion automatique après inactivité",
     "/settings/expense-categories": `${expenseCategories.length} ${plural(expenseCategories.length, "catégorie", "catégories")}`,
     "/settings/documents": "Présentations des contrats, quittances et tickets de caisse",
     "/settings/users": `${users.length} ${plural(users.length, "utilisateur", "utilisateurs")}`,

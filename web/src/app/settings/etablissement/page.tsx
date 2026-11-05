@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { SettingsForm } from "../settings-form";
-import { SessionIdleForm } from "./session-idle-form";
 import { SettingsNotice, SettingsPageHeader, SettingsSection } from "../settings-ui";
 import { getSettings } from "@/lib/settings-data";
 import { resolveImageDisplayUrl } from "@/lib/object-storage";
@@ -15,7 +14,7 @@ export const metadata = { title: "Établissement — SAMA HOME" };
 export default async function EstablishmentSettingsPage(props: { searchParams: Promise<{ saved?: string; contrat?: string }> }) {
   const t = await getT();
   const { saved, contrat } = await props.searchParams;
-  const user = await getCurrentUser();
+  await getCurrentUser();
   const [settings, guest] = await Promise.all([getSettings(), getGuestInfoContext()]);
   // `settings.logoUrl` est la clé brute stockée (ou un lien hérité) : résolue ici en URL
   // d'affichage avant d'être transmise au formulaire (voir src/lib/object-storage.ts).
@@ -34,15 +33,6 @@ export default async function EstablishmentSettingsPage(props: { searchParams: P
       ) : null}
       {/* `key` : après un enregistrement, le formulaire repart des nouvelles valeurs (état « modifié » remis à zéro). */}
       <SettingsForm key={settings?.updatedAt.toISOString() ?? "nouveau"} defaultValues={settings ? { ...settings, logoUrl: logoDisplayUrl } : undefined} guestInfo={guest.enabled ? guest.settings : null} />
-      {user.role === "ADMIN" && settings ? (
-        <SettingsSection
-          title="Déconnexion automatique"
-          description="Après ce temps sans activité, la session se ferme et les identifiants et le mot de passe sont redemandés. Vaut pour tous les comptes de l'établissement."
-          className="mt-5"
-        >
-          <SessionIdleForm current={settings.sessionIdleMinutes} />
-        </SettingsSection>
-      ) : null}
       <SettingsSection title="Logo SAMA HOME" description="Le logo de la plateforme ne se modifie pas ; il s'ajoute à côté de celui de votre établissement." className="mt-5">
         <div className="flex items-center gap-4">
           <Image src="/brand/Sama-Home-icone-Bleu-nuit.png" alt={t("SAMA HOME")} width={48} height={48} className="rounded-lg" />

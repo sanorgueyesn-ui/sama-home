@@ -23,6 +23,7 @@ export const SETTINGS_NAV: SettingsNavGroup[] = [
       { href: "/settings", label: "Vue d'ensemble", shortLabel: "Général", icon: GridIcon },
       { href: "/settings/etablissement", label: "Établissement", icon: DomainIcon },
       { href: "/settings/apparence", label: "Apparence", icon: PaletteIcon },
+      { href: "/settings/securite", label: "Sécurité", icon: LockIcon, adminOnly: true },
     ],
   },
   {

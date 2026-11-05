@@ -1,6 +1,5 @@
-import { setCleaningStatus } from "@/app/actions/housekeeping";
-import { Badge, EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
-import { CLEANING_LABELS, cleaningActions, type CleaningStatusValue } from "@/lib/housekeeping";
+import { EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
+import { CleaningControls } from "./cleaning-controls";
 import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
 import { PropertyFilters } from "./filters";
@@ -9,8 +8,6 @@ import { PropertyPhoto } from "./property-photo";
 import { listProperties } from "@/lib/properties-data";
 import { getPropertyStatuses } from "@/lib/property-status";
 import { T } from "@/components/i18n/i18n-provider";
-
-const CLEANING_TONE: Record<CleaningStatusValue, "bad" | "warn" | "good"> = { DIRTY: "bad", IN_PROGRESS: "warn", CLEAN: "good" };
 
 export default async function PropertiesPage(props: PageProps<"/logements">) {
   const { q, type, deleted } = await props.searchParams;
@@ -30,7 +27,10 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
         eyebrow={space.name}
         title={title}
         subtitle={`${items.length}${truncated ? "+" : ""} ${vocab.unitsSingular}${items.length > 1 ? "s" : ""}`}
-        actions={[{ href: "/logements/new", label: space.mode === "HOTEL" ? "+ Ajouter une chambre" : "+ Ajouter un logement" }]}
+        actions={[
+          { href: "/logements/new", label: space.mode === "HOTEL" ? "+ Ajouter une chambre" : "+ Ajouter un logement" },
+          ...(space.mode === "HOTEL" ? [{ href: "/menage", label: "Ménage des chambres" }] : []),
+        ]}
       />
 
       {deleted ? (
@@ -68,18 +68,8 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
             </ListCard>
             {/* Hôtel : état du ménage et gestes rapides (à nettoyer, en cours, prête), sans quitter la liste. */}
             {space.mode === "HOTEL" && property.active ? (
-              <div className="flex flex-wrap items-center gap-2 px-1">
-                <Badge tone={CLEANING_TONE[property.cleaningStatus]}><T>{CLEANING_LABELS[property.cleaningStatus]}</T></Badge>
-                {cleaningActions(property.cleaningStatus).map((action) => (
-                  <form key={action.to} action={setCleaningStatus.bind(null, property.id, action.to)}>
-                    <button
-                      type="submit"
-                      className="inline-flex h-9 items-center rounded-lg border border-app-line-strong bg-app-panel px-3 text-xs font-bold text-app-text-2 transition hover:bg-app-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus"
-                    >
-                      <T>{action.label}</T>
-                    </button>
-                  </form>
-                ))}
+              <div className="px-1">
+                <CleaningControls propertyId={property.id} status={property.cleaningStatus} />
               </div>
             ) : null}
             </div>

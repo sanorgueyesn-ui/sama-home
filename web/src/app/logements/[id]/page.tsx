@@ -6,6 +6,7 @@ import { pageVocabulary } from "@/lib/page-vocabulary";
 import { DoorIcon, KeyIcon, CalendarIcon, TagIcon, EditIcon } from "@/components/ui/icons";
 import { StatusBadge } from "@/app/logements/status-badge";
 import { PropertyPhoto } from "@/app/logements/property-photo";
+import { CleaningControls } from "@/app/logements/cleaning-controls";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { ToggleActiveButton } from "./toggle-active-button";
 import { DeletePropertyButton } from "./delete-property-button";
@@ -89,6 +90,12 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
       <div className="grid gap-5 lg:grid-cols-[1fr_380px] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-5">
           <PropertyPhoto photo={property.photo} type={property.type} className="h-48 w-full rounded-2xl border border-app-line sm:h-64" />
+
+          {isHotel && property.active ? (
+            <Surface title="Ménage">
+              <CleaningControls propertyId={property.id} status={property.cleaningStatus} />
+            </Surface>
+          ) : null}
 
           <Surface title="Informations">
             <dl className="divide-y divide-app-line">
