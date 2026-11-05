@@ -1376,4 +1376,6 @@ export const enApp: PhraseBook = {
   "Quels logements sont prêts à accueillir un locataire": "Which units are ready to welcome a tenant",
   "Ménage des logements": "Unit housekeeping",
   "Le logement passera à nettoyer, puis redeviendra disponible.": "The unit will be marked as needing cleaning, then become available again.",
+  "Renseignez d'abord le nom, le téléphone et l'adresse de votre établissement : le réglage s'enregistre avec ces informations.": "First fill in the name, phone number and address of your establishment: the setting is saved with this information.",
+  "Renseigner mon établissement": "Fill in my establishment",
 };

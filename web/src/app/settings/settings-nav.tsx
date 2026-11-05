@@ -9,8 +9,8 @@ import { useT, T } from "@/components/i18n/i18n-provider";
 /**
  * Barre de navigation des paramètres, en haut de page (ordinateur uniquement). Sur téléphone, c'est
  * la vue d'ensemble qui joue ce rôle : une liste de sections, puis une page par section avec un
- * retour. Les groupes (Général, Activité, Équipe…) sont séparés par un trait fin ; l'entrée active
- * est une pastille pleine. Reçoit seulement `isAdmin` : les icônes sont des composants, qui ne
+ * retour. Les entrées passent à la ligne quand la place manque (rien ne dépasse jamais à droite) ;
+ * l'entrée active est une pastille pleine. Reçoit seulement `isAdmin` : les icônes sont des composants, qui ne
  * traversent pas la frontière serveur/client, et la barre n'en a pas besoin.
  */
 export function SettingsNav({ isAdmin }: { isAdmin: boolean }) {
@@ -19,14 +19,13 @@ export function SettingsNav({ isAdmin }: { isAdmin: boolean }) {
   const groups = visibleGroups(isAdmin);
   return (
     <nav aria-label={t("Sections des paramètres")} className="hidden lg:block">
-      <ul className="flex items-center gap-0.5 overflow-x-auto rounded-full border border-border/15 bg-surface-raised p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {groups.map((group, index) => (
+      <ul className="flex flex-wrap items-center gap-1 rounded-2xl border border-border/15 bg-surface-raised p-1.5">
+        {groups.map((group) => (
           <Fragment key={group.title}>
-            {index > 0 ? <li aria-hidden className="mx-1 h-5 w-px shrink-0 bg-border/30" /> : null}
             {group.items.map((item) => {
               const active = isNavItemActive(pathname, item.href);
               return (
-                <li key={item.href} className="shrink-0">
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
