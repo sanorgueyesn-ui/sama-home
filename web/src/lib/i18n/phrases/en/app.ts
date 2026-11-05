@@ -1378,4 +1378,12 @@ export const enApp: PhraseBook = {
   "Le logement passera à nettoyer, puis redeviendra disponible.": "The unit will be marked as needing cleaning, then become available again.",
   "Renseignez d'abord le nom, le téléphone et l'adresse de votre établissement : le réglage s'enregistre avec ces informations.": "First fill in the name, phone number and address of your establishment: the setting is saved with this information.",
   "Renseigner mon établissement": "Fill in my establishment",
+  "Abonné (payé)": "Subscribed (paid)",
+  "Jours restants": "Days left",
+  "Abonné": "Subscribed",
+  "jours restants": "days left",
+  "Votre abonnement est payé jusqu'au": "Your subscription is paid until",
+  "Le paiement sera de nouveau possible à son expiration.": "Payment will be possible again when it expires.",
+  "Votre abonnement est déjà payé jusqu'au": "Your subscription is already paid until",
+  "Vous pourrez le renouveler à son expiration.": "You will be able to renew it when it expires.",
 };

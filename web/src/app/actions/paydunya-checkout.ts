@@ -6,6 +6,8 @@ import { getT } from "@/lib/i18n/server";
 import { createInvoice, getPaydunyaConfig } from "@/lib/paydunya";
 import { AGENCY_MODE_ENABLED } from "@/lib/business-mode";
 import { isBillingCycle, isPlanTier, planOffer } from "@/lib/subscription-plans";
+import { isRenewalLocked } from "@/lib/subscription-lock";
+import { dateLocale } from "@/lib/i18n/date-locale";
 
 /**
  * Démarre le paiement en ligne d'une formule : crée un règlement EN ATTENTE, une facture PayDunya,
@@ -28,10 +30,16 @@ export async function startPaydunyaCheckout(tier: string, cycle: string): Promis
 
   const establishment = await prisma.establishment.findUnique({
     where: { id: user.establishmentId },
-    select: { name: true, businessMode: true, subscription: { select: { id: true } } },
+    select: { name: true, businessMode: true, subscription: { select: { id: true, currentPeriodEnd: true } } },
   });
   if (!establishment?.subscription) {
     return { error: t("Aucun abonnement n'est configuré pour cet établissement — contactez un administrateur de plateforme.") };
+  }
+  // Un abonnement payé qui court encore verrouille le paiement d'un autre : il se rouvre à l'expiration.
+  const confirmedPayments = await prisma.subscriptionPayment.count({ where: { subscriptionId: establishment.subscription.id, status: "CONFIRMED" } });
+  if (isRenewalLocked({ confirmedPayments, currentPeriodEnd: establishment.subscription.currentPeriodEnd }, new Date())) {
+    const until = new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "long", year: "numeric" }).format(establishment.subscription.currentPeriodEnd);
+    return { error: `${t("Votre abonnement est déjà payé jusqu'au")} ${until}. ${t("Vous pourrez le renouveler à son expiration.")}` };
   }
   // Pas de vente d'un module non livré (référentiel des abonnements, section 12).
   if (establishment.businessMode === "REAL_ESTATE" && !AGENCY_MODE_ENABLED) {

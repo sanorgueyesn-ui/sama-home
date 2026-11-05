@@ -44,7 +44,8 @@ function SubscriptionSummary({ status }: { status: SubscriptionStatusView }) {
         <>
           <Row label="Essai démarré le" value={fmtDate(status.trialStartedAt!)} />
           <Row label="Fin de la période actuelle" value={fmtDate(status.currentPeriodEnd!)} />
-          <Row label="État de l'abonnement" value={status.isExpired ? "Expiré" : "Actif"} />
+          <Row label="État de l'abonnement" value={status.isExpired ? "Expiré" : status.isPaid ? "Abonné (payé)" : "Essai gratuit"} />
+          {status.isExpired ? null : <Row label="Jours restants" value={`${status.daysLeft} j`} />}
         </>
       ) : (
         <p className="py-3 text-sm font-semibold text-app-text-2">
@@ -226,8 +227,10 @@ export default async function SubscriptionStatusPage() {
     <Badge><T>Aucun abonnement</T></Badge>
   ) : status.isExpired ? (
     <Badge tone="bad"><T>Expiré</T></Badge>
+  ) : status.isPaid ? (
+    <Badge tone="good"><T>Abonné</T></Badge>
   ) : (
-    <Badge tone="good"><T>Actif</T></Badge>
+    <Badge tone="warn"><T>Essai gratuit</T></Badge>
   );
 
   return (
@@ -242,7 +245,16 @@ export default async function SubscriptionStatusPage() {
       ) : null}
       <SubscriptionSummary status={status} />
       <PlanSummary planName={currentPlan?.name ?? null} features={currentPlan?.features ?? []} />
-      {canRequestRenewal && status.hasSubscription && onlineOffers ? (
+      {canRequestRenewal && status.hasSubscription && status.renewalLocked ? (
+        <Surface>
+          <h2 className="mb-1 text-sm font-bold text-app-text"><T>Payer en ligne</T></h2>
+          <p className="text-sm font-semibold text-app-text-2">
+            <T>Votre abonnement est payé jusqu&apos;au</T> {fmtDate(status.currentPeriodEnd!)} ({status.daysLeft} <T>jours restants</T>).{" "}
+            <T>Le paiement sera de nouveau possible à son expiration.</T>
+          </p>
+        </Surface>
+      ) : null}
+      {canRequestRenewal && status.hasSubscription && !status.renewalLocked && onlineOffers ? (
         <Surface>
           <h2 className="mb-2 text-sm font-bold text-app-text"><T>Payer en ligne</T></h2>
           <PayOnlineForm offers={onlineOffers.offers} currentTier={onlineOffers.currentTier} preferredTier={onlineOffers.preferredTier} preferredCycle={onlineOffers.preferredCycle} />

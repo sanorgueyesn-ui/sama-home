@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { EstablishmentStatus } from "@/generated/prisma/client";
 import { requirePlatformAdmin } from "@/lib/dal";
+import { daysLeft, isRenewalLocked } from "@/lib/subscription-lock";
 
 /**
  * Phase 3G / Lot D12-P56 — valeurs par défaut utilisées UNIQUEMENT si aucune
@@ -24,6 +25,12 @@ export type SubscriptionStatusView = {
   trialStartedAt: Date | null;
   currentPeriodEnd: Date | null;
   isExpired: boolean;
+  /** Au moins un règlement confirmé : l'abonnement est payé (sinon, essai gratuit). */
+  isPaid: boolean;
+  /** Paiement d'un autre abonnement impossible tant que l'abonnement payé court encore. */
+  renewalLocked: boolean;
+  /** Jours restants avant l'échéance (0 si expiré ou sans abonnement). */
+  daysLeft: number;
   /**
    * Phase 3G / Lot D12-P58 — demande `SubscriptionPayment` la plus récente
    * au statut `PENDING` pour l'abonnement de CET établissement uniquement
@@ -78,9 +85,17 @@ export async function getSubscriptionStatus(establishmentId: string): Promise<Su
       })
     : null;
 
+  const confirmedPayments = subscription
+    ? await prisma.subscriptionPayment.count({ where: { subscriptionId: subscription.id, status: "CONFIRMED" } })
+    : 0;
+  const now = new Date();
+
   return {
     establishmentStatus: establishment?.status ?? null,
     hasSubscription: Boolean(subscription),
+    isPaid: confirmedPayments > 0,
+    renewalLocked: isRenewalLocked({ confirmedPayments, currentPeriodEnd: subscription?.currentPeriodEnd ?? null }, now),
+    daysLeft: daysLeft(subscription?.currentPeriodEnd ?? null, now),
     trialStartedAt: subscription?.trialStartedAt ?? null,
     currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
     isExpired: subscription ? subscription.currentPeriodEnd.getTime() <= Date.now() : false,
