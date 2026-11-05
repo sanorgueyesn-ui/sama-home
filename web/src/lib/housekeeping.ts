@@ -2,6 +2,11 @@
 // libre n'est pas forcément prête à être relouée.
 import type { PropertyStatus } from "@/lib/property-status";
 
+/** Le suivi du ménage existe pour les hôtels et les résidences (pas pour une agence immobilière). */
+export function supportsHousekeeping(mode: string | null | undefined): boolean {
+  return mode === "HOTEL" || mode === "RESIDENCE";
+}
+
 export type CleaningStatusValue = "DIRTY" | "IN_PROGRESS" | "CLEAN";
 
 export const CLEANING_VALUES: readonly CleaningStatusValue[] = ["DIRTY", "IN_PROGRESS", "CLEAN"];

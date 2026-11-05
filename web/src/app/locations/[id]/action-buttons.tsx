@@ -34,7 +34,7 @@ export function CompleteButton({ id, hotel = false, remaining = 0 }: { id: strin
     }
     const ok = await askConfirm({
       title: hotel ? "Terminer ce séjour ?" : "Terminer cette location ?",
-      message: <T>{hotel ? "La chambre passera à nettoyer." : "Le logement redeviendra disponible."}</T>,
+      message: <T>{hotel ? "La chambre passera à nettoyer." : "Le logement passera à nettoyer, puis redeviendra disponible."}</T>,
       confirmLabel: hotel ? "Terminer le séjour" : "Terminer la location",
     });
     if (!ok) return;

@@ -1373,4 +1373,7 @@ export const enApp: PhraseBook = {
   "Une session ne dépasse jamais 12 heures, même avec une activité continue.": "A session never exceeds 12 hours, even with continuous activity.",
   "Déconnexion automatique après inactivité": "Automatic sign-out after inactivity",
   "Ménage des chambres": "Room housekeeping",
+  "Quels logements sont prêts à accueillir un locataire": "Which units are ready to welcome a tenant",
+  "Ménage des logements": "Unit housekeeping",
+  "Le logement passera à nettoyer, puis redeviendra disponible.": "The unit will be marked as needing cleaning, then become available again.",
 };

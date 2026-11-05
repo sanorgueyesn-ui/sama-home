@@ -1,7 +1,7 @@
 // Ménage : règles pures. La propreté est distincte de l'occupation.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canChangeCleaning, cleaningActions, compareForHousekeeping, isCleaningStatus, readiness } from "../housekeeping";
+import { canChangeCleaning, cleaningActions, compareForHousekeeping, isCleaningStatus, readiness, supportsHousekeeping } from "../housekeeping";
 
 test("statuts : seules les trois valeurs connues sont acceptées", () => {
   assert.equal(isCleaningStatus("DIRTY"), true);
@@ -38,4 +38,12 @@ test("ordre de travail : à nettoyer et libre d'abord, occupées en dernier", ()
     { name: "Chambre 1", cleaning: "IN_PROGRESS" as const, occupancy: "AVAILABLE" as const },
   ].sort(compareForHousekeeping);
   assert.deepEqual(rows.map((r) => r.name), ["Chambre 3", "Chambre 1", "Chambre 2", "Chambre 10"]);
+});
+
+test("le suivi du ménage existe pour l'hôtel et la résidence, pas pour l'agence", () => {
+  assert.equal(supportsHousekeeping("HOTEL"), true);
+  assert.equal(supportsHousekeeping("RESIDENCE"), true);
+  assert.equal(supportsHousekeeping("REAL_ESTATE"), false);
+  assert.equal(supportsHousekeeping(null), false);
+  assert.equal(supportsHousekeeping(undefined), false);
 });

@@ -310,10 +310,10 @@ export function AppShell({
           { href: "/locations", label: "Locations", icon: (a) => <KeyIcon active={a} /> },
           { href: "/logements?type=ROOM", label: "Chambres", icon: (a) => <BedIcon active={a} /> },
           ...(currentMode === "HOTEL"
-            ? [
-                { href: "/planning", label: "Planning", icon: (a: boolean) => <CalendarIcon active={a} /> },
-                { href: "/menage", label: "Ménage", icon: (a: boolean) => <KeyIcon active={a} /> },
-              ]
+            ? [{ href: "/planning", label: "Planning", icon: (a: boolean) => <CalendarIcon active={a} /> }]
+            : []),
+          ...(currentMode === "HOTEL" || currentMode === "RESIDENCE"
+            ? [{ href: "/menage", label: "Ménage", icon: (a: boolean) => <KeyIcon active={a} /> }]
             : []),
           ...(currentMode === "RESIDENCE"
             ? [{ href: "/logements?type=APARTMENT", label: "Appartements", icon: (a: boolean) => <BuildingIcon active={a} /> }]

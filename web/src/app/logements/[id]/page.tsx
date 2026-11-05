@@ -7,6 +7,7 @@ import { DoorIcon, KeyIcon, CalendarIcon, TagIcon, EditIcon } from "@/components
 import { StatusBadge } from "@/app/logements/status-badge";
 import { PropertyPhoto } from "@/app/logements/property-photo";
 import { CleaningControls } from "@/app/logements/cleaning-controls";
+import { supportsHousekeeping } from "@/lib/housekeeping";
 import { ReservationStatusBadge } from "@/app/reservations/status-badge";
 import { ToggleActiveButton } from "./toggle-active-button";
 import { DeletePropertyButton } from "./delete-property-button";
@@ -91,7 +92,7 @@ export default async function PropertyDetailPage(props: PageProps<"/logements/[i
         <div className="flex flex-col gap-5">
           <PropertyPhoto photo={property.photo} type={property.type} className="h-48 w-full rounded-2xl border border-app-line sm:h-64" />
 
-          {isHotel && property.active ? (
+          {supportsHousekeeping(space.mode) && property.active ? (
             <Surface title="Ménage">
               <CleaningControls propertyId={property.id} status={property.cleaningStatus} />
             </Surface>

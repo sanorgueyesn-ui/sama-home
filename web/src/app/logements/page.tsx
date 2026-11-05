@@ -1,5 +1,6 @@
 import { EmptyPanel, ListCard, PageHeader, PageShell } from "@/components/ui/page-kit";
 import { CleaningControls } from "./cleaning-controls";
+import { supportsHousekeeping } from "@/lib/housekeeping";
 import { getActiveSpace } from "@/lib/active-mode";
 import { pageVocabulary } from "@/lib/page-vocabulary";
 import { PropertyFilters } from "./filters";
@@ -29,7 +30,7 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
         subtitle={`${items.length}${truncated ? "+" : ""} ${vocab.unitsSingular}${items.length > 1 ? "s" : ""}`}
         actions={[
           { href: "/logements/new", label: space.mode === "HOTEL" ? "+ Ajouter une chambre" : "+ Ajouter un logement" },
-          ...(space.mode === "HOTEL" ? [{ href: "/menage", label: "Ménage des chambres" }] : []),
+          ...(supportsHousekeeping(space.mode) ? [{ href: "/menage", label: space.mode === "HOTEL" ? "Ménage des chambres" : "Ménage des logements" }] : []),
         ]}
       />
 
@@ -66,8 +67,8 @@ export default async function PropertiesPage(props: PageProps<"/logements">) {
                 </div>
               </div>
             </ListCard>
-            {/* Hôtel : état du ménage et gestes rapides (à nettoyer, en cours, prête), sans quitter la liste. */}
-            {space.mode === "HOTEL" && property.active ? (
+            {/* Hôtel et résidence : état du ménage et gestes rapides (à nettoyer, en cours, prête), sans quitter la liste. */}
+            {supportsHousekeeping(space.mode) && property.active ? (
               <div className="px-1">
                 <CleaningControls propertyId={property.id} status={property.cleaningStatus} />
               </div>

@@ -3,7 +3,7 @@ import { setCleaningStatus } from "@/app/actions/housekeeping";
 import { Badge, EmptyPanel, PageHeader, PageShell, StatTile } from "@/components/ui/page-kit";
 import { getActiveSpace } from "@/lib/active-mode";
 import { getCurrentUser } from "@/lib/dal";
-import { CLEANING_LABELS, cleaningActions, compareForHousekeeping, readiness, type CleaningStatusValue } from "@/lib/housekeeping";
+import { CLEANING_LABELS, cleaningActions, compareForHousekeeping, readiness, supportsHousekeeping, type CleaningStatusValue } from "@/lib/housekeeping";
 import { prisma } from "@/lib/prisma";
 import { getPropertyStatuses } from "@/lib/property-status";
 import { T } from "@/components/i18n/i18n-provider";
@@ -27,8 +27,8 @@ function sinceLabel(date: Date | null, now: Date) {
 
 export default async function HousekeepingPage() {
   const space = await getActiveSpace();
-  // Le ménage est un module de l'hôtel : une résidence n'a ni la page ni le lien.
-  if (space.mode !== "HOTEL") redirect("/dashboard");
+  // Le ménage concerne les hôtels et les résidences ; une agence n'a ni la page ni le lien.
+  if (!supportsHousekeeping(space.mode)) redirect("/dashboard");
   const user = await getCurrentUser();
   if (!user.establishmentId) redirect("/dashboard");
 
@@ -48,7 +48,7 @@ export default async function HousekeepingPage() {
 
   return (
     <PageShell>
-      <PageHeader eyebrow={space.name} title="Ménage" subtitle="Quelles chambres sont prêtes à recevoir un client" />
+      <PageHeader eyebrow={space.name} title="Ménage" subtitle={space.mode === "HOTEL" ? "Quelles chambres sont prêtes à recevoir un client" : "Quels logements sont prêts à accueillir un locataire"} />
 
       <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         <StatTile label="À nettoyer" value={String(toClean)} tone={toClean > 0 ? "bad" : "default"} sub="chambres" />
